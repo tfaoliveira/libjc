@@ -1,0 +1,259 @@
+fn init(reg u64 key nonce, reg u32 counter) -> stack u32[16]
+{
+  inline int i;
+  stack u32[16] st1;
+  reg u32[8] k;
+  reg u32[3] n;
+
+  st1[0] = 0x61707865;
+  st1[1] = 0x3320646e;
+  st1[2] = 0x79622d32;
+  st1[3] = 0x6b206574;
+
+  for i=0 to 8
+  { k[i] = (u32)[key + 4*i];
+    st1[4+i] = k[i]; }
+
+  st1[12] = counter;
+
+  for i=0 to 3
+  { n[i] = (u32)[nonce + 4*i];
+    st1[13+i] = n[i]; }
+
+  return st1;
+}
+
+fn copy_state(stack u32[16] st1) -> reg u32[16], stack u32
+{
+  inline int i;
+  reg   u32     k;
+  reg   u32[16] k1;
+  stack u32     k15;
+
+  k = st1[15];
+  k15 = k;
+
+  for i=0 to 15
+  { k1[i] = st1[i]; }
+
+  return k1, k15;
+}
+
+
+fn quarter_round(reg u32[16] k1, inline int a b c d) -> reg u32[16]
+{
+  k1[a] += k1[b];
+  k1[d] ^= k1[a];
+  _, _, k1[d] = #x86_ROL_32(k1[d], 16);
+
+  k1[c] += k1[d];
+  k1[b] ^= k1[c];
+  _, _, k1[b] = #x86_ROL_32(k1[b], 12);
+
+  k1[a] += k1[b];
+  k1[d] ^= k1[a];
+  _, _, k1[d] = #x86_ROL_32(k1[d], 8);
+
+  k1[c] += k1[d];
+  k1[b] ^= k1[c];
+  _, _, k1[b] = #x86_ROL_32(k1[b], 7);
+
+  return k1;
+}
+
+fn rounds(reg u32[16] k1, stack u32 k15) -> reg u32[16], stack u32
+{
+  inline int i;
+  stack u32 r, k14;
+
+  r = 10;
+  while(r > 0)
+  { r -= 1;
+
+    k1 = quarter_round(k1, 0, 4, 8, 12);
+    k1 = quarter_round(k1, 2, 6, 10, 14);
+
+    k14 = k1[14];
+    k1[15] = k15;
+
+    k1 = quarter_round(k1, 1, 5, 9, 13);
+    k1 = quarter_round(k1, 3, 7, 11, 15);
+
+    k1 = quarter_round(k1, 1, 6, 11, 12);
+    k1 = quarter_round(k1, 0, 5, 10, 15);
+
+    k15 = k1[15];
+    k1[14] = k14;
+
+    k1 = quarter_round(k1, 2, 7, 8,  13);
+    k1 = quarter_round(k1, 3, 4, 9,  14);  
+  }  
+
+  return k1, k15;
+}
+
+fn sum_states(
+  reg u32[16] k1,
+  stack u32 k15,
+  stack u32[16] st1
+) -> reg u32[16], stack u32
+{
+  inline int i;
+  stack u32 k14;
+  reg u32 t;
+
+  for i=0 to 15
+  { k1[i] += st1[i]; }
+
+  k14 = k1[14];
+
+  t = k15;
+  t += st1[15];
+  k15 = t;
+
+  k1[14] = k14;
+
+  return k1, k15;
+}
+
+fn store(
+  stack u64 s_output s_plain s_len,
+  reg u32[16] k1,
+  stack u32 k15
+) -> stack u64, stack u64, stack u64
+{
+  inline int i;
+  stack u32[3] s_k1;
+  reg u64 output, plain, len;
+
+    for i=0 to 3
+    { s_k1[i] = k1[12 + i]; }
+
+  output = s_output;
+  plain = s_plain;
+  len = s_len;
+
+  for i=0 to 12
+  { k1[i] ^= (u32)[plain + 4*i];
+    (u32)[output + 4*i] = k1[i]; }
+
+    for i=0 to 3
+    { k1[12+i] = s_k1[i]; }
+    k1[15] = k15;
+
+  for i=12 to 16
+  { k1[i] ^= (u32)[plain + 4*i];
+    (u32)[output + 4*i] = k1[i]; }
+
+  output += 64;
+  plain += 64;
+  len -= 64;
+
+  s_output = output;
+  s_plain = plain;
+  s_len = len;
+
+  return s_output, s_plain, s_len;
+}
+
+
+// TODO : rewrite me: cast to u8 section disappears; pi ^= s_k1[(int)j]; -> pi ^= k1[u8@(int)j];
+fn store_last(
+  stack u64 s_output s_plain s_len,
+  reg u32[16] k1,
+  stack u32 k15
+)
+{
+  inline int i;
+  reg u64 j, output, plain, len;
+  stack u8[64] s_k1;
+  reg u8 pi;
+  stack u32 k14;
+
+  // cast to u8
+  reg u32 t;
+
+  k14 = k1[14];
+
+  for i=0 to 14
+  { t = k1[i];
+    s_k1[4*i + 0] = (8u) t; t >>= 8;
+    s_k1[4*i + 1] = (8u) t; t >>= 8;
+    s_k1[4*i + 2] = (8u) t; t >>= 8;
+    s_k1[4*i + 3] = (8u) t;
+  }
+
+  k1[14] = k14;
+  k1[15] = k15;
+
+  for i=14 to 16
+  { t = k1[i];
+    s_k1[4*i + 0] = (8u) t; t >>= 8;
+    s_k1[4*i + 1] = (8u) t; t >>= 8;
+    s_k1[4*i + 2] = (8u) t; t >>= 8;
+    s_k1[4*i + 3] = (8u) t;
+  }
+
+  // store
+  output = s_output;
+  plain = s_plain;
+  len = s_len;
+
+  j = 0;
+  while(j < len)
+  {
+    pi = (u8)[plain + j];
+    pi ^= s_k1[(int)j];
+    (u8)[output + j] = pi;
+    j += 1;
+  }
+} 
+
+
+fn increment_counter(stack u32[16] st1) -> stack u32[16]
+{
+  reg u32 c;
+
+  c = 1;
+  c += st1[12];
+  st1[12] = c;
+
+  return st1;
+}
+
+export fn chacha20_xor_ref(
+  reg u64 output plain len,
+  reg u64 key nonce,
+  reg u32 counter
+)
+{
+  stack u64 s_output, s_plain, s_len;
+
+  stack u32[16] st1;
+  reg   u32[16] k1;  // the full state is in k1[0..14] and k15;
+  stack u32     k15;
+
+  s_output = output;
+  s_plain = plain;
+  s_len = len;
+
+  st1 = init(key, nonce, counter);
+
+  while(s_len >= 64)
+  {
+    k1, k15 = copy_state(st1);
+    k1, k15 = rounds(k1, k15);
+    k1, k15 = sum_states(k1, k15, st1);
+    s_output, s_plain, s_len = store(s_output, s_plain, s_len, k1, k15); 
+    st1 = increment_counter(st1);
+  }
+
+  if(s_len > 0)
+  {
+    k1, k15 = copy_state(st1);
+    k1, k15 = rounds(k1, k15);
+    k1, k15 = sum_states(k1, k15, st1);
+    store_last(s_output, s_plain, s_len, k1, k15); 
+  }
+}
+
