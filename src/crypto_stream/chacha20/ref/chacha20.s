@@ -1,9 +1,9 @@
 	.text
 	.p2align	5
-	.globl	_chacha20_xor_ref
-	.globl	chacha20_xor_ref
-_chacha20_xor_ref:
-chacha20_xor_ref:
+	.globl	_chacha20_ref
+	.globl	chacha20_ref
+_chacha20_ref:
+chacha20_ref:
 	pushq	%rbp
 	pushq	%rbx
 	pushq	%r12
@@ -41,8 +41,8 @@ chacha20_xor_ref:
 	movl	%eax, 104(%rsp)
 	movl	8(%r8), %eax
 	movl	%eax, 108(%rsp)
-	jmp 	Lchacha20_xor_ref$6
-Lchacha20_xor_ref$7:
+	jmp 	Lchacha20_ref$6
+Lchacha20_ref$7:
 	movl	108(%rsp), %eax
 	movl	%eax, 36(%rsp)
 	movl	48(%rsp), %eax
@@ -61,8 +61,8 @@ Lchacha20_xor_ref$7:
 	movl	100(%rsp), %r14d
 	movl	104(%rsp), %r15d
 	movl	$10, 44(%rsp)
-	jmp 	Lchacha20_xor_ref$8
-Lchacha20_xor_ref$9:
+	jmp 	Lchacha20_ref$8
+Lchacha20_ref$9:
 	decl	44(%rsp)
 	addl	%edi, %eax
 	xorl	%eax, %r13d
@@ -164,9 +164,9 @@ Lchacha20_xor_ref$9:
 	addl	%r15d, %ebp
 	xorl	%ebp, %edi
 	roll	$7, %edi
-Lchacha20_xor_ref$8:
+Lchacha20_ref$8:
 	cmpl	$0, 44(%rsp)
-	jnbe	Lchacha20_xor_ref$9
+	jnbe	Lchacha20_ref$9
 	addl	48(%rsp), %eax
 	addl	52(%rsp), %ecx
 	addl	56(%rsp), %edx
@@ -238,11 +238,11 @@ Lchacha20_xor_ref$8:
 	movl	$1, %eax
 	addl	96(%rsp), %eax
 	movl	%eax, 96(%rsp)
-Lchacha20_xor_ref$6:
+Lchacha20_ref$6:
 	cmpq	$64, (%rsp)
-	jnb 	Lchacha20_xor_ref$7
+	jnb 	Lchacha20_ref$7
 	cmpq	$0, (%rsp)
-	jbe 	Lchacha20_xor_ref$1
+	jbe 	Lchacha20_ref$1
 	movl	108(%rsp), %eax
 	movl	%eax, 36(%rsp)
 	movl	48(%rsp), %eax
@@ -261,8 +261,8 @@ Lchacha20_xor_ref$6:
 	movl	100(%rsp), %r14d
 	movl	104(%rsp), %r15d
 	movl	$10, 44(%rsp)
-	jmp 	Lchacha20_xor_ref$4
-Lchacha20_xor_ref$5:
+	jmp 	Lchacha20_ref$4
+Lchacha20_ref$5:
 	decl	44(%rsp)
 	addl	%edi, %eax
 	xorl	%eax, %r13d
@@ -364,9 +364,9 @@ Lchacha20_xor_ref$5:
 	addl	%r15d, %ebp
 	xorl	%ebp, %edi
 	roll	$7, %edi
-Lchacha20_xor_ref$4:
+Lchacha20_ref$4:
 	cmpl	$0, 44(%rsp)
-	jnbe	Lchacha20_xor_ref$5
+	jnbe	Lchacha20_ref$5
 	addl	48(%rsp), %eax
 	addl	52(%rsp), %ecx
 	addl	56(%rsp), %edx
@@ -522,16 +522,16 @@ Lchacha20_xor_ref$4:
 	movq	8(%rsp), %rcx
 	movq	(%rsp), %rdx
 	movq	$0, %rsi
-	jmp 	Lchacha20_xor_ref$2
-Lchacha20_xor_ref$3:
+	jmp 	Lchacha20_ref$2
+Lchacha20_ref$3:
 	movb	(%rcx,%rsi), %dil
 	xorb	112(%rsp,%rsi), %dil
 	movb	%dil, (%rax,%rsi)
 	incq	%rsi
-Lchacha20_xor_ref$2:
+Lchacha20_ref$2:
 	cmpq	%rdx, %rsi
-	jb  	Lchacha20_xor_ref$3
-Lchacha20_xor_ref$1:
+	jb  	Lchacha20_ref$3
+Lchacha20_ref$1:
 	addq	$176, %rsp
 	popq	%r15
 	popq	%r14

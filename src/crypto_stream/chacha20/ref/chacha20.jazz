@@ -221,7 +221,7 @@ fn increment_counter(stack u32[16] st1) -> stack u32[16]
   return st1;
 }
 
-export fn chacha20_xor_ref(
+export fn chacha20_ref(
   reg u64 output plain len,
   reg u64 key nonce,
   reg u32 counter
