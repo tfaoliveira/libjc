@@ -11,6 +11,7 @@ u32 g_sigma0   = 0x61707865;
 u32 g_sigma1   = 0x3320646e;
 u32 g_sigma2   = 0x79622d32;
 u32 g_sigma3   = 0x6b206574;
+u128 g_p0      = 0;
 
 param int i_0 = 0;
 param int i_1 = 1;
@@ -30,62 +31,70 @@ param int i_14 = 14;
 param int i_15 = 15;
 param int i_32 = 32;
 
+fn load_shufb_cmd() -> stack u256, stack u256
+{
+  reg   u256   r16,   r8;
+  stack u256 s_r16, s_r8;
+
+  r16 = g_r16;
+  r8 = g_r8;
+  s_r16 = r16;
+  s_r8 = r8;
+  return s_r16, s_r8;
+}
+
 fn init_x2(reg u64 key nonce, reg u32 counter) -> reg u256[4]
 {
-  reg u256[4] s;
-  reg u256 k n;
-  reg u128 t;
-  stack u128 st;
+  reg u256[4] st;
+  reg u128 nc;
+  stack u128 s_nc;
 
-  k = (u256)[key + 0];
+  nc = g_p0;
+  nc = #x86_VPINSR_4u32(nc, counter, 0);
+  nc = #x86_VPINSR_4u32(nc, (u32)[nonce + 0], 1);
+  nc = #x86_VPINSR_2u64(nc, (u64)[nonce + 4], 1);
+  s_nc = nc;
 
-  t = (u128)[nonce + 0];
-  t = #x86_VPSLLDQ_128(t, 4);
-  t = #x86_VPINSR_8u32(t, counter, 0);
+  st[0] = #x86_VPBROADCAST_2u128(g_sigma);
+  st[1] = #x86_VPBROADCAST_2u128((u128)[key + 0]);
+  st[2] = #x86_VPBROADCAST_2u128((u128)[key + 16]);
+  st[3] = #x86_VPBROADCAST_2u128(s_nc);
+  st[3] +8u32= g_p1;
 
-  st = t;
-
-  s[3] = #x86_VPBROADCAST_2u128(st);
-
-  s[0] = #x86_VPBROADCAST_2u128(g_sigma);
-  s[1] = #x86_VPERM2I128(k, k, 0x00);
-  s[2] = #x86_VPERM2I128(k, k, 0x11);
-  s[3] +8u32= g_p1;
-
-  // s
+  // st
   // 0 { sigma     , sigma      }
   // 1 { k[127:0]  , k[127:0]   }
   // 2 { k[255:128], k[255:128] }
   // 3 { n , cnt+1 , n , cnt    }
-  return s;
+  return st;
 }
 
 
-fn init_x8(stack u256[16] st1_8, reg u64 k n1, reg u32 ctr) -> stack u256[16]
+
+fn init_x8(reg u64 key nonce, reg u32 counter) -> stack u256[16]
 {
   inline int i;
-  reg u256[16] s;
-  stack u32 s_ctr;
+  stack u256[16] st_; 
+  reg u256[16] st;
+  stack u32 s_counter;
 
-  s_ctr = ctr;
+  s_counter = counter;
 
-  s[0] = #x86_VPBROADCAST_8u32(g_sigma0);
-  s[1] = #x86_VPBROADCAST_8u32(g_sigma1);
-  s[2] = #x86_VPBROADCAST_8u32(g_sigma2);
-  s[3] = #x86_VPBROADCAST_8u32(g_sigma3);
+  st[0] = #x86_VPBROADCAST_8u32(g_sigma0);
+  st[1] = #x86_VPBROADCAST_8u32(g_sigma1);
+  st[2] = #x86_VPBROADCAST_8u32(g_sigma2);
+  st[3] = #x86_VPBROADCAST_8u32(g_sigma3);
 
   for i=0 to 8
-  { s[i+4] = #x86_VPBROADCAST_8u32((u32)[k + i*4]); }
+  { st[i+4] = #x86_VPBROADCAST_8u32((u32)[key + i*4]); }
 
-  s[12] = #x86_VPBROADCAST_8u32(s_ctr);
-  s[12] +8u32= g_cnt;
+  st[12] = #x86_VPBROADCAST_8u32(s_counter);
+  st[12] +8u32= g_cnt;
 
   for i=0 to 3
-  { s[i+13] = #x86_VPBROADCAST_8u32((u32)[n1 + i*4]); }
+  { st[i+13] = #x86_VPBROADCAST_8u32((u32)[nonce + i*4]); }
 
-  st1_8 = s;
-
-  //  k1_8
+  //  st
   //  0 { ... , sigma0     , sigma0     }
   //  1 { ... , sigma1     , sigma1     }
   //  2 { ... , sigma2     , sigma2     }
@@ -97,23 +106,26 @@ fn init_x8(stack u256[16] st1_8, reg u64 k n1, reg u32 ctr) -> stack u256[16]
   // 13 { ... , n[31:0]    , n[31:0]    }
   // ...
   // 15 { ... , n[95:64]   , n[95:64]   }
-  return st1_8;
+  st_ = st;
+  return st_;
 }
 
 
-fn copy_state_x2(reg u256[4] st1) -> reg u256[4]
+
+fn copy_state_x2(reg u256[4] st) -> reg u256[4]
 {
-  reg u256[4] k1;
-  k1 = st1;
-  return k1;
+  reg u256[4] k;
+  k = st;
+  return k;
 }
 
 
-fn copy_state_x4(reg u256[4] st1) -> reg u256[4], reg u256[4]
+
+fn copy_state_x4(reg u256[4] st) -> reg u256[4], reg u256[4]
 {
   reg u256[4] k1 k2;
-  k1 = st1;
-  k2 = st1;
+  k1 = st;
+  k2 = st;
   k2[3] +8u32= g_p2;
 
   // k2                         k1
@@ -125,70 +137,67 @@ fn copy_state_x4(reg u256[4] st1) -> reg u256[4], reg u256[4]
 }
 
 
-fn copy_state_x8(stack u256[16] st1_8) -> reg u256[16]
+
+fn copy_state_x8(stack u256[16] st) -> reg u256[16]
 {
-  reg u256[16] k1_8;
-  k1_8 = st1_8;
-  return k1_8;
-}
-
-
-fn sum_states_x2(reg u256[4] k12 st12) -> reg u256[4]
-{
-  inline int i;
-
-  for i=0 to 4
-  { k12[i] +8u32= st12[i]; }
-
-  return k12;
-}
-
-
-fn sum_states_x4(reg u256[4] k12 k34 st12) -> reg u256[4], reg u256[4]
-{
-  inline int i;
-
-  k12 = sum_states_x2(k12, st12);
-  k34 = sum_states_x2(k34, st12);
-  k34[3] +8u32= g_p2;
-
-  return k12, k34;
-}
-
-
-fn sum_states_x8(reg u256[16] k, stack u256[16] s) -> reg u256[16]
-{
-  inline int i;
-
-  for i=0 to 16
-  { k[i] +8u32= s[i]; }
-
+  reg u256[16] k;
+  k = st;
   return k;
 }
+
+
+
+fn sum_states_x2(reg u256[4] k st) -> reg u256[4]
+{
+  inline int i;
+  for i=0 to 4
+  { k[i] +8u32= st[i]; }
+  return k;
+}
+
+
+
+fn sum_states_x4(reg u256[4] k1 k2 st) -> reg u256[4], reg u256[4]
+{
+  inline int i;
+  k1 = sum_states_x2(k1, st);
+  k2 = sum_states_x2(k2, st);
+  k2[3] +8u32= g_p2;
+  return k1, k2;
+}
+
+
+
+fn sum_states_x8(reg u256[16] k, stack u256[16] st) -> reg u256[16]
+{
+  inline int i;
+  for i=0 to 16
+  { k[i] +8u32= st[i]; }
+  return k;
+}
+
 
 
 fn perm_x2(reg u256[4] k) -> reg u256[4]
 {
   reg u256[4] pk;
-
   pk[0] = #x86_VPERM2I128(k[0], k[1], 0x20);
   pk[1] = #x86_VPERM2I128(k[2], k[3], 0x20);
   pk[2] = #x86_VPERM2I128(k[0], k[1], 0x31);
   pk[3] = #x86_VPERM2I128(k[2], k[3], 0x31);
-
   return pk;
 }
+
 
 
 fn perm_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
 {
   reg u256[4] pk1 pk2;
-
   pk1 = perm_x2(k1);
   pk2 = perm_x2(k2);
-
   return pk1, pk2;
 }
+
 
 
 fn sub_rotate(reg u256[8] t) -> reg u256[8]
@@ -207,12 +216,13 @@ fn sub_rotate(reg u256[8] t) -> reg u256[8]
   x[7] = #x86_VPUNPCKH_4u64(t[6], t[7]);
 
   for i=0 to 4
-  {   t[i] = #x86_VPERM2I128(x[i*2+0], x[i*2+1], 0x20);
-    t[i+4] = #x86_VPERM2I128(x[i*2+0], x[i*2+1], 0x31);
-  }
+  {   t[i] = #x86_VPERM2I128(x[2*i+0], x[2*i+1], 0x20);
+    t[i+4] = #x86_VPERM2I128(x[2*i+0], x[2*i+1], 0x31); }
 
   return t;
 }
+
+
 
 fn rotate(reg u256[8] x) -> reg u256[8]
 {
@@ -220,60 +230,77 @@ fn rotate(reg u256[8] x) -> reg u256[8]
   reg u256[8] t;
 
   for i=0 to 4
-  {   t[i] = #x86_VPUNPCKL_8u32(x[i*2+0], x[i*2+1]);
-    t[i+4] = #x86_VPUNPCKH_8u32(x[i*2+0], x[i*2+1]);
-  }
+  {   t[i] = #x86_VPUNPCKL_8u32(x[2*i+0], x[2*i+1]);
+    t[i+4] = #x86_VPUNPCKH_8u32(x[2*i+0], x[2*i+1]); }
 
   t = sub_rotate(t);
 
   return t;
 }
+
+
 
 fn rotate_stack(stack u256[8] s) -> reg u256[8]
 {
   inline int i;
-  reg u256[8] t;
-  reg u256[8] x;
+  reg u256[8] t x;
 
   for i=0 to 4
-  { x[i] = s[i*2+0]; }
+  { x[i] = s[2*i+0]; }
 
   for i=0 to 4
-  {   t[i] = #x86_VPUNPCKL_8u32(x[i], s[i*2+1]);
-    t[i+4] = #x86_VPUNPCKH_8u32(x[i], s[i*2+1]);
-  }
+  { t[  i] = #x86_VPUNPCKL_8u32(x[i], s[2*i+1]);
+    t[4+i] = #x86_VPUNPCKH_8u32(x[i], s[2*i+1]); }
 
   t = sub_rotate(t);
 
   return t;
 }
 
-fn rotate_first_half_x8(reg u256[16] k1_8) -> reg u256[8], stack u256[8]
+
+
+fn rotate_first_half_x8(reg u256[16] k) -> reg u256[8], stack u256[8]
 {
   inline int i;
-  stack u256[8] s5_8;
-  reg   u256[8] k1_4;
+  stack u256[8] s_k8_15;
+  reg   u256[8] k0_7;
 
   for i=0 to 8
-  { s5_8[i] = k1_8[i+8]; }
+  { s_k8_15[i] = k[8+i]; }
 
   for i=0 to 8
-  { k1_4[i] = k1_8[i]; }
+  { k0_7[i] = k[i]; }
 
-  k1_4 = rotate(k1_4);
+  k0_7 = rotate(k0_7);
 
-  return k1_4, s5_8;
+  return k0_7, s_k8_15;
 }
 
-fn rotate_second_half_x8(stack u256[8] s5_8) -> reg u256[8]
+
+
+fn rotate_second_half_x8(stack u256[8] s_k8_15) -> reg u256[8]
 {
   inline int i;
-  reg u256[8] k5_8;
-
-  k5_8 = rotate_stack(s5_8);
-
-  return k5_8;
+  reg u256[8] k8_15;
+  k8_15 = rotate_stack(s_k8_15);
+  return k8_15;
 }
+
+
+
+fn interleave(stack u256[8] s, reg u256[8] k, inline int o) -> reg u256[8]
+{
+  inline int i;
+  reg u256[8] sk;
+
+  for i=0 to 4
+  { sk[2*i+0] = s[o + i];
+    sk[2*i+1] = k[o + i]; }
+
+  return sk;
+}
+
+
 
 fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u64, reg u32
 {
@@ -283,27 +310,31 @@ fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u
   return output, plain, len;
 }
 
-fn store(reg u64 output plain, reg u32 len, reg u256 k1 k2) -> reg u64, reg u64, reg u32
-{
-  k1 ^= (u256)[plain + 0*32];
-  k2 ^= (u256)[plain + 1*32];
 
-  (u256)[output + 0*32] = k1;
-  (u256)[output + 1*32] = k2;
+
+fn store(reg u64 output plain, reg u32 len, reg u256[2] k) -> reg u64, reg u64, reg u32, reg u256[2]
+{
+  k[0] ^= (u256)[plain +  0];
+  k[1] ^= (u256)[plain + 32];
+
+  (u256)[output +  0] = k[0];
+  (u256)[output + 32] = k[1];
 
   output, plain, len = update_ptr(output, plain, len, 64);
 
-  return output, plain, len;
+  return output, plain, len, k;
 }
 
-fn store_last(reg u64 output plain, reg u32 len, reg u256 k1 k2)
+
+
+fn store_last(reg u64 output plain, reg u32 len, reg u256[2] k)
 {
   reg u256 r0;
   reg u128 r1;
   reg u64  r2;
   reg u8   r3;
 
-  r0 = k1;
+  r0 = k[0];
 
   if(len >= 32)
   {
@@ -312,7 +343,7 @@ fn store_last(reg u64 output plain, reg u32 len, reg u256 k1 k2)
 
     output, plain, len = update_ptr(output, plain, len, 32);
 
-    r0 = k2;
+    r0 = k[1];
   }
 
   r1 = #x86_VEXTRACTI128(r0, 0);
@@ -350,57 +381,65 @@ fn store_last(reg u64 output plain, reg u32 len, reg u256 k1 k2)
   }
 }
 
+
+
 fn store_x2(reg u64 output plain, reg u32 len, reg u256[4] k) -> reg u64, reg u64, reg u32, reg u256[4]
 {
   inline int i;
 
   for i=0 to 4
-  { k[i] ^= (u256)[plain + i*32]; }
+  { k[i] ^= (u256)[plain + 32*i]; }
 
   for i=0 to 4
-  { (u256)[output + i*32] = k[i]; }
+  { (u256)[output + 32*i] = k[i]; }
 
   output, plain, len = update_ptr(output, plain, len, 128);
 
   return output, plain, len, k;
 }
 
+
+
 fn store_x2_last(reg u64 output plain, reg u32 len, reg u256[4] k)
 {
-  reg u256 r0, r1;
+  reg u256[2] r;
 
-  r0 = k[0];
-  r1 = k[1];
+  r[0] = k[0];
+  r[1] = k[1];
 
   if(len >= 64)
   {
-    output, plain, len = store(output, plain, len, r0, r1);
-    r0 = k[2];
-    r1 = k[3];
+    output, plain, len, r = store(output, plain, len, r);
+    r[0] = k[2];
+    r[1] = k[3];
   }
 
-  store_last(output, plain, len, r0, r1);
+  store_last(output, plain, len, r);
 }
+
+
 
 fn store_x4(reg u64 output plain, reg u32 len, reg u256[8] k) -> reg u64, reg u64, reg u32
 {
   inline int i;
 
   for i=0 to 8
-  { k[i] ^= (u256)[plain + i*32]; }
+  { k[i] ^= (u256)[plain + 32*i]; }
 
   for i=0 to 8
-  { (u256)[output + i*32] = k[i]; }
+  { (u256)[output + 32*i] = k[i]; }
 
   output, plain, len = update_ptr(output, plain, len, 256);
 
   return output, plain, len;
 }
 
+
+
 fn store_x4_last(reg u64 output plain, reg u32 len, reg u256[8] k)
 {
   inline int i;
-  reg u256[4] r, r1;
+  reg u256[4] r;
 
   for i=0 to 4 { r[i] = k[i]; }
 
@@ -413,372 +452,382 @@ fn store_x4_last(reg u64 output plain, reg u32 len, reg u256[8] k)
   store_x2_last(output, plain, len, r);
 }
 
-fn store_half_x8(reg u64 output plain, reg u32 len, reg u256[8] k1_4, inline int o)
+
+
+fn store_half_x8(reg u64 output plain, reg u32 len, reg u256[8] k, inline int o)
 {
   inline int i;
 
   for i=0 to 8
-  { k1_4[i] ^= (u256)[plain + o + i*64]; }
+  { k[i] ^= (u256)[plain + o + 64*i]; }
   for i=0 to 8
-  { (u256)[output + o + i*64] = k1_4[i]; }
+  { (u256)[output + o + 64*i] = k[i]; }
 }
 
-fn store_x8(reg u64 output plain, reg u32 len, reg u256[16] k1_8) -> reg u64, reg u64, reg u32
-{
-  stack u256[8] s5_8;
-  reg   u256[8] k1_4, k5_8;
 
-  k1_4, s5_8 = rotate_first_half_x8(k1_8);
-  store_half_x8(output, plain, len, k1_4, i_0);
-  k5_8 = rotate_second_half_x8(s5_8);
-  store_half_x8(output, plain, len, k5_8, i_32);
+
+fn store_x8(reg u64 output plain, reg u32 len, reg u256[16] k) -> reg u64, reg u64, reg u32
+{
+  stack u256[8] s_k8_15;
+  reg   u256[8] k0_7, k8_15;
+
+  k0_7, s_k8_15 = rotate_first_half_x8(k);
+  store_half_x8(output, plain, len, k0_7, i_0);
+  k8_15 = rotate_second_half_x8(s_k8_15);
+  store_half_x8(output, plain, len, k8_15, i_32);
 
   output, plain, len = update_ptr(output, plain, len, 512);
 
   return output, plain, len;
 }
 
-fn interleave(stack u256[8] s1_4, reg u256[8] k5_8, inline int o) -> reg u256[8]
+
+
+fn store_x8_last(reg u64 output plain, reg u32 len, reg u256[16] k)
 {
   inline int i;
-  reg u256[8] w1_4;
+  stack u256[8] s_k0_7 s_k8_15;
+  reg   u256[8] k0_7 k8_15 i0_7;
 
-  for i=0 to 4
-  { w1_4[i*2+0] = s1_4[i+o];
-    w1_4[i*2+1] = k5_8[i+o];
-  }
-
-  return w1_4;
-}
-
-fn store_x8_last(reg u64 output plain, reg u32 len, reg u256[16] k1_8)
-{
-  inline int i;
-  stack u256[8] s1_4 s5_8;
-  reg   u256[8] k1_4 k5_8 w1_4;
-
-  k1_4, s5_8 = rotate_first_half_x8(k1_8);
-  s1_4 = k1_4;
-  k5_8 = rotate_second_half_x8(s5_8);
-  w1_4 = interleave(s1_4, k5_8, i_0);
+  k0_7, s_k8_15 = rotate_first_half_x8(k);
+  s_k0_7 = k0_7;
+  k8_15 = rotate_second_half_x8(s_k8_15);
+  i0_7 = interleave(s_k0_7, k8_15, i_0);
 
   if(len >= 256)
   {
-    output, plain, len = store_x4(output, plain, len, w1_4);
-    w1_4 = interleave(s1_4, k5_8, i_4);
+    output, plain, len = store_x4(output, plain, len, i0_7);
+    i0_7 = interleave(s_k0_7, k8_15, i_4);
   }
 
-  store_x4_last(output, plain, len, w1_4);
+  store_x4_last(output, plain, len, i0_7);
 }
+
+
 
 fn increment_counter_x8(stack u256[16] s) -> stack u256[16]
 {
   reg u256 t;
-
   t = g_cnt_inc;
   t +8u32= s[12];
   s[12] = t;
-
   return s;
 }
 
-fn round_128(reg u256[4] v0) -> reg u256[4]
+
+
+fn round_128(reg u256[4] k, reg u256 r16 r8) -> reg u256[4]
 {
   reg u256 t;
 
-  v0[0] +8u32= v0[1];
-  v0[3]     ^= v0[0];
-  v0[3] = #x86_VPSHUFB_256(v0[3], g_r16);
+  k[0] +8u32= k[1];
+  k[3]     ^= k[0];
+  k[3] = #x86_VPSHUFB_256(k[3], r16);
 
-  v0[2] +8u32= v0[3];
-  v0[1]     ^= v0[2];
+  k[2] +8u32= k[3];
+  k[1]     ^= k[2];
 
-      t = v0[1] <<8u32 12;
-  v0[1] = v0[1] >>8u32 20;
-  v0[1] ^= t;
+      t = k[1] <<8u32 12;
+  k[1] = k[1] >>8u32 20;
+  k[1] ^= t;
 
-  v0[0] +8u32= v0[1];
-  v0[3]     ^= v0[0];
-  v0[3] = #x86_VPSHUFB_256(v0[3], g_r8);
+  k[0] +8u32= k[1];
+  k[3]     ^= k[0];
+  k[3] = #x86_VPSHUFB_256(k[3], r8);
 
-  v0[2] +8u32= v0[3];
-  v0[1] ^= v0[2];
+  k[2] +8u32= k[3];
+  k[1] ^= k[2];
 
-      t = v0[1] <<8u32 7;
-  v0[1] = v0[1] >>8u32 25;
-  v0[1] ^= t;
+      t = k[1] <<8u32 7;
+  k[1] = k[1] >>8u32 25;
+  k[1] ^= t;
 
-  return v0;
+  return k;
 }
 
-fn round_256(
-  reg u256[4] v0,
-  reg u256[4] v4
-) -> reg u256[4], reg u256[4]
+
+
+fn round_256(reg u256[4] k1 k2, reg u256 r16 r8) -> reg u256[4], reg u256[4]
+{
+  reg u256 t; // TODO implement this with t1 t2
+
+  k1[0] +8u32= k1[1];
+  k2[0] +8u32= k2[1];
+
+  k1[3] ^= k1[0];
+  k2[3] ^= k2[0];
+
+  k1[3] = #x86_VPSHUFB_256(k1[3], r16);
+  k2[3] = #x86_VPSHUFB_256(k2[3], r16);
+
+  k1[2] +8u32= k1[3];
+  k2[2] +8u32= k2[3];
+
+  k1[1] ^= k1[2];
+  k2[1] ^= k2[2];
+
+      t = k1[1] <<8u32 12;
+  k1[1] = k1[1] >>8u32 20;
+  k1[1] ^= t;
+
+      t = k2[1] <<8u32 12;
+  k2[1] = k2[1] >>8u32 20;
+  k2[1] ^= t;
+
+  k1[0] +8u32= k1[1];
+  k2[0] +8u32= k2[1];
+
+  k1[3] ^= k1[0];
+  k2[3] ^= k2[0];
+
+  k1[3] = #x86_VPSHUFB_256(k1[3], r8);
+  k2[3] = #x86_VPSHUFB_256(k2[3], r8);
+
+  k1[2] +8u32= k1[3];
+  k2[2] +8u32= k2[3];
+
+  k1[1] ^= k1[2];
+  k2[1] ^= k2[2];
+
+      t = k1[1] <<8u32 7;
+  k1[1] = k1[1] >>8u32 25;
+  k1[1] ^= t;
+
+      t = k2[1] <<8u32 7;
+  k2[1] = k2[1] >>8u32 25;
+  k2[1] ^= t;
+
+  return k1, k2;
+}
+
+
+
+fn shuffle_state(reg u256[4] k) -> reg u256[4]
+{
+  k[1] = #x86_VPSHUFD_256(k[1], (4u2)[0,3,2,1]);
+  k[2] = #x86_VPSHUFD_256(k[2], (4u2)[1,0,3,2]);
+  k[3] = #x86_VPSHUFD_256(k[3], (4u2)[2,1,0,3]);
+  return k;
+}
+
+
+
+fn reverse_shuffle_state(reg u256[4] k) -> reg u256[4]
+{
+  k[1] = #x86_VPSHUFD_256(k[1], (4u2)[2,1,0,3]);
+  k[2] = #x86_VPSHUFD_256(k[2], (4u2)[1,0,3,2]);
+  k[3] = #x86_VPSHUFD_256(k[3], (4u2)[0,3,2,1]);
+  return k;
+}
+
+
+
+fn rounds_x2(reg u256[4] k) -> reg u256[4]
+{
+  reg u64 c;
+  reg u256 r16 r8;
+
+  r16 = g_r16;
+  r8 = g_r8;
+  c = 0;
+  while(c < 10)
+  {
+    k = round_128(k, r16, r8);
+    k = shuffle_state(k);
+    k = round_128(k, r16, r8);
+    k = reverse_shuffle_state(k);
+    c += 1;
+  }
+  return k;
+}
+
+
+
+fn rounds_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
+{
+  reg u64 c;
+  reg u256 r16 r8;
+
+  r16 = g_r16;
+  r8 = g_r8;
+  c = 0;
+  while(c < 10)
+  {
+    k1, k2 = round_256(k1, k2, r16, r8);
+        k1 = shuffle_state(k1);
+        k2 = shuffle_state(k2);
+    k1, k2 = round_256(k1, k2, r16, r8);
+        k1 = reverse_shuffle_state(k1);
+        k2 = reverse_shuffle_state(k2);
+    c += 1;
+  }
+  return k1, k2;
+}
+
+
+
+fn round_512(reg u256[16] k, stack u256 s_r16 s_r8, inline int a0 b0 c0 d0 a1 b1 c1 d1) -> reg u256[16]
 {
   reg u256 t;
 
-  v0[0] +8u32= v0[1];
-  v4[0] +8u32= v4[1];
+  k[a0] +8u32= k[b0];
+  k[a1] +8u32= k[b1];
 
-  v0[3] ^= v0[0];
-  v4[3] ^= v4[0];
+  k[d0] ^= k[a0];
+  k[d1] ^= k[a1];
 
-  v0[3] = #x86_VPSHUFB_256(v0[3], g_r16);
-  v4[3] = #x86_VPSHUFB_256(v4[3], g_r16);
+  k[d0] = #x86_VPSHUFB_256(k[d0], s_r16);
+  k[d1] = #x86_VPSHUFB_256(k[d1], s_r16);
 
-  v0[2] +8u32= v0[3];
-  v4[2] +8u32= v4[3];
+  k[c0] +8u32= k[d0];
+  k[c1] +8u32= k[d1];
 
-  v0[1] ^= v0[2];
-  v4[1] ^= v4[2];
+                          k[b0] ^= k[c0];
+      t = k[b0] <<8u32 12;
+  k[b0] = k[b0] >>8u32 20;
+                          k[b1] ^= k[c1];
+  k[b0] ^= t;
 
-      t = v0[1] <<8u32 12;
-  v0[1] = v0[1] >>8u32 20;
-  v0[1] ^= t;
+      t = k[b1] <<8u32 12;
+  k[b1] = k[b1] >>8u32 20;
+  k[b1] ^= t;
 
-      t = v4[1] <<8u32 12;
-  v4[1] = v4[1] >>8u32 20;
-  v4[1] ^= t;
+  k[a0] +8u32= k[b0];
+  k[a1] +8u32= k[b1];
 
-  v0[0] +8u32= v0[1];
-  v4[0] +8u32= v4[1];
+  k[d0] ^= k[a0];
+  k[d1] ^= k[a1];
 
-  v0[3] ^= v0[0];
-  v4[3] ^= v4[0];
+  k[d0] = #x86_VPSHUFB_256(k[d0], s_r8);
+  k[d1] = #x86_VPSHUFB_256(k[d1], s_r8);
 
-  v0[3] = #x86_VPSHUFB_256(v0[3], g_r8);
-  v4[3] = #x86_VPSHUFB_256(v4[3], g_r8);
+  k[c0] +8u32= k[d0];
+  k[c1] +8u32= k[d1];
 
-  v0[2] +8u32= v0[3];
-  v4[2] +8u32= v4[3];
+                          k[b0] ^= k[c0];
+      t = k[b0] <<8u32 7;
+  k[b0] = k[b0] >>8u32 25;
+                          k[b1] ^= k[c1];
+  k[b0] ^= t;
 
-  v0[1] ^= v0[2];
-  v4[1] ^= v4[2];
+      t = k[b1] <<8u32 7;
+  k[b1] = k[b1] >>8u32 25;
+  k[b1] ^= t;
 
-      t = v0[1] <<8u32 7;
-  v0[1] = v0[1] >>8u32 25;
-  v0[1] ^= t;
-
-      t = v4[1] <<8u32 7;
-  v4[1] = v4[1] >>8u32 25;
-  v4[1] ^= t;
-
-  return v0, v4;
+  return k;
 }
 
-fn shuffle_state(reg u256[4] v) -> reg u256[4]
-{
-  v[1] = #x86_VPSHUFD_256(v[1], (4u2)[0,3,2,1]);
-  v[2] = #x86_VPSHUFD_256(v[2], (4u2)[1,0,3,2]);
-  v[3] = #x86_VPSHUFD_256(v[3], (4u2)[2,1,0,3]);
-  return v;
-}
 
-fn reverse_shuffle_state(reg u256[4] v) -> reg u256[4]
-{
-  v[1] = #x86_VPSHUFD_256(v[1], (4u2)[2,1,0,3]);
-  v[2] = #x86_VPSHUFD_256(v[2], (4u2)[1,0,3,2]);
-  v[3] = #x86_VPSHUFD_256(v[3], (4u2)[0,3,2,1]);
-  return v;
-}
 
-fn rounds_x2(
-  reg u256[4] v0
-) -> reg u256[4]
-{
-  reg u64 c;
-
-  c = 0;
-  while(c < 10)
-  {
-    v0 = round_128(v0);
-    v0 = shuffle_state(v0);
-    v0 = round_128(v0);
-    v0 = reverse_shuffle_state(v0);
-    c += 1;
-  }
-  return v0;
-}
-
-fn rounds_x4(
-  reg u256[4] v0,
-  reg u256[4] v4
-) -> reg u256[4], reg u256[4]
-{
-  reg u64 c;
-
-  c = 0;
-  while(c < 10)
-  {
-    v0, v4 = round_256(v0, v4);
-        v0 = shuffle_state(v0);
-        v4 = shuffle_state(v4);
-    v0, v4 = round_256(v0, v4);
-        v0 = reverse_shuffle_state(v0);
-        v4 = reverse_shuffle_state(v4);
-    c += 1;
-  }
-  return v0, v4;
-}
-
-fn double_quarter_round_512(
-  reg u256[16] x,
-  inline int a0, inline int b0, inline int c0, inline int d0,
-  inline int a1, inline int b1, inline int c1, inline int d1
-) -> reg u256[16]
-{
-  reg u256 t, r16;
-
-    r16 = #x86_VPBROADCAST_2u128(g_r16_u128);
-
-  x[a0] +8u32= x[b0];
-  x[a1] +8u32= x[b1];
-
-  x[d0] ^= x[a0];
-  x[d1] ^= x[a1];
-
-  x[d0] = #x86_VPSHUFB_256(x[d0], r16);
-  x[d1] = #x86_VPSHUFB_256(x[d1], r16);
-
-  x[c0] +8u32= x[d0];
-  x[c1] +8u32= x[d1];
-
-  x[b0] ^= x[c0];
-  x[b1] ^= x[c1];
-
-      t = x[b0] <<8u32 12;
-  x[b0] = x[b0] >>8u32 20;
-  x[b0] ^= t;
-
-      t = x[b1] <<8u32 12;
-  x[b1] = x[b1] >>8u32 20;
-  x[b1] ^= t;
-
-  x[a0] +8u32= x[b0];
-  x[a1] +8u32= x[b1];
-
-  x[d0] ^= x[a0];
-  x[d1] ^= x[a1];
-
-  x[d0] = #x86_VPSHUFB_256(x[d0], g_r8);
-  x[d1] = #x86_VPSHUFB_256(x[d1], g_r8);
-
-  x[c0] +8u32= x[d0];
-  x[c1] +8u32= x[d1];
-
-                          x[b0] ^= x[c0];
-      t = x[b0] <<8u32 7;
-  x[b0] = x[b0] >>8u32 25;
-                          x[b1] ^= x[c1];
-  x[b0] ^= t;
-
-      t = x[b1] <<8u32 7;
-  x[b1] = x[b1] >>8u32 25;
-  x[b1] ^= t;
-
-  return x;
-}
-
-fn doublex2_quarter_round_512(
-  reg u256[16] x,
-  stack u256 xd3_1,
-  inline int a0, inline int b0, inline int c0, inline int d0,
-  inline int a1, inline int b1, inline int c1, inline int d1,
-  inline int a2, inline int b2, inline int c2, inline int d2,
-  inline int a3, inline int b3, inline int c3, inline int d3
+fn double_round_512(reg u256[16] k,
+                    stack u256 k_d3 s_r16 s_r8,
+                    inline int a0 b0 c0 d0
+                               a1 b1 c1 d1
+                               a2 b2 c2 d2
+                               a3 b3 c3 d3
 ) -> reg u256[16], stack u256
 {
-  x = double_quarter_round_512(x, a0, b0, c0, d0, a1, b1, c1, d1);
-  x[d3] = xd3_1;
-  xd3_1 = x[d1];
-  x = double_quarter_round_512(x, a2, b2, c2, d2, a3, b3, c3, d3);
-  return x, xd3_1;
+  k = round_512(k, s_r16, s_r8, a0, b0, c0, d0, a1, b1, c1, d1);
+  k[d3] = k_d3;
+  k_d3 = k[d1];
+  k = round_512(k, s_r16, s_r8, a2, b2, c2, d2, a3, b3, c3, d3);
+  return k, k_d3;
 }
 
-fn rounds_x8(reg u256[16] x) -> reg u256[16]
+
+
+fn rounds_x8(reg u256[16] k, stack u256 s_r16 s_r8) -> reg u256[16]
 {
   reg u64 c;
-  stack u256 x0, x14, x15;
+  stack u256 k14, k15;
 
-  x15 = x[15];
+  k15 = k[15];
 
   c = 0;
   while(c < 10)
   {
-    x, x14 = doublex2_quarter_round_512(x, x15, i_0, i_4, i_8,  i_12,
-                                                i_2, i_6, i_10, i_14,
-                                                i_1, i_5, i_9,  i_13,
-                                                i_3, i_7, i_11, i_15);
+    k, k14 = double_round_512(k, k15, s_r16, s_r8,
+                                      i_0, i_4, i_8,  i_12,
+                                      i_2, i_6, i_10, i_14,
+                                      i_1, i_5, i_9,  i_13,
+                                      i_3, i_7, i_11, i_15);
 
-    x, x15 = doublex2_quarter_round_512(x, x14, i_1, i_6, i_11, i_12,
-                                                i_0, i_5, i_10, i_15,
-                                                i_2, i_7, i_8,  i_13,
-                                                i_3, i_4, i_9,  i_14);
+    k, k15 = double_round_512(k, k14, s_r16, s_r8,
+                                      i_1, i_6, i_11, i_12,
+                                      i_0, i_5, i_10, i_15,
+                                      i_2, i_7, i_8,  i_13,
+                                      i_3, i_4, i_9,  i_14);
     c += 1;
   }
 
-  x[15] = x15;
+  k[15] = k15;
 
-  return x;
+  return k;
 }
 
-fn chacha20_more_than_256(reg u64 output plain, reg u32 len, reg u64 k n1, reg u32 ctr)
-{
-  stack u256[16] st1_8;
-  reg   u256[16]  k1_8;
 
-  st1_8 = init_x8(st1_8, k, n1, ctr);
+
+fn chacha20_more_than_256(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+{
+  stack u256[16] st;
+  reg   u256[16]  k;
+  stack u256 s_r16 s_r8;
+
+  s_r16, s_r8 = load_shufb_cmd();
+
+  st = init_x8(key, nonce, counter);
 
   while(len >= 512)
   {
-    k1_8 = copy_state_x8(st1_8);
-    k1_8 = rounds_x8(k1_8);
-    k1_8 = sum_states_x8(k1_8, st1_8);
-    output, plain, len = store_x8(output, plain, len, k1_8);
-    st1_8 = increment_counter_x8(st1_8);
+    k = copy_state_x8(st);
+    k = rounds_x8(k, s_r16, s_r8);
+    k = sum_states_x8(k, st);
+    output, plain, len = store_x8(output, plain, len, k);
+    st = increment_counter_x8(st);
   }
 
   if(len > 0)
   {
-    k1_8 = copy_state_x8(st1_8);
-    k1_8 = rounds_x8(k1_8);
-    k1_8 = sum_states_x8(k1_8, st1_8);
-    store_x8_last(output, plain, len, k1_8);
+    k = copy_state_x8(st);
+    k = rounds_x8(k, s_r16, s_r8);
+    k = sum_states_x8(k, st);
+    store_x8_last(output, plain, len, k);
   }
-
 }
 
-fn chacha20_less_than_257(reg u64 output plain, reg u32 len, reg u64 k n1, reg u32 ctr)
-{
-  reg u256[4] st12 k12 k34;
 
-  st12 = init_x2(k, n1, ctr); 
+
+fn chacha20_less_than_257(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+{
+  reg u256[4] st k1 k2;
+
+  st = init_x2(key, nonce, counter); 
 
   if(len > 128)
   {
-    k12, k34 = copy_state_x4(st12);
-    k12, k34 = rounds_x4(k12, k34);
-    k12, k34 = sum_states_x4(k12, k34, st12);
-    k12, k34 = perm_x4(k12, k34);
-    output, plain, len, k12 = store_x2(output, plain, len, k12);
-                              store_x2_last(output, plain, len, k34);
+    k1, k2 = copy_state_x4(st);
+    k1, k2 = rounds_x4(k1, k2);
+    k1, k2 = sum_states_x4(k1, k2, st);
+    k1, k2 = perm_x4(k1, k2);
+    output, plain, len, k1 = store_x2(output, plain, len, k1);
+                             store_x2_last(output, plain, len, k2);
   }
   else
   {
-    k12 = copy_state_x2(st12);
-    k12 = rounds_x2(k12);
-    k12 = sum_states_x2(k12, st12);
-    k12 = perm_x2(k12);
-          store_x2_last(output, plain, len, k12);
+    k1 = copy_state_x2(st);
+    k1 = rounds_x2(k1);
+    k1 = sum_states_x2(k1, st);
+    k1 = perm_x2(k1);
+         store_x2_last(output, plain, len, k1);
   }
 }
 
-export fn chacha20_avx2(reg u64 output plain, reg u32 len, reg u64 k n1, reg u32 ctr)
+
+
+export fn chacha20_avx2(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
 {
   if(len < 257)
-  { chacha20_less_than_257(output, plain, len, k, n1, ctr); }
+  { chacha20_less_than_257(output, plain, len, key, nonce, counter); }
   else
-  { chacha20_more_than_256(output, plain, len, k, n1, ctr); }
+  { chacha20_more_than_256(output, plain, len, key, nonce, counter); }
 }
-
