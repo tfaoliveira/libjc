@@ -5,6 +5,7 @@
 _chacha20_avx2:
 chacha20_avx2:
 	pushq	%rbp
+	pushq	%r15
 	subq	$1140, %rsp
   movq %rsp, %r15
   andq $-63, %rsp
@@ -69,6 +70,7 @@ Lchacha20_avx2$33:
 	vmovdqu	%ymm15, 576(%rsp)
 	movq	$0, %rax
 	jmp 	Lchacha20_avx2$34
+.p2align 6,,63
 Lchacha20_avx2$35:
 	vpaddd	%ymm4, %ymm0, %ymm0
 	vpaddd	%ymm6, %ymm2, %ymm2
@@ -993,6 +995,7 @@ Lchacha20_avx2$4:
 Lchacha20_avx2$2:
   movq %r15, %rsp
 	addq	$1140, %rsp
+	popq	%r15
 	popq	%rbp
 	ret 
 	.data
