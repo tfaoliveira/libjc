@@ -834,9 +834,9 @@ Lchacha20_avx2$12:
 	vpaddd	%ymm7, %ymm6, %ymm6
 	vpaddd	%ymm11, %ymm10, %ymm10
 	vpxor	%ymm6, %ymm5, %ymm5
-	vpxor	%ymm10, %ymm9, %ymm9
 	vpslld	$12, %ymm5, %ymm14
 	vpsrld	$20, %ymm5, %ymm5
+	vpxor	%ymm10, %ymm9, %ymm9
 	vpxor	%ymm14, %ymm5, %ymm5
 	vpslld	$12, %ymm9, %ymm14
 	vpsrld	$20, %ymm9, %ymm9
@@ -850,9 +850,9 @@ Lchacha20_avx2$12:
 	vpaddd	%ymm7, %ymm6, %ymm6
 	vpaddd	%ymm11, %ymm10, %ymm10
 	vpxor	%ymm6, %ymm5, %ymm5
-	vpxor	%ymm10, %ymm9, %ymm9
 	vpslld	$7, %ymm5, %ymm14
 	vpsrld	$25, %ymm5, %ymm5
+	vpxor	%ymm10, %ymm9, %ymm9
 	vpxor	%ymm14, %ymm5, %ymm5
 	vpslld	$7, %ymm9, %ymm14
 	vpsrld	$25, %ymm9, %ymm9
@@ -872,9 +872,9 @@ Lchacha20_avx2$12:
 	vpaddd	%ymm7, %ymm6, %ymm6
 	vpaddd	%ymm11, %ymm10, %ymm10
 	vpxor	%ymm6, %ymm5, %ymm5
-	vpxor	%ymm10, %ymm9, %ymm9
 	vpslld	$12, %ymm5, %ymm14
 	vpsrld	$20, %ymm5, %ymm5
+	vpxor	%ymm10, %ymm9, %ymm9
 	vpxor	%ymm14, %ymm5, %ymm5
 	vpslld	$12, %ymm9, %ymm14
 	vpsrld	$20, %ymm9, %ymm9
@@ -888,9 +888,9 @@ Lchacha20_avx2$12:
 	vpaddd	%ymm7, %ymm6, %ymm6
 	vpaddd	%ymm11, %ymm10, %ymm10
 	vpxor	%ymm6, %ymm5, %ymm5
-	vpxor	%ymm10, %ymm9, %ymm9
 	vpslld	$7, %ymm5, %ymm14
 	vpsrld	$25, %ymm5, %ymm5
+	vpxor	%ymm10, %ymm9, %ymm9
 	vpxor	%ymm14, %ymm5, %ymm5
 	vpslld	$7, %ymm9, %ymm14
 	vpsrld	$25, %ymm9, %ymm9
