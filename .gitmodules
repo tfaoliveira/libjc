@@ -1,0 +1,6 @@
+[submodule "bench/third_party/openssl"]
+	path = bench/third_party/openssl
+	url = https://github.com/openssl/openssl.git
+[submodule "bench/third_party/libsodium"]
+	path = bench/third_party/libsodium
+	url = https://github.com/jedisct1/libsodium.git
