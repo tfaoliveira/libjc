@@ -173,41 +173,22 @@ fn store(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k
 fn store_last(
   stack u64 s_output s_plain,
   stack u32 s_len,
-  reg u32[16] k1,
+  reg u32[16] k,
   stack u32 k15
 )
 {
   inline int i;
-  reg u64 j, output, plain;
-  reg u32 len;
-  stack u8[64] s_k1;
+  reg u64 j output plain;
+  reg u32 t len;
+  stack u32[16] s_k;
   reg u8 pi;
-  stack u32 k14;
 
-  // cast to u8
-  reg u32 t;
-
-  k14 = k1[14];
-
-  for i=0 to 14
-  { t = k1[i];
-    s_k1[4*i + 0] = (8u) t; t >>= 8;
-    s_k1[4*i + 1] = (8u) t; t >>= 8;
-    s_k1[4*i + 2] = (8u) t; t >>= 8;
-    s_k1[4*i + 3] = (8u) t;
-  }
-
-  k1[14] = k14;
-  k1[15] = k15;
-
-  for i=14 to 16
-  { t = k1[i];
-    s_k1[4*i + 0] = (8u) t; t >>= 8;
-    s_k1[4*i + 1] = (8u) t; t >>= 8;
-    s_k1[4*i + 2] = (8u) t; t >>= 8;
-    s_k1[4*i + 3] = (8u) t;
-  }
-
+  for i=0 to 15
+  { s_k[i] = k[i]; }
+  
+  t = k15;
+  s_k[15] = t;
+  
   // store
   output = s_output;
   plain = s_plain;
@@ -217,7 +198,7 @@ fn store_last(
   while(j < len)
   {
     pi = (u8)[plain + j];
-    pi ^= s_k1[(int)j];
+    pi ^= s_k[u8 (int)j];
     (u8)[output + j] = pi;
     j += 1;
   }

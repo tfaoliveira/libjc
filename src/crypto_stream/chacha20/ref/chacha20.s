@@ -10,7 +10,7 @@ chacha20_ref:
 	pushq	%r13
 	pushq	%r14
 	pushq	%r15
-	subq	$172, %rsp
+	subq	$108, %rsp
 	movq	%rdi, 8(%rsp)
 	movq	%rsi, (%rsp)
 	movl	%edx, 104(%rsp)
@@ -60,7 +60,7 @@ Lchacha20_ref$7:
 	movl	88(%rsp), %r13d
 	movl	92(%rsp), %r14d
 	movl	96(%rsp), %r15d
-	movl	$0, 28(%rsp)
+	movl	$0, 32(%rsp)
 	jmp 	Lchacha20_ref$8
 Lchacha20_ref$9:
 	addl	%edi, %eax
@@ -87,7 +87,7 @@ Lchacha20_ref$9:
 	addl	%r15d, %ebx
 	xorl	%ebx, %r9d
 	roll	$7, %r9d
-	movl	%r15d, 32(%rsp)
+	movl	%r15d, 28(%rsp)
 	movl	36(%rsp), %r15d
 	addl	%r8d, %ecx
 	xorl	%ecx, %r14d
@@ -138,7 +138,7 @@ Lchacha20_ref$9:
 	xorl	%ebx, %r8d
 	roll	$7, %r8d
 	movl	%r15d, 36(%rsp)
-	movl	32(%rsp), %r15d
+	movl	28(%rsp), %r15d
 	addl	%r10d, %edx
 	xorl	%edx, %r14d
 	roll	$16, %r14d
@@ -163,9 +163,9 @@ Lchacha20_ref$9:
 	addl	%r15d, %ebp
 	xorl	%ebp, %edi
 	roll	$7, %edi
-	incl	28(%rsp)
+	incl	32(%rsp)
 Lchacha20_ref$8:
-	cmpl	$10, 28(%rsp)
+	cmpl	$10, 32(%rsp)
 	jb  	Lchacha20_ref$9
 	addl	40(%rsp), %eax
 	addl	44(%rsp), %ecx
@@ -387,137 +387,23 @@ Lchacha20_ref$4:
 	addl	100(%rsp), %r15d
 	movl	%r15d, 32(%rsp)
 	movl	36(%rsp), %r15d
-	movl	%r15d, 36(%rsp)
-	movl	%eax, %eax
-	movb	%al, 108(%rsp)
-	shrl	$8, %eax
-	movb	%al, 109(%rsp)
-	shrl	$8, %eax
-	movb	%al, 110(%rsp)
-	shrl	$8, %eax
-	movb	%al, 111(%rsp)
-	movl	%ecx, %eax
-	movb	%al, 112(%rsp)
-	shrl	$8, %eax
-	movb	%al, 113(%rsp)
-	shrl	$8, %eax
-	movb	%al, 114(%rsp)
-	shrl	$8, %eax
-	movb	%al, 115(%rsp)
-	movl	%edx, %eax
-	movb	%al, 116(%rsp)
-	shrl	$8, %eax
-	movb	%al, 117(%rsp)
-	shrl	$8, %eax
-	movb	%al, 118(%rsp)
-	shrl	$8, %eax
-	movb	%al, 119(%rsp)
-	movl	%esi, %eax
-	movb	%al, 120(%rsp)
-	shrl	$8, %eax
-	movb	%al, 121(%rsp)
-	shrl	$8, %eax
-	movb	%al, 122(%rsp)
-	shrl	$8, %eax
-	movb	%al, 123(%rsp)
-	movl	%edi, %eax
-	movb	%al, 124(%rsp)
-	shrl	$8, %eax
-	movb	%al, 125(%rsp)
-	shrl	$8, %eax
-	movb	%al, 126(%rsp)
-	shrl	$8, %eax
-	movb	%al, 127(%rsp)
-	movl	%r8d, %eax
-	movb	%al, 128(%rsp)
-	shrl	$8, %eax
-	movb	%al, 129(%rsp)
-	shrl	$8, %eax
-	movb	%al, 130(%rsp)
-	shrl	$8, %eax
-	movb	%al, 131(%rsp)
-	movl	%r9d, %eax
-	movb	%al, 132(%rsp)
-	shrl	$8, %eax
-	movb	%al, 133(%rsp)
-	shrl	$8, %eax
-	movb	%al, 134(%rsp)
-	shrl	$8, %eax
-	movb	%al, 135(%rsp)
-	movl	%r10d, %eax
-	movb	%al, 136(%rsp)
-	shrl	$8, %eax
-	movb	%al, 137(%rsp)
-	shrl	$8, %eax
-	movb	%al, 138(%rsp)
-	shrl	$8, %eax
-	movb	%al, 139(%rsp)
-	movl	%r11d, %eax
-	movb	%al, 140(%rsp)
-	shrl	$8, %eax
-	movb	%al, 141(%rsp)
-	shrl	$8, %eax
-	movb	%al, 142(%rsp)
-	shrl	$8, %eax
-	movb	%al, 143(%rsp)
-	movl	%ebp, %eax
-	movb	%al, 144(%rsp)
-	shrl	$8, %eax
-	movb	%al, 145(%rsp)
-	shrl	$8, %eax
-	movb	%al, 146(%rsp)
-	shrl	$8, %eax
-	movb	%al, 147(%rsp)
-	movl	%ebx, %eax
-	movb	%al, 148(%rsp)
-	shrl	$8, %eax
-	movb	%al, 149(%rsp)
-	shrl	$8, %eax
-	movb	%al, 150(%rsp)
-	shrl	$8, %eax
-	movb	%al, 151(%rsp)
-	movl	%r12d, %eax
-	movb	%al, 152(%rsp)
-	shrl	$8, %eax
-	movb	%al, 153(%rsp)
-	shrl	$8, %eax
-	movb	%al, 154(%rsp)
-	shrl	$8, %eax
-	movb	%al, 155(%rsp)
-	movl	%r13d, %eax
-	movb	%al, 156(%rsp)
-	shrl	$8, %eax
-	movb	%al, 157(%rsp)
-	shrl	$8, %eax
-	movb	%al, 158(%rsp)
-	shrl	$8, %eax
-	movb	%al, 159(%rsp)
-	movl	%r14d, %eax
-	movb	%al, 160(%rsp)
-	shrl	$8, %eax
-	movb	%al, 161(%rsp)
-	shrl	$8, %eax
-	movb	%al, 162(%rsp)
-	shrl	$8, %eax
-	movb	%al, 163(%rsp)
-	movl	36(%rsp), %eax
-	movl	32(%rsp), %ecx
-	movl	%eax, %eax
-	movb	%al, 164(%rsp)
-	shrl	$8, %eax
-	movb	%al, 165(%rsp)
-	shrl	$8, %eax
-	movb	%al, 166(%rsp)
-	shrl	$8, %eax
-	movb	%al, 167(%rsp)
-	movl	%ecx, %ecx
-	movb	%cl, 168(%rsp)
-	shrl	$8, %ecx
-	movb	%cl, 169(%rsp)
-	shrl	$8, %ecx
-	movb	%cl, 170(%rsp)
-	shrl	$8, %ecx
-	movb	%cl, 171(%rsp)
+	movl	%eax, 40(%rsp)
+	movl	%ecx, 44(%rsp)
+	movl	%edx, 48(%rsp)
+	movl	%esi, 52(%rsp)
+	movl	%edi, 56(%rsp)
+	movl	%r8d, 60(%rsp)
+	movl	%r9d, 64(%rsp)
+	movl	%r10d, 68(%rsp)
+	movl	%r11d, 72(%rsp)
+	movl	%ebp, 76(%rsp)
+	movl	%ebx, 80(%rsp)
+	movl	%r12d, 84(%rsp)
+	movl	%r13d, 88(%rsp)
+	movl	%r14d, 92(%rsp)
+	movl	%r15d, 96(%rsp)
+	movl	32(%rsp), %eax
+	movl	%eax, 100(%rsp)
 	movq	8(%rsp), %rax
 	movq	(%rsp), %rcx
 	movl	104(%rsp), %edx
@@ -525,14 +411,14 @@ Lchacha20_ref$4:
 	jmp 	Lchacha20_ref$2
 Lchacha20_ref$3:
 	movb	(%rcx,%rsi), %dil
-	xorb	108(%rsp,%rsi), %dil
+	xorb	40(%rsp,%rsi), %dil
 	movb	%dil, (%rax,%rsi)
 	incq	%rsi
 Lchacha20_ref$2:
 	cmpl	%edx, %esi
 	jb  	Lchacha20_ref$3
 Lchacha20_ref$1:
-	addq	$172, %rsp
+	addq	$108, %rsp
 	popq	%r15
 	popq	%r14
 	popq	%r13
