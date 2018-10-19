@@ -43,24 +43,22 @@ fn copy_state(stack u32[16] st) -> reg u32[16], stack u32
 
 
 
-fn quarter_round(reg u32[16] k, inline int a b c d) -> reg u32[16]
+fn line(reg u32[16] k, inline int a b c r) -> reg u32[16]
 {
   k[a] += k[b];
-  k[d] ^= k[a];
-  _, _, k[d] = #x86_ROL_32(k[d], 16);
+  k[c] ^= k[a];
+  _, _, k[c] = #x86_ROL_32(k[c], r);
+  return k;
+}
 
-  k[c] += k[d];
-  k[b] ^= k[c];
-  _, _, k[b] = #x86_ROL_32(k[b], 12);
 
-  k[a] += k[b];
-  k[d] ^= k[a];
-  _, _, k[d] = #x86_ROL_32(k[d], 8);
 
-  k[c] += k[d];
-  k[b] ^= k[c];
-  _, _, k[b] = #x86_ROL_32(k[b], 7);
-
+fn quarter_round(reg u32[16] k, inline int a b c d) -> reg u32[16]
+{
+  k = line(k, a, b, d, 16);
+  k = line(k, c, d, b, 12);
+  k = line(k, a, b, d, 8);
+  k = line(k, c, d, b, 7);
   return k;
 }
 
@@ -169,13 +167,7 @@ fn store(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k
 
 
 
-// TODO : rewrite me: cast to u8 section disappears; pi ^= s_k1[(int)j]; -> pi ^= k1[u8@(int)j];
-fn store_last(
-  stack u64 s_output s_plain,
-  stack u32 s_len,
-  reg u32[16] k,
-  stack u32 k15
-)
+fn store_last(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k15)
 {
   inline int i;
   reg u64 j output plain;
@@ -183,9 +175,9 @@ fn store_last(
   stack u32[16] s_k;
   reg u8 pi;
 
+  // copy k to stack
   for i=0 to 15
   { s_k[i] = k[i]; }
-  
   t = k15;
   s_k[15] = t;
   
