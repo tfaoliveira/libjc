@@ -107,23 +107,6 @@ fn store(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, 
   { k[i] ^= (u32)[plain + 4*i];
     (u32)[output + 4*i] = k[i]; }
 
-/*  reg u64 j;
-  stack u32[16] s_k;
-  reg u8 pi;
-
-  // copy k to stack
-  s_k = k;
-  
-  // store
-  j = 0;
-  while(j < 64)
-  {
-    pi = (u8)[plain + j];
-    pi ^= s_k[u8 (int)j];
-    (u8)[output + j] = pi;
-    j += 1;
-  }
-*/
   output, plain, len = update_ptr(output, plain, len, 64);
 
   return output, plain, len;
