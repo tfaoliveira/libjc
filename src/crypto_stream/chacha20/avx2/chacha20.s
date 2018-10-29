@@ -8,7 +8,7 @@ chacha20_avx2:
 	pushq	%r15
 	subq	$1156, %rsp
   movq %rsp, %r15
-  andq $-63, %rsp
+  andq $-31, %rsp
 	cmpl	$257, %edx
 	jb  	Lchacha20_avx2$1
 	vmovdqu	g_r16(%rip), %ymm0
@@ -70,7 +70,7 @@ Lchacha20_avx2$30:
 	vmovdqu	%ymm15, 1088(%rsp)
 	movq	$0, %rax
 	jmp 	Lchacha20_avx2$31
-.p2align 6,,63
+.p2align 5,,
 Lchacha20_avx2$32:
 	vpaddd	%ymm4, %ymm0, %ymm0
 	vpaddd	%ymm6, %ymm2, %ymm2
