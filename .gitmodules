@@ -7,6 +7,7 @@
 [submodule "bench/third_party/hacl-star"]
 	path = bench/third_party/hacl-star
 	url = https://github.com/project-everest/hacl-star.git
+  ignore = dirty
 [submodule "bench/third_party/compcert/CompCert"]
 	path = bench/third_party/compcert/CompCert
 	url = https://github.com/AbsInt/CompCert.git
