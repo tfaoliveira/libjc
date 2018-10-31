@@ -1,0 +1,30 @@
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "ubuntu/xenial64"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "8192"
+  end
+
+  config.vm.synced_folder "../../../", "/home/vagrant/libjc"
+
+  config.vm.provision "shell", binary: true, inline: <<-SHELL
+    apt-get update
+    apt-get -q -y install sudo m4 opam
+    opam init -a
+    opam switch 4.06.1    
+    opam update
+    eval `opam config env`
+    opam remote add coq-released  https://coq.inria.fr/opam/released
+  	opam remote add coq-core-dev  https://coq.inria.fr/opam/core-dev
+	  opam remote add coq-extra-dev https://coq.inria.fr/opam/extra-dev
+    opam pin add -n coq 8.8.1
+    opam pin add -n coq-mathcomp-ssreflect 1.7.0
+    opam install depext
+    opam depext conf-m4.1
+    opam install coq coq-mathcomp-ssreflect coq-mathcomp-algebra menhir
+    opam depext conf-gmp.1
+    (cd /home/vagrant/libjc/bench/third_party/compcert/CompCert && ./configure x86_64-linux && make && make install)
+  SHELL
+
+end

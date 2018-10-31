@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# usage: ./sync # without args syncs jasmin implementations
+#        ./sync openssl # syncs the bindings of openssl
+
+version=`cat config/version`
+
+if [ "$#" -eq 0 ]; then
+  find ../src/ -name "*.s" -printf "%h\n" | sort -u | while read implementationdir
+  do
+    dir=`echo $implementationdir | sed -e 's/^\.\.\/src\///'`
+    dirname=`dirname $dir`
+    basename=`basename $dir`;
+
+    supercopdir=supercop-$version/$dirname/jazz/$basename/;
+    bindingdir=bindings/$dirname/jazz/;
+
+    mkdir -p $supercopdir
+    rm -fr $supercopdir/*
+    find $implementationdir -maxdepth 1 -type f -exec cp {} $supercopdir \;
+    find $bindingdir -maxdepth 1 -type f -exec cp {} $supercopdir \;
+
+    if [ -f $supercopdir/impl.h ]; then
+      sed -i "s/IMPL/$basename/" $supercopdir/impl.h
+    fi
+  done
+  exit
+fi
+
+find  bindings/ -name "api.h" | grep $1 | while read binding
+do
+  bindingdir=`dirname $binding`
+  supercopdir=supercop-$version/`echo $bindingdir | sed -e 's/^bindings\///'`
+  mkdir -p $supercopdir
+  rm -fr $supercopdir/*
+  find $bindingdir -maxdepth 1 -type f -exec cp {} $supercopdir \;
+done

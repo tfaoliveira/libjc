@@ -1,0 +1,15 @@
+#!/bin/bash
+
+version=`cat config/version`
+bench=`cat config/work`
+
+if [ "$#" -eq 1 ]; then
+ bench=$1
+fi
+
+cat config/$bench | egrep -v "^$|^#" | while read implementation
+do
+ (cd supercop-$version && (./do-part $implementation || true))
+ implementationid=`echo "$implementation" | sed -e 's/\//_/g' -e 's/\ /_/g'`.data
+ find supercop-$version/bench/ -name data -exec cp {} data/$implementationid \;
+done

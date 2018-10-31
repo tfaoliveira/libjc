@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# libsodium :
+# - 2 versions will be benchmarked: static and static with assembly disabled
+# - from the help of libsodium configure regarding --disable-asm option:
+#   "Do not compile assembly code -- As a side effect,
+#    this disables CPU-specific implementations on
+#    non-Windows platforms."
+#
+# - symbols in libsodium.a will be renamed to avoid conflicts with supercop
+
+# libsodium static 
+(cd third_party/libsodium/ && \
+  make distclean && \ 
+  ./configure --enable-static && \
+  make && \
+  make check && \
+  cp src/libsodium/.libs/libsodium.a ../../bindings/crypto_stream/chacha20/libsodium/static/libsodium_static.a
+)
+(cd bindings/crypto_stream/chacha20/libsodium/static/ && \
+  nm libsodium_static.a | grep " T " | awk '{print $3" supercop_static_"$3}' > symbols_to_rename && \
+  objcopy --redefine-syms=symbols_to_rename libsodium_static.a && \
+  rm symbols_to_rename
+)
+
+# libsodium static_disable_asm
+(cd third_party/libsodium/ && \
+  make distclean && \ 
+  ./configure --enable-static --disable-asm && \
+  make && \
+  make check && \
+  cp src/libsodium/.libs/libsodium.a ../../bindings/crypto_stream/chacha20/libsodium/static_disable_asm/libsodium_static_disable_asm.a
+)
+(cd bindings/crypto_stream/chacha20/libsodium/static_disable_asm/ && \
+  nm libsodium_static_disable_asm.a | grep " T " | awk '{print $3" supercop_static_disable_asm_"$3}' > symbols_to_rename && \
+  objcopy --redefine-syms=symbols_to_rename libsodium_static_disable_asm.a && \
+  rm symbols_to_rename
+)
+
+
+
+
+# openssl static
+(cd third_party/openssl/ && \
+  make distclean && \ 
+  ./Configure no-shared linux-x86_64 && \
+  make && \
+  cp libcrypto.a ../../bindings/crypto_stream/chacha20/openssl/static/libcrypto_static.a
+)
+(cd bindings/crypto_stream/chacha20/openssl/static/ && \
+  nm libcrypto_static.a | grep " T " | awk '{print $3" supercop_static_"$3}' > symbols_to_rename && \
+  objcopy --redefine-syms=symbols_to_rename libcrypto_static.a && \
+  rm symbols_to_rename
+)
+
+# openssl no asm
+(cd third_party/openssl/ && \
+  make distclean && \ 
+  ./Configure no-shared no-asm linux-x86_64 && \
+  make && \
+  cp libcrypto.a ../../bindings/crypto_stream/chacha20/openssl/static_no_asm/libcrypto_static_no_asm.a
+)
+(cd bindings/crypto_stream/chacha20/openssl/static_no_asm/ && \
+  nm libcrypto_static_no_asm.a | grep " T " | awk '{print $3" supercop_static_no_asm_"$3}' > symbols_to_rename && \
+  objcopy --redefine-syms=symbols_to_rename libcrypto_static_no_asm.a && \
+  rm symbols_to_rename
+)
+
+
+
+# hacl-star : gcc and gcc_vec
+(cd third_party/hacl-star/ && \
+  make clean-build && \ 
+  make build && \
+  cp build/libhacl.a ../../bindings/crypto_stream/chacha20/hacl-star/gcc/libhacl_gcc.a
+)
+(cd bindings/crypto_stream/chacha20/hacl-star/gcc/ && \
+  nm libhacl_gcc.a | grep " T " | awk '{print $3" hacl_star_gcc_"$3}' > symbols_to_rename && \
+  objcopy --redefine-syms=symbols_to_rename libhacl_gcc.a && \
+  rm symbols_to_rename
+  cp libhacl_gcc.a ../gcc_vec/
+)
+
+## hacl-star : compcert (this should be ran in a machine with ccomp)
+#(cd third_party/hacl-star/snapshots/hacl-c-compcert && \
+#  make clean && \
+#  make libhacl.a && \ 
+#  cp libhacl.a ../../../../bindings/crypto_stream/chacha20/hacl-star/compcert/libhacl_compcert.a
+#)
+#(cd bindings/crypto_stream/chacha20/hacl-star/compcert/ && \
+#  nm libhacl_compcert.a | grep " T " | awk '{print $3" hacl_star_compcert_"$3}' > symbols_to_rename && \
+#  objcopy --redefine-syms=symbols_to_rename libhacl_compcert.a && \
+#  rm symbols_to_rename
+#)
