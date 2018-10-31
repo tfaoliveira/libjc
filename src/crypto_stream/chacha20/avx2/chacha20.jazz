@@ -6,12 +6,12 @@ u256 g_cnt_inc  = (8u32)[8,8,8,8,8,8,8,8];
 u256 g_p1       = (2u128)[1,0];
 u256 g_p2       = (2u128)[2,2];
 
-u128 g_sigma   = 0x6b20657479622d323320646e61707865;
-u32 g_sigma0   = 0x61707865;
-u32 g_sigma1   = 0x3320646e;
-u32 g_sigma2   = 0x79622d32;
-u32 g_sigma3   = 0x6b206574;
-u128 g_p0      = 0;
+u128 g_sigma    = 0x6b20657479622d323320646e61707865;
+u32  g_sigma0   = 0x61707865;
+u32  g_sigma1   = 0x3320646e;
+u32  g_sigma2   = 0x79622d32;
+u32  g_sigma3   = 0x6b206574;
+u128 g_p0       = 0;
 
 param int i_0 = 0;
 param int i_1 = 1;
@@ -40,6 +40,7 @@ fn load_shufb_cmd() -> stack u256, stack u256
   r8 = g_r8;
   s_r16 = r16;
   s_r8 = r8;
+
   return s_r16, s_r8;
 }
 
@@ -159,7 +160,6 @@ fn sum_states_x2(reg u256[4] k st) -> reg u256[4]
 
 fn sum_states_x4(reg u256[4] k1 k2 st) -> reg u256[4], reg u256[4]
 {
-  inline int i;
   k1 = sum_states_x2(k1, st);
   k2 = sum_states_x2(k2, st);
   k2[3] +8u32= g_p2;
