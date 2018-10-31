@@ -4,3 +4,6 @@
 [submodule "bench/third_party/libsodium"]
 	path = bench/third_party/libsodium
 	url = https://github.com/jedisct1/libsodium.git
+[submodule "bench/third_party/hacl-star"]
+	path = bench/third_party/hacl-star
+	url = https://github.com/project-everest/hacl-star.git
