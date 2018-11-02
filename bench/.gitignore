@@ -3,3 +3,4 @@ supercop-*
 .vagrant
 *.log
 data/
+third_party_build/

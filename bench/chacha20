@@ -9,7 +9,7 @@ ls data/crypto_stream_chacha20_* | xargs rm
 ./sync libsodium
 ./sync hacl-star
 
-# run benchmarks... this should take some time
+## run benchmarks... this should take some time
 ./bench chacha20
 
 # move openssl static results to openssl static avx2

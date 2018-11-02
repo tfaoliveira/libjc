@@ -5,6 +5,7 @@
 
 version=`cat config/version`
 
+# sync jasmin implementations
 if [ "$#" -eq 0 ]; then
   find ../src/ -name "*.s" -printf "%h\n" | sort -u | while read implementationdir
   do
@@ -27,11 +28,15 @@ if [ "$#" -eq 0 ]; then
   exit
 fi
 
-find  bindings/ -name "api.h" | grep $1 | while read binding
+# sync third_party libraries bindings
+impl="$1"
+find  bindings/ -name "api.h" | grep $impl | while read binding
 do
   bindingdir=`dirname $binding`
   supercopdir=supercop-$version/`echo $bindingdir | sed -e 's/^bindings\///'`
+  libname=third_party_build/`echo $bindingdir | sed -e "s/.*$impl\//${impl}_/"`.a
   mkdir -p $supercopdir
   rm -fr $supercopdir/*
   find $bindingdir -maxdepth 1 -type f -exec cp {} $supercopdir \;
+  cp $libname $supercopdir
 done
