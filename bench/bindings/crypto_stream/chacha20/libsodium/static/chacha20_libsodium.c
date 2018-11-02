@@ -10,7 +10,7 @@ int crypto_stream(
 )
 {
   unsigned char nonce[12];
-  supercop_static_sodium_init();
+  libsodium_static_sodium_init();
   memset(out, 0, outlen);
   memset(nonce, 0, 4);
   memcpy(nonce+4, n, 8);
@@ -27,7 +27,7 @@ int crypto_stream_xor(
 )
 {
   unsigned char nonce[12];
-  supercop_static_sodium_init();
+  libsodium_static_sodium_init();
   memset(nonce, 0, 4);
   memcpy(nonce+4, n, 8);
   libsodium_static_crypto_stream_chacha20_ietf_xor(out, in, inlen, nonce, k);

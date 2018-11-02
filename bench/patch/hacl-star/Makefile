@@ -41,6 +41,7 @@ libhacl.a: $(FILES)
 	$(CC) $(LIBFLAGS) kremlib.c -c -o kremlib.o
 	$(CC) $(LIBFLAGS) Hacl_Policies.c -c -o Hacl_Policies.o
 	$(CC) $(LIBFLAGS) NaCl.c -c -o NaCl.o
+	$(CC) $(LIBFLAGS) FStar.c -c -o FStar.o
 	ar rc $@ *.o
 	ranlib $@
 
