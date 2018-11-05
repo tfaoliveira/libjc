@@ -25,12 +25,10 @@ poly1305_ref3:
 	movq	$0, %rbp
 	movq	$0, %rbx
 	movq	%rdx, %r12
-	jmp 	Lpoly1305_ref3$6
-Lpoly1305_ref3$7:
+	jmp 	Lpoly1305_ref3$4
+Lpoly1305_ref3$5:
 	movq	(%rsi), %rax
 	movq	8(%rsi), %rdx
-	addq	$16, %rsi
-	addq	$-16, %r12
 	addq	%rax, %r11
 	adcq	%rdx, %rbp
 	adcq	$1, %rbx
@@ -38,11 +36,11 @@ Lpoly1305_ref3$7:
 	mulq	%r8
 	movq	%rax, %r13
 	movq	%rdx, %r14
-	movq	$0, %r15
 	movq	%rbp, %rax
 	mulq	%r10
 	addq	%rax, %r13
 	adcq	%rdx, %r14
+	movq	$0, %r15
 	movq	%r11, %rax
 	mulq	%r9
 	addq	%rax, %r14
@@ -62,85 +60,33 @@ Lpoly1305_ref3$7:
 	movq	%rbx, %rax
 	movq	%rbx, %rdx
 	andq	$3, %rbx
-	andq	$-4, %rax
-	shrq	$2, %rdx
-	addq	%rax, %rdx
-	addq	%rdx, %r11
+	shrq	$2, %rax
+	andq	$-4, %rdx
+	addq	%rdx, %rax
+	addq	%rax, %r11
 	adcq	$0, %rbp
 	adcq	$0, %rbx
-Lpoly1305_ref3$6:
+	addq	$16, %rsi
+	addq	$-16, %r12
+Lpoly1305_ref3$4:
 	cmpq	$16, %r12
-	jnb 	Lpoly1305_ref3$7
+	jnb 	Lpoly1305_ref3$5
 	cmpq	$0, %r12
 	jbe 	Lpoly1305_ref3$1
+	movq	$0, (%rsp)
+	movq	$0, 8(%rsp)
 	movq	$0, %rax
-	jmp 	Lpoly1305_ref3$4
-Lpoly1305_ref3$5:
+	jmp 	Lpoly1305_ref3$2
+Lpoly1305_ref3$3:
 	movb	(%rsi,%rax), %dl
 	movb	%dl, (%rsp,%rax)
 	incq	%rax
-Lpoly1305_ref3$4:
-	cmpq	%r12, %rax
-	jb  	Lpoly1305_ref3$5
-	movb	$1, (%rsp,%rax)
-	incq	%rax
-	jmp 	Lpoly1305_ref3$2
-Lpoly1305_ref3$3:
-	movb	$0, (%rsp,%rax)
-	incq	%rax
 Lpoly1305_ref3$2:
-	cmpq	$16, %rax
+	cmpq	%r12, %rax
 	jb  	Lpoly1305_ref3$3
-	movq	$0, %rax
-	movq	$0, %rdx
-	movzbq	(%rsp), %rsi
-	shlq	$0, %rsi
-	orq 	%rsi, %rax
-	movzbq	1(%rsp), %rsi
-	shlq	$8, %rsi
-	orq 	%rsi, %rax
-	movzbq	2(%rsp), %rsi
-	shlq	$16, %rsi
-	orq 	%rsi, %rax
-	movzbq	3(%rsp), %rsi
-	shlq	$24, %rsi
-	orq 	%rsi, %rax
-	movzbq	4(%rsp), %rsi
-	shlq	$32, %rsi
-	orq 	%rsi, %rax
-	movzbq	5(%rsp), %rsi
-	shlq	$40, %rsi
-	orq 	%rsi, %rax
-	movzbq	6(%rsp), %rsi
-	shlq	$48, %rsi
-	orq 	%rsi, %rax
-	movzbq	7(%rsp), %rsi
-	shlq	$56, %rsi
-	orq 	%rsi, %rax
-	movzbq	8(%rsp), %rsi
-	shlq	$0, %rsi
-	orq 	%rsi, %rdx
-	movzbq	9(%rsp), %rsi
-	shlq	$8, %rsi
-	orq 	%rsi, %rdx
-	movzbq	10(%rsp), %rsi
-	shlq	$16, %rsi
-	orq 	%rsi, %rdx
-	movzbq	11(%rsp), %rsi
-	shlq	$24, %rsi
-	orq 	%rsi, %rdx
-	movzbq	12(%rsp), %rsi
-	shlq	$32, %rsi
-	orq 	%rsi, %rdx
-	movzbq	13(%rsp), %rsi
-	shlq	$40, %rsi
-	orq 	%rsi, %rdx
-	movzbq	14(%rsp), %rsi
-	shlq	$48, %rsi
-	orq 	%rsi, %rdx
-	movzbq	15(%rsp), %rsi
-	shlq	$56, %rsi
-	orq 	%rsi, %rdx
+	movb	$1, (%rsp,%rax)
+	movq	(%rsp), %rax
+	movq	8(%rsp), %rdx
 	addq	%rax, %r11
 	adcq	%rdx, %rbp
 	adcq	$0, %rbx
@@ -148,11 +94,11 @@ Lpoly1305_ref3$2:
 	mulq	%r8
 	movq	%rax, %rsi
 	movq	%rdx, %r12
-	movq	$0, %r13
 	movq	%rbp, %rax
 	mulq	%r10
 	addq	%rax, %rsi
 	adcq	%rdx, %r12
+	movq	$0, %r13
 	movq	%r11, %rax
 	mulq	%r9
 	addq	%rax, %r12
@@ -172,10 +118,10 @@ Lpoly1305_ref3$2:
 	movq	%rbx, %rax
 	movq	%rbx, %rdx
 	andq	$3, %rbx
-	andq	$-4, %rax
-	shrq	$2, %rdx
-	addq	%rax, %rdx
-	addq	%rdx, %r11
+	shrq	$2, %rax
+	andq	$-4, %rdx
+	addq	%rdx, %rax
+	addq	%rax, %r11
 	adcq	$0, %rbp
 	adcq	$0, %rbx
 Lpoly1305_ref3$1:
@@ -186,7 +132,6 @@ Lpoly1305_ref3$1:
 	adcq	$0, %rdx
 	adcq	$0, %rsi
 	shrq	$2, %rsi
-	andq	$1, %rsi
 	negq	%rsi
 	xorq	%r11, %rax
 	xorq	%rbp, %rdx
