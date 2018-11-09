@@ -333,15 +333,13 @@ fn freeze(reg u64[3] h) -> reg u64[3]
 
 
 
-export fn poly1305_ref3(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
+fn poly1305_ref3_(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[2] r, reg u64 r54)
 {
   inline int i;
   reg u64[3] h;
-  reg u64[2] r, m, s;
-  reg u64 len, r54;
+  reg u64[2] m, s;
+  reg u64 len;
 
-  r, r54 = clamp(k);
-  k += 16;
   for i=0 to 3 { h[i] = 0; }
 
   len = inlen;
