@@ -2,11 +2,5 @@
 
 export fn poly1305_ref3(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
 {
-  reg u64[2] r;
-  reg u64 r54;
-
-  r, r54 = clamp(k);
-  k += 16;
-
-  poly1305_ref3_(out, in, inlen, k, r, r54);
+  poly1305_ref3_local(out, in, inlen, k);
 }

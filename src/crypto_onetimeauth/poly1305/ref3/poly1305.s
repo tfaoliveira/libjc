@@ -11,61 +11,61 @@ poly1305_ref3:
 	pushq	%r14
 	pushq	%r15
 	subq	$16, %rsp
-	movq	(%rcx), %r8
-	movq	8(%rcx), %r9
+	movq	$0, %r8
+	movq	$0, %r9
+	movq	$0, %r10
+	movq	(%rcx), %r11
+	movq	8(%rcx), %rbp
 	movq	$1152921487695413247, %rax
-	andq	%rax, %r8
+	andq	%rax, %r11
 	movq	$1152921487695413244, %rax
-	andq	%rax, %r9
-	movq	%r9, %r10
-	shrq	$2, %r10
-	addq	%r9, %r10
+	andq	%rax, %rbp
+	movq	%rbp, %rbx
+	shrq	$2, %rbx
+	addq	%rbp, %rbx
 	addq	$16, %rcx
-	movq	$0, %r11
-	movq	$0, %rbp
-	movq	$0, %rbx
 	movq	%rdx, %r12
 	jmp 	Lpoly1305_ref3$4
 Lpoly1305_ref3$5:
 	movq	(%rsi), %rax
 	movq	8(%rsi), %rdx
-	addq	%rax, %r11
-	adcq	%rdx, %rbp
-	adcq	$1, %rbx
-	movq	%r11, %rax
-	mulq	%r8
+	addq	%rax, %r8
+	adcq	%rdx, %r9
+	adcq	$1, %r10
+	movq	%r8, %rax
+	mulq	%r11
 	movq	%rax, %r13
 	movq	%rdx, %r14
-	movq	%rbp, %rax
-	mulq	%r10
+	movq	%r9, %rax
+	mulq	%rbx
 	addq	%rax, %r13
 	adcq	%rdx, %r14
 	movq	$0, %r15
-	movq	%r11, %rax
-	mulq	%r9
+	movq	%r8, %rax
+	mulq	%rbp
 	addq	%rax, %r14
 	adcq	%rdx, %r15
-	movq	%rbp, %rax
-	mulq	%r8
+	movq	%r9, %rax
+	mulq	%r11
 	addq	%rax, %r14
 	adcq	%rdx, %r15
-	movq	%rbx, %rax
-	imulq	%r10, %rax
+	movq	%r10, %rax
+	imulq	%rbx, %rax
 	addq	%rax, %r14
 	adcq	$0, %r15
-	imulq	%r8, %rbx
-	movq	%r13, %r11
-	movq	%r14, %rbp
-	addq	%r15, %rbx
-	movq	%rbx, %rax
-	movq	%rbx, %rdx
-	andq	$3, %rbx
+	imulq	%r11, %r10
+	movq	%r13, %r8
+	movq	%r14, %r9
+	addq	%r15, %r10
+	movq	%r10, %rax
+	movq	%r10, %rdx
+	andq	$3, %r10
 	shrq	$2, %rax
 	andq	$-4, %rdx
 	addq	%rdx, %rax
-	addq	%rax, %r11
-	adcq	$0, %rbp
-	adcq	$0, %rbx
+	addq	%rax, %r8
+	adcq	$0, %r9
+	adcq	$0, %r10
 	addq	$16, %rsi
 	addq	$-16, %r12
 Lpoly1305_ref3$4:
@@ -87,64 +87,64 @@ Lpoly1305_ref3$2:
 	movb	$1, (%rsp,%rax)
 	movq	(%rsp), %rax
 	movq	8(%rsp), %rdx
-	addq	%rax, %r11
-	adcq	%rdx, %rbp
-	adcq	$0, %rbx
-	movq	%r11, %rax
-	mulq	%r8
+	addq	%rax, %r8
+	adcq	%rdx, %r9
+	adcq	$0, %r10
+	movq	%r8, %rax
+	mulq	%r11
 	movq	%rax, %rsi
 	movq	%rdx, %r12
-	movq	%rbp, %rax
-	mulq	%r10
+	movq	%r9, %rax
+	mulq	%rbx
 	addq	%rax, %rsi
 	adcq	%rdx, %r12
 	movq	$0, %r13
-	movq	%r11, %rax
-	mulq	%r9
+	movq	%r8, %rax
+	mulq	%rbp
 	addq	%rax, %r12
 	adcq	%rdx, %r13
-	movq	%rbp, %rax
-	mulq	%r8
+	movq	%r9, %rax
+	mulq	%r11
 	addq	%rax, %r12
 	adcq	%rdx, %r13
-	movq	%rbx, %rax
-	imulq	%r10, %rax
+	movq	%r10, %rax
+	imulq	%rbx, %rax
 	addq	%rax, %r12
 	adcq	$0, %r13
-	imulq	%r8, %rbx
-	movq	%rsi, %r11
-	movq	%r12, %rbp
-	addq	%r13, %rbx
-	movq	%rbx, %rax
-	movq	%rbx, %rdx
-	andq	$3, %rbx
+	imulq	%r11, %r10
+	movq	%rsi, %r8
+	movq	%r12, %r9
+	addq	%r13, %r10
+	movq	%r10, %rax
+	movq	%r10, %rdx
+	andq	$3, %r10
 	shrq	$2, %rax
 	andq	$-4, %rdx
 	addq	%rdx, %rax
-	addq	%rax, %r11
-	adcq	$0, %rbp
-	adcq	$0, %rbx
+	addq	%rax, %r8
+	adcq	$0, %r9
+	adcq	$0, %r10
 Lpoly1305_ref3$1:
-	movq	%r11, %rax
-	movq	%rbp, %rdx
-	movq	%rbx, %rsi
+	movq	%r8, %rax
+	movq	%r9, %rdx
+	movq	%r10, %rsi
 	addq	$5, %rax
 	adcq	$0, %rdx
 	adcq	$0, %rsi
 	shrq	$2, %rsi
 	negq	%rsi
-	xorq	%r11, %rax
-	xorq	%rbp, %rdx
+	xorq	%r8, %rax
+	xorq	%r9, %rdx
 	andq	%rsi, %rax
 	andq	%rsi, %rdx
-	xorq	%rax, %r11
-	xorq	%rdx, %rbp
+	xorq	%rax, %r8
+	xorq	%rdx, %r9
 	movq	(%rcx), %rax
 	movq	8(%rcx), %rcx
-	addq	%rax, %r11
-	adcq	%rcx, %rbp
-	movq	%r11, (%rdi)
-	movq	%rbp, 8(%rdi)
+	addq	%rax, %r8
+	adcq	%rcx, %r9
+	movq	%r8, (%rdi)
+	movq	%r9, 8(%rdi)
 	addq	$16, %rsp
 	popq	%r15
 	popq	%r14

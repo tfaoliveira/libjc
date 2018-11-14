@@ -58,6 +58,7 @@ fn clamp(reg u64 k) -> reg u64[2], reg u64
 }
 
 
+
 // h += m where
 //   h = 2**0 * h[0] + 2**64 * h[1] + 2**128 * h[2]
 //   m = 2**0 * m[0] + 2**64 * m[1] + 2**128 * b
@@ -333,25 +334,44 @@ fn freeze(reg u64[3] h) -> reg u64[3]
 
 
 
-fn poly1305_ref3_(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[2] r, reg u64 r54)
+fn poly1305_ref3_setup(reg u64 k) -> reg u64[3], reg u64[2], reg u64, reg u64
 {
   inline int i;
   reg u64[3] h;
-  reg u64[2] m, s;
-  reg u64 len;
+  reg u64[2] r;
+  reg u64 len r54;
 
   for i=0 to 3 { h[i] = 0; }
+  r, r54 = clamp(k);
+  k += 16;
+  return h, r, r54, k;
+}
 
-  len = inlen;
-  while(len >= 16)
+
+
+fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64, reg u64, reg u64[3]
+{
+  reg u64[2] m;
+
+  while(inlen >= 16)
   { m = load(in);
     h = add_bit(h, m, 1);
     h = mulmod(h, r, r54);
-    in += 16; len -= 16;
+    in += 16;
+    inlen -= 16;
   }
 
-  if(len > 0)
-  { m = load_last(in, len);
+  return in, inlen, h;
+}
+
+
+
+fn poly1305_ref3_last(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[3] h, reg u64[2] r, reg u64 r54)
+{
+  reg u64[2] m, s;
+
+  if(inlen > 0)
+  { m = load_last(in, inlen);
     h = add_bit(h, m, 0); // load last already sets the last bit
     h = mulmod(h, r, r54);
   }
@@ -362,3 +382,21 @@ fn poly1305_ref3_(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[2] 
 
   store(out, h);
 }
+
+
+
+fn poly1305_ref3_local(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
+{
+  reg u64[3] h;
+  reg u64[2] r;
+  reg u64 len r54;
+
+  h, r, r54, k = poly1305_ref3_setup(k);
+  len = inlen;
+  in, len, h = poly1305_ref3_update(in, len, h, r, r54);
+  poly1305_ref3_last(out, in, len, k, h, r, r54);
+}
+
+
+
+
