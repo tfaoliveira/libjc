@@ -11,3 +11,10 @@
 [submodule "bench/third_party/compcert/CompCert"]
 	path = bench/third_party/compcert/CompCert
 	url = https://github.com/AbsInt/CompCert.git
+[submodule "bench/third_party/jasmin/jasmin"]
+	path = bench/third_party/jasmin/jasmin
+	url = git@github.com:jasmin-lang/jasmin.git
+	branch = array_cast
+[submodule "bench/third_party/jasmin/coqword"]
+	path = bench/third_party/jasmin/coqword
+	url = git@github.com:jasmin-lang/coqword.git
