@@ -1,3 +1,5 @@
+![Jazz vs HACL* (CompCert 3.4)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/chacha20_xor_cycles_(jazz%7Chacl_star_compcert)_16_512.svg)
+
 [[https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/chacha20_xor_cycles__16_512.svg]]
 [[https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/chacha20_xor_cycles__512_4096.svg]]
 [[https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/chacha20_xor_cycles__4096_16384.svg]]
