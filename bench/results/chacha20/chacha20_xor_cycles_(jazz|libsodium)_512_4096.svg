@@ -49,33 +49,38 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='black'  d='M37.3,372.8 L46.3,372.8 M575.0,372.8 L566.0,372.8  '/>	<g transform="translate(29.0,377.3)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<path stroke='black'  d='M37.3,383.0 L46.3,383.0 M575.0,383.0 L566.0,383.0  '/>	<g transform="translate(29.0,387.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" > 2</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='black'  d='M37.3,301.6 L46.3,301.6 M575.0,301.6 L566.0,301.6  '/>	<g transform="translate(29.0,306.1)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<path stroke='black'  d='M37.3,321.9 L46.3,321.9 M575.0,321.9 L566.0,321.9  '/>	<g transform="translate(29.0,326.4)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" > 3</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='black'  d='M37.3,230.3 L46.3,230.3 M575.0,230.3 L566.0,230.3  '/>	<g transform="translate(29.0,234.8)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<path stroke='black'  d='M37.3,260.9 L46.3,260.9 M575.0,260.9 L566.0,260.9  '/>	<g transform="translate(29.0,265.4)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" > 4</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='black'  d='M37.3,159.1 L46.3,159.1 M575.0,159.1 L566.0,159.1  '/>	<g transform="translate(29.0,163.6)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<path stroke='black'  d='M37.3,199.8 L46.3,199.8 M575.0,199.8 L566.0,199.8  '/>	<g transform="translate(29.0,204.3)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" > 5</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='black'  d='M37.3,87.9 L46.3,87.9 M575.0,87.9 L566.0,87.9  '/>	<g transform="translate(29.0,92.4)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<path stroke='black'  d='M37.3,138.8 L46.3,138.8 M575.0,138.8 L566.0,138.8  '/>	<g transform="translate(29.0,143.3)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" > 6</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='black'  d='M37.3,16.7 L46.3,16.7 M575.0,16.7 L566.0,16.7  '/>	<g transform="translate(29.0,21.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<path stroke='black'  d='M37.3,77.7 L46.3,77.7 M575.0,77.7 L566.0,77.7  '/>	<g transform="translate(29.0,82.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" > 7</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M37.3,16.7 L46.3,16.7 M575.0,16.7 L566.0,16.7  '/>	<g transform="translate(29.0,21.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 8</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -129,76 +134,122 @@
 	<path stroke='black'  d='M37.3,16.7 L37.3,444.0 L575.0,444.0 L575.0,16.7 L37.3,16.7 Z  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
-	<g id="gnuplot_plot_1" ><title>data/crypto_stream_chacha20_jazz_ref_4096.csv</title>
+	<g id="gnuplot_plot_1" ><title>data/crypto_stream_chacha20_libsodium_static_disable_asm_4096.csv</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<g transform="translate(507.9,39.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_libsodium_static_disable_asm_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(148,   0, 211)'  d='M516.2,34.7 L558.4,34.7 M38.9,85.1 L43.2,52.1 L47.5,88.1 L51.8,57.6 L56.1,88.7 L60.4,61.9
+		L64.7,87.5 L69.0,61.9 L73.3,89.3 L77.6,63.7 L81.9,89.3 L86.2,67.4 L90.5,90.6 L94.8,68.6
+		L99.1,90.6 L103.4,71.6 L107.7,91.2 L112.0,72.2 L116.3,91.2 L120.6,74.1 L124.9,92.4 L129.2,75.3
+		L133.5,93.0 L137.8,77.1 L142.2,93.6 L146.5,77.7 L150.8,94.8 L155.1,79.0 L159.4,95.4 L163.7,79.6
+		L168.0,93.6 L172.3,80.8 L176.6,95.4 L180.9,81.4 L185.2,94.2 L189.5,82.0 L193.8,94.2 L198.1,82.6
+		L202.4,94.2 L206.7,83.2 L211.0,94.8 L215.3,83.8 L219.6,94.8 L223.9,84.5 L228.2,94.8 L232.5,85.1
+		L236.8,94.8 L241.1,85.1 L245.4,94.8 L249.7,85.7 L254.0,95.4 L258.3,86.3 L262.6,94.8 L266.9,86.3
+		L271.2,96.1 L275.5,88.1 L279.8,95.4 L284.1,87.5 L288.4,95.4 L292.7,87.5 L297.0,97.3 L301.3,87.5
+		L305.6,96.1 L309.9,88.1 L314.2,96.1 L318.5,88.1 L322.8,96.1 L327.1,89.3 L331.4,96.1 L335.7,88.7
+		L340.0,96.1 L344.3,90.0 L348.6,96.1 L352.9,89.3 L357.2,97.9 L361.5,89.3 L365.8,96.7 L370.1,90.0
+		L374.4,98.5 L378.7,90.0 L383.0,96.1 L387.3,93.0 L391.6,96.7 L395.9,90.6 L400.2,98.5 L404.5,90.6
+		L408.9,96.7 L413.2,91.2 L417.5,96.7 L421.8,90.6 L426.1,96.7 L430.4,90.6 L434.7,96.7 L439.0,91.2
+		L443.3,96.7 L447.6,91.2 L451.9,96.7 L456.2,91.2 L460.5,96.7 L464.8,91.2 L469.1,96.7 L473.4,91.2
+		L477.7,96.7 L482.0,91.8 L486.3,96.7 L490.6,91.8 L494.9,96.7 L499.2,91.8 L503.5,96.7 L507.8,91.8
+		L512.1,96.7 L516.4,92.4 L520.7,96.7  '/></g>
+	</g>
+	<g id="gnuplot_plot_2" ><title>data/crypto_stream_chacha20_libsodium_static_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,57.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_libsodium_static_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(  0, 158, 115)'  d='M516.2,52.7 L558.4,52.7 M38.9,401.3 L43.2,367.1 L47.5,381.1 L51.8,348.2 L56.1,361.6 L60.4,332.9
+		L64.7,346.3 L69.0,320.1 L73.3,378.7 L77.6,356.7 L81.9,366.5 L86.2,343.9 L90.5,353.7 L94.8,332.9
+		L99.1,342.7 L103.4,323.7 L107.7,408.0 L112.0,390.3 L116.3,396.4 L120.6,378.7 L124.9,384.8 L129.2,368.3
+		L133.5,374.4 L137.8,358.5 L142.2,393.9 L146.5,379.3 L150.8,386.6 L155.1,370.7 L159.4,376.2 L163.7,362.8
+		L168.0,367.7 L172.3,354.9 L176.6,410.4 L180.9,398.8 L185.2,403.7 L189.5,390.3 L193.8,395.8 L198.1,383.0
+		L202.4,387.2 L206.7,375.6 L211.0,400.0 L215.3,389.7 L219.6,394.6 L223.9,382.3 L228.2,386.6 L232.5,376.2
+		L236.8,379.9 L241.1,370.1 L245.4,411.6 L249.7,402.5 L254.0,406.2 L258.3,396.4 L262.6,399.4 L266.9,390.3
+		L271.2,393.3 L275.5,384.8 L279.8,403.1 L284.1,395.2 L288.4,398.2 L292.7,389.7 L297.0,392.7 L301.3,384.2
+		L305.6,387.2 L309.9,379.3 L314.2,412.3 L318.5,405.5 L322.8,408.0 L327.1,400.0 L331.4,402.5 L335.7,395.8
+		L340.0,397.6 L344.3,390.3 L348.6,405.5 L352.9,398.8 L357.2,401.3 L361.5,394.6 L365.8,396.4 L370.1,389.7
+		L374.4,392.1 L378.7,385.4 L383.0,412.9 L387.3,406.8 L391.6,409.2 L395.9,402.5 L400.2,404.3 L404.5,398.2
+		L408.9,400.0 L413.2,393.9 L417.5,406.8 L421.8,401.3 L426.1,403.1 L430.4,397.6 L434.7,399.4 L439.0,393.3
+		L443.3,395.8 L447.6,389.7 L451.9,413.5 L456.2,408.0 L460.5,409.8 L464.8,404.3 L469.1,406.2 L473.4,400.7
+		L477.7,402.5 L482.0,397.0 L486.3,408.0 L490.6,403.1 L494.9,404.9 L499.2,399.4 L503.5,401.3 L507.8,396.4
+		L512.1,398.2 L516.4,392.7 L520.7,413.5  '/></g>
+	</g>
+	<g id="gnuplot_plot_3" ><title>data/crypto_stream_chacha20_jazz_ref_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,75.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_jazz_ref_4096.csv</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(148,   0, 211)'  d='M516.2,34.7 L558.4,34.7 M38.9,54.4 L43.2,21.7 L47.5,51.6 L51.8,21.7 L56.1,50.2 L60.4,25.2
-		L64.7,50.9 L69.0,28.1 L73.3,51.6 L77.6,30.9 L81.9,52.3 L86.2,33.1 L90.5,53.0 L94.8,34.5
-		L99.1,53.0 L103.4,35.9 L107.7,53.7 L112.0,37.4 L116.3,57.3 L120.6,38.8 L124.9,55.2 L129.2,40.2
-		L133.5,54.4 L137.8,40.9 L142.2,55.2 L146.5,41.6 L150.8,55.2 L155.1,42.3 L159.4,55.2 L163.7,43.8
-		L168.0,55.2 L172.3,43.8 L176.6,55.9 L180.9,44.5 L185.2,55.9 L189.5,45.2 L193.8,55.9 L198.1,45.9
-		L202.4,55.9 L206.7,45.9 L211.0,55.9 L215.3,46.6 L219.6,55.9 L223.9,47.3 L228.2,55.9 L232.5,47.3
-		L236.8,56.6 L241.1,50.2 L245.4,56.6 L249.7,48.0 L254.0,56.6 L258.3,48.7 L262.6,56.6 L266.9,48.7
-		L271.2,56.6 L275.5,50.2 L279.8,56.6 L284.1,49.5 L288.4,56.6 L292.7,49.5 L297.0,58.0 L301.3,50.2
-		L305.6,58.0 L309.9,50.2 L314.2,57.3 L318.5,50.2 L322.8,57.3 L327.1,50.9 L331.4,57.3 L335.7,50.9
-		L340.0,56.6 L344.3,50.9 L348.6,56.6 L352.9,50.9 L357.2,57.3 L361.5,50.9 L365.8,58.0 L370.1,52.3
-		L374.4,57.3 L378.7,51.6 L383.0,57.3 L387.3,51.6 L391.6,57.3 L395.9,51.6 L400.2,57.3 L404.5,53.7
-		L408.9,57.3 L413.2,52.3 L417.5,57.3 L421.8,52.3 L426.1,59.4 L430.4,52.3 L434.7,57.3 L439.0,52.3
-		L443.3,57.3 L447.6,52.3 L451.9,57.3 L456.2,52.3 L460.5,57.3 L464.8,53.0 L469.1,59.4 L473.4,53.0
-		L477.7,57.3 L482.0,53.7 L486.3,57.3 L490.6,53.7 L494.9,57.3 L499.2,53.0 L503.5,58.0 L507.8,53.0
-		L512.1,57.3 L516.4,53.7 L520.7,57.3  '/></g>
+	<path stroke='rgb( 86, 180, 233)'  d='M516.2,70.7 L558.4,70.7 M38.9,110.1 L43.2,82.0 L47.5,107.7 L51.8,82.0 L56.1,106.4 L60.4,85.1
+		L64.7,107.0 L69.0,87.5 L73.3,107.7 L77.6,90.0 L81.9,108.3 L86.2,91.8 L90.5,108.9 L94.8,93.0
+		L99.1,108.9 L103.4,94.2 L107.7,109.5 L112.0,95.4 L116.3,112.5 L120.6,96.7 L124.9,110.7 L129.2,97.9
+		L133.5,110.1 L137.8,98.5 L142.2,110.7 L146.5,99.1 L150.8,110.7 L155.1,99.7 L159.4,110.7 L163.7,100.9
+		L168.0,110.7 L172.3,100.9 L176.6,111.3 L180.9,101.5 L185.2,111.3 L189.5,102.2 L193.8,111.3 L198.1,102.8
+		L202.4,111.3 L206.7,102.8 L211.0,111.3 L215.3,103.4 L219.6,111.3 L223.9,104.0 L228.2,111.3 L232.5,104.0
+		L236.8,111.9 L241.1,106.4 L245.4,111.9 L249.7,104.6 L254.0,111.9 L258.3,105.2 L262.6,111.9 L266.9,105.2
+		L271.2,111.9 L275.5,106.4 L279.8,111.9 L284.1,105.8 L288.4,111.9 L292.7,105.8 L297.0,113.1 L301.3,106.4
+		L305.6,113.1 L309.9,106.4 L314.2,112.5 L318.5,106.4 L322.8,112.5 L327.1,107.0 L331.4,112.5 L335.7,107.0
+		L340.0,111.9 L344.3,107.0 L348.6,111.9 L352.9,107.0 L357.2,112.5 L361.5,107.0 L365.8,113.1 L370.1,108.3
+		L374.4,112.5 L378.7,107.7 L383.0,112.5 L387.3,107.7 L391.6,112.5 L395.9,107.7 L400.2,112.5 L404.5,109.5
+		L408.9,112.5 L413.2,108.3 L417.5,112.5 L421.8,108.3 L426.1,114.4 L430.4,108.3 L434.7,112.5 L439.0,108.3
+		L443.3,112.5 L447.6,108.3 L451.9,112.5 L456.2,108.3 L460.5,112.5 L464.8,108.9 L469.1,114.4 L473.4,108.9
+		L477.7,112.5 L482.0,109.5 L486.3,112.5 L490.6,109.5 L494.9,112.5 L499.2,108.9 L503.5,113.1 L507.8,108.9
+		L512.1,112.5 L516.4,109.5 L520.7,112.5  '/></g>
 	</g>
-	<g id="gnuplot_plot_2" ><title>data/crypto_stream_chacha20_jazz_avx_4096.csv</title>
+	<g id="gnuplot_plot_4" ><title>data/crypto_stream_chacha20_jazz_avx_4096.csv</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<g transform="translate(507.9,57.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<g transform="translate(507.9,93.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_jazz_avx_4096.csv</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(  0, 158, 115)'  d='M516.2,52.7 L558.4,52.7 M38.9,342.9 L43.2,276.6 L47.5,289.5 L51.8,300.9 L56.1,311.5 L60.4,320.8
-		L64.7,329.3 L69.0,337.2 L73.3,344.3 L77.6,300.1 L81.9,308.0 L86.2,315.1 L90.5,322.2 L94.8,328.6
-		L99.1,334.3 L103.4,340.0 L107.7,345.0 L112.0,312.2 L116.3,317.9 L120.6,322.9 L124.9,329.3 L129.2,333.6
-		L133.5,337.9 L137.8,342.9 L142.2,345.7 L146.5,321.5 L150.8,324.4 L155.1,327.9 L159.4,332.2 L163.7,337.9
-		L168.0,339.3 L172.3,342.9 L176.6,345.7 L180.9,325.8 L185.2,327.9 L189.5,330.8 L193.8,335.0 L198.1,337.9
-		L202.4,340.7 L206.7,344.3 L211.0,345.7 L215.3,327.9 L219.6,330.8 L223.9,333.6 L228.2,337.2 L232.5,340.7
-		L236.8,345.0 L241.1,345.7 L245.4,347.9 L249.7,331.5 L254.0,334.3 L258.3,335.8 L262.6,339.3 L266.9,341.4
-		L271.2,343.6 L275.5,346.4 L279.8,347.9 L284.1,332.9 L288.4,335.0 L292.7,337.9 L297.0,340.7 L301.3,342.2
-		L305.6,344.3 L309.9,347.1 L314.2,348.6 L318.5,335.0 L322.8,336.5 L327.1,339.3 L331.4,341.4 L335.7,343.6
-		L340.0,345.0 L344.3,347.1 L348.6,349.3 L352.9,336.5 L357.2,337.9 L361.5,340.0 L365.8,342.2 L370.1,343.6
-		L374.4,345.7 L378.7,347.1 L383.0,348.6 L387.3,337.2 L391.6,339.3 L395.9,340.7 L400.2,342.9 L404.5,344.3
-		L408.9,345.7 L413.2,346.4 L417.5,349.3 L421.8,338.6 L426.1,340.0 L430.4,341.4 L434.7,342.9 L439.0,345.0
-		L443.3,345.7 L447.6,347.9 L451.9,349.3 L456.2,340.0 L460.5,340.0 L464.8,342.9 L469.1,343.6 L473.4,345.0
-		L477.7,346.4 L482.0,347.9 L486.3,349.3 L490.6,340.0 L494.9,341.4 L499.2,342.9 L503.5,344.3 L507.8,345.7
-		L512.1,346.4 L516.4,347.9 L520.7,349.3  '/></g>
+	<path stroke='rgb(230, 159,   0)'  d='M516.2,88.7 L558.4,88.7 M38.9,357.3 L43.2,300.5 L47.5,311.5 L51.8,321.3 L56.1,330.5 L60.4,338.4
+		L64.7,345.7 L69.0,352.4 L73.3,358.5 L77.6,320.7 L81.9,327.4 L86.2,333.5 L90.5,339.6 L94.8,345.1
+		L99.1,350.0 L103.4,354.9 L107.7,359.2 L112.0,331.1 L116.3,336.0 L120.6,340.2 L124.9,345.7 L129.2,349.4
+		L133.5,353.0 L137.8,357.3 L142.2,359.8 L146.5,339.0 L150.8,341.4 L155.1,344.5 L159.4,348.2 L163.7,353.0
+		L168.0,354.3 L172.3,357.3 L176.6,359.8 L180.9,342.7 L185.2,344.5 L189.5,346.9 L193.8,350.6 L198.1,353.0
+		L202.4,355.5 L206.7,358.5 L211.0,359.8 L215.3,344.5 L219.6,346.9 L223.9,349.4 L228.2,352.4 L232.5,355.5
+		L236.8,359.2 L241.1,359.8 L245.4,361.6 L249.7,347.6 L254.0,350.0 L258.3,351.2 L262.6,354.3 L266.9,356.1
+		L271.2,357.9 L275.5,360.4 L279.8,361.6 L284.1,348.8 L288.4,350.6 L292.7,353.0 L297.0,355.5 L301.3,356.7
+		L305.6,358.5 L309.9,361.0 L314.2,362.2 L318.5,350.6 L322.8,351.8 L327.1,354.3 L331.4,356.1 L335.7,357.9
+		L340.0,359.2 L344.3,361.0 L348.6,362.8 L352.9,351.8 L357.2,353.0 L361.5,354.9 L365.8,356.7 L370.1,357.9
+		L374.4,359.8 L378.7,361.0 L383.0,362.2 L387.3,352.4 L391.6,354.3 L395.9,355.5 L400.2,357.3 L404.5,358.5
+		L408.9,359.8 L413.2,360.4 L417.5,362.8 L421.8,353.7 L426.1,354.9 L430.4,356.1 L434.7,357.3 L439.0,359.2
+		L443.3,359.8 L447.6,361.6 L451.9,362.8 L456.2,354.9 L460.5,354.9 L464.8,357.3 L469.1,357.9 L473.4,359.2
+		L477.7,360.4 L482.0,361.6 L486.3,362.8 L490.6,354.9 L494.9,356.1 L499.2,357.3 L503.5,358.5 L507.8,359.8
+		L512.1,360.4 L516.4,361.6 L520.7,362.8  '/></g>
 	</g>
-	<g id="gnuplot_plot_3" ><title>data/crypto_stream_chacha20_jazz_avx2_4096.csv</title>
+	<g id="gnuplot_plot_5" ><title>data/crypto_stream_chacha20_jazz_avx2_4096.csv</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<g transform="translate(507.9,75.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<g transform="translate(507.9,111.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_jazz_avx2_4096.csv</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb( 86, 180, 233)'  d='M516.2,70.7 L558.4,70.7 M38.9,424.8 L43.2,350.7 L47.5,360.7 L51.8,368.5 L56.1,374.9 L60.4,382.0
-		L64.7,387.7 L69.0,392.7 L73.3,397.7 L77.6,402.7 L81.9,407.0 L86.2,410.5 L90.5,414.1 L94.8,417.6
-		L99.1,420.5 L103.4,423.3 L107.7,426.9 L112.0,388.5 L116.3,392.7 L120.6,395.6 L124.9,399.1 L129.2,403.4
-		L133.5,404.8 L137.8,407.7 L142.2,410.5 L146.5,412.7 L150.8,415.5 L155.1,417.6 L159.4,420.5 L163.7,422.6
-		L168.0,423.3 L172.3,425.5 L176.6,427.6 L180.9,402.7 L185.2,404.8 L189.5,406.3 L193.8,408.4 L198.1,410.5
-		L202.4,412.0 L206.7,414.1 L211.0,415.5 L215.3,418.4 L219.6,419.1 L223.9,420.5 L228.2,421.9 L232.5,424.1
-		L236.8,424.8 L241.1,426.2 L245.4,428.3 L249.7,408.4 L254.0,409.8 L258.3,412.0 L262.6,413.4 L266.9,414.8
-		L271.2,416.2 L275.5,416.9 L279.8,418.4 L284.1,419.8 L288.4,421.2 L292.7,422.6 L297.0,423.3 L301.3,424.8
-		L305.6,426.2 L309.9,426.9 L314.2,428.3 L318.5,413.4 L322.8,414.1 L327.1,414.8 L331.4,416.2 L335.7,417.6
-		L340.0,418.4 L344.3,419.8 L348.6,420.5 L352.9,421.9 L357.2,422.6 L361.5,423.3 L365.8,424.8 L370.1,425.5
-		L374.4,426.2 L378.7,427.6 L383.0,428.3 L387.3,415.5 L391.6,416.2 L395.9,417.6 L400.2,418.4 L404.5,419.8
-		L408.9,419.8 L413.2,421.2 L417.5,421.9 L421.8,423.3 L426.1,423.3 L430.4,424.8 L434.7,425.5 L439.0,426.2
-		L443.3,426.9 L447.6,427.6 L451.9,428.3 L456.2,417.6 L460.5,419.1 L464.8,419.1 L469.1,419.8 L473.4,420.5
-		L477.7,421.2 L482.0,421.9 L486.3,422.6 L490.6,423.3 L494.9,424.1 L499.2,424.8 L503.5,425.5 L507.8,426.2
-		L512.1,426.9 L516.4,427.6 L520.7,428.3  '/></g>
+	<path stroke='rgb(240, 228,  66)'  d='M516.2,106.7 L558.4,106.7 M38.9,427.5 L43.2,364.0 L47.5,372.6 L51.8,379.3 L56.1,384.8 L60.4,390.9
+		L64.7,395.8 L69.0,400.0 L73.3,404.3 L77.6,408.6 L81.9,412.3 L86.2,415.3 L90.5,418.4 L94.8,421.4
+		L99.1,423.9 L103.4,426.3 L107.7,429.3 L112.0,396.4 L116.3,400.0 L120.6,402.5 L124.9,405.5 L129.2,409.2
+		L133.5,410.4 L137.8,412.9 L142.2,415.3 L146.5,417.1 L150.8,419.6 L155.1,421.4 L159.4,423.9 L163.7,425.7
+		L168.0,426.3 L172.3,428.1 L176.6,430.0 L180.9,408.6 L185.2,410.4 L189.5,411.6 L193.8,413.5 L198.1,415.3
+		L202.4,416.5 L206.7,418.4 L211.0,419.6 L215.3,422.0 L219.6,422.6 L223.9,423.9 L228.2,425.1 L232.5,426.9
+		L236.8,427.5 L241.1,428.7 L245.4,430.6 L249.7,413.5 L254.0,414.7 L258.3,416.5 L262.6,417.8 L266.9,419.0
+		L271.2,420.2 L275.5,420.8 L279.8,422.0 L284.1,423.2 L288.4,424.5 L292.7,425.7 L297.0,426.3 L301.3,427.5
+		L305.6,428.7 L309.9,429.3 L314.2,430.6 L318.5,417.8 L322.8,418.4 L327.1,419.0 L331.4,420.2 L335.7,421.4
+		L340.0,422.0 L344.3,423.2 L348.6,423.9 L352.9,425.1 L357.2,425.7 L361.5,426.3 L365.8,427.5 L370.1,428.1
+		L374.4,428.7 L378.7,430.0 L383.0,430.6 L387.3,419.6 L391.6,420.2 L395.9,421.4 L400.2,422.0 L404.5,423.2
+		L408.9,423.2 L413.2,424.5 L417.5,425.1 L421.8,426.3 L426.1,426.3 L430.4,427.5 L434.7,428.1 L439.0,428.7
+		L443.3,429.3 L447.6,430.0 L451.9,430.6 L456.2,421.4 L460.5,422.6 L464.8,422.6 L469.1,423.2 L473.4,423.9
+		L477.7,424.5 L482.0,425.1 L486.3,425.7 L490.6,426.3 L494.9,426.9 L499.2,427.5 L503.5,428.1 L507.8,428.7
+		L512.1,429.3 L516.4,430.0 L520.7,430.6  '/></g>
 	</g>
-<g fill="none" color="#FFFFFF" stroke="rgb( 86, 180, 233)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g fill="none" color="#FFFFFF" stroke="rgb(240, 228,  66)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>

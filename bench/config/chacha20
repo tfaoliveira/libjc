@@ -9,5 +9,5 @@ crypto_stream chacha20 hacl_star/compcert
 crypto_stream chacha20 openssl/static
 crypto_stream chacha20 openssl/static_no_asm
 
-#crypto_stream chacha20 libsodium/static
-#crypto_stream chacha20 libsodium/static_disable_asm
+crypto_stream chacha20 libsodium/static
+crypto_stream chacha20 libsodium/static_disable_asm

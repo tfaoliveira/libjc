@@ -124,37 +124,57 @@
 	<path stroke='black'  d='M37.3,16.7 L37.3,444.0 L575.0,444.0 L575.0,16.7 L37.3,16.7 Z  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
-	<g id="gnuplot_plot_1" ><title>data/crypto_stream_chacha20_jazz_ref_16384.csv</title>
+	<g id="gnuplot_plot_1" ><title>data/crypto_stream_chacha20_libsodium_static_disable_asm_16384.csv</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<g transform="translate(507.9,39.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_libsodium_static_disable_asm_16384.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(148,   0, 211)'  d='M516.2,34.7 L558.4,34.7 M41.0,38.8 L80.3,39.5 L119.6,40.2 L159.0,40.2 L198.3,40.2 L237.6,40.2
+		L277.0,40.2 L316.3,40.2 L355.6,40.9 L394.9,40.9 L434.3,40.9 L473.6,41.6 L512.9,40.9  '/></g>
+	</g>
+	<g id="gnuplot_plot_2" ><title>data/crypto_stream_chacha20_libsodium_static_16384.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,57.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_libsodium_static_16384.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(  0, 158, 115)'  d='M516.2,52.7 L558.4,52.7 M41.0,408.4 L80.3,409.8 L119.6,409.1 L159.0,409.1 L198.3,409.1 L237.6,409.1
+		L277.0,409.8 L316.3,409.8 L355.6,410.5 L394.9,409.8 L434.3,409.8 L473.6,409.8 L512.9,409.8  '/></g>
+	</g>
+	<g id="gnuplot_plot_3" ><title>data/crypto_stream_chacha20_jazz_ref_16384.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,75.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_jazz_ref_16384.csv</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(148,   0, 211)'  d='M516.2,34.7 L558.4,34.7 M41.0,57.3 L80.3,58.0 L119.6,58.0 L159.0,58.0 L198.3,58.7 L237.6,58.7
+	<path stroke='rgb( 86, 180, 233)'  d='M516.2,70.7 L558.4,70.7 M41.0,57.3 L80.3,58.0 L119.6,58.0 L159.0,58.0 L198.3,58.7 L237.6,58.7
 		L277.0,60.1 L316.3,58.7 L355.6,58.7 L394.9,58.7 L434.3,58.7 L473.6,58.0 L512.9,58.0  '/></g>
 	</g>
-	<g id="gnuplot_plot_2" ><title>data/crypto_stream_chacha20_jazz_avx_16384.csv</title>
+	<g id="gnuplot_plot_4" ><title>data/crypto_stream_chacha20_jazz_avx_16384.csv</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<g transform="translate(507.9,57.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<g transform="translate(507.9,93.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_jazz_avx_16384.csv</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(  0, 158, 115)'  d='M516.2,52.7 L558.4,52.7 M41.0,349.3 L80.3,350.0 L119.6,349.3 L159.0,350.0 L198.3,350.7 L237.6,350.0
+	<path stroke='rgb(230, 159,   0)'  d='M516.2,88.7 L558.4,88.7 M41.0,349.3 L80.3,350.0 L119.6,349.3 L159.0,350.0 L198.3,350.7 L237.6,350.0
 		L277.0,349.3 L316.3,350.0 L355.6,350.0 L394.9,350.0 L434.3,349.3 L473.6,349.3 L512.9,349.3  '/></g>
 	</g>
-	<g id="gnuplot_plot_3" ><title>data/crypto_stream_chacha20_jazz_avx2_16384.csv</title>
+	<g id="gnuplot_plot_5" ><title>data/crypto_stream_chacha20_jazz_avx2_16384.csv</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<g transform="translate(507.9,75.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+	<g transform="translate(507.9,111.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
 		<text><tspan font-family="Arial" >data/crypto_stream_chacha20_jazz_avx2_16384.csv</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb( 86, 180, 233)'  d='M516.2,70.7 L558.4,70.7 M41.0,428.3 L80.3,428.3 L119.6,428.3 L159.0,428.3 L198.3,429.0 L237.6,429.0
+	<path stroke='rgb(240, 228,  66)'  d='M516.2,106.7 L558.4,106.7 M41.0,428.3 L80.3,428.3 L119.6,428.3 L159.0,428.3 L198.3,429.0 L237.6,429.0
 		L277.0,429.0 L316.3,429.0 L355.6,429.0 L394.9,429.8 L434.3,429.0 L473.6,429.0 L512.9,429.8  '/></g>
 	</g>
-<g fill="none" color="#FFFFFF" stroke="rgb( 86, 180, 233)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g fill="none" color="#FFFFFF" stroke="rgb(240, 228,  66)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>

@@ -28,7 +28,7 @@
 
 # Jazz / *
 ![Jazz / * - 16 to 512 bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/chacha20_xor_cycles__16_512.svg)
-![Jazz / * - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/chacha20_xor_cycles__512_4096.svg])
+![Jazz / * - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/chacha20_xor_cycles__512_4096.svg)
 ![Jazz / * - 4K to 16K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/chacha20_xor_cycles__4096_16384.svg)
 
 
