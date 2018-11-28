@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"  standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg 
+ width="600" height="480"
+ viewBox="0 0 600 480"
+ xmlns="http://www.w3.org/2000/svg"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+>
+
+<title>Gnuplot</title>
+<desc>Produced by GNUPLOT 5.0 patchlevel 3 </desc>
+
+<g id="gnuplot_canvas">
+
+<rect x="0" y="0" width="600" height="480" fill="#ffffff"/>
+<defs>
+
+	<circle id='gpDot' r='0.5' stroke-width='0.5'/>
+	<path id='gpPt0' stroke-width='0.222' stroke='currentColor' d='M-1,0 h2 M0,-1 v2'/>
+	<path id='gpPt1' stroke-width='0.222' stroke='currentColor' d='M-1,-1 L1,1 M1,-1 L-1,1'/>
+	<path id='gpPt2' stroke-width='0.222' stroke='currentColor' d='M-1,0 L1,0 M0,-1 L0,1 M-1,-1 L1,1 M-1,1 L1,-1'/>
+	<rect id='gpPt3' stroke-width='0.222' stroke='currentColor' x='-1' y='-1' width='2' height='2'/>
+	<rect id='gpPt4' stroke-width='0.222' stroke='currentColor' fill='currentColor' x='-1' y='-1' width='2' height='2'/>
+	<circle id='gpPt5' stroke-width='0.222' stroke='currentColor' cx='0' cy='0' r='1'/>
+	<use xlink:href='#gpPt5' id='gpPt6' fill='currentColor' stroke='none'/>
+	<path id='gpPt7' stroke-width='0.222' stroke='currentColor' d='M0,-1.33 L-1.33,0.67 L1.33,0.67 z'/>
+	<use xlink:href='#gpPt7' id='gpPt8' fill='currentColor' stroke='none'/>
+	<use xlink:href='#gpPt7' id='gpPt9' stroke='currentColor' transform='rotate(180)'/>
+	<use xlink:href='#gpPt9' id='gpPt10' fill='currentColor' stroke='none'/>
+	<use xlink:href='#gpPt3' id='gpPt11' stroke='currentColor' transform='rotate(45)'/>
+	<use xlink:href='#gpPt11' id='gpPt12' fill='currentColor' stroke='none'/>
+	<path id='gpPt13' stroke-width='0.222' stroke='currentColor' d='M0,1.330 L1.265,0.411 L0.782,-1.067 L-0.782,-1.076 L-1.265,0.411 z'/>
+	<use xlink:href='#gpPt13' id='gpPt14' fill='currentColor' stroke='none'/>
+	<filter id='textbox' filterUnits='objectBoundingBox' x='0' y='0' height='1' width='1'>
+	  <feFlood flood-color='#FFFFFF' flood-opacity='1' result='bgnd'/>
+	  <feComposite in='SourceGraphic' in2='bgnd' operator='atop'/>
+	</filter>
+	<filter id='greybox' filterUnits='objectBoundingBox' x='0' y='0' height='1' width='1'>
+	  <feFlood flood-color='lightgrey' flood-opacity='1' result='grey'/>
+	  <feComposite in='SourceGraphic' in2='grey' operator='atop'/>
+	</filter>
+</defs>
+<g fill="none" color="#FFFFFF" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,444.0 L54.6,444.0 M575.0,444.0 L566.0,444.0  '/>	<g transform="translate(37.3,448.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 0</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,383.0 L54.6,383.0 M575.0,383.0 L566.0,383.0  '/>	<g transform="translate(37.3,387.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 10</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,321.9 L54.6,321.9 M575.0,321.9 L566.0,321.9  '/>	<g transform="translate(37.3,326.4)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 20</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,260.9 L54.6,260.9 M575.0,260.9 L566.0,260.9  '/>	<g transform="translate(37.3,265.4)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 30</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,199.8 L54.6,199.8 M575.0,199.8 L566.0,199.8  '/>	<g transform="translate(37.3,204.3)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 40</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,138.8 L54.6,138.8 M575.0,138.8 L566.0,138.8  '/>	<g transform="translate(37.3,143.3)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 50</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,77.7 L54.6,77.7 M575.0,77.7 L566.0,77.7  '/>	<g transform="translate(37.3,82.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 60</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,16.7 L54.6,16.7 M575.0,16.7 L566.0,16.7  '/>	<g transform="translate(37.3,21.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" > 70</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,444.0 L45.6,435.0 M45.6,16.7 L45.6,25.7  '/>	<g transform="translate(45.6,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 500</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M111.8,444.0 L111.8,435.0 M111.8,16.7 L111.8,25.7  '/>	<g transform="translate(111.8,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 1000</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M178.0,444.0 L178.0,435.0 M178.0,16.7 L178.0,25.7  '/>	<g transform="translate(178.0,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 1500</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M244.1,444.0 L244.1,435.0 M244.1,16.7 L244.1,25.7  '/>	<g transform="translate(244.1,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 2000</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M310.3,444.0 L310.3,435.0 M310.3,16.7 L310.3,25.7  '/>	<g transform="translate(310.3,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 2500</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M376.5,444.0 L376.5,435.0 M376.5,16.7 L376.5,25.7  '/>	<g transform="translate(376.5,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 3000</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M442.7,444.0 L442.7,435.0 M442.7,16.7 L442.7,25.7  '/>	<g transform="translate(442.7,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 3500</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M508.8,444.0 L508.8,435.0 M508.8,16.7 L508.8,25.7  '/>	<g transform="translate(508.8,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 4000</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M575.0,444.0 L575.0,435.0 M575.0,16.7 L575.0,25.7  '/>	<g transform="translate(575.0,466.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
+		<text><tspan font-family="Arial" > 4500</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,16.7 L45.6,444.0 L575.0,444.0 L575.0,16.7 L45.6,16.7 Z  '/></g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+	<g id="gnuplot_plot_1" ><title>data/crypto_onetimeauth_poly1305_openssl_static_no_asm_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,39.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_openssl_static_no_asm_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(148,   0, 211)'  d='M516.2,34.7 L558.4,34.7 M47.2,431.0 L51.4,431.1 L55.7,431.1 L59.9,431.2 L64.1,431.2 L68.4,431.2
+		L72.6,431.3 L76.8,431.3 L81.1,431.4 L85.3,431.4 L89.5,431.4 L93.8,431.4 L98.0,431.5 L102.2,431.5
+		L106.5,431.5 L110.7,431.5 L115.0,431.5 L119.2,431.5 L123.4,431.5 L127.7,431.5 L131.9,431.5 L136.1,431.6
+		L140.4,431.6 L144.6,431.6 L148.8,431.7 L153.1,431.7 L157.3,431.7 L161.5,431.7 L165.8,431.8 L170.0,431.7
+		L174.2,431.7 L178.5,431.7 L182.7,431.7 L186.9,431.7 L191.2,431.7 L195.4,431.7 L199.7,431.7 L203.9,431.7
+		L208.1,431.7 L212.4,431.7 L216.6,431.7 L220.8,431.7 L225.1,431.8 L229.3,431.9 L233.5,431.8 L237.8,431.8
+		L242.0,431.8 L246.2,431.8 L250.5,431.8 L254.7,431.8 L258.9,431.8 L263.2,431.8 L267.4,431.8 L271.7,431.8
+		L275.9,431.8 L280.1,431.8 L284.4,431.8 L288.6,431.8 L292.8,431.9 L297.1,431.9 L301.3,431.9 L305.5,432.0
+		L309.8,431.9 L314.0,431.9 L318.2,431.9 L322.5,431.9 L326.7,432.0 L330.9,431.9 L335.2,431.9 L339.4,431.9
+		L343.7,431.9 L347.9,431.9 L352.1,431.9 L356.4,431.9 L360.6,431.9 L364.8,432.0 L369.1,431.9 L373.3,431.9
+		L377.5,431.9 L381.8,431.9 L386.0,431.9 L390.2,431.9 L394.5,431.9 L398.7,431.9 L402.9,431.9 L407.2,431.9
+		L411.4,431.9 L415.7,432.0 L419.9,432.0 L424.1,432.0 L428.4,432.0 L432.6,432.0 L436.8,432.0 L441.1,432.0
+		L445.3,432.0 L449.5,431.9 L453.8,431.9 L458.0,431.9 L462.2,431.9 L466.5,431.9 L470.7,431.9 L474.9,431.9
+		L479.2,432.0 L483.4,431.9 L487.6,432.0 L491.9,431.9 L496.1,431.9 L500.4,431.9 L504.6,431.9 L508.8,432.0
+		L513.1,431.9 L517.3,431.9 L521.5,431.9  '/></g>
+	</g>
+	<g id="gnuplot_plot_2" ><title>data/crypto_onetimeauth_poly1305_openssl_static_avx_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,57.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_openssl_static_avx_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(  0, 158, 115)'  d='M516.2,52.7 L558.4,52.7 M47.2,435.5 L51.4,435.6 L55.7,435.8 L59.9,436.0 L64.1,436.0 L68.4,436.1
+		L72.6,436.2 L76.8,436.2 L81.1,436.1 L85.3,436.4 L89.5,436.5 L93.8,436.6 L98.0,436.6 L102.2,436.4
+		L106.5,436.7 L110.7,436.7 L115.0,436.6 L119.2,436.8 L123.4,436.9 L127.7,436.9 L131.9,436.9 L136.1,436.9
+		L140.4,437.0 L144.6,437.0 L148.8,436.9 L153.1,437.0 L157.3,437.1 L161.5,436.9 L165.8,437.1 L170.0,437.2
+		L174.2,437.2 L178.5,437.3 L182.7,437.2 L186.9,437.3 L191.2,437.3 L195.4,437.2 L199.7,437.3 L203.9,437.3
+		L208.1,437.3 L212.4,437.3 L216.6,437.3 L220.8,437.3 L225.1,437.3 L229.3,437.3 L233.5,437.3 L237.8,437.3
+		L242.0,437.4 L246.2,437.4 L250.5,437.4 L254.7,437.4 L258.9,437.5 L263.2,437.5 L267.4,437.5 L271.7,437.6
+		L275.9,437.5 L280.1,437.5 L284.4,437.5 L288.6,437.5 L292.8,437.5 L297.1,437.5 L301.3,437.5 L305.5,437.5
+		L309.8,437.5 L314.0,437.5 L318.2,437.5 L322.5,437.5 L326.7,437.5 L330.9,437.6 L335.2,437.6 L339.4,437.6
+		L343.7,437.6 L347.9,437.6 L352.1,437.6 L356.4,437.6 L360.6,437.6 L364.8,437.7 L369.1,437.6 L373.3,437.6
+		L377.5,437.6 L381.8,437.6 L386.0,437.7 L390.2,437.7 L394.5,437.7 L398.7,437.7 L402.9,437.7 L407.2,437.7
+		L411.4,437.7 L415.7,437.7 L419.9,437.7 L424.1,437.7 L428.4,437.8 L432.6,437.8 L436.8,437.7 L441.1,437.7
+		L445.3,437.8 L449.5,437.7 L453.8,437.7 L458.0,437.7 L462.2,437.7 L466.5,437.7 L470.7,437.7 L474.9,437.7
+		L479.2,437.8 L483.4,437.7 L487.6,437.7 L491.9,437.7 L496.1,437.7 L500.4,437.7 L504.6,437.7 L508.8,437.7
+		L513.1,437.7 L517.3,437.7 L521.5,437.7  '/></g>
+	</g>
+	<g id="gnuplot_plot_3" ><title>data/crypto_onetimeauth_poly1305_openssl_static_avx2_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,75.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_openssl_static_avx2_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb( 86, 180, 233)'  d='M516.2,70.7 L558.4,70.7 M47.2,438.1 L51.4,438.1 L55.7,438.4 L59.9,438.4 L64.1,438.6 L68.4,438.6
+		L72.6,438.8 L76.8,438.8 L81.1,439.0 L85.3,439.0 L89.5,439.2 L93.8,439.1 L98.0,439.2 L102.2,439.2
+		L106.5,439.4 L110.7,439.4 L115.0,439.5 L119.2,439.4 L123.4,439.5 L127.7,439.5 L131.9,439.6 L136.1,439.5
+		L140.4,439.7 L144.6,439.7 L148.8,439.7 L153.1,439.7 L157.3,439.8 L161.5,439.8 L165.8,439.8 L170.0,439.8
+		L174.2,439.8 L178.5,439.8 L182.7,439.9 L186.9,439.9 L191.2,440.0 L195.4,439.9 L199.7,440.0 L203.9,440.0
+		L208.1,440.0 L212.4,440.0 L216.6,440.0 L220.8,440.0 L225.1,440.1 L229.3,440.0 L233.5,440.1 L237.8,440.0
+		L242.0,440.1 L246.2,440.1 L250.5,440.2 L254.7,440.1 L258.9,440.2 L263.2,440.2 L267.4,440.2 L271.7,440.2
+		L275.9,440.2 L280.1,440.2 L284.4,440.2 L288.6,440.2 L292.8,440.2 L297.1,440.2 L301.3,440.2 L305.5,440.2
+		L309.8,440.3 L314.0,440.2 L318.2,440.3 L322.5,440.3 L326.7,440.3 L330.9,440.3 L335.2,440.3 L339.4,440.3
+		L343.7,440.3 L347.9,440.3 L352.1,440.3 L356.4,440.3 L360.6,440.3 L364.8,440.3 L369.1,440.3 L373.3,440.3
+		L377.5,440.3 L381.8,440.3 L386.0,440.3 L390.2,440.3 L394.5,440.4 L398.7,440.3 L402.9,440.4 L407.2,440.3
+		L411.4,440.4 L415.7,440.4 L419.9,440.4 L424.1,440.4 L428.4,440.4 L432.6,440.4 L436.8,440.4 L441.1,440.4
+		L445.3,440.4 L449.5,440.4 L453.8,440.4 L458.0,440.4 L462.2,440.5 L466.5,440.4 L470.7,440.5 L474.9,440.4
+		L479.2,440.5 L483.4,440.4 L487.6,440.5 L491.9,440.5 L496.1,440.5 L500.4,440.5 L504.6,440.5 L508.8,440.5
+		L513.1,440.5 L517.3,440.5 L521.5,440.5  '/></g>
+	</g>
+	<g id="gnuplot_plot_4" ><title>data/crypto_onetimeauth_poly1305_libsodium_static_disable_asm_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,93.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_libsodium_static_disable_asm_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(230, 159,   0)'  d='M516.2,88.7 L558.4,88.7 M47.2,428.6 L51.4,428.6 L55.7,428.7 L59.9,428.8 L64.1,428.9 L68.4,428.9
+		L72.6,428.9 L76.8,429.0 L81.1,429.1 L85.3,429.1 L89.5,429.1 L93.8,429.1 L98.0,429.2 L102.2,429.2
+		L106.5,429.2 L110.7,429.2 L115.0,429.3 L119.2,429.3 L123.4,429.3 L127.7,429.3 L131.9,429.3 L136.1,429.3
+		L140.4,429.4 L144.6,429.4 L148.8,429.4 L153.1,429.5 L157.3,429.5 L161.5,429.5 L165.8,429.6 L170.0,429.5
+		L174.2,429.5 L178.5,429.5 L182.7,429.5 L186.9,429.5 L191.2,429.5 L195.4,429.5 L199.7,429.5 L203.9,429.5
+		L208.1,429.5 L212.4,429.6 L216.6,429.5 L220.8,429.6 L225.1,429.6 L229.3,429.6 L233.5,429.6 L237.8,429.6
+		L242.0,429.6 L246.2,429.6 L250.5,429.7 L254.7,429.6 L258.9,429.6 L263.2,429.7 L267.4,429.7 L271.7,429.7
+		L275.9,429.7 L280.1,429.7 L284.4,429.7 L288.6,429.7 L292.8,429.7 L297.1,429.7 L301.3,429.7 L305.5,429.7
+		L309.8,429.7 L314.0,429.7 L318.2,429.7 L322.5,429.7 L326.7,429.7 L330.9,429.7 L335.2,429.7 L339.4,429.7
+		L343.7,429.7 L347.9,429.7 L352.1,429.7 L356.4,429.7 L360.6,429.7 L364.8,429.7 L369.1,429.7 L373.3,429.7
+		L377.5,429.8 L381.8,429.8 L386.0,429.8 L390.2,429.8 L394.5,429.8 L398.7,429.8 L402.9,429.8 L407.2,429.8
+		L411.4,429.8 L415.7,429.8 L419.9,429.8 L424.1,429.8 L428.4,429.8 L432.6,429.8 L436.8,429.8 L441.1,429.8
+		L445.3,429.8 L449.5,429.8 L453.8,429.9 L458.0,429.9 L462.2,429.8 L466.5,429.8 L470.7,429.8 L474.9,429.8
+		L479.2,429.8 L483.4,429.8 L487.6,429.8 L491.9,429.8 L496.1,429.8 L500.4,429.8 L504.6,429.8 L508.8,429.8
+		L513.1,429.8 L517.3,429.8 L521.5,429.9  '/></g>
+	</g>
+	<g id="gnuplot_plot_5" ><title>data/crypto_onetimeauth_poly1305_libsodium_static_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,111.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_libsodium_static_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(240, 228,  66)'  d='M516.2,106.7 L558.4,106.7 M47.2,433.4 L51.4,433.7 L55.7,433.7 L59.9,434.0 L64.1,434.1 L68.4,434.3
+		L72.6,434.3 L76.8,434.5 L81.1,434.5 L85.3,434.7 L89.5,434.8 L93.8,434.8 L98.0,434.9 L102.2,435.0
+		L106.5,435.0 L110.7,435.1 L115.0,435.1 L119.2,435.2 L123.4,435.2 L127.7,435.3 L131.9,435.3 L136.1,435.4
+		L140.4,435.4 L144.6,435.5 L148.8,435.5 L153.1,435.6 L157.3,435.6 L161.5,435.6 L165.8,435.6 L170.0,435.6
+		L174.2,435.7 L178.5,435.8 L182.7,435.7 L186.9,435.8 L191.2,435.8 L195.4,435.8 L199.7,435.8 L203.9,435.9
+		L208.1,435.9 L212.4,435.9 L216.6,435.9 L220.8,435.9 L225.1,435.9 L229.3,436.0 L233.5,436.1 L237.8,436.0
+		L242.0,436.0 L246.2,436.0 L250.5,436.1 L254.7,436.1 L258.9,436.1 L263.2,436.1 L267.4,436.1 L271.7,436.1
+		L275.9,436.1 L280.1,436.1 L284.4,436.1 L288.6,436.1 L292.8,436.1 L297.1,436.2 L301.3,436.2 L305.5,436.2
+		L309.8,436.2 L314.0,436.2 L318.2,436.2 L322.5,436.2 L326.7,436.2 L330.9,436.2 L335.2,436.2 L339.4,436.2
+		L343.7,436.2 L347.9,436.2 L352.1,436.2 L356.4,436.3 L360.6,436.2 L364.8,436.3 L369.1,436.3 L373.3,436.3
+		L377.5,436.3 L381.8,436.3 L386.0,436.3 L390.2,436.4 L394.5,436.3 L398.7,436.4 L402.9,436.3 L407.2,436.4
+		L411.4,436.4 L415.7,436.4 L419.9,436.4 L424.1,436.4 L428.4,436.4 L432.6,436.4 L436.8,436.4 L441.1,436.4
+		L445.3,436.4 L449.5,436.4 L453.8,436.4 L458.0,436.4 L462.2,436.4 L466.5,436.4 L470.7,436.4 L474.9,436.4
+		L479.2,436.4 L483.4,436.4 L487.6,436.4 L491.9,436.4 L496.1,436.4 L500.4,436.4 L504.6,436.4 L508.8,436.5
+		L513.1,436.4 L517.3,436.5 L521.5,436.5  '/></g>
+	</g>
+	<g id="gnuplot_plot_6" ><title>data/crypto_onetimeauth_poly1305_jazz_ref3_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,129.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_jazz_ref3_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(  0, 114, 178)'  d='M516.2,124.7 L558.4,124.7 M47.2,435.3 L51.4,435.3 L55.7,435.5 L59.9,435.4 L64.1,435.4 L68.4,435.3
+		L72.6,435.2 L76.8,435.2 L81.1,435.3 L85.3,435.5 L89.5,435.5 L93.8,435.4 L98.0,435.3 L102.2,435.5
+		L106.5,435.5 L110.7,435.4 L115.0,435.5 L119.2,435.5 L123.4,435.5 L127.7,435.1 L131.9,435.1 L136.1,435.1
+		L140.4,435.1 L144.6,435.1 L148.8,435.1 L153.1,435.3 L157.3,435.3 L161.5,435.5 L165.8,435.3 L170.0,435.5
+		L174.2,435.5 L178.5,435.1 L182.7,435.1 L186.9,435.1 L191.2,435.2 L195.4,435.2 L199.7,435.2 L203.9,435.2
+		L208.1,435.2 L212.4,435.2 L216.6,435.2 L220.8,435.2 L225.1,435.2 L229.3,435.2 L233.5,435.2 L237.8,435.2
+		L242.0,435.2 L246.2,435.2 L250.5,435.2 L254.7,435.1 L258.9,435.2 L263.2,435.2 L267.4,435.2 L271.7,435.2
+		L275.9,435.2 L280.1,435.2 L284.4,435.2 L288.6,435.2 L292.8,435.2 L297.1,435.2 L301.3,435.2 L305.5,435.2
+		L309.8,435.2 L314.0,435.2 L318.2,435.2 L322.5,435.3 L326.7,435.3 L330.9,435.2 L335.2,435.3 L339.4,435.3
+		L343.7,435.2 L347.9,435.3 L352.1,435.3 L356.4,435.3 L360.6,435.2 L364.8,435.2 L369.1,435.2 L373.3,435.2
+		L377.5,435.2 L381.8,435.3 L386.0,435.2 L390.2,435.2 L394.5,435.6 L398.7,435.3 L402.9,435.3 L407.2,435.2
+		L411.4,435.2 L415.7,435.2 L419.9,435.2 L424.1,435.6 L428.4,435.3 L432.6,435.6 L436.8,435.3 L441.1,435.3
+		L445.3,435.2 L449.5,435.2 L453.8,435.3 L458.0,435.3 L462.2,435.2 L466.5,435.3 L470.7,435.3 L474.9,435.2
+		L479.2,435.3 L483.4,435.3 L487.6,435.3 L491.9,435.3 L496.1,435.3 L500.4,435.3 L504.6,435.3 L508.8,435.3
+		L513.1,435.2 L517.3,435.2 L521.5,435.2  '/></g>
+	</g>
+	<g id="gnuplot_plot_7" ><title>data/crypto_onetimeauth_poly1305_jazz_avx_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,147.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_jazz_avx_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(229,  30,  16)'  d='M516.2,142.7 L558.4,142.7 M47.2,436.3 L51.4,436.2 L55.7,436.6 L59.9,436.5 L64.1,436.8 L68.4,436.7
+		L72.6,436.9 L76.8,436.9 L81.1,437.0 L85.3,436.9 L89.5,437.2 L93.8,437.0 L98.0,437.3 L102.2,437.2
+		L106.5,437.3 L110.7,437.3 L115.0,437.4 L119.2,437.3 L123.4,437.5 L127.7,437.4 L131.9,437.5 L136.1,437.4
+		L140.4,437.5 L144.6,437.5 L148.8,437.7 L153.1,437.5 L157.3,437.7 L161.5,437.6 L165.8,437.7 L170.0,437.6
+		L174.2,437.7 L178.5,437.7 L182.7,437.8 L186.9,437.7 L191.2,437.8 L195.4,437.7 L199.7,437.8 L203.9,437.8
+		L208.1,437.8 L212.4,437.8 L216.6,437.8 L220.8,437.8 L225.1,437.8 L229.3,437.8 L233.5,437.9 L237.8,437.8
+		L242.0,437.9 L246.2,437.8 L250.5,437.9 L254.7,437.9 L258.9,438.0 L263.2,437.9 L267.4,438.0 L271.7,437.9
+		L275.9,438.0 L280.1,437.9 L284.4,438.0 L288.6,438.0 L292.8,438.0 L297.1,438.0 L301.3,438.0 L305.5,438.0
+		L309.8,438.0 L314.0,438.0 L318.2,438.0 L322.5,438.0 L326.7,438.0 L330.9,438.1 L335.2,438.0 L339.4,438.0
+		L343.7,438.1 L347.9,438.0 L352.1,438.1 L356.4,438.0 L360.6,438.1 L364.8,438.1 L369.1,438.1 L373.3,438.1
+		L377.5,438.1 L381.8,438.1 L386.0,438.1 L390.2,438.1 L394.5,438.1 L398.7,438.1 L402.9,438.1 L407.2,438.1
+		L411.4,438.1 L415.7,438.1 L419.9,438.1 L424.1,438.1 L428.4,438.1 L432.6,438.1 L436.8,438.1 L441.1,438.1
+		L445.3,438.1 L449.5,438.1 L453.8,438.1 L458.0,438.1 L462.2,438.1 L466.5,438.1 L470.7,438.1 L474.9,438.1
+		L479.2,438.1 L483.4,438.1 L487.6,438.1 L491.9,438.1 L496.1,438.1 L500.4,438.1 L504.6,438.1 L508.8,438.2
+		L513.1,438.2 L517.3,438.1 L521.5,438.1  '/></g>
+	</g>
+	<g id="gnuplot_plot_8" ><title>data/crypto_onetimeauth_poly1305_jazz_avx2_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,165.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_jazz_avx2_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(  0,   0,   0)'  d='M516.2,160.7 L558.4,160.7 M47.2,439.1 L51.4,438.9 L55.7,439.3 L59.9,439.1 L64.1,439.4 L68.4,439.2
+		L72.6,439.6 L76.8,439.4 L81.1,439.7 L85.3,439.5 L89.5,439.8 L93.8,439.5 L98.0,439.8 L102.2,439.7
+		L106.5,439.9 L110.7,439.7 L115.0,440.0 L119.2,439.8 L123.4,440.0 L127.7,439.8 L131.9,440.0 L136.1,439.9
+		L140.4,440.1 L144.6,440.0 L148.8,440.1 L153.1,440.0 L157.3,440.2 L161.5,440.0 L165.8,440.2 L170.0,440.0
+		L174.2,440.2 L178.5,440.1 L182.7,440.2 L186.9,440.1 L191.2,440.3 L195.4,440.2 L199.7,440.3 L203.9,440.2
+		L208.1,440.3 L212.4,440.2 L216.6,440.3 L220.8,440.2 L225.1,440.3 L229.3,440.3 L233.5,440.3 L237.8,440.3
+		L242.0,440.3 L246.2,440.3 L250.5,440.4 L254.7,440.3 L258.9,440.4 L263.2,440.3 L267.4,440.4 L271.7,440.3
+		L275.9,440.4 L280.1,440.3 L284.4,440.4 L288.6,440.3 L292.8,440.5 L297.1,440.3 L301.3,440.5 L305.5,440.3
+		L309.8,440.5 L314.0,440.4 L318.2,440.5 L322.5,440.4 L326.7,440.5 L330.9,440.4 L335.2,440.5 L339.4,440.4
+		L343.7,440.5 L347.9,440.4 L352.1,440.5 L356.4,440.4 L360.6,440.5 L364.8,440.5 L369.1,440.5 L373.3,440.5
+		L377.5,440.5 L381.8,440.5 L386.0,440.5 L390.2,440.5 L394.5,440.5 L398.7,440.5 L402.9,440.6 L407.2,440.5
+		L411.4,440.5 L415.7,440.5 L419.9,440.5 L424.1,440.5 L428.4,440.5 L432.6,440.5 L436.8,440.5 L441.1,440.5
+		L445.3,440.6 L449.5,440.5 L453.8,440.6 L458.0,440.5 L462.2,440.6 L466.5,440.5 L470.7,440.6 L474.9,440.5
+		L479.2,440.6 L483.4,440.5 L487.6,440.6 L491.9,440.5 L496.1,440.6 L500.4,440.5 L504.6,440.6 L508.8,440.5
+		L513.1,440.6 L517.3,440.5 L521.5,440.6  '/></g>
+	</g>
+	<g id="gnuplot_plot_9" ><title>data/crypto_onetimeauth_poly1305_hacl_star_gcc_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,183.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_hacl_star_gcc_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(148,   0, 211)'  d='M516.2,178.7 L558.4,178.7 M47.2,429.5 L51.4,429.5 L55.7,429.5 L59.9,429.6 L64.1,429.7 L68.4,429.7
+		L72.6,429.7 L76.8,429.8 L81.1,429.8 L85.3,429.8 L89.5,429.8 L93.8,429.8 L98.0,429.9 L102.2,429.9
+		L106.5,429.9 L110.7,429.9 L115.0,430.0 L119.2,430.0 L123.4,430.0 L127.7,430.0 L131.9,430.0 L136.1,430.0
+		L140.4,430.0 L144.6,430.0 L148.8,430.0 L153.1,430.0 L157.3,430.0 L161.5,430.1 L165.8,430.0 L170.0,430.1
+		L174.2,430.1 L178.5,430.1 L182.7,430.0 L186.9,430.1 L191.2,430.1 L195.4,430.1 L199.7,430.1 L203.9,430.1
+		L208.1,430.1 L212.4,430.1 L216.6,430.1 L220.8,430.1 L225.1,430.1 L229.3,430.1 L233.5,430.1 L237.8,430.1
+		L242.0,430.1 L246.2,430.1 L250.5,430.2 L254.7,430.2 L258.9,430.1 L263.2,430.1 L267.4,430.1 L271.7,430.1
+		L275.9,430.1 L280.1,430.1 L284.4,430.1 L288.6,430.2 L292.8,430.1 L297.1,430.1 L301.3,430.1 L305.5,430.2
+		L309.8,430.2 L314.0,430.2 L318.2,430.2 L322.5,430.2 L326.7,430.2 L330.9,430.2 L335.2,430.2 L339.4,430.2
+		L343.7,430.2 L347.9,430.2 L352.1,430.2 L356.4,430.2 L360.6,430.2 L364.8,430.2 L369.1,430.2 L373.3,430.2
+		L377.5,430.2 L381.8,430.2 L386.0,430.3 L390.2,430.3 L394.5,430.2 L398.7,430.2 L402.9,430.3 L407.2,430.2
+		L411.4,430.2 L415.7,430.2 L419.9,430.2 L424.1,430.2 L428.4,430.2 L432.6,430.2 L436.8,430.2 L441.1,430.2
+		L445.3,430.3 L449.5,430.2 L453.8,430.2 L458.0,430.2 L462.2,430.2 L466.5,430.2 L470.7,430.2 L474.9,430.3
+		L479.2,430.3 L483.4,430.3 L487.6,430.3 L491.9,430.3 L496.1,430.3 L500.4,430.3 L504.6,430.3 L508.8,430.3
+		L513.1,430.3 L517.3,430.3 L521.5,430.3  '/></g>
+	</g>
+	<g id="gnuplot_plot_10" ><title>data/crypto_onetimeauth_poly1305_hacl_star_compcert_4096.csv</title>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<g transform="translate(507.9,201.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
+		<text><tspan font-family="Arial" >data/crypto_onetimeauth_poly1305_hacl_star_compcert_4096.csv</tspan></text>
+	</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='rgb(  0, 158, 115)'  d='M516.2,196.7 L558.4,196.7 M47.2,58.1 L51.4,60.2 L55.7,58.6 L59.9,62.2 L64.1,60.3 L68.4,60.8
+		L72.6,61.3 L76.8,60.4 L81.1,60.8 L85.3,60.8 L89.5,61.5 L93.8,61.4 L98.0,60.2 L102.2,60.3
+		L106.5,64.6 L110.7,61.9 L115.0,60.6 L119.2,60.6 L123.4,61.0 L127.7,61.9 L131.9,61.6 L136.1,61.0
+		L140.4,62.0 L144.6,61.1 L148.8,61.2 L153.1,62.9 L157.3,61.6 L161.5,61.3 L165.8,62.3 L170.0,61.3
+		L174.2,61.3 L178.5,63.6 L182.7,64.4 L186.9,64.1 L191.2,63.1 L195.4,62.5 L199.7,61.6 L203.9,63.6
+		L208.1,63.6 L212.4,63.3 L216.6,63.3 L220.8,61.7 L225.1,61.9 L229.3,64.5 L233.5,61.9 L237.8,61.9
+		L242.0,62.4 L246.2,61.9 L250.5,62.4 L254.7,62.0 L258.9,61.9 L263.2,62.9 L267.4,62.1 L271.7,62.8
+		L275.9,63.5 L280.1,63.0 L284.4,62.1 L288.6,62.2 L292.8,63.3 L297.1,63.0 L301.3,62.8 L305.5,64.3
+		L309.8,63.0 L314.0,64.2 L318.2,64.3 L322.5,62.2 L326.7,63.3 L330.9,62.2 L335.2,62.2 L339.4,63.0
+		L343.7,62.3 L347.9,62.8 L352.1,62.3 L356.4,62.7 L360.6,63.8 L364.8,63.7 L369.1,63.8 L373.3,62.6
+		L377.5,63.0 L381.8,62.6 L386.0,62.4 L390.2,62.4 L394.5,62.7 L398.7,62.4 L402.9,62.4 L407.2,62.4
+		L411.4,63.1 L415.7,62.4 L419.9,62.8 L424.1,62.5 L428.4,63.9 L432.6,63.6 L436.8,63.4 L441.1,62.5
+		L445.3,63.4 L449.5,62.6 L453.8,64.5 L458.0,63.3 L462.2,62.7 L466.5,63.6 L470.7,62.5 L474.9,63.2
+		L479.2,62.5 L483.4,63.1 L487.6,63.2 L491.9,63.5 L496.1,62.4 L500.4,63.0 L504.6,62.7 L508.8,63.8
+		L513.1,62.6 L517.3,64.4 L521.5,63.3  '/></g>
+	</g>
+<g fill="none" color="#FFFFFF" stroke="rgb(  0, 158, 115)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M45.6,16.7 L45.6,444.0 L575.0,444.0 L575.0,16.7 L45.6,16.7 Z  '/></g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+</g>
+</svg>
+
