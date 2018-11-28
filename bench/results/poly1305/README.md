@@ -1,3 +1,6 @@
+# Overview
+Cycles per byte over message length. Each following section contains 3 images, the first for messages from 16 to 512 bytes, the second from 512 to 4096 bytes and the last from 4096 to 16384.
+
 # Jazz / OpenSSL 1_1_1-stable (GCC 8.1)
 ![Jazz / OpenSSL 1_1_1-stable (GCC 8.1) - 16 to 512 bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/poly1305/poly1305_cycles_(jazz%7Copenssl)_16_512.svg)
 ![Jazz / OpenSSL 1_1_1-stable (GCC 8.1) - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/poly1305/poly1305_cycles_(jazz%7Copenssl)_512_4096.svg)
