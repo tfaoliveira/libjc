@@ -49,7 +49,32 @@ fn quarter_round(reg u32[16] k, inline int a b c d) -> reg u32[16]
   return k;
 }
 
+fn column_round(reg u32[16] k) -> reg u32[16] 
+{
+  k = quarter_round(k, 0, 4, 8, 12);
+  k = quarter_round(k, 2, 6, 10, 14);
 
+  k = quarter_round(k, 1, 5, 9, 13);
+  k = quarter_round(k, 3, 7, 11, 15);
+  return k;
+}
+
+fn diagonal_round(reg u32[16] k) -> reg u32[16] 
+{
+  k = quarter_round(k, 1, 6, 11, 12);
+  k = quarter_round(k, 0, 5, 10, 15);
+
+  k = quarter_round(k, 2, 7, 8,  13);
+  k = quarter_round(k, 3, 4, 9,  14);
+  return k;
+}
+
+fn round(reg u32[16] k) -> reg u32[16] 
+{
+  k = column_round(k);
+  k = diagonal_round(k);
+  return k;
+}
 
 fn rounds(reg u32[16] k) -> reg u32[16]
 {
@@ -59,25 +84,12 @@ fn rounds(reg u32[16] k) -> reg u32[16]
   c = 0;
   while(c < 10)
   {
-    k = quarter_round(k, 0, 4, 8, 12);
-    k = quarter_round(k, 2, 6, 10, 14);
-
-    k = quarter_round(k, 1, 5, 9, 13);
-    k = quarter_round(k, 3, 7, 11, 15);
-
-    k = quarter_round(k, 1, 6, 11, 12);
-    k = quarter_round(k, 0, 5, 10, 15);
-
-    k = quarter_round(k, 2, 7, 8,  13);
-    k = quarter_round(k, 3, 4, 9,  14); 
-
+    k = round(k);
     c += 1; 
   }  
 
   return k;
 }
-
-
 
 fn sum_states(reg u32[16] k, reg u32[16] st) -> reg u32[16]
 {
@@ -99,7 +111,7 @@ fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u
 
 
 
-fn store(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, reg u32
+fn store32(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, reg u32
 {
   inline int i;
 
@@ -112,7 +124,17 @@ fn store(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, 
   return output, plain, len;
 }
 
+fn store(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, reg u32
+{
+  inline int i;
 
+  for i=0 to 64
+  { (u8)[output + i] = k[u8 i] ^ (u8)[plain + i]; }
+
+  output, plain, len = update_ptr(output, plain, len, 64);
+
+  return output, plain, len;
+}
 
 fn store_last(reg u64 output plain, reg u32 len, reg u32[16] k)
 {
@@ -145,6 +167,30 @@ fn increment_counter(reg u32[16] st) -> reg u32[16]
 
 
 
+export fn chacha20_ref32(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+{
+  reg u32[16] st k;
+
+  st = init(key, nonce, counter);
+
+  while(len >= 64)
+  {
+    k = copy_state(st);
+    k = rounds(k);
+    k = sum_states(k, st);
+    output, plain, len = store32(output, plain, len, k); 
+    st = increment_counter(st);
+  }
+
+  if(len > 0)
+  {
+    k = copy_state(st);
+    k = rounds(k);
+    k = sum_states(k, st);
+    store_last(output, plain, len, k); 
+  }
+}
+
 export fn chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
 {
   reg u32[16] st k;
@@ -168,8 +214,6 @@ export fn chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg
     store_last(output, plain, len, k); 
   }
 }
-
-
 
 fn chacha20_memory_init_ietf_test(reg u64 output plain key nonce) -> stack u8[114], reg u32
 {
