@@ -8,14 +8,14 @@ equiv init : ChaCha20_pref.M.init ~ ChaCha20_sref.M.init :
   ={key, nonce, counter, Glob.mem} ==>
   ={res}.
 proof.
-(*
   proc.
   while (={i,st, nonce, Glob.mem} /\ 0 <= i{1}).
-  + wp;skip => /> &1 hi0 hi3.
-    rewrite Array3.get_setE //= /#.    
-  wp;while(={i,st,key
-*)
-admit.
+  + wp;skip => /> &1 ??.
+    by rewrite Array3.get_setE //= /#.    
+  wp;while(={i,st,key, Glob.mem} /\ 0 <= i{1}).
+  + wp;skip => /> &1 ??.
+    by rewrite Array8.get_setE //= /#.    
+  wp;skip => />.
 qed.
 
 equiv copy_state : ChaCha20_pref.M.copy_state ~ ChaCha20_sref.M.copy_state :

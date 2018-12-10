@@ -12,6 +12,9 @@ module M = {
     var i:int;
     var k:W32.t Array8.t;
     var n:W32.t Array3.t;
+    k <- witness;
+    n <- witness;
+    st <- witness;
     st.[0] <- (W32.of_int 1634760805);
     st.[1] <- (W32.of_int 857760878);
     st.[2] <- (W32.of_int 2036477234);
@@ -39,6 +42,7 @@ module M = {
     var s_k15:W32.t;
     var k15:W32.t;
     var i:int;
+    k <- witness;
     k15 <- st.[15];
     s_k15 <- k15;
     i <- 0;
@@ -56,6 +60,7 @@ module M = {
     
     var  _0:bool;
     var  _1:bool;
+    
     k.[a] <- (k.[a] + k.[b]);
     k.[c] <- (k.[c] `^` k.[a]);
     (aux_0, aux, aux_1) <- x86_ROL_32 k.[c] (W8.of_int r);
@@ -69,6 +74,7 @@ module M = {
   W32.t Array16.t = {
     
     
+    
     k <@ line (k, a, b, d, 16);
     k <@ line (k, c, d, b, 12);
     k <@ line (k, a, b, d, 8);
@@ -80,6 +86,7 @@ module M = {
     
     var c:W32.t;
     var k14:W32.t;
+    
     c <- (W32.of_int 0);
     
     while ((c \ult (W32.of_int 10))) {
@@ -107,6 +114,7 @@ module M = {
     var i:int;
     var k14:W32.t;
     var t:W32.t;
+    
     i <- 0;
     while (i < 15) {
       k.[i] <- (k.[i] + st.[i]);
@@ -125,6 +133,7 @@ module M = {
                                                                   W32.t = {
     
     
+    
     output <- (output + (W64.of_int n));
     plain <- (plain + (W64.of_int n));
     len <- (len - (W32.of_int n));
@@ -140,6 +149,7 @@ module M = {
     var output:W64.t;
     var plain:W64.t;
     var len:W32.t;
+    s_k <- witness;
     i <- 0;
     while (i < 3) {
       s_k.[i] <- k.[(12 + i)];
@@ -185,6 +195,7 @@ module M = {
     var len:W32.t;
     var j:W64.t;
     var pi:W8.t;
+    s_k <- witness;
     i <- 0;
     while (i < 15) {
       s_k.[i] <- k.[i];
@@ -210,6 +221,7 @@ module M = {
   proc increment_counter (st:W32.t Array16.t) : W32.t Array16.t = {
     
     var t:W32.t;
+    
     t <- (W32.of_int 1);
     t <- (t + st.[12]);
     st.[12] <- t;
@@ -225,6 +237,8 @@ module M = {
     var st:W32.t Array16.t;
     var k:W32.t Array16.t;
     var k15:W32.t;
+    k <- witness;
+    st <- witness;
     s_output <- output;
     s_plain <- plain;
     s_len <- len;

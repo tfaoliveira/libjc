@@ -10,6 +10,7 @@ module M = {
     
     var st:W32.t Array16.t;
     var i:int;
+    st <- witness;
     st.[0] <- (W32.of_int 1634760805);
     st.[1] <- (W32.of_int 857760878);
     st.[2] <- (W32.of_int 2036477234);
@@ -31,6 +32,7 @@ module M = {
   proc copy_state (st:W32.t Array16.t) : W32.t Array16.t = {
     
     var k:W32.t Array16.t;
+    k <- witness;
     k <- st;
     return (k);
   }
@@ -42,6 +44,7 @@ module M = {
     
     var  _0:bool;
     var  _1:bool;
+    
     k.[a] <- (k.[a] + k.[b]);
     k.[c] <- (k.[c] `^` k.[a]);
     (aux_0, aux, aux_1) <- x86_ROL_32 k.[c] (W8.of_int r);
@@ -55,6 +58,7 @@ module M = {
   W32.t Array16.t = {
     
     
+    
     k <@ line (k, a, b, d, 16);
     k <@ line (k, c, d, b, 12);
     k <@ line (k, a, b, d, 8);
@@ -63,6 +67,7 @@ module M = {
   }
   
   proc column_round (k:W32.t Array16.t) : W32.t Array16.t = {
+    
     
     
     k <@ quarter_round (k, 0, 4, 8, 12);
@@ -75,6 +80,7 @@ module M = {
   proc diagonal_round (k:W32.t Array16.t) : W32.t Array16.t = {
     
     
+    
     k <@ quarter_round (k, 1, 6, 11, 12);
     k <@ quarter_round (k, 0, 5, 10, 15);
     k <@ quarter_round (k, 2, 7, 8, 13);
@@ -85,6 +91,7 @@ module M = {
   proc round (k:W32.t Array16.t) : W32.t Array16.t = {
     
     
+    
     k <@ column_round (k);
     k <@ diagonal_round (k);
     return (k);
@@ -93,6 +100,7 @@ module M = {
   proc rounds (k:W32.t Array16.t) : W32.t Array16.t = {
     
     var c:W32.t;
+    
     c <- (W32.of_int 0);
     
     while ((c \ult (W32.of_int 10))) {
@@ -106,6 +114,7 @@ module M = {
     var aux: int;
     
     var i:int;
+    
     i <- 0;
     while (i < 16) {
       k.[i] <- (k.[i] + st.[i]);
@@ -119,6 +128,7 @@ module M = {
                                                                   W32.t = {
     
     
+    
     output <- (output + (W64.of_int n));
     plain <- (plain + (W64.of_int n));
     len <- (len - (W32.of_int n));
@@ -129,6 +139,7 @@ module M = {
   W64.t * W64.t * W32.t = {
     
     var i:int;
+    
     i <- 0;
     
     while ((((W32.of_int i) \ult len) /\ (i < 64))) {
@@ -145,6 +156,7 @@ module M = {
   proc increment_counter (st:W32.t Array16.t) : W32.t Array16.t = {
     
     
+    
     st.[12] <- (st.[12] + (W32.of_int 1));
     return (st);
   }
@@ -154,6 +166,8 @@ module M = {
     
     var st:W32.t Array16.t;
     var k:W32.t Array16.t;
+    k <- witness;
+    st <- witness;
     st <@ init (key, nonce, counter);
     
     while (((W32.of_int 0) \ult len)) {

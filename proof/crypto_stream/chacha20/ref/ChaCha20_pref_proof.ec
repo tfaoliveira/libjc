@@ -336,7 +336,7 @@ hoare chacha20_ref_spec output0 plain0 key0 nonce0 counter0 : M.chacha20_ref :
   loads_8 Glob.mem output0 (size plain0).
 proof.
   proc; rewrite /chacha20_CTR_encrypt_bytes /=.
-  seq 1: 
+  seq 3: 
     ((to_uint plain{hr} + W32.to_uint len < to_uint output{hr} || to_uint output{hr} <= to_uint plain{hr}) /\
     to_uint output{hr} + to_uint len < W64.modulus /\
     to_uint plain{hr} + to_uint len < W64.modulus /\
@@ -349,8 +349,8 @@ proof.
       (0 < ilen => splain1 %% 64 = 0) /\
       iter (splain1 %/ 64 + b2i (splain1 %% 64 <> 0) ) (ctr_round key0 nonce0) ([], plain0, counter0) = 
          (loads_8 Glob.mem output0 splain1, loads_8 Glob.mem plain ilen, c)).
-  + inline M.init.
-    unroll for 12; unroll for 9; wp; skip => &m /> ???.
+  + sp;inline M.init.
+    unroll for 13; unroll for 10; wp; skip => &m /> ???.
     exists [] counter{m} => /=.
     rewrite iter0 // /loads_8 /=.
     rewrite /setup /loads_32 /=.
