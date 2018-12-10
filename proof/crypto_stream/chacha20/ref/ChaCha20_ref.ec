@@ -1,6 +1,6 @@
 require import List Jasmin_model Int IntDiv CoreMap.
-
-clone import WArray as WArray64 with op size <- 64.
+require import Array16.
+require import WArray64.
 
 
 
@@ -127,37 +127,19 @@ module M = {
   
   proc store (output:W64.t, plain:W64.t, len:W32.t, k:W32.t Array16.t) : 
   W64.t * W64.t * W32.t = {
-    var aux: int;
     
     var i:int;
     i <- 0;
-    while (i < 64) {
+    
+    while ((((W32.of_int i) \ult len) /\ (i < 64))) {
       Glob.mem <-
       storeW8 Glob.mem (output + (W64.of_int i)) ((get8
                                                   (WArray64.init32 (fun i => k.[i]))
                                                   i) `^` (loadW8 Glob.mem (plain + (W64.of_int i))));
-      i <- i + 1;
+      i <- (i + 1);
     }
-    (output, plain, len) <@ update_ptr (output, plain, len, 64);
+    (output, plain, len) <@ update_ptr (output, plain, len, i);
     return (output, plain, len);
-  }
-  
-  proc store_last (output:W64.t, plain:W64.t, len:W32.t, k:W32.t Array16.t) : unit = {
-    
-    var s_k:W32.t Array16.t;
-    var j:W64.t;
-    var pi:W8.t;
-    s_k <- k;
-    j <- (W64.of_int 0);
-    
-    while (((truncateu32 j) \ult len)) {
-      pi <- (loadW8 Glob.mem (plain + j));
-      pi <-
-      (pi `^` (get8 (WArray64.init32 (fun i => s_k.[i])) (W64.to_uint j)));
-      Glob.mem <- storeW8 Glob.mem (output + j) pi;
-      j <- (j + (W64.of_int 1));
-    }
-    return ();
   }
   
   proc increment_counter (st:W32.t Array16.t) : W32.t Array16.t = {
@@ -174,20 +156,12 @@ module M = {
     var k:W32.t Array16.t;
     st <@ init (key, nonce, counter);
     
-    while (((W32.of_int 64) \ule len)) {
+    while (((W32.of_int 0) \ult len)) {
       k <@ copy_state (st);
       k <@ rounds (k);
       k <@ sum_states (k, st);
       (output, plain, len) <@ store (output, plain, len, k);
       st <@ increment_counter (st);
-    }
-    if (((W32.of_int 0) \ult len)) {
-      k <@ copy_state (st);
-      k <@ rounds (k);
-      k <@ sum_states (k, st);
-      store_last (output, plain, len, k);
-    } else {
-      
     }
     return ();
   }

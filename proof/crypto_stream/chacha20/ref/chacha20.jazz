@@ -109,86 +109,25 @@ fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u
   return output, plain, len;
 }
 
-
-
-fn store32(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, reg u32
-{
-  inline int i;
-
-  for i=0 to 16
-  { k[i] ^= (u32)[plain + 4*i];
-    (u32)[output + 4*i] = k[i]; }
-
-  output, plain, len = update_ptr(output, plain, len, 64);
-
-  return output, plain, len;
-}
-
 fn store(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, reg u32
 {
   inline int i;
 
-  for i=0 to 64
-  { (u8)[output + i] = k[u8 i] ^ (u8)[plain + i]; }
+  i = 0;
+  while(i < len && i < 64) { 
+    (u8)[output + i] = k[u8 i] ^ (u8)[plain + i]; 
+    i += 1;
+  }
 
-  output, plain, len = update_ptr(output, plain, len, 64);
+  output, plain, len = update_ptr(output, plain, len, i);
 
   return output, plain, len;
 }
-
-fn store_last(reg u64 output plain, reg u32 len, reg u32[16] k)
-{
-  inline int i;
-  reg u64 j;
-  stack u32[16] s_k;
-  reg u8 pi;
-
-  // copy k to stack
-  s_k = k;
-  
-  // store
-  j = 0;
-  while(j < len)
-  {
-    pi = (u8)[plain + j];
-    pi ^= s_k[u8 (int)j];
-    (u8)[output + j] = pi;
-    j += 1;
-  }
-} 
-
-
 
 fn increment_counter(reg u32[16] st) -> reg u32[16]
 {
   st[12] += 1;
   return st;
-}
-
-
-
-export fn chacha20_ref32(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
-{
-  reg u32[16] st k;
-
-  st = init(key, nonce, counter);
-
-  while(len >= 64)
-  {
-    k = copy_state(st);
-    k = rounds(k);
-    k = sum_states(k, st);
-    output, plain, len = store32(output, plain, len, k); 
-    st = increment_counter(st);
-  }
-
-  if(len > 0)
-  {
-    k = copy_state(st);
-    k = rounds(k);
-    k = sum_states(k, st);
-    store_last(output, plain, len, k); 
-  }
 }
 
 export fn chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
@@ -197,7 +136,7 @@ export fn chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg
 
   st = init(key, nonce, counter);
 
-  while(len >= 64)
+  while(len > 0)
   {
     k = copy_state(st);
     k = rounds(k);
@@ -206,13 +145,6 @@ export fn chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg
     st = increment_counter(st);
   }
 
-  if(len > 0)
-  {
-    k = copy_state(st);
-    k = rounds(k);
-    k = sum_states(k, st);
-    store_last(output, plain, len, k); 
-  }
 }
 
 fn chacha20_memory_init_ietf_test(reg u64 output plain key nonce) -> stack u8[114], reg u32

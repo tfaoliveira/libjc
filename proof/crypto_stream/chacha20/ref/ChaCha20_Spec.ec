@@ -1,4 +1,7 @@
-require import List Jasmin_model Int IntDiv CoreMap AllCore WArray64.
+require import List Jasmin_model Int IntDiv CoreMap AllCore.
+require import Array3 Array8 Array16.
+require import WArray64.
+
 import Jasmin_memory.
 import Jasmin_array.
 
@@ -84,7 +87,6 @@ op ctr_round (k:key) (n:nonce) (round_st : cph * msg * counter) =
 
 op chacha20_CTR_encrypt_bytes key nonce counter m =
   let len = size m in
-  let len64 = len %/ 64 in
-  let rounds = if len %% 64 = 0 then len64 else len64 + 1 in
+  let rounds = (len %/ 64) + b2i (len %% 64 <> 0) in 
   iter rounds (ctr_round key nonce) ([],m,counter).
 

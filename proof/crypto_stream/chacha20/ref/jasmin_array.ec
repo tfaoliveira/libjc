@@ -499,7 +499,7 @@ abstract theory PolyArray.
 
 end PolyArray.
 
-clone export PolyArray as Array0  with op size <- 0.
+(*clone export PolyArray as Array0  with op size <- 0.
 clone export PolyArray as Array1  with op size <- 1.
 clone export PolyArray as Array2  with op size <- 2.
 clone export PolyArray as Array3  with op size <- 3.
@@ -552,6 +552,6 @@ clone export PolyArray as Array45  with op size <- 45.
 clone export PolyArray as Array46  with op size <- 46.
 clone export PolyArray as Array47  with op size <- 47.
 clone export PolyArray as Array48  with op size <- 48.
-clone export PolyArray as Array49  with op size <- 49. 
+clone export PolyArray as Array49  with op size <- 49. *)
 
 
