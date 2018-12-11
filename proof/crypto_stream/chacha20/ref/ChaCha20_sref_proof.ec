@@ -4,13 +4,27 @@ require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref.
 require import Array3 Array8 Array16.
 require import WArray64.
 
+(*
+equiv init : ChaCha20_pref.M.init ~ ChaCha20_sref.M.init :
+  ={key, nonce, counter, Glob.mem} ==>
+  ={res}.
+  proof.
+  proc.
+    seq 5 7 : (#pre /\ ={st}). wp. skip. progress.
+  while (={i, st, nonce, Glob.mem} /\ 0 <= i{1}). wp. skip. progress. rewrite Array3.get_setE. smt(). smt(). smt().
+    wp.
+  while (={i, key, st, Glob.mem} /\ 0 <= i{1}). wp. skip. progress. rewrite Array8.get_setE. smt(). smt(). smt().
+    wp. skip. progress.
+  qed.
+*)
+
 equiv init : ChaCha20_pref.M.init ~ ChaCha20_sref.M.init :
   ={key, nonce, counter, Glob.mem} ==>
   ={res}.
 proof.
   proc.
   while (={i,st, nonce, Glob.mem} /\ 0 <= i{1}).
-  + wp;skip => /> &1 ??.
+  + wp. skip => /> &1 ??.
     by rewrite Array3.get_setE //= /#.    
   wp;while(={i,st,key, Glob.mem} /\ 0 <= i{1}).
   + wp;skip => /> &1 ??.
@@ -20,11 +34,31 @@ qed.
 
 equiv copy_state : ChaCha20_pref.M.copy_state ~ ChaCha20_sref.M.copy_state :
   ={st} ==>
-  res{1} = res{2}.`1.[15 <- res{2}.`2].
-proof.
-  proc => /=.  
-  admit.
+    res{1} = res{2}.`1.[15 <- res{2}.`2].
+    (*res{1}.[0]  = res{2}.`1.[0] /\
+    res{1}.[1]  = res{2}.`1.[1] /\
+    res{1}.[2]  = res{2}.`1.[2] /\
+    res{1}.[3]  = res{2}.`1.[3] /\
+    res{1}.[4]  = res{2}.`1.[4] /\
+    res{1}.[5]  = res{2}.`1.[5] /\
+    res{1}.[6]  = res{2}.`1.[6] /\
+    res{1}.[7]  = res{2}.`1.[7] /\
+    res{1}.[8]  = res{2}.`1.[8] /\
+    res{1}.[9]  = res{2}.`1.[9] /\
+    res{1}.[10] = res{2}.`1.[10] /\
+    res{1}.[11] = res{2}.`1.[11] /\
+    res{1}.[12] = res{2}.`1.[12] /\
+    res{1}.[13] = res{2}.`1.[13] /\
+    res{1}.[14] = res{2}.`1.[14] /\
+    res{1}.[15] = res{2}.`1.[15 <- res{2}.`2].[15].*)
+  
+  proof.
+  proc => /=.
+  seq 2 3 : (#pre /\ st{1} = k{1} /\ k.[15]{1} = s_k15{2}). wp. skip. progress.
+    unroll for {2} 2. wp. skip. progress.
+  (* ?? *)
 qed.
+
 
 equiv rounds : ChaCha20_pref.M.rounds ~ ChaCha20_sref.M.rounds :
   k{1} = k{2}.[15 <- k15{2}] ==>
