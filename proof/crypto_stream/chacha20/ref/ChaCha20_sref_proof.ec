@@ -4,6 +4,7 @@ require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref.
 require import Array3 Array8 Array16.
 require import WArray64.
 
+
 (*
 equiv init : ChaCha20_pref.M.init ~ ChaCha20_sref.M.init :
   ={key, nonce, counter, Glob.mem} ==>
@@ -25,10 +26,10 @@ proof.
   proc.
   while (={i,st, nonce, Glob.mem} /\ 0 <= i{1}).
   + wp. skip => /> &1 ??.
-    by rewrite Array3.get_setE //= /#.    
+    by rewrite Array3.get_setE //= /#.
   wp;while(={i,st,key, Glob.mem} /\ 0 <= i{1}).
   + wp;skip => /> &1 ??.
-    by rewrite Array8.get_setE //= /#.    
+    by rewrite Array8.get_setE //= /#.
   wp;skip => />.
 qed.
 
@@ -56,16 +57,44 @@ equiv copy_state : ChaCha20_pref.M.copy_state ~ ChaCha20_sref.M.copy_state :
   proc => /=.
   seq 2 3 : (#pre /\ st{1} = k{1} /\ k.[15]{1} = s_k15{2}). wp. skip. progress.
     unroll for {2} 2. wp. skip. progress.
-  (* ?? *)
+    (* ?? *)
+  admit.
 qed.
 
+hint simplify (x86_ROL_32_E, W32.rol_xor_simplify).
+
+
+equiv line : ChaCha20_pref.M.line ~ ChaCha20_sref.M.line :
+  ={k,a,b,c,r} ==>
+  res{1} = res{2}.
+proof.
+proc => /=.
+  wp. skip. progress.
+qed.
 
 equiv rounds : ChaCha20_pref.M.rounds ~ ChaCha20_sref.M.rounds :
   k{1} = k{2}.[15 <- k15{2}] ==>
   res{1} = res{2}.`1.[15 <- res{2}.`2].
 proof.
-  proc => /=.  
-  admit.
+ proc => /=.
+while ( ={c} /\ k{1} = k{2}.[15 <- k15{2}]).
+  inline{1} ChaCha20_pref.M.round.
+  inline{1} ChaCha20_pref.M.column_round.
+  seq 1 0 : ( #pre /\ k0{1} = k{1}). wp. skip. progress.
+  seq 1 0 : ( #pre /\ k1{1} = k{1}). wp. skip. progress.
+  seq 1 1 : ( #pre). inline *. wp. skip. progress.
+  by rewrite Array16.get_setE //= /#.
+
+
+
+  seq 1 1 : ( #pre /\ k1{1}.[0] = k{2}.[0]
+                   /\ k1{1}.[4] = k{2}.[4]
+                   /\ k1{1}.[8] = k{2}.[8]
+  /\ k1{1}.[12] = k{2}.[12]). inline *. wp. skip. progress.
+
+
+
+  seq 3 1 : ( #pre /\ k1{1} = k{2}.[15 <- k15{2}]). inline *. wp. skip. progress.
 qed.
 
 equiv sum_states : ChaCha20_pref.M.sum_states ~ ChaCha20_sref.M.sum_states :
