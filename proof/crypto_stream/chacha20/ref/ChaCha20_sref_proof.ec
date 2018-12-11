@@ -82,19 +82,8 @@ while ( ={c} /\ k{1} = k{2}.[15 <- k15{2}]).
   inline{1} ChaCha20_pref.M.column_round.
   seq 1 0 : ( #pre /\ k0{1} = k{1}). wp. skip. progress.
   seq 1 0 : ( #pre /\ k1{1} = k{1}). wp. skip. progress.
-  seq 1 1 : ( #pre). inline *. wp. skip. progress.
-  by rewrite Array16.get_setE //= /#.
 
-
-
-  seq 1 1 : ( #pre /\ k1{1}.[0] = k{2}.[0]
-                   /\ k1{1}.[4] = k{2}.[4]
-                   /\ k1{1}.[8] = k{2}.[8]
-  /\ k1{1}.[12] = k{2}.[12]). inline *. wp. skip. progress.
-
-
-
-  seq 3 1 : ( #pre /\ k1{1} = k{2}.[15 <- k15{2}]). inline *. wp. skip. progress.
+  seq 1 1 : ( k1{1} = k{2}.[15 <- k15{2}] ). inline *. wp. skip. progress.
 qed.
 
 equiv sum_states : ChaCha20_pref.M.sum_states ~ ChaCha20_sref.M.sum_states :
