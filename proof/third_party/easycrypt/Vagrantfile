@@ -1,0 +1,44 @@
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "ubuntu/bionic64"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "8192"
+  end
+
+  config.ssh.forward_x11 = true
+
+  config.vm.synced_folder "../../../", "/home/vagrant/libjc"
+
+  config.vm.provision "shell", binary: true, privileged: false, inline: <<-SHELL
+
+    export LANGUAGE=en_US.UTF-8
+    export LANG=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+    locale-gen en_US.UTF-8
+    dpkg-reconfigure locales
+
+    sudo apt-get update
+    sudo apt-get -q -y install sudo m4 gpp libpcre3-dev pkg-config zlib1g-dev z3 cvc4 rsync git curl python python-pip
+    sudo apt-get -q -y --no-install-recommends install ocaml-nox opam aspcud emacs xorg libcanberra-gtk3-module
+    pip install --no-cache-dir pyyaml
+
+    opam init -a
+    opam switch 4.04.0   
+    opam update
+    eval `opam config env`
+
+    opam install depext
+    opam depext conf-gmp.1
+
+    opam remote add easycrypt https://github.com/EasyCrypt/opam.git
+    opam install -y alt-ergo
+    opam install -y --deps-only easycrypt
+    opam config exec -- why3 config --detect
+    opam pin add -n easycrypt https://github.com/EasyCrypt/easycrypt.git#deploy-kms
+    opam install easycrypt.dev
+    opam install proofgeneral
+
+    cp /home/vagrant/libjc/proof/third_party/easycrypt/emacs .emacs
+  SHELL
+end

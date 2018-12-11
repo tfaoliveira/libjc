@@ -18,3 +18,7 @@
 [submodule "bench/third_party/jasmin/coqword"]
 	path = bench/third_party/jasmin/coqword
 	url = git@github.com:jasmin-lang/coqword.git
+[submodule "proof/third_party/easycrypt"]
+	path = proof/third_party/easycrypt/easycrypt
+	url = https://github.com/EasyCrypt/easycrypt.git
+	branch = deploy-kms

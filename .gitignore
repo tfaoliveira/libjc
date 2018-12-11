@@ -1,1 +1,3 @@
-*.japp
+*.a
+.vagrant
+*.log

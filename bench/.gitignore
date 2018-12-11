@@ -1,6 +1,3 @@
 supercop-*
-*.a
-.vagrant
-*.log
 data/
 third_party_build/
