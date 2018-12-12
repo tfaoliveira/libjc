@@ -10,8 +10,8 @@ equiv init : ChaCha20_pref.M.init ~ ChaCha20_sref.M.init :
 proof.
   proc.
   while (={i,st, nonce, Glob.mem} /\ 0 <= i{1}).
-  + wp. skip => /> &1 ??.
-    by rewrite Array3.get_setE //= /#.
+  + wp; skip => /> &2 2?.
+    by rewrite Array3.get_setE //= /#. 
   wp;while(={i,st,key, Glob.mem} /\ 0 <= i{1}).
   + wp;skip => /> &1 ??.
     by rewrite Array8.get_setE //= /#.
@@ -52,7 +52,7 @@ equiv rounds : ChaCha20_pref.M.rounds ~ ChaCha20_sref.M.rounds :
   res{1} = res{2}.`1.[15 <- res{2}.`2].
 proof.
   proc => /=.
-  while ( ={c} /\ k{1} = k{2}.[15 <- k15{2}]);last by by wp;skip.
+  while ( ={c} /\ k{1} = k{2}.[15 <- k15{2}]);last by wp;skip.
   inline{1} ChaCha20_pref.M.round ChaCha20_pref.M.column_round ChaCha20_pref.M.diagonal_round.
   wp. 
   ecall (quarter_round_spec 15 k15{2}) => /=.
@@ -80,7 +80,6 @@ proof.
 qed.
 
 require import Real.
-
 
 theory Loop.
 
@@ -379,4 +378,21 @@ if => //;last first.
   apply W32.to_uintRL => /=;rewrite modz_small 1://; smt (W32.to_uint_cmp).
 inline{1}ChaCha20_pref.M.increment_counter;wp.
 call store_last; call sum_states; call rounds; call copy_state;skip => />.
+qed.
+
+
+hoare chacha20_sref_spec output0 plain0 key0 nonce0 counter0 : ChaCha20_sref.M.chacha20_ref :
+  output = output0 /\ 
+  (to_uint plain{hr} + W32.to_uint len < to_uint output{hr} || to_uint output{hr} <= to_uint plain{hr}) /\
+  to_uint output{hr} + to_uint len < W64.modulus /\
+  to_uint plain{hr} + to_uint len < W64.modulus /\
+  plain0 = loads_8 Glob.mem plain (W32.to_uint len) /\
+  key0 = Array8.of_list W32.zero (loads_32 Glob.mem key 8) /\
+  nonce0 = Array3.of_list W32.zero (loads_32 Glob.mem nonce 3) /\
+  counter0 = counter 
+  ==> 
+  (chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 = 
+  loads_8 Glob.mem output0 (size plain0).
+proof.
+
 qed.
