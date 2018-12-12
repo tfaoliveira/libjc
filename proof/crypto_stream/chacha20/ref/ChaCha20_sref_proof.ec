@@ -4,21 +4,6 @@ require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref.
 require import Array3 Array8 Array16.
 require import WArray64.
 
-
-(*
-equiv init : ChaCha20_pref.M.init ~ ChaCha20_sref.M.init :
-  ={key, nonce, counter, Glob.mem} ==>
-  ={res}.
-  proof.
-  proc.
-    seq 5 7 : (#pre /\ ={st}). wp. skip. progress.
-  while (={i, st, nonce, Glob.mem} /\ 0 <= i{1}). wp. skip. progress. rewrite Array3.get_setE. smt(). smt(). smt().
-    wp.
-  while (={i, key, st, Glob.mem} /\ 0 <= i{1}). wp. skip. progress. rewrite Array8.get_setE. smt(). smt(). smt().
-    wp. skip. progress.
-  qed.
-*)
-
 equiv init : ChaCha20_pref.M.init ~ ChaCha20_sref.M.init :
   ={key, nonce, counter, Glob.mem} ==>
   ={res}.
@@ -34,41 +19,53 @@ proof.
 qed.
 
 equiv copy_state : ChaCha20_pref.M.copy_state ~ ChaCha20_sref.M.copy_state :
-  ={st} ==>
-    res{1} = res{2}.`1.[15 <- res{2}.`2]. 
-  proof.
+  ={st} ==> res{1} = res{2}.`1.[15 <- res{2}.`2].
+proof.
   proc => /=.
-    unroll for {2} 5. wp. skip. progress.
-    print Array16.all_eq_eq.
-    apply Array16.all_eq_eq.
-    by rewrite /Array16.all_eq.
+  conseq (_: Array16.all_eq k{1} k{2}.[15 <- s_k15{2}]). 
+  + by move=> *;apply Array16.all_eq_eq.
+  by unroll for {2} 5; wp; skip => />.
 qed.
 
-hint simplify (x86_ROL_32_E, W32.rol_xor_simplify).
-
-equiv line : ChaCha20_pref.M.line ~ ChaCha20_sref.M.line :
-  ={k,a,b,c,r} ==>
-  res{1} = res{2}.
+equiv line_spec i ki: ChaCha20_pref.M.line ~ ChaCha20_sref.M.line : 
+    (0 <= i < 16 /\ ={a,b,c,r} /\ k{1} = k{2}.[i <- ki] /\ (a <> i /\ b <> i /\ c <> i){1}) ==>
+    res{1} = res{2}.[i <- ki].
 proof.
-proc => /=.
-  wp. skip. progress.
+  proc;wp;skip => /> &2 h0i hi ha hb hc.
+  rewrite !(Array16.get_setE _ i) // ha hb /=.
+  rewrite (Array16.set_set_if _ i) (eq_sym i) ha /=.
+  rewrite (Array16.set_set_if _ i) (eq_sym i) hc /=.
+  congr; congr.
+  rewrite (Array16.set_set_if _ i) (eq_sym i) hc /=.
+  by rewrite !(Array16.get_setE _ i) // hc ha.
+qed.
+
+equiv quarter_round_spec i ki: ChaCha20_pref.M.quarter_round ~ ChaCha20_sref.M.quarter_round : 
+    (0 <= i < 16 /\ ={a,b,c,d} /\ k{1} = k{2}.[i <- ki] /\ (a <> i /\ b <> i /\ c <> i /\ d<>i){1}) ==>
+    res{1} = res{2}.[i <- ki].
+proof.
+  proc; do 4! call (line_spec i ki);skip => />.
 qed.
 
 equiv rounds : ChaCha20_pref.M.rounds ~ ChaCha20_sref.M.rounds :
   k{1} = k{2}.[15 <- k15{2}] ==>
   res{1} = res{2}.`1.[15 <- res{2}.`2].
 proof.
- proc => /=.
-(*
-while ( ={c} /\ k{1} = k{2}.[15 <- k15{2}]).
-  inline{1} ChaCha20_pref.M.round.
-  inline{1} ChaCha20_pref.M.column_round.
-  seq 1 0 : ( #pre /\ k0{1} = k{1}). wp. skip. progress.
-  seq 1 0 : ( #pre /\ k1{1} = k{1}). wp. skip. progress.
-
-  seq 1 1 : ( k1{1} = k{2}.[15 <- k15{2}] ). inline *. wp. skip. progress.
-  *)
-admit.
+  proc => /=.
+  while ( ={c} /\ k{1} = k{2}.[15 <- k15{2}]);last by by wp;skip.
+  inline{1} ChaCha20_pref.M.round ChaCha20_pref.M.column_round ChaCha20_pref.M.diagonal_round.
+  wp. 
+  ecall (quarter_round_spec 15 k15{2}) => /=.
+  ecall (quarter_round_spec 15 k15{2}) => /=.
+  wp.
+  ecall (quarter_round_spec 14 k14{2}) => /=.
+  ecall (quarter_round_spec 14 k14{2}) => /=.
+  wp;ecall (quarter_round_spec 14 k14{2}) => /=.
+  wp;ecall (quarter_round_spec 14 k14{2}) => /=.
+  wp.
+  ecall (quarter_round_spec 15 k15{2}) => /=.
+  ecall (quarter_round_spec 15 k15{2}) => /=.
+  by wp;skip => /> *;split => *; rewrite Array16.set_set_if /= Array16.set_notmod.
 qed.
 
 equiv sum_states : ChaCha20_pref.M.sum_states ~ ChaCha20_sref.M.sum_states :
