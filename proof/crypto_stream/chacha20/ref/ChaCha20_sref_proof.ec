@@ -35,34 +35,16 @@ qed.
 
 equiv copy_state : ChaCha20_pref.M.copy_state ~ ChaCha20_sref.M.copy_state :
   ={st} ==>
-    res{1} = res{2}.`1.[15 <- res{2}.`2].
-    (*res{1}.[0]  = res{2}.`1.[0] /\
-    res{1}.[1]  = res{2}.`1.[1] /\
-    res{1}.[2]  = res{2}.`1.[2] /\
-    res{1}.[3]  = res{2}.`1.[3] /\
-    res{1}.[4]  = res{2}.`1.[4] /\
-    res{1}.[5]  = res{2}.`1.[5] /\
-    res{1}.[6]  = res{2}.`1.[6] /\
-    res{1}.[7]  = res{2}.`1.[7] /\
-    res{1}.[8]  = res{2}.`1.[8] /\
-    res{1}.[9]  = res{2}.`1.[9] /\
-    res{1}.[10] = res{2}.`1.[10] /\
-    res{1}.[11] = res{2}.`1.[11] /\
-    res{1}.[12] = res{2}.`1.[12] /\
-    res{1}.[13] = res{2}.`1.[13] /\
-    res{1}.[14] = res{2}.`1.[14] /\
-    res{1}.[15] = res{2}.`1.[15 <- res{2}.`2].[15].*)
-  
+    res{1} = res{2}.`1.[15 <- res{2}.`2]. 
   proof.
   proc => /=.
-  seq 2 3 : (#pre /\ st{1} = k{1} /\ k.[15]{1} = s_k15{2}). wp. skip. progress.
-    unroll for {2} 2. wp. skip. progress.
-    (* ?? *)
-  admit.
+    unroll for {2} 5. wp. skip. progress.
+    print Array16.all_eq_eq.
+    apply Array16.all_eq_eq.
+    by rewrite /Array16.all_eq.
 qed.
 
 hint simplify (x86_ROL_32_E, W32.rol_xor_simplify).
-
 
 equiv line : ChaCha20_pref.M.line ~ ChaCha20_sref.M.line :
   ={k,a,b,c,r} ==>
@@ -77,6 +59,7 @@ equiv rounds : ChaCha20_pref.M.rounds ~ ChaCha20_sref.M.rounds :
   res{1} = res{2}.`1.[15 <- res{2}.`2].
 proof.
  proc => /=.
+(*
 while ( ={c} /\ k{1} = k{2}.[15 <- k15{2}]).
   inline{1} ChaCha20_pref.M.round.
   inline{1} ChaCha20_pref.M.column_round.
@@ -84,6 +67,8 @@ while ( ={c} /\ k{1} = k{2}.[15 <- k15{2}]).
   seq 1 0 : ( #pre /\ k1{1} = k{1}). wp. skip. progress.
 
   seq 1 1 : ( k1{1} = k{2}.[15 <- k15{2}] ). inline *. wp. skip. progress.
+  *)
+admit.
 qed.
 
 equiv sum_states : ChaCha20_pref.M.sum_states ~ ChaCha20_sref.M.sum_states :
