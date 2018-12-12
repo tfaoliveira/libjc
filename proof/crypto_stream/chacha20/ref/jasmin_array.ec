@@ -104,6 +104,11 @@ abstract theory MonoArray.
     k <> k' => t.[k <- x].[k' <- x'] = t.[k' <- x'].[k <- x].
   proof. by rewrite set_set_if => ->. qed.
 
+  lemma set_notmod (t:t) i : t.[i <- t.[i]] = t.
+  proof. 
+    by apply ext_eq => j hj; rewrite get_set_if; case: (0 <= i < size /\ j = i).
+  qed.
+
   (* -------------------------------------------------------------------- *)
   op of_list (l:elem list) = 
     init (fun i => nth dfl l i)
@@ -346,6 +351,11 @@ abstract theory PolyArray.
   lemma set_set_swap (t : 'a t) (k k' : int) (x x' : 'a):
     k <> k' => t.[k <- x].[k' <- x'] = t.[k' <- x'].[k <- x].
   proof. by rewrite set_set_if => ->. qed.
+
+  lemma set_notmod (t:'a t) i : t.[i <- t.[i]] = t.
+  proof. 
+    by apply ext_eq => j hj; rewrite get_set_if; case: (0 <= i < size /\ j = i).
+  qed.
 
   (* -------------------------------------------------------------------- *)
   op create (a:'a) = init (fun (i:int) => a)
