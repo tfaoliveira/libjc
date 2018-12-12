@@ -135,6 +135,22 @@ module M = {
     return (output, plain, len);
   }
   
+  proc store32 (output:W64.t, plain:W64.t, len:W32.t, k:W32.t Array16.t) : 
+  W64.t * W64.t * W32.t = {
+    
+    var i:int;
+    
+    i <- 0;
+    
+    while ((i < 16)) {
+      Glob.mem <-
+      storeW32 Glob.mem (output + (W64.of_int (4 * i))) (k.[i] `^` (loadW32 Glob.mem (plain + (W64.of_int (4 * i)))));
+      i <- (i + 1);
+    }
+    (output, plain, len) <@ update_ptr (output, plain, len, 64);
+    return (output, plain, len);
+  }
+  
   proc store (output:W64.t, plain:W64.t, len:W32.t, k:W32.t Array16.t) : 
   W64.t * W64.t * W32.t = {
     

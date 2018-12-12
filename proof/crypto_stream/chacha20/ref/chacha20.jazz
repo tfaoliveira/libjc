@@ -109,6 +109,21 @@ fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u
   return output, plain, len;
 }
 
+fn store32(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, reg u32
+{
+  inline int i;
+
+  i = 0;
+  while(i < 16) { 
+    (u32)[output + 4 * i] = k[i] ^ (u32)[plain + 4 * i]; 
+    i += 1;
+  }
+
+  output, plain, len = update_ptr(output, plain, len, 64);
+
+  return output, plain, len;
+}
+
 fn store(reg u64 output plain, reg u32 len, reg u32[16] k) -> reg u64, reg u64, reg u32
 {
   inline int i;

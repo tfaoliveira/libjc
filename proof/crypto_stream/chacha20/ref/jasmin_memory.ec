@@ -98,6 +98,23 @@ proof.
   by rewrite modzMDl divzMDl // -addrA. 
 qed.
 
+lemma load4u8 mem p : 
+  pack4
+    [loadW8 mem p;
+     loadW8 mem (p + W64.of_int 1);
+     loadW8 mem (p + W64.of_int 2);
+     loadW8 mem (p + W64.of_int 3)] =
+  loadW32 mem p.
+proof.
+  have -> : W4u8.Pack.of_list
+          [loadW8 mem p; loadW8 mem (p + (of_int 1)%W64);
+           loadW8 mem (p + (of_int 2)%W64); loadW8 mem (p + (of_int 3)%W64)] =
+         W4u8.Pack.init (fun i => loadW8 mem (p + W64.of_int i)).
+  + by apply W4u8.Pack.all_eqP; rewrite /all_eq.
+  apply (can_inj _ _ W4u8.unpack8K); apply W4u8.Pack.packP => i hi.
+  by rewrite pack4K initiE.
+qed.
+
 lemma load4u32 mem p : 
   pack4
     [loadW32 mem p;
@@ -165,6 +182,17 @@ proof.
   rewrite /W4u8.Pack.to_list /mkseq /= /stores /=.
   by rewrite !pack4u32_bits8_nth //.
 qed.
+
+lemma store4u8 mem ptr w0 w1 w2 w3 :
+  storeW32 mem ptr (W4u8.pack4 [w0; w1; w2; w3]) =
+  storeW8 
+    (storeW8 
+       (storeW8 
+          (storeW8 mem ptr w0) 
+          (ptr + W64.of_int 1) w1) 
+       (ptr + W64.of_int 2) w2)
+    (ptr + W64.of_int 3) w3.
+proof. by rewrite storeW32E !storeW8E. qed.
 
 (* ------------------------------------------------------------------- *)
 (* Global Memory                                                       *)
