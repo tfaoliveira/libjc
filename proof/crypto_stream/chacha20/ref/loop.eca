@@ -1,0 +1,108 @@
+require import AllCore StdOrder.
+
+type t.
+op c : int.
+
+module type AdvLoop = {
+  proc body(t:t, i:int) : t
+}.
+
+
+module Loop(B:AdvLoop) = {
+  proc loop1 (t:t, n:int) = {
+    var i;
+    i = 0;
+    while (i < n) {
+      t <@ B.body(t,i);
+      i <- i + 1;
+    }
+    return t;
+  }
+
+  proc loopk (t:t, n:int, k:int) = {
+    var i, j;
+    i = 0;
+    while (i < n) {
+      j = 0;
+      while (j < k) {
+        t <@ B.body(t, k * i + j);
+        j <- j + 1;
+      }
+      i <- i + 1;
+    }
+    return t;
+  }
+
+  proc loopc (t:t, n:int) = {
+    var i, j;
+    i = 0;
+    while (i < n) {
+      j = 0;
+      while (j < c) {
+        t <@ B.body(t, c * i + j);
+        j <- j + 1;
+      }
+      i <- i + 1;
+    }
+    return t;
+  }
+
+}.
+
+section.
+
+declare module B:AdvLoop.
+
+axiom B_ll : islossless B.body.
+
+equiv loop1_loopk : Loop(B).loop1 ~ Loop(B).loopk : ={t, glob B} /\ n{1} = (k * n){2} /\ 0 < k{2}==> ={res, glob B}.
+proof.
+  proc.
+  async while [ (fun r => i%r < r), (i{1}+k{2})%r ] 
+              [ (fun r => i%r < r), (i{2} + 1)%r ]
+  
+              ( (i < n){1} /\ (i < n){2}) 
+              (!(i < n){2}) : 
+              (={t, glob B} /\ (0 <= i <= n){2} /\ 0 < k{2} /\ n{1} = (k * n){2} /\ i{1} = k{2} * i{2}).
+  + smt(). + smt (). + smt().
+  + move=> &m2;exfalso;smt().
+  + move=> &m1;exfalso;smt().
+  + move=> v1 v2.
+    rcondt{2} 1; 1: by auto => /> /#.
+    rcondf{2} 4; 1: by auto; conseq (_: true);auto.
+    exlim i{2} => i2.
+    wp;while (={t,glob B} /\ i{1} = k{2}*i{2} + j{2} /\ 0 <= i{2} < n{2} /\ 
+              0 <= j{2} <= k{2} /\ v1 = (k{2} * i2 + k{2})%r /\ i{2} = i2 /\ n{1} = (k * n){2}).
+    + wp;call (_: true);skip => /> &2 h0i hin h0j hjk.
+      rewrite !RealExtra.lt_fromint => h1 h2 h3.
+      have := IntOrder.ler_wpmul2l k{2} _ i{2} (n{2} - 1); smt(). 
+    by wp;skip => /> /#.
+  + by while (true) (n - i);auto;1:call B_ll;auto => /> /#.
+  + while (true) (n-i);2: by auto=>/#.
+    by move=> z;wp; while (true) (k - j);auto;1:call B_ll;auto => /> /#.
+  by auto.
+qed.
+
+equiv loopk_loopc : Loop(B).loopk ~ Loop(B).loopc : ={n,t, glob B} /\ k{1} = c ==> ={res, glob B}.
+proof.
+  proc => /=.
+  while (={glob B, i, t, n} /\ k{1} = c);2: by auto.
+  wp;while (={glob B, i, j, t, n} /\ k{1} = c);2: by auto.
+  by wp;call (_:true);skip.
+qed.
+
+lemma loop1_loopc : 0 < c =>
+  equiv [Loop(B).loop1 ~ Loop(B).loopc : ={t, glob B} /\ n{1} = (c * n){2} ==> ={res, glob B}].
+proof.
+  move=> hc.
+  transitivity Loop(B).loopk
+    (={t, glob B} /\ n{1} = c * n{2} /\ k{2} = c ==> ={res, glob B})
+    (={n,t, glob B} /\ k{1} = c ==> ={res, glob B}).
+  + by move=> /> &1 &2 *; exists (glob B){2} (t{1},n{2}, c).
+  + by move=> />.
+  + by conseq loop1_loopk => /> /#. 
+  by conseq loopk_loopc.  
+qed.
+
+end section.
+

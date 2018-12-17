@@ -219,6 +219,33 @@ proof.
   by case (i=0) => // ?;apply hrec => /#.  
 qed.
 
+lemma map2_cat (f:'a -> 'b -> 'c) (l1 l2:'a list) (l1' l2':'b list):
+  size l1 = size l1' =>
+  map2 f (l1 ++ l2) (l1' ++ l2') = map2 f l1 l1' ++ map2 f l2 l2'.
+proof. by move=> hs;rewrite !map2_zip zip_cat // map_cat. qed.
+
+lemma map2C (f: 'a -> 'a -> 'b) (l1 l2:'a list) : 
+  (forall a1 a2, f a1 a2 = f a2 a1) =>
+  map2 f l1 l2 = map2 f l2 l1.
+proof.
+  move=> hf; elim: l1 l2=> [ | a1 l1 hrec] [ | a2 l2] //=.
+  by rewrite hf hrec.
+qed.
+
+lemma map2_take1 (f: 'a -> 'b -> 'c) (l1: 'a list) (l2: 'b list) :
+  map2 f l1 l2 = map2 f (take (size l2) l1) l2. 
+proof.
+  elim: l1 l2 => [ | a1 l1 hrec] [ | a2 l2] //=.
+  smt (size_ge0).
+qed.
+
+lemma map2_take2 (f: 'a -> 'b -> 'c) (l1: 'a list) (l2: 'b list) :
+  map2 f l1 l2 = map2 f l1 (take (size l1) l2).
+proof.
+  elim: l1 l2 => [ | a1 l1 hrec] [ | a2 l2] //=.
+  smt (size_ge0).
+qed.
+
 (* FIXME: we can not do l1 = "[]", l2= _ => l2 *)
 op interleave (l1 l2: 'a list) = 
  with l1 = "[]", l2= "[]" => []

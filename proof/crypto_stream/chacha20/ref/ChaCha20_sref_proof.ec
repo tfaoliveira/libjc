@@ -1,4 +1,5 @@
 require import AllCore List Jasmin_model Int IntDiv IntExtra CoreMap.
+require Loop.
 import IterOp.
 require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref.
 require import Array3 Array8 Array16.
@@ -79,141 +80,9 @@ proof.
   wp; skip => />.
 qed.
 
-require import Real.
-
-theory Loop.
-
-type t.
-op c : int.
-
-module type AdvLoop = {
-  proc body(t:t, i:int) : t
-}.
-
-
-module Loop(B:AdvLoop) = {
-  proc loop1 (t:t, n:int) = {
-    var i;
-    i = 0;
-    while (i < n) {
-      t <@ B.body(t,i);
-      i <- i + 1;
-    }
-    return t;
-  }
-
-  proc loopk (t:t, n:int, k:int) = {
-    var i, j;
-    i = 0;
-    while (i < n) {
-      j = 0;
-      while (j < k) {
-        t <@ B.body(t, k * i + j);
-        j <- j + 1;
-      }
-      i <- i + 1;
-    }
-    return t;
-  }
-
-  proc loopc (t:t, n:int) = {
-    var i, j;
-    i = 0;
-    while (i < n) {
-      j = 0;
-      while (j < c) {
-        t <@ B.body(t, c * i + j);
-        j <- j + 1;
-      }
-      i <- i + 1;
-    }
-    return t;
-  }
-
-}.
-
-section.
-declare module B:AdvLoop.
-
-axiom B_ll : islossless B.body.
-
-equiv loop1_loopk : Loop(B).loop1 ~ Loop(B).loopk : ={t, glob B} /\ n{1} = (k * n){2} /\ 0 < k{2}==> ={res, glob B}.
-proof.
-  proc.
-  async while [ (fun r => i%r < r), (i{1}+k{2})%r ] 
-              [ (fun r => i%r < r), (i{2} + 1)%r ]
-  
-              ( (i < n){1} /\ (i < n){2}) 
-              (!(i < n){2}) : 
-              (={t, glob B} /\ (0 <= i <= n){2} /\ 0 < k{2} /\ n{1} = (k * n){2} /\ i{1} = k{2} * i{2}).
-  + smt(). + smt (). + smt().
-  + move=> &m2;exfalso;smt().
-  + move=> &m1;exfalso;smt().
-  + move=> v1 v2.
-    rcondt{2} 1; 1: by auto => /> /#.
-    rcondf{2} 4; 1: by auto; conseq (_: true);auto.
-    exlim i{2} => i2.
-    wp;while (={t,glob B} /\ i{1} = k{2}*i{2} + j{2} /\ 0 <= i{2} < n{2} /\ 
-              0 <= j{2} <= k{2} /\ v1 = (k{2} * i2 + k{2})%r /\ i{2} = i2 /\ n{1} = (k * n){2}).
-    + wp;call (_: true);skip => /> &2 h0i hin h0j hjk.
-      rewrite !RealExtra.lt_fromint => h1 h2 h3.
-      have := StdOrder.IntOrder.ler_wpmul2l k{2} _ i{2} (n{2} - 1); smt(). 
-    by wp;skip => /> /#.
-  + by while (true) (n - i);auto;1:call B_ll;auto => /> /#.
-  + while (true) (n-i);2: by auto=>/#.
-    by move=> z;wp; while (true) (k - j);auto;1:call B_ll;auto => /> /#.
-  by auto.
-qed.
-
-equiv loopk_loopc : Loop(B).loopk ~ Loop(B).loopc : ={n,t, glob B} /\ k{1} = c ==> ={res, glob B}.
-proof.
-  proc => /=.
-  while (={glob B, i, t, n} /\ k{1} = c);2: by auto.
-  wp;while (={glob B, i, j, t, n} /\ k{1} = c);2: by auto.
-  by wp;call (_:true);skip.
-qed.
-
-lemma loop1_loopc : 0 < c =>
-  equiv [Loop(B).loop1 ~ Loop(B).loopc : ={t, glob B} /\ n{1} = (c * n){2} ==> ={res, glob B}].
-proof.
-  move=> hc.
-  transitivity Loop(B).loopk
-    (={t, glob B} /\ n{1} = c * n{2} /\ k{2} = c ==> ={res, glob B})
-    (={n,t, glob B} /\ k{1} = c ==> ={res, glob B}).
-  + by move=> /> &1 &2 *; exists (glob B){2} (t{1},n{2}, c).
-  + by move=> />.
-  + by conseq loop1_loopk => /> /#. 
-  by conseq loopk_loopc.  
-qed.
-
-end section.
-
-end Loop.
-
 clone import Loop as Loop0 with
    type t <- W64.t * W64.t * W32.t Array16.t,
    op c <- 4.
-
-op inv_ptr (output plain:W64.t) (len:W32.t) = 
-  (to_uint plain + to_uint len < to_uint output || to_uint output <= to_uint plain) /\
-   to_uint output + to_uint len < W64.modulus /\
-   to_uint plain + to_uint len < W64.modulus.
-
-lemma inv_ptr_disj len output plain i1 i2:
-  inv_ptr output plain len =>
-  0 <= i1 <= to_uint len =>
-  0 <= i2 <= to_uint len =>
-  i1 < i2 => 
-  plain + W64.of_int i2 <> output + W64.of_int i1.
-proof.
-  rewrite /inv_ptr /= => [#] h1 h2 h3 hi1 hi2 hlti.
-  rewrite eq_sym -W64.WRingA.eqr_sub W64.WRingA.subr_eq -W64.WRingA.addrA
-     (W64.WRingA.addrC _ (W64.of_int i2)) /=; apply /negP => ->>.
-  have hii: to_uint (W64.of_int (i2 - i1)) = i2 - i1.
-  + by rewrite W64.to_uint_small //=;have /= /#:= W32.to_uint_cmp len.
-  have /# :  to_uint (plain + (W64.of_int (i2 - i1))) = to_uint plain + (i2 - i1).
-  by rewrite W64.to_uintD_small hii /#.
-qed.
 
 module Body = {
   proc body (t: W64.t * W64.t * W32.t Array16.t, i:int) = {
@@ -232,17 +101,17 @@ proof. by rewrite /loadW8 storeW8E Jasmin_memory.get_setE. qed.
 
 equiv store_store32 len0 : ChaCha20_pref.M.store ~ ChaCha20_pref.M.store32 : 
   ={Glob.mem, k, output, plain, len} /\ W32.of_int 64 \ule len{1} /\
-  (inv_ptr output plain len){1} /\ len{1} = len0
+  (inv_ptr output plain (to_uint len)){1} /\ len{1} = len0
   ==>
-  ={Glob.mem, res} /\ (inv_ptr res.`1 res.`2 res.`3){1} /\ res{1}.`3 = len0 - W32.of_int 64.
+  ={Glob.mem, res} /\ (inv_ptr res.`1 res.`2 (to_uint res.`3)){1} /\ res{1}.`3 = len0 - W32.of_int 64.
 proof.
   proc.
   inline ChaCha20_pref.M.update_ptr;wp => /=.
   transitivity{1} { Loop(Body).loop1((output, plain, k), 64);}
        (={Glob.mem, output, plain, len, k} /\ (of_int 64)%W32 \ule len{1} ==> ={Glob.mem, output, plain, len, k} /\ i{1} = 64)
        (={Glob.mem, k, output, plain, len} /\
-         ((of_int 64)%W32 \ule len{1}) /\ inv_ptr output{1} plain{1} len{1} /\ len{1} = len0 ==>
-        ={Glob.mem, output, plain, len} /\ inv_ptr (output{1} + (of_int 64)%W64) (plain{1} + (of_int 64)%W64) (len{1} - (of_int 64)%W32) /\
+         ((of_int 64)%W32 \ule len{1}) /\ inv_ptr output{1} plain{1} (to_uint len{1}) /\ len{1} = len0 ==>
+        ={Glob.mem, output, plain, len} /\ inv_ptr (output{1} + (of_int 64)%W64) (plain{1} + (of_int 64)%W64) (to_uint (len{1} - (of_int 64)%W32)) /\
         len{1} = len0).
   + by move=> /> &2 *;exists Glob.mem{2} k{2} len{2} output{2} plain{2}. 
   + by move=> />.
@@ -253,14 +122,14 @@ proof.
   transitivity{1} { Loop(Body).loopc((output, plain, k), 16);}
        (={Glob.mem, output, plain, len, k} ==> ={Glob.mem, output, plain, len, k})
        (={Glob.mem, k, output, plain, len} /\
-         ((of_int 64)%W32 \ule len{1}) /\ inv_ptr output{1} plain{1} len{1} /\ len{1} = len0 ==>
-        ={Glob.mem, output, plain, len} /\ inv_ptr (output{1} + (of_int 64)%W64) (plain{1} + (of_int 64)%W64) (len{1} - (of_int 64)%W32) /\
+         ((of_int 64)%W32 \ule len{1}) /\ inv_ptr output{1} plain{1} (to_uint len{1}) /\ len{1} = len0 ==>
+        ={Glob.mem, output, plain, len} /\ inv_ptr (output{1} + (of_int 64)%W64) (plain{1} + (of_int 64)%W64) (to_uint (len{1} - (of_int 64)%W32)) /\
         len{1} = len0).
   + by move=> /> &2 *;exists Glob.mem{2} k{2} len{2} output{2} plain{2}. 
   + by move=> />.
   + by call (loop1_loopc Body _ _);[islossless | | skip].
   inline *;wp.
-  while ( ={Glob.mem, k, output, plain, len} /\ inv_ptr output{1} plain{1} len{1} /\ 64 <= to_uint len{1} /\
+  while ( ={Glob.mem, k, output, plain, len} /\ inv_ptr output{1} plain{1} (to_uint len{1}) /\ 64 <= to_uint len{1} /\
           n0{1} = 16 /\ i0{1} = i{2} /\  0 <= i{2} /\ (t = (output, plain, k)){1}).
   + unroll for {1} 2;wp;skip => |> &2 h1 h2 h3 h4. 
     pose ini := WArray64.init32 (fun (i0 : int) => k{2}.[i0]).
@@ -269,7 +138,7 @@ proof.
     have b1 : 0 <= 4 * i{2} + 1 <= to_uint len{2} by smt().
     have b2 : 0 <= 4 * i{2} + 2 <= to_uint len{2} by smt().
     have b3 : 0 <= 4 * i{2} + 3 <= to_uint len{2} by smt().
-    do 6!rewrite load_storeW8 (inv_ptr_disj len{2}) // 1:-StdOrder.IntOrder.ltr_subl_addl 1:/# /=. 
+    do 6!rewrite load_storeW8 (inv_ptr_disj (to_uint len{2})) // 1:-StdOrder.IntOrder.ltr_subl_addl 1:/# /=. 
     rewrite -load4u8.
     have -> : k{2}.[i{2}] = pack4 [get8 ini (4 * i{2}); get8 ini (4 * i{2} + 1);
                                 get8 ini (4 * i{2} + 2); get8 ini (4 * i{2} + 3)].
@@ -285,16 +154,16 @@ qed.
 
 equiv store len0 : ChaCha20_pref.M.store ~ ChaCha20_sref.M.store :
   ={Glob.mem} /\ output{1} = s_output{2} /\ plain{1} = s_plain{2} /\ len{1} = s_len{2} /\
-  W32.of_int 64 \ule len{1} /\ (inv_ptr output plain len){1} /\ len{1} = len0 /\
+  W32.of_int 64 \ule len{1} /\ (inv_ptr output plain (to_uint len)){1} /\ len{1} = len0 /\
   k{1} = k{2}.[15 <- k15{2}] 
   ==>
-  ={Glob.mem, res} /\ (inv_ptr res.`1 res.`2 res.`3){1} /\ res{2}.`3 = len0 - W32.of_int 64.
+  ={Glob.mem, res} /\ (inv_ptr res.`1 res.`2 (to_uint res.`3)){1} /\ res{2}.`3 = len0 - W32.of_int 64.
 proof.
   transitivity ChaCha20_pref.M.store32
     (={Glob.mem, k, output, plain, len} /\ W32.of_int 64 \ule len{1} /\
-     (inv_ptr output plain len){1} /\ len{1} = len0
+     (inv_ptr output plain (to_uint len)){1} /\ len{1} = len0
      ==>
-     ={Glob.mem, res} /\ (inv_ptr res.`1 res.`2 res.`3){1} /\ res{1}.`3 = len0 - W32.of_int 64)
+     ={Glob.mem, res} /\ (inv_ptr res.`1 res.`2 (to_uint res.`3)){1} /\ res{1}.`3 = len0 - W32.of_int 64)
     (={Glob.mem} /\ output{1} = s_output{2} /\ plain{1} = s_plain{2} /\ len{1} = s_len{2} /\ k{1} = k{2}.[15 <- k15{2}]
      ==> 
      ={Glob.mem, res}).
@@ -351,7 +220,7 @@ qed.
 
 equiv pref_sref : ChaCha20_pref.M.chacha20_ref ~ ChaCha20_sref.M.chacha20_ref : 
   ={output, plain, len, key, nonce,counter, Glob.mem} /\
-  (inv_ptr output plain len){1}
+  (inv_ptr output plain (to_uint len)){1}
   ==>
   ={Glob.mem}.
 proof.
@@ -364,7 +233,7 @@ seq 1 1 : (={st, Glob.mem} /\
            len{1} \ult W32.of_int 64). 
 + while (={st, Glob.mem} /\ 
           output{1} = s_output{2} /\ plain{1} = s_plain{2} /\ len{1} = s_len{2} /\
-          (inv_ptr output plain len){1}). 
+          (inv_ptr output plain (to_uint len)){1}). 
   + call increment_counter;ecall (store len{1}); call sum_states; call rounds; call copy_state.
     skip => /> &m; rewrite W32.ultE W32.uleE /= => ????????? ->.
     by rewrite W32.uleE W32.ultE /= W32.to_uintB 1:W32.uleE //= /#.
@@ -383,9 +252,7 @@ qed.
 
 hoare chacha20_sref_spec output0 plain0 key0 nonce0 counter0 : ChaCha20_sref.M.chacha20_ref :
   output = output0 /\ 
-  (to_uint plain{hr} + W32.to_uint len < to_uint output{hr} || to_uint output{hr} <= to_uint plain{hr}) /\
-  to_uint output{hr} + to_uint len < W64.modulus /\
-  to_uint plain{hr} + to_uint len < W64.modulus /\
+  inv_ptr output plain (to_uint len) /\
   plain0 = loads_8 Glob.mem plain (W32.to_uint len) /\
   key0 = Array8.of_list W32.zero (loads_32 Glob.mem key 8) /\
   nonce0 = Array3.of_list W32.zero (loads_32 Glob.mem nonce 3) /\
@@ -394,5 +261,23 @@ hoare chacha20_sref_spec output0 plain0 key0 nonce0 counter0 : ChaCha20_sref.M.c
   (chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 = 
   loads_8 Glob.mem output0 (size plain0).
 proof.
-
+ bypr.
+ move=> &m [#] ? hinv ????.
+ have <-: 
+  Pr[ChaCha20_pref.M.chacha20_ref(output{m}, plain{m}, len{m}, key{m}, nonce{m}, counter{m}) @ &m :
+      (chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 <> loads_8 Glob.mem output0 (size plain0)] =
+  Pr[ChaCha20_sref.M.chacha20_ref(output{m}, plain{m}, len{m}, key{m}, nonce{m}, counter{m}) @ &m :
+      (chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 <> loads_8 Glob.mem output0 (size plain0)].
+ + byequiv pref_sref => //=.
+ byphoare (_ : output = output0 /\ 
+  inv_ptr output plain (to_uint len) /\
+  plain0 = loads_8 Glob.mem plain (W32.to_uint len) /\
+  key0 = Array8.of_list W32.zero (loads_32 Glob.mem key 8) /\
+  nonce0 = Array3.of_list W32.zero (loads_32 Glob.mem nonce 3) /\
+  counter0 = counter 
+  ==> 
+  (chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 <> 
+  loads_8 Glob.mem output0 (size plain0)) => //.
+ hoare.
+ conseq (chacha20_ref_spec output0 plain0 key0 nonce0 counter0).
 qed.
