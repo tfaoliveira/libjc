@@ -14,21 +14,7 @@ u32  g_sigma3   = 0x6b206574;
 u128 g_p0       = 0;
 
 param int i_0 = 0;
-param int i_1 = 1;
-param int i_2 = 2;
-param int i_3 = 3;
 param int i_4 = 4;
-param int i_5 = 5;
-param int i_6 = 6;
-param int i_7 = 7;
-param int i_8 = 8;
-param int i_9 = 9;
-param int i_10 = 10;
-param int i_11 = 11;
-param int i_12 = 12;
-param int i_13 = 13;
-param int i_14 = 14;
-param int i_15 = 15;
 param int i_32 = 32;
 
 fn load_shufb_cmd() -> stack u256, stack u256
@@ -43,6 +29,10 @@ fn load_shufb_cmd() -> stack u256, stack u256
 
   return s_r16, s_r8;
 }
+
+
+
+// init
 
 fn init_x2(reg u64 key nonce, reg u32 counter) -> reg u256[4]
 {
@@ -69,8 +59,6 @@ fn init_x2(reg u64 key nonce, reg u32 counter) -> reg u256[4]
   // 3 { n , cnt+1 , n , cnt    }
   return st;
 }
-
-
 
 fn init_x8(reg u64 key nonce, reg u32 counter) -> stack u256[16]
 {
@@ -113,14 +101,14 @@ fn init_x8(reg u64 key nonce, reg u32 counter) -> stack u256[16]
 
 
 
+// copy state
+
 fn copy_state_x2(reg u256[4] st) -> reg u256[4]
 {
   reg u256[4] k;
   k = st;
   return k;
 }
-
-
 
 fn copy_state_x4(reg u256[4] st) -> reg u256[4], reg u256[4]
 {
@@ -137,8 +125,6 @@ fn copy_state_x4(reg u256[4] st) -> reg u256[4], reg u256[4]
   return k1, k2;
 }
 
-
-
 fn copy_state_x8(stack u256[16] st) -> reg u256[16]
 {
   reg u256[16] k;
@@ -148,6 +134,8 @@ fn copy_state_x8(stack u256[16] st) -> reg u256[16]
 
 
 
+// sum states
+
 fn sum_states_x2(reg u256[4] k st) -> reg u256[4]
 {
   inline int i;
@@ -156,8 +144,6 @@ fn sum_states_x2(reg u256[4] k st) -> reg u256[4]
   return k;
 }
 
-
-
 fn sum_states_x4(reg u256[4] k1 k2 st) -> reg u256[4], reg u256[4]
 {
   k1 = sum_states_x2(k1, st);
@@ -165,8 +151,6 @@ fn sum_states_x4(reg u256[4] k1 k2 st) -> reg u256[4], reg u256[4]
   k2[3] +8u32= g_p2;
   return k1, k2;
 }
-
-
 
 fn sum_states_x8(reg u256[16] k, stack u256[16] st) -> reg u256[16]
 {
@@ -178,6 +162,21 @@ fn sum_states_x8(reg u256[16] k, stack u256[16] st) -> reg u256[16]
 
 
 
+// increment
+// note: increment counters is only necessary when processing 512 (or more) bytes
+fn increment_counter_x8(stack u256[16] s) -> stack u256[16]
+{
+  reg u256 t;
+  t = g_cnt_inc;
+  t +8u32= s[12];
+  s[12] = t;
+  return s;
+}
+
+
+
+// store aux functions
+
 fn perm_x2(reg u256[4] k) -> reg u256[4]
 {
   reg u256[4] pk;
@@ -188,8 +187,6 @@ fn perm_x2(reg u256[4] k) -> reg u256[4]
   return pk;
 }
 
-
-
 fn perm_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
 {
   reg u256[4] pk1 pk2;
@@ -197,8 +194,6 @@ fn perm_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
   pk2 = perm_x2(k2);
   return pk1, pk2;
 }
-
-
 
 fn sub_rotate(reg u256[8] t) -> reg u256[8]
 {
@@ -222,8 +217,6 @@ fn sub_rotate(reg u256[8] t) -> reg u256[8]
   return t;
 }
 
-
-
 fn rotate(reg u256[8] x) -> reg u256[8]
 {
   inline int i;
@@ -237,8 +230,6 @@ fn rotate(reg u256[8] x) -> reg u256[8]
 
   return t;
 }
-
-
 
 fn rotate_stack(stack u256[8] s) -> reg u256[8]
 {
@@ -257,8 +248,6 @@ fn rotate_stack(stack u256[8] s) -> reg u256[8]
   return t;
 }
 
-
-
 fn rotate_first_half_x8(reg u256[16] k) -> reg u256[8], stack u256[8]
 {
   inline int i;
@@ -276,8 +265,6 @@ fn rotate_first_half_x8(reg u256[16] k) -> reg u256[8], stack u256[8]
   return k0_7, s_k8_15;
 }
 
-
-
 fn rotate_second_half_x8(stack u256[8] s_k8_15) -> reg u256[8]
 {
   inline int i;
@@ -285,8 +272,6 @@ fn rotate_second_half_x8(stack u256[8] s_k8_15) -> reg u256[8]
   k8_15 = rotate_stack(s_k8_15);
   return k8_15;
 }
-
-
 
 fn interleave(stack u256[8] s, reg u256[8] k, inline int o) -> reg u256[8]
 {
@@ -300,8 +285,6 @@ fn interleave(stack u256[8] s, reg u256[8] k, inline int o) -> reg u256[8]
   return sk;
 }
 
-
-
 fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u64, reg u32
 {
   output += n;
@@ -310,7 +293,7 @@ fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u
   return output, plain, len;
 }
 
-
+// store functions
 
 fn store(reg u64 output plain, reg u32 len, reg u256[2] k) -> reg u64, reg u64, reg u32, reg u256[2]
 {
@@ -324,8 +307,6 @@ fn store(reg u64 output plain, reg u32 len, reg u256[2] k) -> reg u64, reg u64, 
 
   return output, plain, len, k;
 }
-
-
 
 fn store_last(reg u64 output plain, reg u32 len, reg u256[2] k)
 {
@@ -371,8 +352,6 @@ fn store_last(reg u64 output plain, reg u32 len, reg u256[2] k)
   }
 }
 
-
-
 fn store_x2(reg u64 output plain, reg u32 len, reg u256[4] k) -> reg u64, reg u64, reg u32, reg u256[4]
 {
   inline int i;
@@ -387,8 +366,6 @@ fn store_x2(reg u64 output plain, reg u32 len, reg u256[4] k) -> reg u64, reg u6
 
   return output, plain, len, k;
 }
-
-
 
 fn store_x2_last(reg u64 output plain, reg u32 len, reg u256[4] k)
 {
@@ -407,8 +384,6 @@ fn store_x2_last(reg u64 output plain, reg u32 len, reg u256[4] k)
   store_last(output, plain, len, r);
 }
 
-
-
 fn store_x4(reg u64 output plain, reg u32 len, reg u256[8] k) -> reg u64, reg u64, reg u32
 {
   inline int i;
@@ -423,8 +398,6 @@ fn store_x4(reg u64 output plain, reg u32 len, reg u256[8] k) -> reg u64, reg u6
 
   return output, plain, len;
 }
-
-
 
 fn store_x4_last(reg u64 output plain, reg u32 len, reg u256[8] k)
 {
@@ -442,8 +415,6 @@ fn store_x4_last(reg u64 output plain, reg u32 len, reg u256[8] k)
   store_x2_last(output, plain, len, r);
 }
 
-
-
 fn store_half_x8(reg u64 output plain, reg u32 len, reg u256[8] k, inline int o)
 {
   inline int i;
@@ -453,8 +424,6 @@ fn store_half_x8(reg u64 output plain, reg u32 len, reg u256[8] k, inline int o)
   for i=0 to 8
   { (u256)[output + o + 64*i] = k[i]; }
 }
-
-
 
 fn store_x8(reg u64 output plain, reg u32 len, reg u256[16] k) -> reg u64, reg u64, reg u32
 {
@@ -470,8 +439,6 @@ fn store_x8(reg u64 output plain, reg u32 len, reg u256[16] k) -> reg u64, reg u
 
   return output, plain, len;
 }
-
-
 
 fn store_x8_last(reg u64 output plain, reg u32 len, reg u256[16] k)
 {
@@ -493,102 +460,168 @@ fn store_x8_last(reg u64 output plain, reg u32 len, reg u256[16] k)
   store_x4_last(output, plain, len, i0_7);
 }
 
+// rounds related functions
 
+// notes about round_x2 (quad_quarter_round_x2 -> round_x2): on how to produce 128 bytes of stream material
+//
+// in the non vectorized implementation, and for given state "k1", the following
+// operations are performed for the column_round:
+//
+//  k1 = quarter_round(k1, 0, 4, 8, 12);
+//  k1 = quarter_round(k1, 1, 5, 9, 13); // (as seen in the original spec)
+//  k1 = quarter_round(k1, 2, 6, 10, 14);
+//  k1 = quarter_round(k1, 3, 7, 11, 15);
+//
+// which is equivalent to the following when inlining the quarter_round function:
+//
+// k1= line(k1, 0, 4, 12, 16); k1= line(k1, 8,  12, 4, 12); k1= line(k1, 0, 4, 12, 8); k1= line(k1, 8,  12, 4, 7);
+// k1= line(k1, 1, 5, 13, 16); k1= line(k1, 9,  13, 5, 12); k1= line(k1, 1, 5, 13, 8); k1= line(k1, 9,  13, 5, 7);
+// k1= line(k1, 2, 6, 14, 16); k1= line(k1, 10, 14, 6, 12); k1= line(k1, 2, 6, 14, 8); k1= line(k1, 10, 14, 6, 7);
+// k1= line(k1, 3, 7, 15, 16); k1= line(k1, 11, 15, 7, 12); k1= line(k1, 3, 7, 15, 8); k1= line(k1, 11, 15, 7, 7);
+//
+// with the line(k1,a,b,c,r) function defined as:
+//
+//   k1[a] += k1[b];
+//   k1[c] ^= k1[a];
+//   k1[c] = #x86_ROL_32(k1[c], r);
+//
+// in order to process 2 blocks at once we can thus arrange the state of an "k"
+// register array, with type u256[4], to contain 2 states k1 and k2, for the first
+// and second block, respectively:
+// 
+//   let the state for block 1 be "u32[16] k1" and "u32[16] k2" for block 2. then:
+//
+//   k[0] = { k2[3],  k2[2],  k2[1],  k2[0],    k1[3],  k1[2],  k1[1],  k1[0] }
+//   k[1] = { k2[7],  k2[6],  k2[5],  k2[4],    k1[7],  k1[6],  k1[5],  k1[4] }
+//   k[2] = { k2[11], k2[10], k2[9],  k2[8],    k1[11], k1[10], k1[9],  k1[8] }
+//   k[2] = { k2[15], k2[14], k2[13], k2[12],   k1[15], k1[14], k1[13], k1[12] }
+//
+// and, for example, if we compute:
+// 
+//   k[0] +8u32= k[1];
+//   k[3]     ^= k[0];
+//   k[3] = #x86_VPSHUFB_256(k[3], r16);
+//
+// with r16 being (32u8)[13,12,15,14, 9,8,11,10, 5,4,7,6, 1,0,3,2, 13,12,15,14, 9,8,11,10, 5,4,7,6, 1,0,3,2]
+// that is the same as computing:
+//
+//   k1= line(k1, 0, 4, 12, 16);
+//   k1= line(k1, 1, 5, 13, 16);
+//   k1= line(k1, 2, 6, 14, 16);
+//   k1= line(k1, 3, 7, 15, 16);
+//   
+//   k2= line(k2, 0, 4, 12, 16);
+//   k2= line(k2, 1, 5, 13, 16);
+//   k2= line(k2, 2, 6, 14, 16);
+//   k2= line(k2, 3, 7, 15, 16);
+//
+// we are then vectorizing "vertically" (across quarter_round's) and "horizontally" (blocks).
+//
+//
+// Let's now define some auxiliary functions to help define round_x2.
+//
+// We know that we need to perform some rotates (to the left) on some parts of the
+// state by 16, 12, 8, and 7.
+//
+// rotate by 16 and 8 are "easy" to do: we can use the shuffle instruction to achieve that.
+// As said the in Intel Intrinsics documentation regarding vpshufb, this instruction
+//   "shuffle 8-bit integers in a within 128-bit lanes according to shuffle control
+//    mask in the corresponding 8-bit element of b, and store the results in dst."
+//
+// so if we need the following mask for rotating by 16:
+//   (32u8)[13,12,15,14, 9,8,11,10, 5,4,7,6, 1,0,3,2, 13,12,15,14, 9,8,11,10, 5,4,7,6, 1,0,3,2]
+//
+// and the following mask to rotate by 8:
+//   (32u8)[14,13,12,15, 10,9,8,11, 6,5,4,7, 2,1,0,3, 14,13,12,15, 10,9,8,11, 6,5,4,7, 2,1,0,3];
+//
+// in order to rotate by 12 and 7 it is necessary to perform a shift left, right and then or or xor
+// we can define a rotate_x8 function to abstract the previously described behaviours:
 
-fn increment_counter_x8(stack u256[16] s) -> stack u256[16]
+fn rotate_x8(reg u256[4] k, inline int i r, reg u256 r16 r8) -> reg u256[4]
 {
   reg u256 t;
-  t = g_cnt_inc;
-  t +8u32= s[12];
-  s[12] = t;
-  return s;
-}
 
+  if(r==16){ 
+    k[i] = #x86_VPSHUFB_256(k[i], r16);
 
+  } else { if (r==8) {
+    k[i] = #x86_VPSHUFB_256(k[i], r8);
 
-fn round_128(reg u256[4] k, reg u256 r16 r8) -> reg u256[4]
-{
-  reg u256 t;
+  } else {
+    t = k[i] <<8u32 r;
+    k[i] = k[i] >>8u32 (32-r);
+    k[i] ^= t;
 
-  k[0] +8u32= k[1];
-  k[3]     ^= k[0];
-  k[3] = #x86_VPSHUFB_256(k[3], r16);
-
-  k[2] +8u32= k[3];
-  k[1]     ^= k[2];
-
-     t = k[1] <<8u32 12;
-  k[1] = k[1] >>8u32 20;
-  k[1] ^= t;
-
-  k[0] +8u32= k[1];
-  k[3]     ^= k[0];
-  k[3] = #x86_VPSHUFB_256(k[3], r8);
-
-  k[2] +8u32= k[3];
-  k[1] ^= k[2];
-
-     t = k[1] <<8u32 7;
-  k[1] = k[1] >>8u32 25;
-  k[1] ^= t;
+  }}
 
   return k;
 }
 
-
-
-fn round_256(reg u256[4] k1 k2, reg u256 r16 r8) -> reg u256[4], reg u256[4]
+// we can now implement a line_x8 function that performs 8 lines computations
+// across "quarter_round's" and "blocks" as previously described
+//
+fn line_x8(reg u256[4] k, inline int a b c r, reg u256 r16 r8) -> reg u256[4]
 {
-  reg u256 t1, t2;
-
-  k1[0] +8u32= k1[1];
-  k2[0] +8u32= k2[1];
-
-  k1[3] ^= k1[0];
-  k2[3] ^= k2[0];
-
-  k1[3] = #x86_VPSHUFB_256(k1[3], r16);
-  k2[3] = #x86_VPSHUFB_256(k2[3], r16);
-
-  k1[2] +8u32= k1[3];
-  k2[2] +8u32= k2[3];
-
-                          k1[1] ^= k1[2];
-     t1 = k1[1] <<8u32 12;
-  k1[1] = k1[1] >>8u32 20;
-                          k2[1] ^= k2[2];
-  k1[1] ^= t1;
-
-     t2 = k2[1] <<8u32 12;
-  k2[1] = k2[1] >>8u32 20;
-  k2[1] ^= t2;
-
-  k1[0] +8u32= k1[1];
-  k2[0] +8u32= k2[1];
-
-  k1[3] ^= k1[0];
-  k2[3] ^= k2[0];
-
-  k1[3] = #x86_VPSHUFB_256(k1[3], r8);
-  k2[3] = #x86_VPSHUFB_256(k2[3], r8);
-
-  k1[2] +8u32= k1[3];
-  k2[2] +8u32= k2[3];
-
-                          k1[1] ^= k1[2];
-     t1 = k1[1] <<8u32 7;
-  k1[1] = k1[1] >>8u32 25;
-                          k2[1] ^= k2[2];
-  k1[1] ^= t1;
-
-     t2 = k2[1] <<8u32 7;
-  k2[1] = k2[1] >>8u32 25;
-  k2[1] ^= t2;
-
-  return k1, k2;
+  k[a/4] +8u32= k[b/4];
+  k[c/4] ^= k[a/4];
+  k = rotate_x8(k, (c/4), r, r16, r8);
+  return k;
 }
 
+// and finally we can define the quad_quarter_round_x2, or just round_x2, function.
+//
+// if we look at the previously inline of quarter_round we can read the following line:
+//   k1= line(k1, 0, 4, 12, 16); k1= line(k1, 8,  12, 4, 12); k1= line(k1, 0, 4, 12, 8); k1= line(k1, 8,  12, 4, 7);
+//
+// since we wrote line_x8 with /4 at the indexes we can just define round_x2 as:
+//
+fn round_x2(reg u256[4] k, reg u256 r16 r8) -> reg u256[4]
+{
+  k = line_x8(k, 0, 4, 12, 16, r16, r8);
+  k = line_x8(k, 8, 12, 4, 12, r16, r8);
+  k = line_x8(k, 0, 4, 12,  8, r16, r8);
+  k = line_x8(k, 8, 12, 4,  7, r16, r8);
+  return k;
+}
 
+//
+// and the function column_round_x2 consists in just a call to round_x2
+//
+fn column_round_x2(reg u256[4] k, reg u256 r16 r8) -> reg u256[4]
+{
+  k = round_x2(k, r16, r8);
+  return k;
+}
+
+// but for the diagonal_round_x2 we need to change how the state is organized. First, let's
+// see what a diagonal_round is in a non-vectorized implementation:
+//
+//  k1 = quarter_round(k1, 0, 5, 10, 15);
+//  k1 = quarter_round(k1, 1, 6, 11, 12);
+//  k1 = quarter_round(k1, 2, 7, 8,  13);
+//  k1 = quarter_round(k1, 3, 4, 9,  14);
+//
+// so it is basically a column_round:
+//
+//  k1 = quarter_round(k1, 0, 4, 8, 12);
+//  k1 = quarter_round(k1, 1, 5, 9, 13);
+//  k1 = quarter_round(k1, 2, 6, 10, 14);
+//  k1 = quarter_round(k1, 3, 7, 11, 15);
+//
+// where 5 is 4, 10 is an 8, 15 is a 12... and so on. So it is only needed to rearrange the state:
+//
+//  4,   5,  6,  7 -> 5,  6,   7,  4
+//  8,   9, 10, 11 -> 10, 11,  8,  9
+//  12, 13, 14, 15 -> 15, 12, 13, 14
+//
+// As such, we want our state k to be:
+//
+//   k[0] = { k2[3],  k2[2],  k2[1],  k2[0],   k1[3],  k1[2],  k1[1],  k1[0]  }
+//   k[1] = { k2[4],  k2[7],  k2[6],  k2[5],   k1[4],  k1[7],  k1[6],  k1[5]  }
+//   k[2] = { k2[9],  k2[8],  k2[11], k2[10],  k1[9],  k1[8],  k1[11], k1[10] }
+//   k[2] = { k2[14], k2[13], k2[12], k2[15],  k1[14], k1[13], k1[12], k1[15] }
+//
+// this transformation of the state can be achieved with the following function:
 
 fn shuffle_state(reg u256[4] k) -> reg u256[4]
 {
@@ -598,7 +631,9 @@ fn shuffle_state(reg u256[4] k) -> reg u256[4]
   return k;
 }
 
-
+//
+// and we also need the inverse function to put everything back into its place:
+//
 
 fn reverse_shuffle_state(reg u256[4] k) -> reg u256[4]
 {
@@ -608,8 +643,21 @@ fn reverse_shuffle_state(reg u256[4] k) -> reg u256[4]
   return k;
 }
 
+//
+// finally, diagonal_round_x2 can be defined as:
+//
 
+fn diagonal_round_x2(reg u256[4] k, reg u256 r16 r8) -> reg u256[4]
+{
+  k = shuffle_state(k);
+  k = round_x2(k, r16, r8);
+  k = reverse_shuffle_state(k);
+  return k;
+}
 
+//
+// and the rounds_x2 function as:
+//
 fn rounds_x2(reg u256[4] k) -> reg u256[4]
 {
   reg u64 c;
@@ -617,19 +665,65 @@ fn rounds_x2(reg u256[4] k) -> reg u256[4]
 
   r16 = g_r16;
   r8 = g_r8;
+
   c = 0;
   while(c < 10)
   {
-    k = round_128(k, r16, r8);
-    k = shuffle_state(k);
-    k = round_128(k, r16, r8);
-    k = reverse_shuffle_state(k);
+    k = column_round_x2(k, r16, r8);
+    k = diagonal_round_x2(k, r16, r8);
     c += 1;
   }
   return k;
 }
 
+//
+// notes about round_x4 (quad_quarter_round_x4 -> round_x4): on how to produce 256 bytes of stream material.
+// 
+// In here the story repeats itself and the strategy is pretty much the same as the
+// one described for round_x2.
+//
+// round_x4 goes through 4 blocks at a time:
 
+fn round_x4(reg u256[4] k1 k2, reg u256 r16 r8) -> reg u256[4], reg u256[4]
+{
+  k1 = round_x2(k1, r16, r8);
+  k2 = round_x2(k2, r16, r8);
+  return k1, k2;
+}
+
+//
+// And its done! The following functions are just reusing previous definitions for
+// rounds_x2.
+//
+
+fn column_round_x4(reg u256[4] k1 k2, reg u256 r16 r8) -> reg u256[4], reg u256[4]
+{
+  k1, k2 = round_x4(k1, k2, r16, r8);
+  return k1, k2;
+}
+
+fn shuffle_state_x2(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
+{
+  k1 = shuffle_state(k1);
+  k2 = shuffle_state(k2);
+  return k1, k2;
+}
+
+fn reverse_shuffle_state_x2(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
+{
+  k1 = reverse_shuffle_state(k1);
+  k2 = reverse_shuffle_state(k2);
+  return k1, k2;
+}
+
+
+fn diagonal_round_x4(reg u256[4] k1 k2, reg u256 r16 r8) -> reg u256[4], reg u256[4]
+{
+  k1, k2 = shuffle_state_x2(k1, k2);
+  k1, k2 = round_x4(k1, k2, r16, r8);
+  k1, k2 = reverse_shuffle_state_x2(k1, k2);
+  return k1, k2;
+}
 
 fn rounds_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
 {
@@ -638,15 +732,12 @@ fn rounds_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
 
   r16 = g_r16;
   r8 = g_r8;
+
   c = 0;
   while(c < 10)
   {
-    k1, k2 = round_256(k1, k2, r16, r8);
-        k1 = shuffle_state(k1);
-        k2 = shuffle_state(k2);
-    k1, k2 = round_256(k1, k2, r16, r8);
-        k1 = reverse_shuffle_state(k1);
-        k2 = reverse_shuffle_state(k2);
+    k1, k2 = column_round_x4(k1, k2, r16, r8);
+    k1, k2 = diagonal_round_x4(k1, k2, r16, r8);
     c += 1;
   }
   return k1, k2;
@@ -654,97 +745,201 @@ fn rounds_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
 
 
 
-fn round_512(reg u256[16] k, stack u256 s_r16 s_r8, inline int a0 b0 c0 d0 a1 b1 c1 d1) -> reg u256[16]
+//
+// notes about round_x8: on how to produce 512 bytes of stream material.
+//
+// 512 bytes are 8 times 64, which means that we are evaluating 8 blocks at a time.
+// Since the number of ymm registers limited to 16, and in the previous approach we
+// require 2 registers for the r16 r8 masks and 1 register to be a temporary value
+// for the rotates, this means that there would be only 13 registers for the state,
+// which means that too many memory spills would have to happen. For this function
+// we are going to forget about "vertical" vectorization (see section regarding round_x2)
+// and just focus on vectorizing across blocks. We are going to use a strategy identical
+// to the one used in ref implementation, were the quarter_rounds are swapped so the 
+// number of memory spills is reduced.
+//
+// So let k1 to k8 be the state for block 1 to 8, respectively. We want to have a k such that:
+//
+//   k[0]  = {k8[0],  k7[0],  k6[0],  k5[0],  k4[0],  k3[0],  k2[0],  k1[0]}
+//   k[1]  = {k8[1],  k7[1],  k6[1],  k5[1],  k4[1],  k3[1],  k2[1],  k1[1]}
+//   k[2]  = {k8[2],  k7[2],  k6[2],  k5[2],  k4[2],  k3[2],  k2[2],  k1[2]}
+//   k[3]  = {k8[3],  k7[3],  k6[3],  k5[3],  k4[3],  k3[3],  k2[3],  k1[3]}
+//   k[4]  = {k8[4],  k7[4],  k6[4],  k5[4],  k4[4],  k3[4],  k2[4],  k1[4]}
+//   k[5]  = {k8[5],  k7[5],  k6[5],  k5[5],  k4[5],  k3[5],  k2[5],  k1[5]}
+//   k[6]  = {k8[6],  k7[6],  k6[6],  k5[6],  k4[6],  k3[6],  k2[6],  k1[6]}
+//   k[7]  = {k8[7],  k7[7],  k6[7],  k5[7],  k4[7],  k3[7],  k2[7],  k1[7]}
+//   k[8]  = {k8[8],  k7[8],  k6[8],  k5[8],  k4[8],  k3[8],  k2[8],  k1[8]}
+//   k[9]  = {k8[9],  k7[9],  k6[9],  k5[9],  k4[9],  k3[9],  k2[9],  k1[9]}
+//   k[10] = {k8[10], k7[10], k6[10], k5[10], k4[10], k3[10], k2[10], k1[10]}
+//   k[11] = {k8[11], k7[11], k6[11], k5[11], k4[11], k3[11], k2[11], k1[11]}
+//   k[12] = {k8[12], k7[12], k6[12], k5[12], k4[12], k3[12], k2[12], k1[12]}
+//   k[13] = {k8[13], k7[13], k6[13], k5[13], k4[13], k3[13], k2[13], k1[13]}
+//   k[14] = {k8[14], k7[14], k6[14], k5[14], k4[14], k3[14], k2[14], k1[14]}
+//   k[15] = {k8[15], k7[15], k6[15], k5[15], k4[15], k3[15], k2[15], k1[15]}
+//
+//
+// since we want to have as much free registers as possible we just need an alternative
+// definition of rotate_x8 that receives r16 and r8 as stack values (instead of registers):
+
+fn rotate_x8_s(reg u256[16] k, inline int i r, stack u256 r16 r8) -> reg u256[16]
 {
   reg u256 t;
 
-  k[a0] +8u32= k[b0];
-  k[a1] +8u32= k[b1];
+  if(r==16){ 
+    k[i] = #x86_VPSHUFB_256(k[i], r16);
 
-  k[d0] ^= k[a0];
-  k[d1] ^= k[a1];
+  } else { if (r==8) {
+    k[i] = #x86_VPSHUFB_256(k[i], r8);
 
-  k[d0] = #x86_VPSHUFB_256(k[d0], s_r16);
-  k[d1] = #x86_VPSHUFB_256(k[d1], s_r16);
+  } else {
+    t = k[i] <<8u32 r;
+    k[i] = k[i] >>8u32 (32-r);
+    k[i] ^= t;
 
-  k[c0] +8u32= k[d0];
-  k[c1] +8u32= k[d1];
-
-                          k[b0] ^= k[c0];
-      t = k[b0] <<8u32 12;
-  k[b0] = k[b0] >>8u32 20;
-                          k[b1] ^= k[c1];
-  k[b0] ^= t;
-
-      t = k[b1] <<8u32 12;
-  k[b1] = k[b1] >>8u32 20;
-  k[b1] ^= t;
-
-  k[a0] +8u32= k[b0];
-  k[a1] +8u32= k[b1];
-
-  k[d0] ^= k[a0];
-  k[d1] ^= k[a1];
-
-  k[d0] = #x86_VPSHUFB_256(k[d0], s_r8);
-  k[d1] = #x86_VPSHUFB_256(k[d1], s_r8);
-
-  k[c0] +8u32= k[d0];
-  k[c1] +8u32= k[d1];
-
-                          k[b0] ^= k[c0];
-      t = k[b0] <<8u32 7;
-  k[b0] = k[b0] >>8u32 25;
-                          k[b1] ^= k[c1];
-  k[b0] ^= t;
-
-      t = k[b1] <<8u32 7;
-  k[b1] = k[b1] >>8u32 25;
-  k[b1] ^= t;
+  }}
 
   return k;
 }
 
-
-
-fn double_round_512(reg u256[16] k,
-                    stack u256 k_d3 s_r16 s_r8,
-                    inline int a0 b0 c0 d0
-                               a1 b1 c1 d1
-                               a2 b2 c2 d2
-                               a3 b3 c3 d3
-) -> reg u256[16], stack u256
+//
+// we can now define a function line_x8_v such that (in a moment we will see why
+// there is an _ at the beginning of the following functions names):
+//
+fn _line_x8_v(reg u256[16] k, inline int a b c r, stack u256 r16 r8) -> reg u256[16]
 {
-  k = round_512(k, s_r16, s_r8, a0, b0, c0, d0, a1, b1, c1, d1);
-  k[d3] = k_d3;
-  k_d3 = k[d1];
-  k = round_512(k, s_r16, s_r8, a2, b2, c2, d2, a3, b3, c3, d3);
-  return k, k_d3;
+  k[a] +8u32= k[b];
+  k[c] ^= k[a];
+  k = rotate_x8_s(k, c, r, r16, r8);
+  return k;
 }
 
+//
+// and now the remaining functions, quarter column and diagonal round...
+//
+fn _quarter_round_x8(reg u256[16] k, inline int a b c d, stack u256 r16 r8) -> reg u256[16]
+{
+  k = _line_x8_v(k, a, b, d, 16, r16, r8);
+  k = _line_x8_v(k, c, d, b, 12, r16, r8);
+  k = _line_x8_v(k, a, b, d, 8,  r16, r8);
+  k = _line_x8_v(k, c, d, b, 7,  r16, r8);
+  return k;
+}
+
+fn _column_round_x8(reg u256[16] k, stack u256 k15 k14 r16 r8) -> reg u256[16], stack u256
+{
+  k = _quarter_round_x8(k, 0, 4, 8,  12, r16, r8);
+  k = _quarter_round_x8(k, 2, 6, 10, 14, r16, r8);
+
+  k[15] = k15;
+  k14 = k[14];
+
+  k = _quarter_round_x8(k, 1, 5, 9,  13, r16, r8);
+  k = _quarter_round_x8(k, 3, 7, 11, 15, r16, r8);
+
+  return k, k14;
+}
+
+fn _diagonal_round_x8(reg u256[16] k, stack u256 k15 k14 r16 r8) -> reg u256[16], stack u256
+{
+  k = _quarter_round_x8(k, 1, 6, 11, 12, r16, r8);
+  k = _quarter_round_x8(k, 0, 5, 10, 15, r16, r8);
+
+  k[14] = k14;
+  k15 = k[15];
+
+  k = _quarter_round_x8(k, 2, 7, 8, 13, r16, r8);
+  k = _quarter_round_x8(k,  3, 4, 9, 14, r16, r8);
+
+  return k, k15;
+}
+
+//
+// you can check the definition of rounds_x8 down bellow. But imagine that you want to
+// do some micro optimizations: let's say you wanted to merge both _quarter_round_x8 into
+// one double_quarter_round_x8 such that line_x8_v performs as follows:
+//
+fn line_x8_v(reg u256[16] k, inline int a0 b0 c0 r0
+                                        a1 b1 c1 r1, stack u256 r16 r8) -> reg u256[16]
+{
+  k[a0] +8u32= k[b0];
+  k[a1] +8u32= k[b1];
+
+  k[c0] ^= k[a0];
+  k[c1] ^= k[a1];
+
+  k = rotate_x8_s(k, c0, r0, r16, r8);
+  k = rotate_x8_s(k, c1, r1, r16, r8);
+
+  return k;
+}
+
+//
+// and double quarter_round could be defined as:
+//
+fn _double_quarter_round_x8(reg u256[16] k, inline int a0 b0 c0 d0
+                                                       a1 b1 c1 d1, stack u256 r16 r8) -> reg u256[16]
+{
+  k = line_x8_v(k, a0, b0, d0, 16, a1, b1, d1, 16, r16, r8);
+  k = line_x8_v(k, c0, d0, b0, 12, c1, d1, b1, 12, r16, r8);
+  k = line_x8_v(k, a0, b0, d0, 8,  a1, b1, d1, 8,  r16, r8);
+  k = line_x8_v(k, c0, d0, b0, 7,  c1, d1, b1, 7,  r16, r8);
+
+  return k;
+}
+
+//
+// but imagine that you don't want to execute 2 shuffles from memory operands next to each other...
+// we can just define a variant of the double_quarter_round_x8 such that:
+//
+fn double_quarter_round_x8(reg u256[16] k, inline int a0 b0 c0 d0
+                                                       a1 b1 c1 d1, stack u256 r16 r8) -> reg u256[16]
+{
+  k = _line_x8_v(k, a0, b0, d0, 16,                 r16, r8);
+  k =  line_x8_v(k, c0, d0, b0, 12, a1, b1, d1, 16, r16, r8);
+  k =  line_x8_v(k, a0, b0, d0, 8,  c1, d1, b1, 12, r16, r8);
+  k =  line_x8_v(k, c0, d0, b0, 7,  a1, b1, d1, 8,  r16, r8);
+  k = _line_x8_v(k,                 c1, d1, b1, 7,  r16, r8);
+
+  return k;
+}
+
+fn column_round_x8(reg u256[16] k, stack u256 k15 k14 s_r16 s_r8) -> reg u256[16], stack u256
+{
+  k = double_quarter_round_x8(k, 0, 4, 8,  12,
+                                 2, 6, 10, 14, s_r16, s_r8);
+  k[15] = k15;
+  k14 = k[14];
+
+  k = double_quarter_round_x8(k, 1, 5, 9,  13,
+                                 3, 7, 11, 15, s_r16, s_r8);
+  return k, k14;
+}
+
+fn diagonal_round_x8(reg u256[16] k, stack u256 k15 k14 s_r16 s_r8) -> reg u256[16], stack u256
+{
+  k = double_quarter_round_x8(k, 1, 6, 11, 12,
+                                 0, 5, 10, 15, s_r16, s_r8);
+  k[14] = k14;
+  k15 = k[15];
+
+  k = double_quarter_round_x8(k, 2, 7, 8, 13,
+                                 3, 4, 9, 14, s_r16, s_r8);
+  return k, k15;
+}
 
 
 fn rounds_x8(reg u256[16] k, stack u256 s_r16 s_r8) -> reg u256[16]
 {
   reg u64 c;
-  stack u256 k14, k15;
+  stack u256 k15 k14;
 
   k15 = k[15];
 
   c = 0;
   while(c < 10)
   {
-    k, k14 = double_round_512(k, k15, s_r16, s_r8,
-                                      i_0, i_4, i_8,  i_12,
-                                      i_2, i_6, i_10, i_14,
-                                      i_1, i_5, i_9,  i_13,
-                                      i_3, i_7, i_11, i_15);
-
-    k, k15 = double_round_512(k, k14, s_r16, s_r8,
-                                      i_1, i_6, i_11, i_12,
-                                      i_0, i_5, i_10, i_15,
-                                      i_2, i_7, i_8,  i_13,
-                                      i_3, i_4, i_9,  i_14);
+    k, k14 = column_round_x8(k, k15, k14, s_r16, s_r8);
+    k, k15 = diagonal_round_x8(k, k15, k14, s_r16, s_r8);
     c += 1;
   }
 

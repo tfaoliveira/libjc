@@ -333,6 +333,58 @@ fn line(reg u32[16] k, inline int a b c r) -> reg u32[16]
 
 
 
+fn line_x8_v1(reg u32[16] k1 k2 k3 k4 k5 k6 k7 k8, inline int a b c r
+) -> reg u32[16], reg u32[16], reg u32[16], reg u32[16],
+     reg u32[16], reg u32[16], reg u32[16], reg u32[16]
+{
+  k1 = line(k1, a, b, c, r);
+  k2 = line(k2, a, b, c, r);
+  k3 = line(k3, a, b, c, r);
+  k4 = line(k4, a, b, c, r);
+  k5 = line(k5, a, b, c, r);
+  k6 = line(k6, a, b, c, r);
+  k7 = line(k7, a, b, c, r);
+  k8 = line(k8, a, b, c, r);
+
+  return k1, k2, k3, k4, k5, k6, k7, k8;
+}
+
+
+fn line_x8_v2(reg u32[16] k1 k2 k3 k4 k5 k6 k7 k8, inline int a b c r
+) -> reg u32[16], reg u32[16], reg u32[16], reg u32[16],
+     reg u32[16], reg u32[16], reg u32[16], reg u32[16]
+{
+  k1[a] += k1[b];
+  k2[a] += k2[b];
+  k3[a] += k3[b];
+  k4[a] += k4[b];
+  k5[a] += k5[b];
+  k6[a] += k6[b];
+  k7[a] += k7[b];
+  k8[a] += k8[b];
+
+  k1[c] ^= k1[a];
+  k2[c] ^= k2[a];
+  k3[c] ^= k3[a];
+  k4[c] ^= k4[a];
+  k5[c] ^= k5[a];
+  k6[c] ^= k6[a];
+  k7[c] ^= k7[a];
+  k8[c] ^= k8[a];
+
+  _, _, k1[c] = #x86_ROL_32(k1[c], r);
+  _, _, k2[c] = #x86_ROL_32(k2[c], r);
+  _, _, k3[c] = #x86_ROL_32(k3[c], r);
+  _, _, k4[c] = #x86_ROL_32(k4[c], r);
+  _, _, k5[c] = #x86_ROL_32(k5[c], r);
+  _, _, k6[c] = #x86_ROL_32(k6[c], r);
+  _, _, k7[c] = #x86_ROL_32(k7[c], r);
+  _, _, k8[c] = #x86_ROL_32(k8[c], r);
+
+  return k1, k2, k3, k4, k5, k6, k7, k8;
+}
+
+
 fn quarter_round(reg u32[16] k, inline int a b c d) -> reg u32[16]
 {
   k = line(k, a, b, d, 16);
@@ -477,6 +529,10 @@ export fn chacha20_avx2(reg u64 output plain, reg u32 len, reg u64 key nonce, re
 
 
 
+
+
+
+// actual implementation ends here, this is only for testing
 u128 bswap = (16u8)[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
 fn chacha20_memory_init_ietf_test(reg u64 output plain key nonce) -> stack u8[114], reg u32
@@ -729,6 +785,9 @@ fn chacha20_avx2_ietf_test_vector_extended() -> reg u64[1088], reg u64
   return sr, ssr;
 }
 
+
+// uncomment follow exec if you want to run the tests
+/*
 exec chacha20_avx2_ietf_test_vector_extended
 (
   0x0:1088
@@ -736,4 +795,5 @@ exec chacha20_avx2_ietf_test_vector_extended
 , 0x880:32
 , 0x8A0:12
 )
+*/
 
