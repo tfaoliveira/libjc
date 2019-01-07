@@ -40,12 +40,12 @@ module M = {
       c <- (loadW8 Glob.mem (ptr + j));
       s =
       Array2.init
-      (WArray128.get64 (WArray128.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) c));
+      (WArray16.get64 (WArray16.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) c));
       j <- (j + (W64.of_int 1));
     }
     s =
     Array2.init
-    (WArray128.get64 (WArray128.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) (W8.of_int 1)));
+    (WArray16.get64 (WArray16.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) (W8.of_int 1)));
     x.[0] <- s.[0];
     x.[1] <- s.[1];
     return (x);
@@ -292,31 +292,31 @@ module M = {
     l <- (l `&` (W64.of_int mask26));
     r1234 =
     Array5.init
-    (WArray1280.get256 (WArray1280.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 0) l));
+    (WArray160.get256 (WArray160.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 0) l));
     l <- rt.[0];
     l <- (l `>>` (W8.of_int 26));
     l <- (l `&` (W64.of_int mask26));
     r1234 =
     Array5.init
-    (WArray1280.get256 (WArray1280.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 4) l));
+    (WArray160.get256 (WArray160.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 4) l));
     l <- rt.[0];
     ( _0,  _1,  _2,  _3,  _4, l) <- x86_SHRD_64 l rt.[1] (W8.of_int 52);
     h <- l;
     l <- (l `&` (W64.of_int mask26));
     r1234 =
     Array5.init
-    (WArray1280.get256 (WArray1280.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 8) l));
+    (WArray160.get256 (WArray160.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 8) l));
     l <- h;
     l <- (l `>>` (W8.of_int 26));
     l <- (l `&` (W64.of_int mask26));
     r1234 =
     Array5.init
-    (WArray1280.get256 (WArray1280.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 12) l));
+    (WArray160.get256 (WArray160.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 12) l));
     l <- rt.[1];
     ( _5,  _6,  _7,  _8,  _9, l) <- x86_SHRD_64 l rt.[2] (W8.of_int 40);
     r1234 =
     Array5.init
-    (WArray1280.get256 (WArray1280.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 16) l));
+    (WArray160.get256 (WArray160.set64 (WArray160.init256 (fun i => r1234.[i])) (o + 16) l));
     return (r1234);
   }
   
