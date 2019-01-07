@@ -2,8 +2,6 @@ require import List Jasmin_model Int IntDiv CoreMap.
 require import Array2 Array3.
 require import WArray16 WArray24.
 
-
-
 module M = {
   proc load (p:W64.t) : W64.t Array2.t = {
     
@@ -30,12 +28,12 @@ module M = {
       c <- (loadW8 Glob.mem (ptr + j));
       s =
       Array2.init
-      (WArray128.get64 (WArray128.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) c));
+      (WArray16.get64 (WArray16.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) c));
       j <- (j + (W64.of_int 1));
     }
     s =
     Array2.init
-    (WArray128.get64 (WArray128.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) (W8.of_int 1)));
+    (WArray16.get64 (WArray16.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) (W8.of_int 1)));
     x.[0] <- s.[0];
     x.[1] <- s.[1];
     return (x);

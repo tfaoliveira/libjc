@@ -146,11 +146,26 @@ op x86_VPSHUFD_256 (w : W256.t) (m : W8.t) : W256.t =
 abbrev [-printing] x86_VPBROADCASTI_2u128 = x86_VPBROADCAST_2u128.
 
 (* -------------------------------------------------------------------- *)
+abbrev [-printing] subc_8 = W8.subc.
+abbrev [-printing] addc_8 = W8.addc.
+abbrev [-printing] mulu_8 = W8.mulu.
 
-op mulu_64 (w1 w2 : W64.t) = 
+abbrev [-printing] subc_16 = W16.subc.
+abbrev [-printing] addc_16 = W16.addc.
+abbrev [-printing] mulu_16 = W16.mulu.
+
+abbrev [-printing] subc_32 = W32.subc.
+abbrev [-printing] addc_32 = W32.addc.
+abbrev [-printing] mulu_32 = W32.mulu.
+
+abbrev [-printing] subc_64 = W64.subc.
+abbrev [-printing] addc_64 = W64.addc.
+abbrev [-printing] mulu_64 = W64.mulu.
+
+op mulu64 (w1 w2 : W64.t) = 
   (W2u32.zeroextu64 (W2u32.truncateu32 w1)) *
   (W2u32.zeroextu64 (W2u32.truncateu32 w2)).
- 
+  
 (* -------------------------------------------------------------------- *)
 
 (* FIXME it is really the semantics? In particular the last if *)
@@ -179,7 +194,7 @@ abbrev [-printing] x86_VPOR_256  = W256.(`|`).
 abbrev [-printing] x86_VPXOR_256 = W256.(`^`).
 
 op x86_VPMULU_128 (w1 w2: W128.t) = 
-  map2 mulu_64 w1 w2.
+  map2 mulu64 w1 w2.
 
 op x86_VPERM2I128 (w1 w2: W256.t) (i:W8.t) : W256.t = 
   let choose = fun n =>

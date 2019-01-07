@@ -655,6 +655,7 @@ instance ring with t
 
 (* --------------------------------------------------------------------- *)
 (* Exact arithmetic operations                                           *)
+op subc : t -> t -> bool -> bool * t.
 op addc : t -> t -> bool -> bool * t.
 op mulu : t -> t -> t * t.
 
