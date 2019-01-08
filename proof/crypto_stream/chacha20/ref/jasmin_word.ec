@@ -1180,6 +1180,12 @@ abstract theory W_WS.
    op x86_VPADD_'Ru'S (w1 : WB.t) (w2:WB.t) = 
      map2 WS.(+) w1 w2.
 
+(*   op x86_VPSUB_'Ru'S (w1 : WB.t) (w2:WB.t) = 
+     map2 (fun (x y:WS.t) => x - y) w1 w2.
+
+   op x86_VPMUL_'Ru'S (w1 : WB.t) (w2:WB.t) = 
+     map2 WS.( * ) w1 w2. *)
+
    op x86_VPSLL_'Ru'S (w : WB.t) (cnt : W8.t) = 
      map (fun (w:WS.t) => w `<<` cnt) w.
 
@@ -1398,3 +1404,4 @@ lemma foo (x y:W128.t) (x1 x2 y1 y2:W64.t):
   x `|` y = pack2 [x1 `|` y1; x2 `|` y2].
 proof. move=> -> -> /=.
 *)
+
