@@ -16,27 +16,28 @@ ls data/crypto_onetimeauth_poly1305_* | xargs rm
 mv data/crypto_onetimeauth_poly1305_openssl_static.data data/crypto_onetimeauth_poly1305_openssl_static_avx2.data
 
 # disable avx2 and run openssl benchmarks
-(export OPENSSL_ia32cap=~0x200000200000000 && ./bench poly1305-openssl && unset OPENSSL_ia32cap)
+#(export OPENSSL_ia32cap=~0x200000200000000 && ./bench poly1305-openssl && unset OPENSSL_ia32cap)
+(export OPENSSL_ia32cap=~0x201000000000000000 && ./bench poly1305-openssl && unset OPENSSL_ia32cap)
 mv data/crypto_onetimeauth_poly1305_openssl_static.data data/crypto_onetimeauth_poly1305_openssl_static_avx.data
 
 # plot
-./plot poly1305 cycles 16 512 "(jazz|openssl)"
+./plot poly1305 cycles 32 512 "(jazz|openssl)"
 ./plot poly1305 cycles 512 4096 "(jazz|openssl)"
 ./plot poly1305 cycles 4096 16384 "(jazz|openssl)"
 
-./plot poly1305 cycles 16 512 "(jazz|hacl_star_gcc)"
+./plot poly1305 cycles 32 512 "(jazz|hacl_star_gcc)"
 ./plot poly1305 cycles 512 4096 "(jazz|hacl_star_gcc)"
 ./plot poly1305 cycles 4096 16384 "(jazz|hacl_star_gcc)"
 
-./plot poly1305 cycles 16 512 "(jazz|hacl_star_compcert)"
-./plot poly1305 cycles 512 4096 "(jazz|hacl_star_compcert)"
-./plot poly1305 cycles 4096 16384 "(jazz|hacl_star_compcert)"
+#./plot poly1305 cycles 32 512 "(jazz|hacl_star_compcert)"
+#./plot poly1305 cycles 512 4096 "(jazz|hacl_star_compcert)"
+#./plot poly1305 cycles 4096 16384 "(jazz|hacl_star_compcert)"
 
-./plot poly1305 cycles 16 512 "(jazz|libsodium)"
+./plot poly1305 cycles 32 512 "(jazz|libsodium)"
 ./plot poly1305 cycles 512 4096 "(jazz|libsodium)"
 ./plot poly1305 cycles 4096 16384 "(jazz|libsodium)"
 
-./plot poly1305 cycles 16 512
+./plot poly1305 cycles 32 512
 ./plot poly1305 cycles 512 4096
 ./plot poly1305 cycles 4096 16384
 

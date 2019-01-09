@@ -3,7 +3,7 @@ crypto_onetimeauth poly1305 jazz/avx
 crypto_onetimeauth poly1305 jazz/avx2
 
 crypto_onetimeauth poly1305 hacl_star/gcc
-crypto_onetimeauth poly1305 hacl_star/compcert
+#crypto_onetimeauth poly1305 hacl_star/compcert
 
 crypto_onetimeauth poly1305 openssl/static
 crypto_onetimeauth poly1305 openssl/static_no_asm

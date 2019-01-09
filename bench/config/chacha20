@@ -4,7 +4,7 @@ crypto_stream chacha20 jazz/avx2
 
 crypto_stream chacha20 hacl_star/gcc
 crypto_stream chacha20 hacl_star/gcc_vec
-crypto_stream chacha20 hacl_star/compcert
+#crypto_stream chacha20 hacl_star/compcert
 
 crypto_stream chacha20 openssl/static
 crypto_stream chacha20 openssl/static_no_asm
