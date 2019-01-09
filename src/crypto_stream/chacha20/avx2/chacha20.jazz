@@ -132,8 +132,6 @@ fn copy_state_x8(stack u256[16] st) -> reg u256[16]
   return k;
 }
 
-
-
 // sum states
 
 fn sum_states_x2(reg u256[4] k st) -> reg u256[4]
@@ -175,18 +173,47 @@ fn increment_counter_x8(stack u256[16] s) -> stack u256[16]
 
 
 
-// store aux functions
+// store auxiliary functions
 
+fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u64, reg u32
+{
+  output += n;
+  plain += n;
+  len -= n;
+  return output, plain, len;
+}
+
+
+
+// Function perm_x2 receives a state k organized as follows:
+//
+//   k[0] = { k2[3],  k2[2],  k2[1],  k2[0],    k1[3],  k1[2],  k1[1],  k1[0] }
+//   k[1] = { k2[7],  k2[6],  k2[5],  k2[4],    k1[7],  k1[6],  k1[5],  k1[4] }
+//   k[2] = { k2[11], k2[10], k2[9],  k2[8],    k1[11], k1[10], k1[9],  k1[8] }
+//   k[2] = { k2[15], k2[14], k2[13], k2[12],   k1[15], k1[14], k1[13], k1[12] }
+//
+// where k1 and k2 are the states corresponding to the first and second block, respectively.
+// perm_x2 function rearranges k into pk such that pk is equal to:
+// 
+//   pk[0] = { k1[7],  k1[6],  k1[5],  k1[4],    k1[3],  k1[2],  k1[1],  k1[0] }
+//   pk[1] = { k1[15], k1[14], k1[13], k1[12],   k1[11], k1[10], k1[9],  k1[8] }
+//   pk[2] = { k2[7],  k2[6],  k2[5],  k2[4],    k2[3],  k2[2],  k2[1],  k2[0] }
+//   pk[2] = { k2[15], k2[14], k2[13], k2[12],   k2[11], k2[10], k2[9],  k2[8] }
+//
 fn perm_x2(reg u256[4] k) -> reg u256[4]
 {
   reg u256[4] pk;
-  pk[0] = #x86_VPERM2I128(k[0], k[1], 0x20);
-  pk[1] = #x86_VPERM2I128(k[2], k[3], 0x20);
-  pk[2] = #x86_VPERM2I128(k[0], k[1], 0x31);
-  pk[3] = #x86_VPERM2I128(k[2], k[3], 0x31);
+  pk[0] = #x86_VPERM2I128(k[0], k[1], (2u4)[2, 0]);
+  pk[1] = #x86_VPERM2I128(k[2], k[3], (2u4)[2, 0]);
+  pk[2] = #x86_VPERM2I128(k[0], k[1], (2u4)[3, 1]);
+  pk[3] = #x86_VPERM2I128(k[2], k[3], (2u4)[3, 1]);
   return pk;
 }
 
+//
+// perm_x4 is the same as perm_x2, only difference is that it works for 256 bytes
+// of stream (or 4 blocks).
+// 
 fn perm_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
 {
   reg u256[4] pk1 pk2;
@@ -194,6 +221,292 @@ fn perm_x4(reg u256[4] k1 k2) -> reg u256[4], reg u256[4]
   pk2 = perm_x2(k2);
   return pk1, pk2;
 }
+
+
+// store functions
+
+//
+// stores 64 bytes
+//
+fn store(reg u64 output plain, reg u32 len, reg u256[2] k) -> reg u64, reg u64, reg u32, reg u256[2]
+{
+  k[0] ^= (u256)[plain +  0];
+  k[1] ^= (u256)[plain + 32];
+
+  (u256)[output +  0] = k[0];
+  (u256)[output + 32] = k[1];
+
+  output, plain, len = update_ptr(output, plain, len, 64);
+
+  return output, plain, len, k;
+}
+
+//
+// stores up to 64 bytes
+//
+fn store_last(reg u64 output plain, reg u32 len, reg u256[2] k)
+{
+  reg u256     r0;
+  reg u128     r1;
+  reg u64      r2 j;
+  reg u8       r3;
+  stack u8[16] s0; 
+
+  r0 = k[0];
+
+  if(len >= 32)
+  {
+    r0 ^= (u256)[plain + 0];
+    (u256)[output + 0] = r0;
+
+    output, plain, len = update_ptr(output, plain, len, 32);
+
+    r0 = k[1];
+  }
+
+  r1 = #x86_VEXTRACTI128(r0, 0);
+
+  if(len >= 16)
+  {
+    r1 ^= (u128)[plain + 0];
+    (u128)[output + 0] = r1;
+
+    output, plain, len = update_ptr(output, plain, len, 16);
+
+    r1 = #x86_VEXTRACTI128(r0, 1);
+  }
+
+  s0[u128 0] = r1;
+
+  j = 0;
+  while(j < len)
+  {
+    r3 = (u8)[plain + j];
+    r3 ^= s0[(int)j];
+    (u8)[output + j] = r3;
+    j += 1;
+  }
+}
+
+//
+// stores 128 bytes
+//
+fn store_x2(reg u64 output plain, reg u32 len, reg u256[4] k) -> reg u64, reg u64, reg u32, reg u256[4]
+{
+  inline int i;
+
+  for i=0 to 4
+  { k[i] ^= (u256)[plain + 32*i]; }
+
+  for i=0 to 4
+  { (u256)[output + 32*i] = k[i]; }
+
+  output, plain, len = update_ptr(output, plain, len, 128);
+
+  return output, plain, len, k;
+}
+
+
+//
+// stores up to 128 bytes
+//
+fn store_x2_last(reg u64 output plain, reg u32 len, reg u256[4] k)
+{
+  reg u256[2] r;
+
+  r[0] = k[0];
+  r[1] = k[1];
+
+  if(len >= 64)
+  {
+    output, plain, len, r = store(output, plain, len, r);
+    r[0] = k[2];
+    r[1] = k[3];
+  }
+
+  store_last(output, plain, len, r);
+}
+
+
+//
+// stores 256 bytes
+//
+fn store_x4(reg u64 output plain, reg u32 len, reg u256[8] k) -> reg u64, reg u64, reg u32
+{
+  inline int i;
+
+  for i=0 to 8
+  { k[i] ^= (u256)[plain + 32*i]; }
+
+  for i=0 to 8
+  { (u256)[output + 32*i] = k[i]; }
+
+  output, plain, len = update_ptr(output, plain, len, 256);
+
+  return output, plain, len;
+}
+
+
+//
+// stores up to 256 bytes
+//
+fn store_x4_last(reg u64 output plain, reg u32 len, reg u256[8] k)
+{
+  inline int i;
+  reg u256[4] r;
+
+  for i=0 to 4 { r[i] = k[i]; }
+
+  if(len >= 128)
+  {
+    output, plain, len, r = store_x2(output, plain, len, r);
+    for i=0 to 4 { r[i] = k[i+4]; }
+  }
+
+  store_x2_last(output, plain, len, r);
+}
+
+
+//
+// store_x8 notes about how to store 512 bytes
+//
+// k contains 512 bytes of stream material to xor and store. Let k1 to k8 be the
+// state for block 1 to 8, respectively. store_x8 function receives an k such that:
+//
+//   k[0]  = {k8[0],  k7[0],  k6[0],  k5[0],  k4[0],  k3[0],  k2[0],  k1[0]}
+//   k[1]  = {k8[1],  k7[1],  k6[1],  k5[1],  k4[1],  k3[1],  k2[1],  k1[1]}
+//   k[2]  = {k8[2],  k7[2],  k6[2],  k5[2],  k4[2],  k3[2],  k2[2],  k1[2]}
+//   k[3]  = {k8[3],  k7[3],  k6[3],  k5[3],  k4[3],  k3[3],  k2[3],  k1[3]}
+//   k[4]  = {k8[4],  k7[4],  k6[4],  k5[4],  k4[4],  k3[4],  k2[4],  k1[4]}
+//   k[5]  = {k8[5],  k7[5],  k6[5],  k5[5],  k4[5],  k3[5],  k2[5],  k1[5]}
+//   k[6]  = {k8[6],  k7[6],  k6[6],  k5[6],  k4[6],  k3[6],  k2[6],  k1[6]}
+//   k[7]  = {k8[7],  k7[7],  k6[7],  k5[7],  k4[7],  k3[7],  k2[7],  k1[7]}
+//   k[8]  = {k8[8],  k7[8],  k6[8],  k5[8],  k4[8],  k3[8],  k2[8],  k1[8]}
+//   k[9]  = {k8[9],  k7[9],  k6[9],  k5[9],  k4[9],  k3[9],  k2[9],  k1[9]}
+//   k[10] = {k8[10], k7[10], k6[10], k5[10], k4[10], k3[10], k2[10], k1[10]}
+//   k[11] = {k8[11], k7[11], k6[11], k5[11], k4[11], k3[11], k2[11], k1[11]}
+//   k[12] = {k8[12], k7[12], k6[12], k5[12], k4[12], k3[12], k2[12], k1[12]}
+//   k[13] = {k8[13], k7[13], k6[13], k5[13], k4[13], k3[13], k2[13], k1[13]}
+//   k[14] = {k8[14], k7[14], k6[14], k5[14], k4[14], k3[14], k2[14], k1[14]}
+//   k[15] = {k8[15], k7[15], k6[15], k5[15], k4[15], k3[15], k2[15], k1[15]}
+//
+// Since we want to perform (u256) loads and stores we need to 'rotate' the state k
+// such that k is:
+//
+//   k[0]  = {k1[7],  k1[6],  k1[5],  k1[4],  k1[3],  k1[2],  k1[1],  k1[0]}
+//   k[1]  = {k1[15], k1[14], k1[13], k1[12], k1[11], k1[10], k1[9],  k1[8]}
+//
+//   k[2]  = {k2[7],  k2[6],  k2[5],  k2[4],  k2[3],  k2[2],  k2[1],  k2[0]}
+//   k[3]  = {k2[15], k2[14], k2[13], k2[12], k2[11], k2[10], k2[9],  k2[8]}
+//
+//   k[4]  = {k3[7],  k3[6],  k3[5],  k3[4],  k3[3],  k3[2],  k3[1],  k3[0]}
+//   k[5]  = {k3[15], k3[14], k3[13], k3[12], k3[11], k3[10], k3[9],  k3[8]}
+//   k[6]  = {k4[7],  k4[6],  k4[5],  k4[4],  k4[3],  k4[2],  k4[1],  k4[0]}
+//   k[7]  = {k4[15], k4[14], k4[13], k4[12], k4[11], k4[10], k4[9],  k4[8]}
+//   k[8]  = {k5[7],  k5[6],  k5[5],  k5[4],  k5[3],  k5[2],  k5[1],  k5[0]}
+//   k[9]  = {k5[15], k5[14], k5[13], k5[12], k5[11], k5[10], k5[9],  k5[8]}
+//   k[10] = {k6[7],  k6[6],  k6[5],  k6[4],  k6[3],  k6[2],  k6[1],  k6[0]}
+//   k[11] = {k6[15], k6[14], k6[13], k6[12], k6[11], k6[10], k6[9],  k6[8]}
+//   k[12] = {k7[7],  k7[6],  k7[5],  k7[4],  k7[3],  k7[2],  k7[1],  k7[0]}
+//   k[13] = {k7[15], k7[14], k7[13], k7[12], k7[11], k7[10], k7[9],  k7[8]}
+//   k[14] = {k8[7],  k8[6],  k8[5],  k8[4],  k8[3],  k8[2],  k8[1],  k8[0]}
+//   k[15] = {k8[15], k8[14], k8[13], k8[12], k8[11], k8[10], k8[9],  k8[8]}
+//
+// Let's consider for some moment that we have as many registers as we need so we
+// can define a function to rotate all k at once. So let there be a function
+// full_rotate that receives k and returns rotated k:
+fn full_rotate(reg u256[16] k) -> reg u256[16]
+{
+  inline int i;
+  reg u256[16] upk32, upk64, rk;
+
+
+  for i=0 to 8
+  { upk32[i] = #x86_VPUNPCKL_8u32(k[2*i+0], k[2*i+1]); }
+  //
+  //   upk32[0]  = {k7[1],  k7[0],  k5[1],  k5[0],  k3[1],  k3[0],  k1[1],  k1[0]}
+  //   upk32[1]  = {k7[3],  k7[2],  k5[3],  k5[2],  k3[3],  k3[2],  k1[3],  k1[2]}
+  //   upk32[2]  = {k7[5],  k7[4],  k5[5],  k5[4],  k3[5],  k3[4],  k1[5],  k1[4]}
+  //   upk32[3]  = {k7[7],  k7[6],  k5[7],  k5[6],  k3[7],  k3[6],  k1[7],  k1[6]}
+  //   upk32[4]  = {k7[9],  k7[8],  k5[9],  k5[8],  k3[9],  k3[8],  k1[9],  k1[8]}
+  //   upk32[5]  = {k7[11], k7[10], k5[11], k5[10], k3[11], k3[10], k1[11], k1[10]}
+  //   upk32[6]  = {k7[13], k7[12], k5[13], k5[12], k3[13], k3[12], k1[13], k1[12]}
+  //   upk32[7]  = {k7[15], k7[14], k5[15], k5[14], k3[15], k3[14], k1[15], k1[14]}
+
+  for i=0 to 8
+  { upk32[8+i] = #x86_VPUNPCKH_8u32(k[2*i+0], k[2*i+1]); }
+  //
+  //   upk32[8]  = {k8[1],  k8[0],  k6[1],  k6[0],  k4[1],  k4[0],  k2[1],  k2[0]}
+  //   upk32[9]  = {k8[3],  k8[2],  k6[3],  k6[2],  k4[3],  k4[2],  k2[3],  k2[2]}
+  //   upk32[10] = {k8[5],  k8[4],  k6[5],  k6[4],  k4[5],  k4[4],  k2[5],  k2[4]}
+  //   upk32[11] = {k8[7],  k8[6],  k6[7],  k6[6],  k4[7],  k4[6],  k2[7],  k2[6]}
+  //   upk32[12] = {k8[9],  k8[8],  k6[9],  k6[8],  k4[9],  k4[8],  k2[9],  k2[8]}
+  //   upk32[13] = {k8[11], k8[10], k6[11], k6[10], k4[11], k4[10], k2[11], k2[10]}
+  //   upk32[14] = {k8[13], k8[12], k6[13], k6[12], k4[13], k4[12], k2[13], k2[12]}
+  //   upk32[15] = {k8[15], k8[14], k6[15], k6[14], k4[15], k4[14], k2[15], k2[14]} 
+
+  for i=0 to 8
+  { upk64[i] = #x86_VPUNPCKL_4u64(upk32[2*i+0], upk32[2*i+1]); }
+  //
+  //   upk64[0] = {k5[3],  k5[2],  k5[1],  k5[0],  k1[3],  k1[2],  k1[1],  k1[0]}
+  //   upk64[1] = {k5[7],  k5[6],  k5[5],  k5[4],  k1[7],  k1[6],  k1[5],  k1[4]}
+  //   upk64[2] = {k5[11], k5[10], k5[9],  k5[8],  k1[11], k1[10], k1[9],  k1[8]}
+  //   upk64[3] = {k5[15], k5[14], k5[13], k5[12], k1[15], k1[14], k1[13], k1[12]}
+  //   upk64[4] = {k6[3],  k6[2],  k6[1],  k6[0],  k2[3],  k2[2],  k2[1],  k2[0]}
+  //   upk64[5] = {k6[7],  k6[6],  k6[5],  k6[4],  k2[7],  k2[6],  k2[5],  k2[4]}
+  //   upk64[6] = {k6[11], k6[10], k6[9],  k6[8],  k2[11], k2[10], k2[9],  k2[8]}
+  //   upk64[7] = {k6[15], k6[14], k6[13], k6[12], k2[15], k2[14], k2[13], k2[12]}
+
+  for i=0 to 8
+  { upk64[8+i] = #x86_VPUNPCKH_4u64(upk32[2*i+0], upk32[2*i+1]); }
+  //
+  //   upk64[8]  = {k7[3],  k7[2],  k7[1],  k7[0],  k3[3],  k3[2],  k3[1],  k3[0] }
+  //   upk64[9]  = {k7[7],  k7[6],  k7[5],  k7[4],  k3[7],  k3[6],  k3[5],  k3[4] }
+  //   upk64[10] = {k7[11], k7[10], k7[9],  k7[8],  k3[11], k3[10], k3[9],  k3[8] }
+  //   upk64[11] = {k7[15], k7[14], k7[13], k7[12], k3[15], k3[14], k3[13], k3[12]}
+  //   upk64[12] = {k8[3],  k8[2],  k8[1],  k8[0],  k4[3],  k4[2],  k4[1],  k4[0] }
+  //   upk64[13] = {k8[7],  k8[6],  k8[5],  k8[4],  k4[7],  k4[6],  k4[5],  k4[4] }
+  //   upk64[14] = {k8[11], k8[10], k8[9],  k8[8],  k4[11], k4[10], k4[9],  k4[8] }
+  //   upk64[15] = {k8[15], k8[14], k8[13], k8[12], k4[15], k4[14], k4[13], k4[12]}
+
+  for i=0 to 8
+  { rk[i] = #x86_VPERM2I128(upk32[2*i+0], upk32[2*i+1], (2u4)[2, 0]); }
+
+  //   rk[0]  = {k1[7],  k1[6],  k1[5],  k1[4],  k1[3],  k1[2],  k1[1],  k1[0]}
+  //   rk[1]  = {k1[15], k1[14], k1[13], k1[12], k1[11], k1[10], k1[9],  k1[8]}
+  //   rk[2]  = {k2[7],  k2[6],  k2[5],  k2[4],  k2[3],  k2[2],  k2[1],  k2[0]}
+  //   rk[3]  = {k2[15], k2[14], k2[13], k2[12], k2[11], k2[10], k2[9],  k2[8]}
+  //   rk[4]  = {k3[7],  k3[6],  k3[5],  k3[4],  k3[3],  k3[2],  k3[1],  k3[0]}
+  //   rk[5]  = {k3[15], k3[14], k3[13], k3[12], k3[11], k3[10], k3[9],  k3[8]}
+  //   rk[6]  = {k4[7],  k4[6],  k4[5],  k4[4],  k4[3],  k4[2],  k4[1],  k4[0]}
+  //   rk[7]  = {k4[15], k4[14], k4[13], k4[12], k4[11], k4[10], k4[9],  k4[8]}
+
+  for i=0 to 8
+  { rk[8+i] = #x86_VPERM2I128(upk32[2*i+0], upk32[2*i+1], (2u4)[3, 1]); }
+
+  //   rk[8]  = {k5[7],  k5[6],  k5[5],  k5[4],  k5[3],  k5[2],  k5[1],  k5[0]}
+  //   rk[9]  = {k5[15], k5[14], k5[13], k5[12], k5[11], k5[10], k5[9],  k5[8]}
+  //   rk[10] = {k6[7],  k6[6],  k6[5],  k6[4],  k6[3],  k6[2],  k6[1],  k6[0]}
+  //   rk[11] = {k6[15], k6[14], k6[13], k6[12], k6[11], k6[10], k6[9],  k6[8]}
+  //   rk[12] = {k7[7],  k7[6],  k7[5],  k7[4],  k7[3],  k7[2],  k7[1],  k7[0]}
+  //   rk[13] = {k7[15], k7[14], k7[13], k7[12], k7[11], k7[10], k7[9],  k7[8]}
+  //   rk[14] = {k8[7],  k8[6],  k8[5],  k8[4],  k8[3],  k8[2],  k8[1],  k8[0]}
+  //   rk[15] = {k8[15], k8[14], k8[13], k8[12], k8[11], k8[10], k8[9],  k8[8]}
+
+  return rk;
+}
+
+
+fn store_half_x8(reg u64 output plain, reg u32 len, reg u256[8] k, inline int o)
+{
+  inline int i;
+
+  for i=0 to 8
+  { k[i] ^= (u256)[plain + o + 64*i]; }
+  for i=0 to 8
+  { (u256)[output + o + 64*i] = k[i]; }
+}
+
 
 fn sub_rotate(reg u256[8] t) -> reg u256[8]
 {
@@ -211,8 +524,8 @@ fn sub_rotate(reg u256[8] t) -> reg u256[8]
   x[7] = #x86_VPUNPCKH_4u64(t[6], t[7]);
 
   for i=0 to 4
-  {   t[i] = #x86_VPERM2I128(x[2*i+0], x[2*i+1], 0x20);
-    t[i+4] = #x86_VPERM2I128(x[2*i+0], x[2*i+1], 0x31); }
+  {   t[i] = #x86_VPERM2I128(x[2*i+0], x[2*i+1], (2u4)[2,0]);
+    t[i+4] = #x86_VPERM2I128(x[2*i+0], x[2*i+1], (2u4)[3,1]); }
 
   return t;
 }
@@ -283,146 +596,6 @@ fn interleave(stack u256[8] s, reg u256[8] k, inline int o) -> reg u256[8]
     sk[2*i+1] = k[o + i]; }
 
   return sk;
-}
-
-fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u64, reg u32
-{
-  output += n;
-  plain += n;
-  len -= n;
-  return output, plain, len;
-}
-
-// store functions
-
-fn store(reg u64 output plain, reg u32 len, reg u256[2] k) -> reg u64, reg u64, reg u32, reg u256[2]
-{
-  k[0] ^= (u256)[plain +  0];
-  k[1] ^= (u256)[plain + 32];
-
-  (u256)[output +  0] = k[0];
-  (u256)[output + 32] = k[1];
-
-  output, plain, len = update_ptr(output, plain, len, 64);
-
-  return output, plain, len, k;
-}
-
-fn store_last(reg u64 output plain, reg u32 len, reg u256[2] k)
-{
-  reg u256     r0;
-  reg u128     r1;
-  reg u64      r2 j;
-  reg u8       r3;
-  stack u8[16] s0; 
-
-  r0 = k[0];
-
-  if(len >= 32)
-  {
-    r0 ^= (u256)[plain + 0];
-    (u256)[output + 0] = r0;
-
-    output, plain, len = update_ptr(output, plain, len, 32);
-
-    r0 = k[1];
-  }
-
-  r1 = #x86_VEXTRACTI128(r0, 0);
-
-  if(len >= 16)
-  {
-    r1 ^= (u128)[plain + 0];
-    (u128)[output + 0] = r1;
-
-    output, plain, len = update_ptr(output, plain, len, 16);
-
-    r1 = #x86_VEXTRACTI128(r0, 1);
-  }
-
-  s0[u128 0] = r1;
-
-  j = 0;
-  while(j < len)
-  {
-    r3 = (u8)[plain + j];
-    r3 ^= s0[(int)j];
-    (u8)[output + j] = r3;
-    j += 1;
-  }
-}
-
-fn store_x2(reg u64 output plain, reg u32 len, reg u256[4] k) -> reg u64, reg u64, reg u32, reg u256[4]
-{
-  inline int i;
-
-  for i=0 to 4
-  { k[i] ^= (u256)[plain + 32*i]; }
-
-  for i=0 to 4
-  { (u256)[output + 32*i] = k[i]; }
-
-  output, plain, len = update_ptr(output, plain, len, 128);
-
-  return output, plain, len, k;
-}
-
-fn store_x2_last(reg u64 output plain, reg u32 len, reg u256[4] k)
-{
-  reg u256[2] r;
-
-  r[0] = k[0];
-  r[1] = k[1];
-
-  if(len >= 64)
-  {
-    output, plain, len, r = store(output, plain, len, r);
-    r[0] = k[2];
-    r[1] = k[3];
-  }
-
-  store_last(output, plain, len, r);
-}
-
-fn store_x4(reg u64 output plain, reg u32 len, reg u256[8] k) -> reg u64, reg u64, reg u32
-{
-  inline int i;
-
-  for i=0 to 8
-  { k[i] ^= (u256)[plain + 32*i]; }
-
-  for i=0 to 8
-  { (u256)[output + 32*i] = k[i]; }
-
-  output, plain, len = update_ptr(output, plain, len, 256);
-
-  return output, plain, len;
-}
-
-fn store_x4_last(reg u64 output plain, reg u32 len, reg u256[8] k)
-{
-  inline int i;
-  reg u256[4] r;
-
-  for i=0 to 4 { r[i] = k[i]; }
-
-  if(len >= 128)
-  {
-    output, plain, len, r = store_x2(output, plain, len, r);
-    for i=0 to 4 { r[i] = k[i+4]; }
-  }
-
-  store_x2_last(output, plain, len, r);
-}
-
-fn store_half_x8(reg u64 output plain, reg u32 len, reg u256[8] k, inline int o)
-{
-  inline int i;
-
-  for i=0 to 8
-  { k[i] ^= (u256)[plain + o + 64*i]; }
-  for i=0 to 8
-  { (u256)[output + o + 64*i] = k[i]; }
 }
 
 fn store_x8(reg u64 output plain, reg u32 len, reg u256[16] k) -> reg u64, reg u64, reg u32
