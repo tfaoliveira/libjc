@@ -27,42 +27,39 @@ poly1305_ref3:
 	movq	%rdx, %r12
 	jmp 	Lpoly1305_ref3$4
 Lpoly1305_ref3$5:
-	movq	(%rsi), %rax
-	movq	8(%rsi), %rdx
-	addq	%rax, %r8
-	adcq	%rdx, %r9
+	addq	(%rsi), %r8
+	adcq	8(%rsi), %r9
 	adcq	$1, %r10
-	movq	%r8, %rax
-	mulq	%r11
+	movq	%rbp, %rax
+	mulq	%r8
 	movq	%rax, %r13
+	movq	%r11, %rax
 	movq	%rdx, %r14
-	movq	%r9, %rax
-	mulq	%rbx
+	mulq	%r8
+	movq	%rax, %r8
+	movq	%r11, %rax
+	movq	%rdx, %r15
+	mulq	%r9
 	addq	%rax, %r13
+	movq	%rbx, %rax
 	adcq	%rdx, %r14
-	movq	$0, %r15
-	movq	%r8, %rax
-	mulq	%rbp
-	addq	%rax, %r14
+	mulq	%r9
+	movq	%r10, %r9
+	addq	%rax, %r8
 	adcq	%rdx, %r15
-	movq	%r9, %rax
-	mulq	%r11
-	addq	%rax, %r14
-	adcq	%rdx, %r15
-	movq	%r10, %rax
-	imulq	%rbx, %rax
-	addq	%rax, %r14
-	adcq	$0, %r15
+	imulq	%rbx, %r9
+	addq	%r9, %r13
+	movq	%r15, %r9
+	adcq	$0, %r14
 	imulq	%r11, %r10
-	movq	%r13, %r8
-	movq	%r14, %r9
-	addq	%r15, %r10
-	movq	%r10, %rax
-	movq	%r10, %rdx
+	addq	%r13, %r9
+	movq	$-4, %rax
+	adcq	%r10, %r14
+	andq	%r14, %rax
+	movq	%r14, %r10
+	shrq	$2, %r14
 	andq	$3, %r10
-	shrq	$2, %rax
-	andq	$-4, %rdx
-	addq	%rdx, %rax
+	addq	%r14, %rax
 	addq	%rax, %r8
 	adcq	$0, %r9
 	adcq	$0, %r10
@@ -85,42 +82,39 @@ Lpoly1305_ref3$2:
 	cmpq	%r12, %rax
 	jb  	Lpoly1305_ref3$3
 	movb	$1, (%rsp,%rax)
-	movq	(%rsp), %rax
-	movq	8(%rsp), %rdx
-	addq	%rax, %r8
-	adcq	%rdx, %r9
+	addq	(%rsp), %r8
+	adcq	8(%rsp), %r9
 	adcq	$0, %r10
-	movq	%r8, %rax
-	mulq	%r11
+	movq	%rbp, %rax
+	mulq	%r8
 	movq	%rax, %rsi
+	movq	%r11, %rax
+	movq	%rdx, %rbp
+	mulq	%r8
+	movq	%rax, %r8
+	movq	%r11, %rax
 	movq	%rdx, %r12
-	movq	%r9, %rax
-	mulq	%rbx
+	mulq	%r9
 	addq	%rax, %rsi
+	movq	%rbx, %rax
+	adcq	%rdx, %rbp
+	mulq	%r9
+	movq	%r10, %r9
+	addq	%rax, %r8
 	adcq	%rdx, %r12
-	movq	$0, %r13
-	movq	%r8, %rax
-	mulq	%rbp
-	addq	%rax, %r12
-	adcq	%rdx, %r13
-	movq	%r9, %rax
-	mulq	%r11
-	addq	%rax, %r12
-	adcq	%rdx, %r13
-	movq	%r10, %rax
-	imulq	%rbx, %rax
-	addq	%rax, %r12
-	adcq	$0, %r13
-	imulq	%r11, %r10
-	movq	%rsi, %r8
+	imulq	%rbx, %r9
+	addq	%r9, %rsi
 	movq	%r12, %r9
-	addq	%r13, %r10
-	movq	%r10, %rax
-	movq	%r10, %rdx
+	adcq	$0, %rbp
+	imulq	%r11, %r10
+	addq	%rsi, %r9
+	movq	$-4, %rax
+	adcq	%r10, %rbp
+	andq	%rbp, %rax
+	movq	%rbp, %r10
+	shrq	$2, %rbp
 	andq	$3, %r10
-	shrq	$2, %rax
-	andq	$-4, %rdx
-	addq	%rdx, %rax
+	addq	%rbp, %rax
 	addq	%rax, %r8
 	adcq	$0, %r9
 	adcq	$0, %r10

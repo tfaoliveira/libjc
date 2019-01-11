@@ -198,10 +198,10 @@
 		L477.7,422.6 L482.0,423.3 L486.3,424.1 L490.6,424.8 L494.9,425.5 L499.2,426.2 L503.5,426.9 L507.8,427.6
 		L512.1,428.3 L516.4,428.3 L520.7,429.8  '/></g>
 	</g>
-	<g id="gnuplot_plot_4" ><title>OpenSSL 1.1.1 stable no-asm</title>
+	<g id="gnuplot_plot_4" ><title>OpenSSL 1.1.1 stable - no assembly</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<g transform="translate(507.9,93.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
-		<text><tspan font-family="Arial" >OpenSSL 1.1.1 stable no-asm</tspan></text>
+		<text><tspan font-family="Arial" >OpenSSL 1.1.1 stable - no assembly</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -221,10 +221,10 @@
 		L477.7,47.3 L482.0,43.8 L486.3,47.3 L490.6,43.8 L494.9,47.3 L499.2,43.8 L503.5,47.3 L507.8,43.8
 		L512.1,47.3 L516.4,43.8 L520.7,48.7  '/></g>
 	</g>
-	<g id="gnuplot_plot_5" ><title>OpenSSL 1.1.1 stable (AVX2 disabled)</title>
+	<g id="gnuplot_plot_5" ><title>OpenSSL 1.1.1 stable - AVX</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<g transform="translate(507.9,111.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
-		<text><tspan font-family="Arial" >OpenSSL 1.1.1 stable (AVX2 disabled)</tspan></text>
+		<text><tspan font-family="Arial" >OpenSSL 1.1.1 stable - AVX</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -244,10 +244,10 @@
 		L477.7,342.9 L482.0,342.9 L486.3,345.7 L490.6,334.3 L494.9,337.2 L499.2,337.9 L503.5,340.0 L507.8,340.7
 		L512.1,342.9 L516.4,342.9 L520.7,345.0  '/></g>
 	</g>
-	<g id="gnuplot_plot_6" ><title>OpenSSL 1.1.1 stable</title>
+	<g id="gnuplot_plot_6" ><title>OpenSSL 1.1.1 stable - AVX2</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<g transform="translate(507.9,129.2)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="end">
-		<text><tspan font-family="Arial" >OpenSSL 1.1.1 stable</tspan></text>
+		<text><tspan font-family="Arial" >OpenSSL 1.1.1 stable - AVX2</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">

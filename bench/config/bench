@@ -1,2 +1,2 @@
-crypto_onetimeauth poly1305 jazz/ref3
-
+crypto_onetimeauth poly1305 hacl_star/compcert
+crypto_stream chacha20 hacl_star/compcert

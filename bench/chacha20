@@ -15,11 +15,7 @@ ls data/crypto_stream_chacha20_* | xargs rm
 # move openssl static results to openssl static avx2
 mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_openssl_static_avx2.data
 
-# disable avx2 and run openssl benchmarks
-#(export OPENSSL_ia32cap=~0x200000200000000 && ./bench chacha20-openssl && unset OPENSSL_ia32cap)
-#mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_openssl_static_avx.data
-
-# disable avx and avx2 and run openssl benchmarks
+# disable avx and avx2 and avx run openssl benchmarks
 (export OPENSSL_ia32cap=~0x201000000000000000 && ./bench chacha20-openssl && unset OPENSSL_ia32cap)
 mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_openssl_static_ref.data
 
