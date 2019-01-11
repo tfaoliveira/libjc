@@ -1,1 +1,2 @@
-crypto_stream chacha20 jazz/avx2
+crypto_onetimeauth poly1305 jazz/ref3
+
