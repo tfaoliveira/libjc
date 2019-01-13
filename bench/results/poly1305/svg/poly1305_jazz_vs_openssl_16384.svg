@@ -171,8 +171,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(255,   0,   0)'  d='M516.2,106.7 L558.4,106.7 M57.5,300.1 L95.6,301.6 L133.7,303.0 L171.8,301.6 L209.9,310.1 L248.0,303.0
-		L286.2,304.4 L324.3,304.4 L362.4,313.0 L400.5,313.0 L438.6,313.0 L476.7,313.0 L514.9,313.0  '/></g>
+	<path stroke='rgb(255,   0,   0)'  d='M516.2,106.7 L558.4,106.7 M57.5,301.6 L95.6,301.6 L133.7,310.1 L171.8,303.0 L209.9,311.5 L248.0,304.4
+		L286.2,313.0 L324.3,313.0 L362.4,313.0 L400.5,304.4 L438.6,304.4 L476.7,313.0 L514.9,313.0  '/></g>
 	</g>
 	<g id="gnuplot_plot_6" ><title>OpenSSL 1.1.1 stable - AVX2</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">

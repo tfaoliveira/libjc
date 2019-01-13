@@ -166,8 +166,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(255,   0,   0)'  d='M516.2,88.7 L558.4,88.7 M57.5,320.7 L95.6,321.9 L133.7,323.1 L171.8,321.9 L209.9,329.2 L248.0,323.1
-		L286.2,324.4 L324.3,324.4 L362.4,331.7 L400.5,331.7 L438.6,331.7 L476.7,331.7 L514.9,331.7  '/></g>
+	<path stroke='rgb(255,   0,   0)'  d='M516.2,88.7 L558.4,88.7 M57.5,321.9 L95.6,321.9 L133.7,329.2 L171.8,323.1 L209.9,330.5 L248.0,324.4
+		L286.2,331.7 L324.3,331.7 L362.4,331.7 L400.5,324.4 L438.6,324.4 L476.7,331.7 L514.9,331.7  '/></g>
 	</g>
 	<g id="gnuplot_plot_5" ><title>Jasmin - AVX2</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
