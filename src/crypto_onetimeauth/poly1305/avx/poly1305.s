@@ -14,7 +14,7 @@ poly1305_avx:
   movq  %rsp, %r15
   andq  $-31, %rsp
   movq  %r15, -8(%rsp)
-	cmpq	$384, %rdx
+	cmpq	$1024, %rdx
 	jb  	Lpoly1305_avx$1
 	movq	%rdx, %r8
 	movq	(%rcx), %r9

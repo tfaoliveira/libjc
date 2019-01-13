@@ -786,7 +786,7 @@ fn poly1305_avx_wrapper(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
 
 export fn poly1305_avx(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
 {
-  if(inlen < 384) // good ratio
+  if(inlen < 1024)
   { poly1305_ref3_local(out, in, inlen, k); }
   else
   { poly1305_avx_wrapper(out, in, inlen, k); }
