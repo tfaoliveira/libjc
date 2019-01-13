@@ -2,7 +2,7 @@ set term svg enhanced background rgb 'white'
 set logscale y 2
 set yrange [0.5:64]
 
-set output "chacha20_xor_cycles__jazz_vs_hacl_star_compcert__4096_16384.svg"
+set output "chacha20_xor_cycles__jazz_vs_hacl_star_log__4096_16384.svg"
 
 plot \
 "csv/crypto_stream_chacha20_hacl_star_compcert_16384.csv" using 1:2 title 'HACL* (CompCert 3.4)' with lines lc "yellow", \

@@ -82,140 +82,7 @@ fn add(reg u64[3] h, reg u64[2] s) -> reg u64[3]
 
 
 
-// 2**0   * ( h[0] * r[0]   + (h[1] * r[1] * (5/4)) )
-// 2**64  * ( h[0] * r[1]   +  h[1] * r[0]  + (h[2] * r[1] * (5/4)) )
-// 2**128 * ( h[2] * r[0]   )
-fn mulmod_base(reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64[3]
-{
-  reg bool cf;  
-  reg u64 high low;
-  reg u64[3] t;
-  reg u64 v0, tt;
-
-  // r54 h2
-  t[1] = r54;
-  t[1] *= h[2]; // 0x13fffffb13fffffb * 0x6 -> 0x77ffffe2_77ffffe2
-
-  // r54 h1
-  low = r54;
-  high, low = low * h[1]; // 0x13fffffb13fffffb * 2**64-1 = 0x13fffffb_13fffffa_ec000004_ec000005L
-  t[0] = low; // 2**64 - 1
-  t[1] += high; // 0x77ffffe277ffffe2 + 0x13fffffb13fffffa = 0x8bffffdd_8bffffdc
-
-  // r0 h1
-  low = r[0];
-  high, low = low * h[1]; // 0x0ffffffc0fffffff * 2**64-1 = 0x0ffffffc_0ffffffe_f0000003_f0000001L
-  h[1] = low; // 2**64 - 1
-  t[2] = high; // 0x0ffffffc_0ffffffe
-
-  // r0 h0
-  low = r[0];
-  high, low = low * h[0]; // 0x0ffffffc0fffffff * 2**64-1 = 0x0ffffffc_0ffffffe_f0000003_f0000001L 
-  
-  // h2 r0
-  h[2] *= r[0]; // 0x6 * ??? = 0x5fff_ffe8_5ffffffa
-
-  // 
-  v0 = low; // 2**64-1
-  cf, h[1] += high; // 2**64-1 + 0x0ffffffc_0ffffffe = 2**64 - 1
-  _ , h[2] += t[2] + cf; // 0x5fff_ffe8_5ffffffa + 0x0ffffffc_0ffffffe + 0x1 = 0x6fff_ffe4_6fff_fff9
-
-  // r1 h0
-  low = r[1];
-  high, low = low * h[0]; // 0x0ffffffc0ffffffc * 2**64-1 = 0x0ffffffc0ffffffb_f0000003_f0000004L
-
-  //
-  cf, t[0] += v0; // 2**64 - 1
-  cf, h[1] += low + cf; // 2**64 - 1
-  _ , h[2] += high + cf; // 0x6fff_ffe4_6fff_fff9 + 0x0ffffffc0ffffffb + 0x1 = 0x7fffffe0_7ffffff5
-
-  //
-/*  h[0] = -4;*/
-/*  h[0] &= h[2];*/
-/*  h[2] &= 3;*/
-/*  tt = h[0];*/
-/*  tt >>= 2;*/
-/*  h[0] += tt; // 0x9fffffd8_9ffffff1*/
-
-  h[0] = h[2];
-  h[2] &= 3;
-
-  h[0] >>= 2;
-  h[0] *= 5;
-
-  cf, t[0] += h[0];
-  cf, h[1] += 0 + cf;
-  _ , h[2] += 0 + cf;
-
-  h[0] = t[0];
-
-  return h;
-}
-
-
-
-fn mulmod_not_working_1(reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64[3]
-{
-  reg bool cf;  
-  reg u64 high low;
-  reg u64[3] t;
-  reg u64 v0, tt;
-
-  // r54 h2
-  t[1] = r54;
-  low = r54;
-  t[1] *= h[2];
-
-  // r54 h1
-  high, low = low * h[1];
-  t[0] = low;
-  low = r[0];
-  t[1] += high;
-
-  // r0 h1
-  high, low = low * h[1];
-  h[1] = low;
-  low = r[0];
-  t[2] = high;
-
-  // r0 h0
-  high, low = low * h[0];
-  v0 = low;
-
-  // h2 r0
-  h[2] *= r[0];
-
-  // 
-  cf, h[1] += high;
-  low = r[1];
-  _ , h[2] += t[2] + cf;
-
-  // r1 h0
-  high, low = low * h[0];
-
-  //
-  cf, t[0] += v0;
-  cf, h[1] += low + cf;
-  _ , h[2] += high + cf;
-
-  //
-  h[0] = -4;
-  h[0] &= h[2];
-  h[2] &= 3;
-
-  tt = h[0];
-  tt >>= 2;
-
-  h[0] += tt;
-
-  cf, h[0] += t[0];
-  cf, h[1] += 0 + cf;
-  _ , h[2] += 0 + cf;
-
-  return h;
-}
-
-fn mulmod_fixed(reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64[3]
+fn mulmod(reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64[3]
 {
   reg bool cf;
   reg u64[3] t;
@@ -259,7 +126,7 @@ fn mulmod_fixed(reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64[3]
   h[0] = 0xfffffffffffffffc;
   h[0] &= h[2];
 
-  //h2 = Reg(h2.val & 0x03, 0x03) #andMask(h2,0x03)
+  // #andMask(h2,0x03)
   h[2] &= 0x03;
 
   //tt = div4(h0)
@@ -271,94 +138,6 @@ fn mulmod_fixed(reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64[3]
   cf, h[0] += t[0];
   cf, h[1] += t[1] + cf;
   _,  h[2] += 0 + cf;
-
-  return h;
-}
-
-// mulmod from openssl
-fn mulmod(reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64[3]
-{
-  reg bool cf;  
-  reg u64 high low mask;
-  reg u64[4] d;
-
-  low = r[1];
-
-  /*	mulq	$h0			# h0*r1*/
-  /*	mov	%rax,$d2*/
-  /*	 mov	$r0,%rax*/
-  /*	mov	%rdx,$d3*/
-
-  high, low = low * h[0]; // h0 r1
-  d[2] = low;
-  low = r[0];
-  d[3] = high;
-
-  /*	mulq	$h0			# h0*r0*/
-  /*	mov	%rax,$h0		# future $h0*/
-  /*	 mov	$r0,%rax*/
-  /*	mov	%rdx,$d1*/
-  high, low = low * h[0]; // h0*r0
-  h[0] = low;
-  low = r[0];
-  d[1] = high;
-
-  /*	mulq	$h1			# h1*r0*/
-  /*	add	%rax,$d2*/
-  /*	 mov	$s1,%rax*/
-  /*	adc	%rdx,$d3*/
-
-  high, low = low * h[1]; // h1*r0
-  cf, d[2] += low;
-  low = r54;
-   _, d[3] += high + cf;
-  
-  /*	mulq	$h1			# h1*s1*/
-  /*	 mov	$h2,$h1			# borrow $h1*/
-  /*	add	%rax,$h0*/
-  /*	adc	%rdx,$d1*/
-  high, low = low * h[1]; // h1*r54
-  h[1] = h[2]; 
-  cf, h[0] += low;
-   _, d[1] += high + cf;
-
-  /*	imulq	$s1,$h1			# h2*s1*/
-  /*	add	$h1,$d2*/
-  /*	 mov	$d1,$h1*/
-  /*	adc	$0,$d3*/
-  h[1] *= r54;
-  cf, d[2] += h[1];
-  h[1] = d[1];
-  _, d[3] += 0 + cf;
-  
-   /*	imulq	$r0,$h2			# h2*r0*/
-  /*	add	$d2,$h1*/
-  /*	mov	$-4,%rax		# mask value*/
-  /*	adc	$h2,$d3*/
-  h[2] *= r[0];
-  cf, h[1] += d[2];
-  mask = -4;
-  _, d[3] += h[2] + cf; 
-
-  /*	and	$d3,%rax		# last reduction step*/
-  /*	mov	$d3,$h2*/
-  /*	shr	$2,$d3*/
-
-  /*	and	$3,$h2*/
-  /*	add	$d3,%rax*/
-  /*	add	%rax,$h0*/
-  /*	adc	$0,$h1*/
-  /*	adc	$0,$h2*/
-
-  mask &= d[3];
-  h[2] = d[3];
-  d[3] >>= 2;
-
-  h[2] &= 3;
-  mask += d[3];
-  cf, h[0] += mask;
-  cf, h[1] += 0 + cf;
-  cf, h[2] += 0 + cf;
 
   return h;
 }
@@ -463,7 +242,6 @@ fn poly1305_ref3_local(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
   in, len, h = poly1305_ref3_update(in, len, h, r, r54);
   poly1305_ref3_last(out, in, len, k, h, r, r54);
 }
-
 
 
 
