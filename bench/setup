@@ -14,7 +14,9 @@ cp ./patch/$version/crypto_stream/measure.c supercop-$version/crypto_stream/meas
 
 (cd supercop-$version/ \
  && ./do-part init \
- && ./do-part crypto_verify
+ && ./do-part crypto_verify 32 \
+ && ./do-part crypto_verify 16 \
+ && ./do-part crypto_verify 8
 )
 
 echo "bench" > config/work
