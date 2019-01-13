@@ -56,17 +56,17 @@ fn store(reg u64 p, reg u64[3] x)
 
 
 
-fn clamp(reg u64 k) -> reg u64[2], reg u64
+fn clamp(reg u64 k) -> reg u64[3]
 {
-  reg u64[2] r;
-  reg u64 r54;
-  r = load(k);
+  reg u64[3] r;
+  r[0] = [k + 0];
+  r[1] = [k + 8];
   r[0] &= 0x0ffffffc0fffffff;
   r[1] &= 0x0ffffffc0ffffffc;
-  r54 = r[1];
-  r54 >>= 2;
-  r54 += r[1];
-  return r, r54; // r54 = r[1] * 5/4;
+  r[2] = r[1];
+  r[2] >>= 2;
+  r[2] += r[1];
+  return r;
 }
 
 
@@ -82,16 +82,16 @@ fn add(reg u64[3] h, reg u64[2] s) -> reg u64[3]
 
 
 
-fn mulmod(reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64[3]
+fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
 {
   reg bool cf;
   reg u64[3] t;
   reg u64 v0 rax rdx tt;
 
-  t[1] = r54;
+  t[1] = r[2];
   t[1] *= h[2];
 
-  rax = r54;
+  rax = r[2];
   rdx, rax = rax * h[1];
 
   t[1] += rdx;
@@ -180,22 +180,22 @@ fn freeze(reg u64[3] h) -> reg u64[3]
 
 
 
-fn poly1305_ref3_setup(reg u64 k) -> reg u64[3], reg u64[2], reg u64, reg u64
+fn poly1305_ref3_setup(reg u64 k) -> reg u64[3], reg u64[3], reg u64
 {
   inline int i;
   reg u64[3] h;
-  reg u64[2] r;
-  reg u64 len r54;
+  reg u64[3] r;
+  reg u64 len;
 
   for i=0 to 3 { h[i] = 0; }
-  r, r54 = clamp(k);
+  r = clamp(k);
   k += 16;
-  return h, r, r54, k;
+  return h, r, k;
 }
 
 
 
-fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[2] r, reg u64 r54) -> reg u64, reg u64, reg u64[3]
+fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -> reg u64, reg u64, reg u64[3]
 {
   reg bool cf;
   reg u64[2] m;
@@ -203,7 +203,7 @@ fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[2] r, r
   while(inlen >= 16)
   {
     h = load_add(h, in);
-    h = mulmod(h, r, r54);
+    h = mulmod(h, r);
     in += 16;
     inlen -= 16;
   }
@@ -213,13 +213,13 @@ fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[2] r, r
 
 
 
-fn poly1305_ref3_last(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[3] h, reg u64[2] r, reg u64 r54)
+fn poly1305_ref3_last(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[3] h, reg u64[3] r)
 {
   reg u64[2] m, s;
 
   if(inlen > 0)
   { h = load_last_add(h, in, inlen);
-    h = mulmod(h, r, r54);
+    h = mulmod(h, r);
   }
 
   h = freeze(h);
@@ -234,13 +234,13 @@ fn poly1305_ref3_last(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64
 fn poly1305_ref3_local(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
 {
   reg u64[3] h;
-  reg u64[2] r;
-  reg u64 len r54;
+  reg u64[3] r;
+  reg u64 len;
 
-  h, r, r54, k = poly1305_ref3_setup(k);
+  h, r, k = poly1305_ref3_setup(k);
   len = inlen;
-  in, len, h = poly1305_ref3_update(in, len, h, r, r54);
-  poly1305_ref3_last(out, in, len, k, h, r, r54);
+  in, len, h = poly1305_ref3_update(in, len, h, r);
+  poly1305_ref3_last(out, in, len, k, h, r);
 }
 
 
