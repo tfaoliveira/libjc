@@ -79,7 +79,7 @@ fn broadcast_r4(stack u256[5] r1234, stack u256[4] r1234x5) -> stack u256[5], st
 
 
 
-fn poly1305_avx2_setup(reg u64[2] r, reg u64 r54) ->
+fn poly1305_avx2_setup(reg u64[3] r) ->
   stack u256[5], stack u256[4],
   stack u256[5], stack u256[4]
 {
@@ -95,7 +95,7 @@ fn poly1305_avx2_setup(reg u64[2] r, reg u64 r54) ->
 
   // precompute r^2 r^3 r^4
   for i=0 to 3
-  { rt = mulmod(rt, r, r54);
+  { rt = mulmod(rt, r);
     r1234 = unpack(r1234, rt, 2-i);
   }
 
@@ -124,8 +124,8 @@ fn load_avx2(reg u64 in, reg u256 mask26, stack u256 s_bit25) -> reg u256[5], re
   //    t = { in[128:257] , in[0:127]   }
   // m[1] = { in[384:511] , in[256:383] }
 
-  m[0] = #x86_VPERM2I128(t, m[1], (2u4)[2,0]);
-  m[1] = #x86_VPERM2I128(t, m[1], (2u4)[3,1]);
+  m[0] = #x86_VPERM2I128(t, m[1], 0x20); // TODO FIXME (2u4)[2,0]);
+  m[1] = #x86_VPERM2I128(t, m[1], 0x31); // TODO FIXME //(2u4)[3,1]);
   // m[0] = { in[256:383] , in[0:127] }
   // m[1] = { in[384:511] , in[128:257] }
 
@@ -208,12 +208,12 @@ fn pack_avx2(reg u256[5] h) -> reg u64[3]
   // we then permute the internal state of t2 so that:
   // t2 = { e(2+3), e(0+1), xxx, yyy }
   // and since we are not interested in e1 and e3 anymore we just write xxx, yyy
-  t[2] = #x86_VPERMQ(t[2], (4u2)[2,0,0,0]);
+  t[2] = #x86_VPERMQ(t[2], 0x80); //TODO FIXME (4u2)[2,0,0,0]);
 
   // let u0 be { cd(1), cd(0), ab(1), ab(0) } and
   //     u1 be { cd(3), cd(2), ab(3), ab(2) } and
-  u[0] = #x86_VPERM2I128(t[0], t[1], (2u4)[2,0]);
-  u[1] = #x86_VPERM2I128(t[0], t[1], (2u4)[3,1]);
+  u[0] = #x86_VPERM2I128(t[0], t[1], 0x20); //TODO FIXME (2u4)[2,0]);
+  u[1] = #x86_VPERM2I128(t[0], t[1], 0x31); //TODO FIXME (2u4)[3,1]);
 
   // t0 = { cd(1+3), cd(0+2), ab(1+3), ab(0+2) }
   t[0] = u[0] +4u64 u[1];
@@ -592,8 +592,8 @@ fn mainloop_avx2_v1(
   // t2 += h0*r2
   // t3 += h1*r2
   // t4 += h2*r2
-  u[0] = #x86_VPMULU_256(h[0], r2); m[0] = #x86_VPERM2I128(m0, m[1], (2u4)[2,0]);
-  u[1] = #x86_VPMULU_256(h[1], r2); m[1] = #x86_VPERM2I128(m0, m[1], (2u4)[3,1]);
+  u[0] = #x86_VPMULU_256(h[0], r2); m[0] = #x86_VPERM2I128(m0, m[1], 0x20); //TODO FIXME //(2u4)[2,0]);
+  u[1] = #x86_VPMULU_256(h[1], r2); m[1] = #x86_VPERM2I128(m0, m[1], 0x31); //TODO FIXME //(2u4)[3,1]);
   u[2] = #x86_VPMULU_256(h[2], r2);
 
   
@@ -761,20 +761,20 @@ fn poly1305_avx2_update(
 fn poly1305_avx2_wrapper(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
 {
   reg u64[3] h;
-  reg u64[2] r;
-  reg u64 len r54;
+  reg u64[3] r;
+  reg u64 len;
   stack u256[5] r4444   r1234;
   stack u256[4] r4444x5 r1234x5;
 
   len = inlen;
 
-  h, r, r54, k = poly1305_ref3_setup(k);
-  r4444, r4444x5, r1234, r1234x5 = poly1305_avx2_setup(r, r54);
+  h, r, k = poly1305_ref3_setup(k);
+  r4444, r4444x5, r1234, r1234x5 = poly1305_avx2_setup(r);
 
   in, len, h = poly1305_avx2_update(in, len, r4444, r4444x5, r1234, r1234x5);
-  in, len, h = poly1305_ref3_update(in, len, h, r, r54);
+  in, len, h = poly1305_ref3_update(in, len, h, r);
 
-  poly1305_ref3_last(out, in, len, k, h, r, r54);
+  poly1305_ref3_last(out, in, len, k, h, r);
 }
 
 

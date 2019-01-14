@@ -1,1 +1,1 @@
-crypto_onetimeauth poly1305 jazz/ref3
+crypto_onetimeauth poly1305 jazz/avx2

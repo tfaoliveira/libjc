@@ -24,20 +24,43 @@ module M = {
     return (x);
   }
   
-  proc load_last (ptr:W64.t, len:W64.t) : W64.t Array2.t = {
+  proc load_add (h:W64.t Array3.t, in_0:W64.t) : W64.t Array3.t = {
+    var aux: bool;
+    var aux_0: W64.t;
     
-    var x:W64.t Array2.t;
+    var cf:bool;
+    var  _0:bool;
+    
+    (aux, aux_0) <- addc_64 h.[0] (loadW64 Glob.mem (in_0 + (W64.of_int 0)))
+    false;
+    cf <- aux;
+    h.[0] <- aux_0;
+    (aux, aux_0) <- addc_64 h.[1] (loadW64 Glob.mem (in_0 + (W64.of_int 8)))
+    cf;
+    cf <- aux;
+    h.[1] <- aux_0;
+    (aux, aux_0) <- addc_64 h.[2] (W64.of_int 1) cf;
+     _0 <- aux;
+    h.[2] <- aux_0;
+    return (h);
+  }
+  
+  proc load_last_add (h:W64.t Array3.t, in_0:W64.t, len:W64.t) : W64.t Array3.t = {
+    var aux: bool;
+    var aux_0: W64.t;
+    
     var s:W64.t Array2.t;
     var j:W64.t;
     var c:W8.t;
+    var cf:bool;
+    var  _0:bool;
     s <- witness;
-    x <- witness;
     s.[0] <- (W64.of_int 0);
     s.[1] <- (W64.of_int 0);
     j <- (W64.of_int 0);
     
     while ((j \ult len)) {
-      c <- (loadW8 Glob.mem (ptr + j));
+      c <- (loadW8 Glob.mem (in_0 + j));
       s =
       Array2.init
       (WArray16.get64 (WArray16.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) c));
@@ -46,9 +69,16 @@ module M = {
     s =
     Array2.init
     (WArray16.get64 (WArray16.set8 (WArray16.init64 (fun i => s.[i])) (W64.to_uint j) (W8.of_int 1)));
-    x.[0] <- s.[0];
-    x.[1] <- s.[1];
-    return (x);
+    (aux, aux_0) <- addc_64 h.[0] s.[0] false;
+    cf <- aux;
+    h.[0] <- aux_0;
+    (aux, aux_0) <- addc_64 h.[1] s.[1] cf;
+    cf <- aux;
+    h.[1] <- aux_0;
+    (aux, aux_0) <- addc_64 h.[2] (W64.of_int 0) cf;
+     _0 <- aux;
+    h.[2] <- aux_0;
+    return (h);
   }
   
   proc store (p:W64.t, x:W64.t Array3.t) : unit = {
@@ -60,110 +90,95 @@ module M = {
     return ();
   }
   
-  proc clamp (k:W64.t) : W64.t Array2.t * W64.t = {
+  proc clamp (k:W64.t) : W64.t Array3.t = {
     
-    var r:W64.t Array2.t;
-    var r54:W64.t;
+    var r:W64.t Array3.t;
     r <- witness;
-    r <@ load (k);
+    r.[0] <- (loadW64 Glob.mem (k + (W64.of_int 0)));
+    r.[1] <- (loadW64 Glob.mem (k + (W64.of_int 8)));
     r.[0] <- (r.[0] `&` (W64.of_int 1152921487695413247));
     r.[1] <- (r.[1] `&` (W64.of_int 1152921487695413244));
-    r54 <- r.[1];
-    r54 <- (r54 `>>` (W8.of_int 2));
-    r54 <- (r54 + r.[1]);
-    return (r, r54);
+    r.[2] <- r.[1];
+    r.[2] <- (r.[2] `>>` (W8.of_int 2));
+    r.[2] <- (r.[2] + r.[1]);
+    return (r);
   }
   
-  proc add_bit (h:W64.t Array3.t, m:W64.t Array2.t, b:int) : W64.t Array3.t = {
+  proc add (h:W64.t Array3.t, s:W64.t Array2.t) : W64.t Array3.t = {
     var aux: bool;
     var aux_0: W64.t;
     
     var cf:bool;
     var  _0:bool;
     
-    (aux, aux_0) <- addc_64 h.[0] m.[0] false;
+    (aux, aux_0) <- addc_64 h.[0] s.[0] false;
     cf <- aux;
     h.[0] <- aux_0;
-    (aux, aux_0) <- addc_64 h.[1] m.[1] cf;
-    cf <- aux;
-    h.[1] <- aux_0;
-    (aux, aux_0) <- addc_64 h.[2] (W64.of_int b) cf;
+    (aux, aux_0) <- addc_64 h.[1] s.[1] cf;
      _0 <- aux;
-    h.[2] <- aux_0;
+    h.[1] <- aux_0;
     return (h);
   }
   
-  proc mulmod (h:W64.t Array3.t, r:W64.t Array2.t, r54:W64.t) : W64.t Array3.t = {
+  proc mulmod (h:W64.t Array3.t, r:W64.t Array3.t) : W64.t Array3.t = {
     var aux: bool;
     var aux_0: W64.t;
     
-    var low:W64.t;
-    var high:W64.t;
     var t:W64.t Array3.t;
+    var rax:W64.t;
+    var rdx:W64.t;
     var cf:bool;
-    var h2r:W64.t;
-    var h2rx4:W64.t;
+    var v0:W64.t;
+    var tt:W64.t;
     var  _0:bool;
     var  _1:bool;
     var  _2:bool;
-    var  _3:bool;
-    var  _4:bool;
     t <- witness;
-    low <- h.[0];
-    (high, low) <- mulu_64 low r.[0];
-    t.[0] <- low;
-    t.[1] <- high;
-    low <- h.[1];
-    (high, low) <- mulu_64 low r54;
-    (aux, aux_0) <- addc_64 t.[0] low false;
+    t.[1] <- r.[2];
+    t.[1] <- (t.[1] * h.[2]);
+    rax <- r.[2];
+    (rdx, rax) <- mulu_64 rax h.[1];
+    t.[1] <- (t.[1] + rdx);
+    t.[0] <- rax;
+    rax <- r.[0];
+    (rdx, rax) <- mulu_64 rax h.[1];
+    t.[2] <- rdx;
+    h.[1] <- rax;
+    h.[2] <- (h.[2] * r.[0]);
+    rax <- r.[0];
+    (rdx, rax) <- mulu_64 rax h.[0];
+    (aux, aux_0) <- addc_64 h.[1] rdx false;
+    cf <- aux;
+    h.[1] <- aux_0;
+    (aux, aux_0) <- addc_64 h.[2] t.[2] cf;
+     _0 <- aux;
+    h.[2] <- aux_0;
+    v0 <- rax;
+    rax <- r.[1];
+    (rdx, rax) <- mulu_64 rax h.[0];
+    (aux, aux_0) <- addc_64 t.[0] v0 false;
     cf <- aux;
     t.[0] <- aux_0;
-    (aux, aux_0) <- addc_64 t.[1] high cf;
-     _0 <- aux;
-    t.[1] <- aux_0;
-    t.[2] <- (W64.of_int 0);
-    low <- h.[0];
-    (high, low) <- mulu_64 low r.[1];
-    (aux, aux_0) <- addc_64 t.[1] low false;
+    (aux, aux_0) <- addc_64 h.[1] rax cf;
     cf <- aux;
-    t.[1] <- aux_0;
-    (aux, aux_0) <- addc_64 t.[2] high cf;
+    h.[1] <- aux_0;
+    (aux, aux_0) <- addc_64 h.[2] rdx cf;
      _1 <- aux;
-    t.[2] <- aux_0;
-    low <- h.[1];
-    (high, low) <- mulu_64 low r.[0];
-    (aux, aux_0) <- addc_64 t.[1] low false;
-    cf <- aux;
-    t.[1] <- aux_0;
-    (aux, aux_0) <- addc_64 t.[2] high cf;
-     _2 <- aux;
-    t.[2] <- aux_0;
-    low <- h.[2];
-    low <- (low * r54);
-    (aux, aux_0) <- addc_64 t.[1] low false;
-    cf <- aux;
-    t.[1] <- aux_0;
-    (aux, aux_0) <- addc_64 t.[2] (W64.of_int 0) cf;
-     _3 <- aux;
-    t.[2] <- aux_0;
-    h.[2] <- (h.[2] * r.[0]);
-    h.[0] <- t.[0];
-    h.[1] <- t.[1];
-    h.[2] <- (h.[2] + t.[2]);
-    h2r <- h.[2];
-    h2rx4 <- h.[2];
+    h.[2] <- aux_0;
+    h.[0] <- (W64.of_int 18446744073709551612);
+    h.[0] <- (h.[0] `&` h.[2]);
     h.[2] <- (h.[2] `&` (W64.of_int 3));
-    h2r <- (h2r `>>` (W8.of_int 2));
-    h2rx4 <- (h2rx4 `&` (W64.of_int (- 4)));
-    h2r <- (h2r + h2rx4);
-    (aux, aux_0) <- addc_64 h.[0] h2r false;
+    tt <- h.[0];
+    tt <- (tt `>>` (W8.of_int 2));
+    h.[0] <- (h.[0] + tt);
+    (aux, aux_0) <- addc_64 h.[0] t.[0] false;
     cf <- aux;
     h.[0] <- aux_0;
-    (aux, aux_0) <- addc_64 h.[1] (W64.of_int 0) cf;
+    (aux, aux_0) <- addc_64 h.[1] t.[1] cf;
     cf <- aux;
     h.[1] <- aux_0;
     (aux, aux_0) <- addc_64 h.[2] (W64.of_int 0) cf;
-     _4 <- aux;
+     _2 <- aux;
     h.[2] <- aux_0;
     return (h);
   }
@@ -198,13 +213,12 @@ module M = {
     return (h);
   }
   
-  proc poly1305_ref3_setup (k:W64.t) : W64.t Array3.t * W64.t Array2.t *
-                                       W64.t * W64.t = {
+  proc poly1305_ref3_setup (k:W64.t) : W64.t Array3.t * W64.t Array3.t *
+                                       W64.t = {
     var aux: int;
     
     var h:W64.t Array3.t;
-    var r:W64.t Array2.t;
-    var r54:W64.t;
+    var r:W64.t Array3.t;
     var i:int;
     h <- witness;
     r <- witness;
@@ -213,22 +227,21 @@ module M = {
       h.[i] <- (W64.of_int 0);
       i <- i + 1;
     }
-    (r, r54) <@ clamp (k);
+    r <@ clamp (k);
     k <- (k + (W64.of_int 16));
-    return (h, r, r54, k);
+    return (h, r, k);
   }
   
   proc poly1305_ref3_update (in_0:W64.t, inlen:W64.t, h:W64.t Array3.t,
-                             r:W64.t Array2.t, r54:W64.t) : W64.t * W64.t *
-                                                            W64.t Array3.t = {
+                             r:W64.t Array3.t) : W64.t * W64.t *
+                                                 W64.t Array3.t = {
     
-    var m:W64.t Array2.t;
-    m <- witness;
+    
+    
     
     while (((W64.of_int 16) \ule inlen)) {
-      m <@ load (in_0);
-      h <@ add_bit (h, m, 1);
-      h <@ mulmod (h, r, r54);
+      h <@ load_add (h, in_0);
+      h <@ mulmod (h, r);
       in_0 <- (in_0 + (W64.of_int 16));
       inlen <- (inlen - (W64.of_int 16));
     }
@@ -236,22 +249,19 @@ module M = {
   }
   
   proc poly1305_ref3_last (out:W64.t, in_0:W64.t, inlen:W64.t, k:W64.t,
-                           h:W64.t Array3.t, r:W64.t Array2.t, r54:W64.t) : unit = {
+                           h:W64.t Array3.t, r:W64.t Array3.t) : unit = {
     
-    var m:W64.t Array2.t;
     var s:W64.t Array2.t;
-    m <- witness;
     s <- witness;
     if (((W64.of_int 0) \ult inlen)) {
-      m <@ load_last (in_0, inlen);
-      h <@ add_bit (h, m, 0);
-      h <@ mulmod (h, r, r54);
+      h <@ load_last_add (h, in_0, inlen);
+      h <@ mulmod (h, r);
     } else {
       
     }
     h <@ freeze (h);
     s <@ load (k);
-    h <@ add_bit (h, s, 0);
+    h <@ add (h, s);
     store (out, h);
     return ();
   }
@@ -259,15 +269,14 @@ module M = {
   proc poly1305_ref3_local (out:W64.t, in_0:W64.t, inlen:W64.t, k:W64.t) : unit = {
     
     var h:W64.t Array3.t;
-    var r:W64.t Array2.t;
-    var r54:W64.t;
+    var r:W64.t Array3.t;
     var len:W64.t;
     h <- witness;
     r <- witness;
-    (h, r, r54, k) <@ poly1305_ref3_setup (k);
+    (h, r, k) <@ poly1305_ref3_setup (k);
     len <- inlen;
-    (in_0, len, h) <@ poly1305_ref3_update (in_0, len, h, r, r54);
-    poly1305_ref3_last (out, in_0, len, k, h, r, r54);
+    (in_0, len, h) <@ poly1305_ref3_update (in_0, len, h, r);
+    poly1305_ref3_last (out, in_0, len, k, h, r);
     return ();
   }
   
@@ -368,10 +377,10 @@ module M = {
     return (r4444, r4444x5);
   }
   
-  proc poly1305_avx2_setup (r:W64.t Array2.t, r54:W64.t) : W256.t Array5.t *
-                                                           W256.t Array4.t *
-                                                           W256.t Array5.t *
-                                                           W256.t Array4.t = {
+  proc poly1305_avx2_setup (r:W64.t Array3.t) : W256.t Array5.t *
+                                                W256.t Array4.t *
+                                                W256.t Array5.t *
+                                                W256.t Array4.t = {
     var aux: int;
     
     var r4444:W256.t Array5.t;
@@ -394,7 +403,7 @@ module M = {
     r1234 <@ unpack (r1234, rt, 3);
     i <- 0;
     while (i < 3) {
-      rt <@ mulmod (rt, r, r54);
+      rt <@ mulmod (rt, r);
       r1234 <@ unpack (r1234, rt, (2 - i));
       i <- i + 1;
     }
@@ -788,8 +797,7 @@ module M = {
     
     var len:W64.t;
     var h:W64.t Array3.t;
-    var r:W64.t Array2.t;
-    var r54:W64.t;
+    var r:W64.t Array3.t;
     var r4444:W256.t Array5.t;
     var r4444x5:W256.t Array4.t;
     var r1234:W256.t Array5.t;
@@ -801,12 +809,12 @@ module M = {
     r4444 <- witness;
     r4444x5 <- witness;
     len <- inlen;
-    (h, r, r54, k) <@ poly1305_ref3_setup (k);
-    (r4444, r4444x5, r1234, r1234x5) <@ poly1305_avx2_setup (r, r54);
+    (h, r, k) <@ poly1305_ref3_setup (k);
+    (r4444, r4444x5, r1234, r1234x5) <@ poly1305_avx2_setup (r);
     (in_0, len, h) <@ poly1305_avx2_update (in_0, len, r4444, r4444x5, r1234,
     r1234x5);
-    (in_0, len, h) <@ poly1305_ref3_update (in_0, len, h, r, r54);
-    poly1305_ref3_last (out, in_0, len, k, h, r, r54);
+    (in_0, len, h) <@ poly1305_ref3_update (in_0, len, h, r);
+    poly1305_ref3_last (out, in_0, len, k, h, r);
     return ();
   }
   
