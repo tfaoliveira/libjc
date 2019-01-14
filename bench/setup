@@ -19,6 +19,9 @@ cp ./patch/$version/crypto_stream/measure.c supercop-$version/crypto_stream/meas
  && ./do-part crypto_verify 8
 )
 
+#./do-part used # seems to do a lot of stuff
+#./do-part crypto_verify 
+
 echo "bench" > config/work
 mkdir -p data/
 
