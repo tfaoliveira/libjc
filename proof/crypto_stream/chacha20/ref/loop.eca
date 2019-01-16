@@ -1,4 +1,4 @@
-require import AllCore StdOrder.
+require import AllCore StdOrder IntDiv IntExtra Jasmin_utils.
 
 type t.
 op c : int.
@@ -12,6 +12,44 @@ module Loop(B:AdvLoop) = {
   proc loop1 (t:t, n:int) = {
     var i;
     i = 0;
+    while (i < n) {
+      t <@ B.body(t,i);
+      i <- i + 1;
+    }
+    return t;
+  }
+
+  proc loopk_r (t:t, n:int, k:int) = {
+    var i, j;
+    i = 0;
+    while (i < n %/ k) {
+      j = 0;
+      while (j < k) {
+        t <@ B.body(t, k * i + j);
+        j <- j + 1;
+      }
+      i <- i + 1;
+    }
+    i <- i * k;
+    while (i < n) {
+      t <@ B.body(t,i);
+      i <- i + 1;
+    }
+    return t;
+  }
+
+  proc loopc_r (t:t, n:int) = {
+    var i, j;
+    i = 0;
+    while (i < n %/ c) {
+      j = 0;
+      while (j < c) {
+        t <@ B.body(t, c * i + j);
+        j <- j + 1;
+      }
+      i <- i + 1;
+    }
+    i <- i * c;
     while (i < n) {
       t <@ B.body(t,i);
       i <- i + 1;
@@ -60,7 +98,6 @@ proof.
   proc.
   async while [ (fun r => i%r < r), (i{1}+k{2})%r ] 
               [ (fun r => i%r < r), (i{2} + 1)%r ]
-  
               ( (i < n){1} /\ (i < n){2}) 
               (!(i < n){2}) : 
               (={t, glob B} /\ (0 <= i <= n){2} /\ 0 < k{2} /\ n{1} = (k * n){2} /\ i{1} = k{2} * i{2}).
@@ -104,5 +141,61 @@ proof.
   by conseq loopk_loopc.  
 qed.
 
+equiv loop1_loopk_r : Loop(B).loop1 ~ Loop(B).loopk_r : ={t, glob B, n} /\ 0 < k{2}==> ={res, glob B}.
+proof.
+  proc => /=; exlim k{2} => k0.
+  case: (n{2} < 0).
+  + rcondf{2} 2; 1: by move=> &m1; wp; skip => &m2 />; smt (divz_ge0).
+    by sim; wp; skip.
+  splitwhile{1} 2 : (i < n %/ k0 * k0).
+  seq 2 2: (={glob B, t, n} /\ i{1} = (i * k){2}); last first.
+  + by sim;wp;skip.
+  transitivity{1} { t <@ Loop(B).loop1(t, n %/ k0 * k0); i <-  n %/ k0 * k0; }
+    (={t, glob B, n} /\ 0 < k0 /\ 0 <= n{1} ==> ={glob B, t, n, i})
+    (k0 = k{2} /\ ={t, glob B, n} /\ 0 < k{2} /\ 0 <= n{1} ==> ={glob B, t, n} /\ i{1} = i{2} * k{2}) => //. 
+  + smt().
+  + inline *; wp. 
+    while (={glob B, n} /\ i{1} = i0{2} /\ t{1} = t0{2} /\ n0{2} = n{1} %/ k0 * k0 /\ 0 < k0 /\ 
+                 i{1} <= n{1} %/ k0 * k0).
+    + wp; call (_: true); skip => /> *; split; 1: smt().
+      by move=> ?; rewrite (divz_eq n{2} k0); smt (modz_cmp).
+    by wp; skip; smt (divz_ge0 lez_floor).
+  wp; conseq />.
+  transitivity{1} {t <@ Loop(B).loopk(t, n %/ k0, k0); }
+    (={t, glob B, n} /\ 0 < k0 ==> ={t, glob B})
+    (k0 = k{2} /\ ={t, glob B, n} /\ 0 < k{2} /\ 0 <= n{1} ==> 
+       ={glob B, t} /\ n{2} %/ k{2} * k{2} = i{2} * k{2}) => //.
+  + smt(). 
+  + call loop1_loopk; skip => /> *; ring.
+  inline Loop(B).loopk;wp.
+  while (={glob B, k} /\ t0{1} = t{2} /\ i0{1} = i{2} /\ n0{1} = (n %/ k){2} /\ (i <= n %/ k){2}).
+  + wp; while (#[/:-2]pre /\ ={j}).
+    + by wp; call (_: true); skip.
+    wp; skip => /#.
+  wp; skip; smt (divz_ge0). 
+qed.
+
+equiv loopk_r_loopc_r : Loop(B).loopk_r ~ Loop(B).loopc_r : ={n,t, glob B} /\ k{1} = c ==> ={res, glob B}.
+proof.
+  proc => /=; sim; wp.
+  while (={glob B, i, t, n} /\ k{1} = c);2: by auto.
+  wp;while (={glob B, i, j, t, n} /\ k{1} = c);2: by auto.
+  by wp;call (_:true);skip.
+qed.
+
+lemma loop1_loopc_r : 0 < c =>
+  equiv [Loop(B).loop1 ~ Loop(B).loopc_r : ={t, glob B, n} ==> ={res, glob B}].
+proof.
+  move=> hc.
+  transitivity Loop(B).loopk_r
+    (={t, glob B, n} /\ k{2} = c ==> ={res, glob B})
+    (={n,t, glob B} /\ k{1} = c ==> ={res, glob B}).
+  + by move=> /> &1 &2 *; exists (glob B){2} (t{1},n{2}, c).
+  + by move=> />.
+  + by conseq loop1_loopk_r => /> /#. 
+  by conseq loopk_r_loopc_r.
+qed.  
+
 end section.
+
 
