@@ -224,7 +224,7 @@ op interleave_gen ['elem]
    (src1 src2: W128.t) = 
   let l1 = split_v (get src1) in
   let l2 = split_v (get src2) in
-  pack_2v (interleave l1 l2).
+  pack_2v (_interleave l1 l2).
 
 op get_lo_2u64 (w:W128.t) = w \bits64 0.
 op get_hi_2u64 (w:W128.t) = w \bits64 1.

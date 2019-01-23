@@ -221,7 +221,7 @@ equiv pref_pavx2_more_than_256 : ChaCha20_avx2_pv.M.chacha20_ref ~ ChaCha20_avx2
   ={Glob.mem}.
 proof.
   proc => /=.
-  seq 1 17 : (  ={output, plain, len, Glob.mem} /\ inv_ptr output{1} plain{1} (to_uint len{1}) /\
+  seq 1 1 : (  ={output, plain, len, Glob.mem} /\ inv_ptr output{1} plain{1} (to_uint len{1}) /\
                   st{1} = st_1{2}).
   + by sim |>.
   transitivity{1}
@@ -320,13 +320,13 @@ proof.
     by move=> &m;skip => /> &hr; rewrite W32.ultE /=; smt().
   inline ChaCha20_avx2_pv.M.store_x8_last.
   case: (256 <= to_uint len{2}).
-  + rcondt{2} 28.
+  + rcondt{2} 24.
     + by move=> &m; wp; conseq (_:true) => // /> *; rewrite W32.uleE.
     rcondt{1} 1.
     + by move=> &m; skip => /> &hr; rewrite W32.ultE /= /#.
     inline ChaCha20_avx2_pv.M.store_x4.   
-    swap{2} 35 -3. swap{2} [28..32] -3. swap{2} [24..29] -3. swap{2} [20..26] -7. swap{2} [9..19] -7.
-    seq 2 12 : (={Glob.mem} /\
+    swap{2} 31 -3. swap{2} [24..28] -3. swap{2} [20..25] -7. swap{2} [9..18] -7.
+    seq 2 11 : (={Glob.mem} /\
                 to_uint len1{2} = n{1} - i{1} /\ inv_ptr output1{2} plain1{2} (to_uint len1{2}) /\
                 t{1} = (output1{2}, plain1{2}, len1{2}, st_2{2}) /\ n{1} - i{1} < 64 * 7 /\
                 64 * 3 <= to_uint len1{2}).
@@ -335,25 +335,25 @@ proof.
       wp; skip => |> &1 &2 h; rewrite W32.ultE W32.uleE /= => *; split; 1: smt().
       by move=> ??? ->; rewrite W32.to_uintB 1:uleE //= /#.
     rcondt{1} 1; 1 : by move=> &m; skip => /#.
-    swap{2} 24 -2. swap{2} [21..22] -2. swap{2} [18..20] -2. swap{2} [15..18] -6. swap{2} [8..12] -6.
-    seq 2 6 : (#[/:-3]pre /\  t{1} = (output1{2}, plain1{2}, len1{2}, st_3{2}) /\
+    swap{2} 21 -2. swap{2} [18..19] -2. swap{2} [15..17] -6. swap{2} [8..11] -6.
+    seq 2 5 : (#[/:-3]pre /\  t{1} = (output1{2}, plain1{2}, len1{2}, st_3{2}) /\
                n{1} - i{1} < 64 * 6 /\ 64 * 2 <= to_uint len1{2}).
     + inline Body.body; wp; ecall (store_store32 len0{1}); wp.
       call (_:true); 1: by sim.
       wp; skip => |> &1 &2 h; rewrite W32.uleE /= => *; split; 1: smt().
       by move=> ???? ->; rewrite W32.to_uintB 1:uleE //= /#.
     rcondt{1} 1; 1 : by move=> &m; skip => /#.
-    swap{2} 19 -1. swap{2} [17..18] -1. swap{2} [15..17] -1. swap{2} [13..16] -5. swap{2} [7..11] -5.
+    swap{2} 17 -1. swap{2} [15..16] -1. swap{2} [13..15] -5. swap{2} [7..10] -5.
 
-    seq 2 6 : (#[/:-3]pre /\  t{1} = (output1{2}, plain1{2}, len1{2}, st_4{2}) /\
+    seq 2 5 : (#[/:-3]pre /\  t{1} = (output1{2}, plain1{2}, len1{2}, st_4{2}) /\
                n{1} - i{1} < 64 * 5 /\ 64 * 1 <= to_uint len1{2}).
     + inline Body.body; wp; ecall (store_store32 len0{1}); wp.
       call (_:true); 1: by sim.
       wp; skip => |> &1 &2 h; rewrite W32.uleE /= => *; split; 1: smt().
       by move=> ???? ->; rewrite W32.to_uintB 1:uleE //= /#.
     rcondt{1} 1; 1 : by move=> &m; skip => /#.
-    swap{2} [11..14] -4. swap{2} [6..10] -4.
-    seq 2 6 : (#[/:-3]pre /\  t{1} = (output1{2}, plain1{2}, len1{2}, st_5{2}) /\
+    swap{2} [11..13] -4. swap{2} [6..9] -4.
+    seq 2 5 : (#[/:-3]pre /\  t{1} = (output1{2}, plain1{2}, len1{2}, st_5{2}) /\
                n{1} - i{1} < 64 * 4 ).
     + inline Body.body; wp; ecall (store_store32 len0{1}); wp.
       call (_:true); 1: by sim.
@@ -380,7 +380,7 @@ proof.
     + smt(). + done.
     + call pref_pavx2_between_128_255; skip => |> /#.
     by inline ChaCha20_avx2_pv.M.chacha20_between_128_255; sim.
-  rcondf{2} 28. 
+  rcondf{2} 24. 
   + by move=> &m; wp; conseq (_:true) => // /> *; rewrite W32.uleE. 
   transitivity{1} { ChaCha20_avx2_pv.M.chacha20_ref_loop(t.`1, t.`2, t.`3, t.`4); }
        (={t,Glob.mem} /\ to_uint t{2}.`3 = n{1} - i{1} ==> ={Glob.mem}) 
@@ -462,8 +462,8 @@ proof.
       call (_: ={Glob.mem}); 1:by sim.
       wp; call (_: true); 1: by auto.
       conseq (_: st{1} = st1{2} /\ k{1} = k1{2}) => //.
-      sim (_:true).
-      by proc; inline ChaCha20_pref.M.column_round ChaCha20_pref.M.diagonal_round; sim.
+      inline{1} ChaCha20_pref.M.copy_state.
+      by sim (_:true). 
     by wp; sim />.
   by apply avx2_ref_pavx2.
 qed.

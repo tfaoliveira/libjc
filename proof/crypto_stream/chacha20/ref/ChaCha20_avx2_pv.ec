@@ -4,7 +4,7 @@ require import WArray64.
 require import ChaCha20_pref.
 
 module M = {
-  proc init (key:W64.t, nonce:W64.t, counter:W32.t) : W32.t Array16.t = {
+(*  proc init (key:W64.t, nonce:W64.t, counter:W32.t) : W32.t Array16.t = {
     var aux: int;
     
     var st:W32.t Array16.t;
@@ -26,7 +26,7 @@ module M = {
       i <- i + 1;
     }
     return (st);
-  }
+  } 
   
   proc copy_state (st:W32.t Array16.t) : W32.t Array16.t = {
     
@@ -35,7 +35,7 @@ module M = {
     k <- st;
     return (k);
   }
-  
+*)  
   proc sum_states (k:W32.t Array16.t, st:W32.t Array16.t) : W32.t Array16.t = {
     var aux: int;
     
@@ -169,10 +169,6 @@ module M = {
     var r_2:W32.t Array16.t;
     var r_3:W32.t Array16.t;
     var r_4:W32.t Array16.t;
-    r_1 <- witness;
-    r_2 <- witness;
-    r_3 <- witness;
-    r_4 <- witness;
     r_1 <- k_1;
     r_2 <- k_2;
     r_3 <- k_3;
@@ -191,10 +187,7 @@ module M = {
     return ();
   }
   
-  proc increment_counter (st:W32.t Array16.t) : W32.t Array16.t = {
-    
-    
-    
+(*  proc increment_counter (st:W32.t Array16.t) : W32.t Array16.t = {
     st.[12] <- (st.[12] + (W32.of_int 1));
     return (st);
   }
@@ -217,10 +210,7 @@ module M = {
   }
   
   proc quarter_round (k:W32.t Array16.t, a:int, b:int, c:int, d:int) : 
-  W32.t Array16.t = {
-    
-    
-    
+  W32.t Array16.t = {  
     k <@ line (k, a, b, d, 16);
     k <@ line (k, c, d, b, 12);
     k <@ line (k, a, b, d, 8);
@@ -252,16 +242,14 @@ module M = {
     }
     return (k);
   }
-  
+*)  
   proc chacha20_body (st:W32.t Array16.t) : W32.t Array16.t * W32.t Array16.t = {
     
-    var k:W32.t Array16.t;
-    k <- witness;
-    k <@ copy_state (st);
-    k <@ rounds (k);
+    var k, st1:W32.t Array16.t;
+    k <@ ChaCha20_pref.M.rounds (st);
     k <@ sum_states (k, st);
-    st <@ increment_counter (st);
-    return (k, st);
+    st1 <@ ChaCha20_pref.M.increment_counter (st);
+    return (k, st1);
   }
   
   proc chacha20_more_than_256 (output:W64.t, plain:W64.t, len:W32.t,
@@ -283,23 +271,8 @@ module M = {
     var k_7:W32.t Array16.t;
     var st_8:W32.t Array16.t;
     var k_8:W32.t Array16.t;
-    k_1 <- witness;
-    k_2 <- witness;
-    k_3 <- witness;
-    k_4 <- witness;
-    k_5 <- witness;
-    k_6 <- witness;
-    k_7 <- witness;
-    k_8 <- witness;
-    st_1 <- witness;
-    st_2 <- witness;
-    st_3 <- witness;
-    st_4 <- witness;
-    st_5 <- witness;
-    st_6 <- witness;
-    st_7 <- witness;
-    st_8 <- witness;
-    st_1 <@ init (key, nonce, counter);
+
+    st_1 <@ ChaCha20_pref.M.init (key, nonce, counter);
     
     while (((W32.of_int 512) \ule len)) {
       (k_1, st_2) <@ chacha20_body (st_1);
@@ -342,7 +315,7 @@ module M = {
   proc chacha20_ref (output:W64.t, plain:W64.t, len:W32.t,
                                key:W64.t, nonce:W64.t, counter:W32.t) : unit = {
     var st, k:W32.t Array16.t; (* Do not remove k *)
-    st <@ init (key, nonce, counter);
+    st <@ ChaCha20_pref.M.init (key, nonce, counter);
     chacha20_ref_loop(output, plain, len, st);
   }
     
@@ -380,7 +353,7 @@ module M = {
     var st_2:W32.t Array16.t;
     var k1_2:W32.t Array16.t;
     var st_3:W32.t Array16.t;
-    st_1 <@ init (key, nonce, counter);
+    st_1 <@ ChaCha20_pref.M.init (key, nonce, counter);
     if (((W32.of_int 128) \ult len)) {
       chacha20_between_128_255_1(output, plain, len, st_1);
     } else {
@@ -402,4 +375,5 @@ module M = {
     return ();
   }
 }.
+
 
