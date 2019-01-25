@@ -83,13 +83,13 @@ module M = {
   
   proc rounds (k:W32.t Array16.t) : W32.t Array16.t = {
     
-    var c:W32.t;
+    var c:int;
     
-    c <- (W32.of_int 0);
+    c <- 0;
     
-    while ((c \ult (W32.of_int 10))) {
+    while (c < 10) {
       k <@ round (k);
-      c <- (c + (W32.of_int 1));
+      c <- c + 1;
     }
     return (k);
   }

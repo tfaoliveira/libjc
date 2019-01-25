@@ -275,32 +275,73 @@ module M = {
     st_1 <@ ChaCha20_pref.M.init (key, nonce, counter);
     
     while (((W32.of_int 512) \ule len)) {
-      (k_1, st_2) <@ chacha20_body (st_1);
-      (k_2, st_3) <@ chacha20_body (st_2);
-      (k_3, st_4) <@ chacha20_body (st_3);
-      (k_4, st_5) <@ chacha20_body (st_4);
-      (k_5, st_6) <@ chacha20_body (st_5);
-      (k_6, st_7) <@ chacha20_body (st_6);
-      (k_7, st_8) <@ chacha20_body (st_7);
-      (k_8, st_1) <@ chacha20_body (st_8);
-      (output, plain, len) <@ store_x8 (output, plain, len, k_1, k_2, k_3,
-      k_4, k_5, k_6, k_7, k_8);
+      k_1 <@ ChaCha20_pref.M.rounds (st_1);
+      k_1 <@ sum_states (k_1, st_1);
+      st_2 <@ ChaCha20_pref.M.increment_counter (st_1);
+
+      k_2 <@ ChaCha20_pref.M.rounds (st_2);
+      k_2 <@ sum_states (k_2, st_2);
+      st_3 <@ ChaCha20_pref.M.increment_counter (st_2);
+  
+      k_3 <@ ChaCha20_pref.M.rounds (st_3);
+      k_3 <@ sum_states (k_3, st_3);
+      st_4 <@ ChaCha20_pref.M.increment_counter (st_3);
+
+      k_4 <@ ChaCha20_pref.M.rounds (st_4);
+      k_4 <@ sum_states (k_4, st_4);
+      st_5 <@ ChaCha20_pref.M.increment_counter (st_4);
+
+      k_5 <@ ChaCha20_pref.M.rounds (st_5);
+      k_5 <@ sum_states (k_5, st_5);
+      st_6 <@ ChaCha20_pref.M.increment_counter (st_6);
+
+      k_6 <@ ChaCha20_pref.M.rounds (st_6);
+      k_6 <@ sum_states (k_6, st_6);
+      st_7 <@ ChaCha20_pref.M.increment_counter (st_7);
+  
+      k_7 <@ ChaCha20_pref.M.rounds (st_7);
+      k_7 <@ sum_states (k_7, st_7);
+      st_8 <@ ChaCha20_pref.M.increment_counter (st_7);
+
+      k_8 <@ ChaCha20_pref.M.rounds (st_8);
+      k_8 <@ sum_states (k_8, st_8);
+      st_1 <@ ChaCha20_pref.M.increment_counter (st_8);
+
+      (output, plain, len) <@ store_x8 (output, plain, len, k_1, k_2, k_3, k_4, k_5, k_6, k_7, k_8);
     }
     if (((W32.of_int 0) \ult len)) {
-      (k_1, st_2) <@ chacha20_body (st_1);
-      (k_2, st_3) <@ chacha20_body (st_2);
-      (k_3, st_4) <@ chacha20_body (st_3);
-      (k_4, st_5) <@ chacha20_body (st_4);
-      (k_5, st_6) <@ chacha20_body (st_5);
-      (k_6, st_7) <@ chacha20_body (st_6);
-      (k_7, st_8) <@ chacha20_body (st_7);
-      (k_8, st_1) <@ chacha20_body (st_8);
-      store_x8_last (output, plain, len, k_1, k_2, k_3, k_4, k_5, k_6, k_7,
-      k_8);
-    } else {
-      
-    }
-    return ();
+      k_1 <@ ChaCha20_pref.M.rounds (st_1);
+      k_1 <@ sum_states (k_1, st_1);
+      st_2 <@ ChaCha20_pref.M.increment_counter (st_1);
+
+      k_2 <@ ChaCha20_pref.M.rounds (st_2);
+      k_2 <@ sum_states (k_2, st_2);
+      st_3 <@ ChaCha20_pref.M.increment_counter (st_2);
+  
+      k_3 <@ ChaCha20_pref.M.rounds (st_3);
+      k_3 <@ sum_states (k_3, st_3);
+      st_4 <@ ChaCha20_pref.M.increment_counter (st_3);
+
+      k_4 <@ ChaCha20_pref.M.rounds (st_4);
+      k_4 <@ sum_states (k_4, st_4);
+      st_5 <@ ChaCha20_pref.M.increment_counter (st_4);
+
+      k_5 <@ ChaCha20_pref.M.rounds (st_5);
+      k_5 <@ sum_states (k_5, st_5);
+      st_6 <@ ChaCha20_pref.M.increment_counter (st_6);
+
+      k_6 <@ ChaCha20_pref.M.rounds (st_6);
+      k_6 <@ sum_states (k_6, st_6);
+      st_7 <@ ChaCha20_pref.M.increment_counter (st_7);
+  
+      k_7 <@ ChaCha20_pref.M.rounds (st_7);
+      k_7 <@ sum_states (k_7, st_7);
+      st_8 <@ ChaCha20_pref.M.increment_counter (st_7);
+
+      k_8 <@ ChaCha20_pref.M.rounds (st_8);
+      k_8 <@ sum_states (k_8, st_8);
+      store_x8_last (output, plain, len, k_1, k_2, k_3, k_4, k_5, k_6, k_7, k_8);
+    } 
   }
 
   proc chacha20_ref_loop (output:W64.t, plain:W64.t, len:W32.t, st : W32.t Array16.t) : unit = {
@@ -319,32 +360,50 @@ module M = {
     chacha20_ref_loop(output, plain, len, st);
   }
     
-  proc chacha20_less_than_128 (output:W64.t, plain:W64.t, len:W32.t, st : W32.t Array16.t) : unit = {
-     var k1_1:W32.t Array16.t;
-     var st_2:W32.t Array16.t;
-     var k1_2:W32.t Array16.t;
-     var st_3:W32.t Array16.t;
-     (k1_1, st_2) <@ chacha20_body (st);
-     (k1_2, st_3) <@ chacha20_body (st_2);
-     store_x2_last (output, plain, len, k1_1, k1_2);
+  proc chacha20_less_than_128 (output:W64.t, plain:W64.t, len:W32.t, st_1 : W32.t Array16.t) : unit = {
+    var k_1, k_2, st_2 :W32.t Array16.t;
+      
+    k_1 <@ ChaCha20_pref.M.rounds (st_1);
+    k_1 <@ sum_states (k_1, st_1);
+    st_2 <@ ChaCha20_pref.M.increment_counter (st_1);
+
+    k_2 <@ ChaCha20_pref.M.rounds (st_2);
+    k_2 <@ sum_states (k_2, st_2);
+(*    st_3 <@ ChaCha20_pref.M.increment_counter (st_2); *)
+
+    store_x2_last (output, plain, len, k_1, k_2);
   }
 
-  proc chacha20_between_128_255 (output:W64.t, plain:W64.t, len:W32.t, st : W32.t Array16.t) : unit = {
-    var k_1, k_2, k_3, k_4, st_2, st_3, st_4, st_5 : W32.t Array16.t;
-    (k_1, st_2) <@ chacha20_body(st);
-    (k_2, st_3) <@ chacha20_body(st_2);
-    (k_3, st_4) <@ chacha20_body(st_3); 
-    (k_4, st_5) <@ chacha20_body(st_4);                                           
-    store_x4_last(output, plain, len, k_1, k_2, k_3, k_4);
+  proc chacha20_between_128_255 (output:W64.t, plain:W64.t, len:W32.t, st_1 : W32.t Array16.t) : unit = {
+    var k_1, k_2, k_3, k_4, st_2, st_3, st_4 : W32.t Array16.t;
+
+    k_1 <@ ChaCha20_pref.M.rounds (st_1);
+    k_1 <@ sum_states (k_1, st_1);
+    st_2 <@ ChaCha20_pref.M.increment_counter (st_1);
+
+    k_2 <@ ChaCha20_pref.M.rounds (st_2);
+    k_2 <@ sum_states (k_2, st_2);
+    st_3 <@ ChaCha20_pref.M.increment_counter (st_2);
+  
+    k_3 <@ ChaCha20_pref.M.rounds (st_3);
+    k_3 <@ sum_states (k_3, st_3);
+    st_4 <@ ChaCha20_pref.M.increment_counter (st_3);
+
+    k_4 <@ ChaCha20_pref.M.rounds (st_4);
+    k_4 <@ sum_states (k_4, st_4);
+
+    (output, plain, len) <@ store_x2 (output, plain, len, k_1, k_2);
+    store_x2_last (output, plain, len, k_1, k_2);
+
   }
 
-  proc chacha20_between_128_255_1 (output:W64.t, plain:W64.t, len:W32.t, st : W32.t Array16.t) : unit = {
+(*  proc chacha20_between_128_255_1 (output:W64.t, plain:W64.t, len:W32.t, st : W32.t Array16.t) : unit = {
     var k_1, k_2, k_3, k_4, st_2, st_3, st_4, st_5 : W32.t Array16.t;
     (k_1, st_2) <@ chacha20_body(st);
     (k_2, st_3) <@ chacha20_body(st_2);
     (output, plain, len) <@ store_x2 (output, plain, len, k_1, k_2);
     chacha20_less_than_128(output, plain, len, st_3);
-  }
+  }*)
 
   proc chacha20_less_than_257 (output:W64.t, plain:W64.t, len:W32.t,
                                key:W64.t, nonce:W64.t, counter:W32.t) : unit = {
@@ -355,7 +414,7 @@ module M = {
     var st_3:W32.t Array16.t;
     st_1 <@ ChaCha20_pref.M.init (key, nonce, counter);
     if (((W32.of_int 128) \ult len)) {
-      chacha20_between_128_255_1(output, plain, len, st_1);
+      chacha20_between_128_255(output, plain, len, st_1);
     } else {
       chacha20_less_than_128 (output, plain, len, st_1);
     }
