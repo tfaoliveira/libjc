@@ -30,7 +30,6 @@ module M = {
   }
   
   proc copy_state (st:W32.t Array16.t) : W32.t Array16.t = {
-    
     var k:W32.t Array16.t;
     k <- witness;
     k <- st;
@@ -38,13 +37,6 @@ module M = {
   }
   
   proc line (k:W32.t Array16.t, a:int, b:int, c:int, r:int) : W32.t Array16.t = {
-    var aux_0: bool;
-    var aux: bool;
-    var aux_1: W32.t;
-    
-    var  _0:bool;
-    var  _1:bool;
-    
     k.[a] <- (k.[a] + k.[b]);
     k.[c] <- (k.[c] `^` k.[a]);
     k.[c] <- rol k.[c] r;
