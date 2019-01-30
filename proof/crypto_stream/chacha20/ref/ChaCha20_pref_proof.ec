@@ -1,35 +1,46 @@
-require import List Jasmin_model Int IntDiv IntExtra CoreMap.
+require import AllCore List Jasmin_model Int IntDiv IntExtra CoreMap.
 import IterOp.
 require import ChaCha20_Spec ChaCha20_pref.
 require import Array3 Array8 Array16.
 require import WArray64.
 
-op loads_8 (mem : global_mem_t) (from : W64.t) (len: int) = 
-  map (fun i => loadW8 mem (from + W64.of_int i)) (iota_ 0 len).
+op loads_8 (mem : global_mem_t) (from : address) (len: int) = 
+  map (fun i => loadW8 mem (from + i)) (iota_ 0 len).
 
-op loads_32 (mem: global_mem_t) (from : W64.t) (len : int) = 
-  map (fun i => loadW32 mem (from + W64.of_int (4 * i))) (iota_ 0 len).
+op loads_32 (mem: global_mem_t) (from : address) (len : int) = 
+  map (fun i => loadW32 mem (from + 4 * i)) (iota_ 0 len).
 
 lemma loads_8D m p (n1 n2:int) : 0 <= n1 => 0 <= n2 =>
   loads_8 m p (n1 + n2) = 
-  loads_8 m p n1 ++ loads_8 m (p + W64.of_int n1) n2.
+  loads_8 m p n1 ++ loads_8 m (p + n1) n2.
 proof.
   move=> hn1 hn2; rewrite /loads_8 iota_add //.
-  by rewrite map_cat addzC iota_addl /= -map_comp.
+  rewrite map_cat addzC iota_addl /= -map_comp.
+  by do 2!congr; apply fun_ext => i; rewrite /(\o); rewrite addzA.
 qed.
 
-lemma loads_8_eq mem1 mem2 p n: 
-  W64.to_uint p + n <= W64.modulus  => 
-  (forall i, W64.to_uint p <= i <  W64.to_uint p + n => 
-     loadW8 mem1 (W64.of_int i) = loadW8 mem2 (W64.of_int i)) =>
-  loads_8 mem1 p n = loads_8 mem2 p n. 
+op mem_eq_on (P:int -> bool) (m1 m2: global_mem_t) =
+   forall i, P i => loadW8 m1 i = loadW8 m2 i.
+
+abbrev mem_eq_except P = mem_eq_on (predC P).
+
+op in_range (p n i:int) = p <= i < p + n.
+
+lemma loads_8_eq m1 m2 (p n:int): 
+  mem_eq_on (in_range p n) m1 m2 =>
+  loads_8 m1 p n = loads_8 m2 p n. 
 proof.
-  move=> /= hp hmem;apply eq_in_map => /= i /mema_iota hi.
-  have toi : to_uint (W64.of_int i) = i.
-  + apply W64.to_uint_small; smt (W64.to_uint_cmp).
-  have := hmem (W64.to_uint (p + W64.of_int i)) _.
-  + by rewrite W64.to_uintD_small toi /#. 
-  by rewrite W64.to_uintK.
+  move=> hmem;apply eq_in_map => /= i /mema_iota hi.
+  apply hmem => /#.
+qed.
+
+lemma mem_eq_except_storeW8 m1 m2 p len len1 k v:
+  0 <= len => 0 <= k => len1 = max len (k+1) =>
+  mem_eq_except (in_range p len) m1 m2 =>
+  mem_eq_except (in_range p len1) (storeW8 m1 (p + k) v) m2.
+proof.
+  move=> hlen hk ->>; rewrite /mem_eq_on /predC /in_range => h i hni.
+  rewrite /loadW8 storeW8E get_setE /#.
 qed.
 
 lemma size_loads_8 mem p s : size (loads_8 mem p s) = max 0 s.
@@ -47,27 +58,23 @@ lemma size_bytes_of_block st : size (bytes_of_block st) = 64.
 proof. by rewrite /bytes_of_block WArray64.size_to_list. qed.
 
 (* -------------------------------------------------------------------------------- *)
-op inv_ptr (output plain:W64.t) (len:int) = 
-  (to_uint plain + len < to_uint output || to_uint output <= to_uint plain) /\
+op inv_ptr (output plain: address) (len:int) = 
+  !(plain < output /\ output <= plain + len).
+(*
+(plain + len < output || output <= plain).
+ /\
    to_uint output + len < W64.modulus /\
    to_uint plain + len < W64.modulus.
-
+*)
 lemma inv_ptr_disj len output plain i1 i2:
   inv_ptr output plain len =>
   0 <= i1 <= len =>
   0 <= i2 <= len =>
   i1 < i2 => 
-  plain + W64.of_int i2 <> output + W64.of_int i1.
-proof.
-  rewrite /inv_ptr /= => [#] h1 h2 h3 hi1 hi2 hlti.
-  rewrite eq_sym -W64.WRingA.eqr_sub W64.WRingA.subr_eq -W64.WRingA.addrA
-     (W64.WRingA.addrC _ (W64.of_int i2)) /=; apply /negP => ->>.
-  have hii: to_uint (W64.of_int (i2 - i1)) = i2 - i1.
-  + by rewrite W64.to_uint_small //=;have /= /#:= W64.to_uint_cmp plain.
-  have /# :  to_uint (plain + (W64.of_int (i2 - i1))) = to_uint plain + (i2 - i1).
-  by rewrite W64.to_uintD_small hii /#.
-qed.
+  plain + i2 <> output + i1.
+proof. smt (). qed.
 
+(*
 lemma inv_ptr_add_out output plain len i: 
    inv_ptr output plain len =>
    0 <= i <= len =>
@@ -83,7 +90,7 @@ lemma inv_ptr_add_plain output plain len i:
 proof.
   move=> /> *; rewrite W64.to_uintD_small W64.to_uint_small; smt(W64.to_uint_cmp).
 qed.
-
+*)
 (* -------------------------------------------------------------------------------- *)
 
 lemma line_diff a b d s st i:
@@ -139,21 +146,16 @@ proof.
   apply Array16.ext_eq => i hi_bound; smt (quarter_round_morph quarter_round_diff). 
 qed.
 
-hoare copy_state_spec st0: M.copy_state : 
-  st = st0 
-  ==> res = st0.
-proof. by proc; auto. qed.
-
 hoare line_spec (st0:state) a0 b0 c0 r0 : M.line : 
   k = st0 /\ (a,b,c,r) = (a0,b0,c0,r0) /\ 
   0 <= a0 < 16 /\ 0 <= b0 < 16 /\ 0 <= c0 < 16 /\ 
-  a0 <> c0 /\ 0 <= r0 <= 16 
+  a0 <> c0 
   ==>
   res = line a0 b0 c0 r0 st0.
 proof.
-  proc;auto => /> &m h0a ha h0b hb h0c hc;rewrite eq_sym => hac h0r hr. 
+  proc;auto => /> &m h0a ha h0b hb h0c hc;rewrite eq_sym => hac (* h0r hr *). 
   apply Array16.ext_eq => i hi.
-  rewrite /line /= !Array16.get_set_if /= x86_ROL_32_E /= pmod_small /#.
+  rewrite /line /= !Array16.get_set_if /= /#.
 qed.
 
 hoare quarter_round_spec (st0:state) a0 b0 c0 d0 : M.quarter_round : 
@@ -208,76 +210,81 @@ hoare rounds_spec (st0:state) : M.rounds :
   k = st0 ==> res = rounds st0.
 proof.
   proc.
-  while (W32.to_uint c <= 10 /\ k = iter (W32.to_uint c) double_round st0).
-  + wp; ecall (round_spec (iter (to_uint c) double_round st0)); skip => />.
-    move=> &m hc; rewrite W32.ultE /= => hc10.
-    have [h0c _] := W32.to_uint_cmp c{m}.
-    have -> : to_uint (c{m} + W32.one) = W32.to_uint c{m} + 1.
-    + by rewrite W32.to_uintD pmod_small //= /#.
-    by split => [/# | ]; rewrite iterS.  
-  wp;skip => /= &m;rewrite iter0 1:// => h;split => // c k.
-  by rewrite W32.ultE /= /rounds /#.
+  while (0 <= c <= 10 /\ k = iter c double_round st0).
+  + wp; ecall (round_spec (iter c double_round st0)); skip => />.
+    move=> &m hc _ hc10; rewrite iterS //= /#.
+  wp;skip => /= &m;rewrite iter0 1:// /rounds=> /> /#.
+qed.
+
+(* FIXME: move this *)
+lemma size_map2 (f:'a -> 'b -> 'c) (l1:'a list) l2 : size (map2 f l1 l2) = min (size l1) (size l2).
+proof.
+  elim: l1 l2 => [ | a l1 hrec] [| b l2] //=; smt (size_ge0).
+qed.
+
+lemma nth_map2 dfla dflb dflc (f:'a -> 'b -> 'c) (l1:'a list) l2 i: 
+  0 <= i < min (size l1) (size l2) => 
+  nth dflc (map2 f l1 l2) i = f (nth dfla l1 i) (nth dflb l2 i).
+proof.
+  elim: l1 l2 i => [ | a l1 hrec] [ | b l2] i /=; 1..3:smt(size_ge0).
+  case: (i=0) => [->> // | hi ?].
+  apply hrec;smt().
+qed.
+
+lemma nth_loads_8 len mem p j : 0 <= j < len =>
+   loadW8 mem (p + j) = (loads_8 mem p len).[j].
+proof.
+  move=> hj; rewrite /loads_8. 
+  by rewrite (nth_map 0 W8.zero) 1:size_iota 1:/# /= nth_iota. 
 qed.
 
 hoare store_spec output0 plain0 len0 k0 mem0 : M.store :
-  output = output0 /\ plain = plain0 /\ to_uint len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 0 <= len0 /\
+  output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 0 <= len0 /\
   inv_ptr output0 plain0 (min 64 len0)
   ==>
   loads_8 Glob.mem output0 (min 64 len0) = map2 W8.(+^) (bytes_of_block k0) (loads_8 mem0 plain0 (min 64 len0)) /\
-  (forall i, 0 <= i < W64.modulus => !(to_uint output0 <= i < to_uint output0 + (min 64 len0)) => 
-     loadW8 Glob.mem (W64.of_int i) = loadW8 mem0 (W64.of_int i)) /\
-  res.`1 = output0 + W64.of_int (min 64 len0) /\
-  res.`2 = plain0 + W64.of_int (min 64 len0) /\
-  res.`3 = W32.of_int len0 - W32.of_int (min 64 len0).
+  mem_eq_except (in_range output0 (min 64 len0)) Glob.mem mem0 /\
+  res.`1 = output0 + min 64 len0 /\
+  res.`2 = plain0  + min 64 len0 /\
+  res.`3 = len0    - min 64 len0.
 proof.
   proc; inline *; wp => /=.
   pose len1 := min 64 len0.
-  while (0 <= i <= len1 /\
-         output = output0 /\ plain = plain0 /\ k0 = k /\ len = W32.of_int len0 /\ 0 <= len0 /\
-         inv_ptr output0 plain0 len1 /\
-         loads_8 Glob.mem output0 i = map2 W8.(+^) (take i (bytes_of_block k0)) (loads_8 mem0 plain0 i) /\
-         (forall j, 0 <= j < W64.modulus => !(to_uint output0 <= j < to_uint output0 + i) => 
-            loadW8 Glob.mem (W64.of_int j) = loadW8 mem0 (W64.of_int j))).
-  + wp; skip => |> &m h0i _ hlen0 ^ hinv_ptr /> hdisj hout hplain hloads hdiff + hi64.
-    have ismall : to_uint (W32.of_int i{m}) = i{m}.
-    + by rewrite W32.to_uint_small 1:/#.
-    rewrite W32.ultE ismall => hilen.
+  sp 1.
+  seq 2 : (#pre /\ 
+           forall j, 0 <= j < len1 => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain0 + j)).
+  + while (#pre /\ 0 <= i <= len1 /\ forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain0 + j)).  
+    + wp; skip; smt (WArray64.get_setE).
+    by wp; skip => /#.
+  while (0 <= i <= len1 /\ output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ 0 <= len0 /\
+         loads_8 Glob.mem output0 i = take i (to_list k8) /\ mem_eq_except (in_range output0 i) Glob.mem mem0).
+  + wp;skip => &hr [#] h0i hilen1 4!->> h0len0 hload heqexc hi.
+    pose l8 := to_list k8{hr}; move=> /=.
+    rewrite (take_nth W8.zero); 1: rewrite /l8 /= /#.
     split; 1:smt().
-    have hpi := inv_ptr_add_plain _ _ _ i{m} hinv_ptr _ => //.
-    have hoi := inv_ptr_add_out _ _ _ i{m} hinv_ptr _ => //.
-    split.
-    + rewrite !loads_8D // (take_nth W8.zero) 1:size_bytes_of_block 1:// -cats1 map2_cat. 
-      + by rewrite size_take // size_bytes_of_block hi64 size_loads_8 /#.
-      congr.
-      + rewrite -hloads;apply loads_8_eq; 1: by smt().
-        move=> j hj.        
-        rewrite  /loadW8 storeW8E get_set_neqE_s //.
-        rewrite to_uint_eq W64.to_uint_small; smt (W64.to_uint_cmp). 
-      rewrite /loads_8 /= /loadW8 storeW8E /=;congr.
-      + by rewrite /bytes_of_block -WArray64.get_to_list.
-      rewrite (hdiff (to_uint (plain{m} + W64.of_int i{m}))).
-      + by rewrite hpi; smt (W64.to_uint_cmp).
-      + by rewrite hpi /#.
-      by rewrite W64.to_uintK.
-    move=> j h0j hjb hj.
-    rewrite -hdiff 1:// 1:/# /loadW8 storeW8E get_set_neqE_s //.
-    by rewrite to_uint_eq W64.to_uint_small 1:// hoi /#.
-  wp;skip => &hr |> *. 
-  split; 1:split.
-  + smt().
-  + by rewrite /loads_8 iota0 // take0.
-  move=> mem i0; rewrite W32.ultE => + h2 h3.
-  have ismall : to_uint (W32.of_int i0) = i0.
-  + by rewrite W32.to_uint_small 1:/#.
-  rewrite ismall => h1 /=.
-  have ->> /> ??? -> hdiff: i0 = len1 by smt(). 
-  split.
-  + have {1}-> : len1 = size (loads_8 Glob.mem{hr} plain{hr} len1).
-    + by rewrite size_loads_8 /#.
-    by rewrite -map2_take1.
-  split; 1: by move=> *;apply hdiff.
-  by rewrite W32.of_intS /=.
+    split => //.
+    split. 
+    + rewrite loads_8D 1,2:// -cats1; congr.
+      + by rewrite -hload;apply loads_8_eq => j hj; rewrite storeW8E /loadW8 get_set_neqE_s 1:/#.
+      by rewrite /loads_8 /= /loadW8 storeW8E get_set_eqE_s 1:// /l8 WArray64.get_to_list.
+    apply: mem_eq_except_storeW8 heqexc => // /#.
+  wp; skip => &hr [#] 6!->> h0len0 hinv hj; split; 1: by move=> /> /#.
+  (pose l8 := to_list k8{hr}) => mem1 i hi /> ??? hl heq.
+  have ->> : i = min 64 len0 by smt().
+  rewrite heq hl /=.
+  have ? : 0 <= min 64 len0 by smt().
+  apply (eq_from_nth W8.zero).
+  + rewrite size_take 1:// size_map2 size_bytes_of_block size_loads_8 /l8 /= /#.
+  have -> : size (take (min 64 len0) l8) = min 64 len0.
+  + by rewrite size_take 1:// /l8 /= /#.
+  move=> j h_j.
+  rewrite nth_take 1:// 1:/# (nth_map2 W8.zero W8.zero W8.zero).
+  + by rewrite size_loads_8 size_bytes_of_block /#.
+  rewrite /l8  WArray64.get_to_list hj 1://.
+  rewrite /bytes_of_block WArray64.get_to_list.
+  by rewrite (nth_loads_8 (min 64 len0)).
 qed.
+  
 
 hoare sum_states_spec k0 st0 : M.sum_states : 
   k = k0 /\ st = st0
@@ -286,121 +293,97 @@ hoare sum_states_spec k0 st0 : M.sum_states :
 proof.
   proc.
   rewrite /is_state. 
-  unroll for 2;wp;skip => /> &hr.
+  unroll for ^while;wp;skip => /> &hr.
   by apply Array16.all_eq_eq;rewrite /all_eq.
 qed.
 
-hoare chacha20_ref_spec output0 plain0 key0 nonce0 counter0 : M.chacha20_ref :
+hoare chacha20_ref_spec mem0 output0 plain0 key0 nonce0 counter0 : M.chacha20_ref :
+  mem0 = Glob.mem /\
+  0 <= len /\
   output = output0 /\ 
-  inv_ptr output plain (to_uint len) /\
-  plain0 = loads_8 Glob.mem plain (W32.to_uint len) /\
+  inv_ptr output plain len /\
+  plain0 = loads_8 Glob.mem plain len /\
   key0 = Array8.of_list W32.zero (loads_32 Glob.mem key 8) /\
   nonce0 = Array3.of_list W32.zero (loads_32 Glob.mem nonce 3) /\
   counter0 = counter 
   ==> 
   (chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 = 
-  loads_8 Glob.mem output0 (size plain0).
+     loads_8 Glob.mem output0 (size plain0) /\
+  mem_eq_except (in_range output0 (size plain0)) Glob.mem mem0.
 proof.
   proc; rewrite /chacha20_CTR_encrypt_bytes /=.
-  seq 3: 
-    (inv_ptr output plain (to_uint len) /\
+  while 
+    (inv_ptr output plain len /\ 0 <= len /\
      exists plain1 c, 
-      let ilen = W32.to_uint len in
       let splain1 = size plain1 in
-      to_uint output0 = to_uint output{hr} - size plain1 /\
-      plain0 = plain1 ++ loads_8 Glob.mem plain ilen /\
+      output0 = output{hr} - splain1 /\
+      plain0 = plain1 ++ loads_8 Glob.mem plain len /\
       st = setup key0 nonce0 c /\
-      (0 < ilen => splain1 %% 64 = 0) /\
+      (0 < len => splain1 %% 64 = 0) /\
       iter (splain1 %/ 64 + b2i (splain1 %% 64 <> 0) ) (ctr_round key0 nonce0) ([], plain0, counter0) = 
-         (loads_8 Glob.mem output0 splain1, loads_8 Glob.mem plain ilen, c)).
-  + sp;inline M.init.
-    unroll for 13; unroll for 10; wp; skip => &m /> ???.
-    exists [] counter{m} => /=.
-    rewrite iter0 // /loads_8 /=.
-    rewrite /setup /loads_32 /=.
-    rewrite Array8.of_listK 1:// Array3.of_listK 1:// /=.
-    split;2: done.
-    by apply Array16.all_eq_eq; rewrite /Array16.all_eq.
-  while (#pre).
-  + elim * => plain1 counter1 /=.
-    inline M.increment_counter; wp.
-    pose st0 := (setup key0 nonce0 counter1).
-    ecall (store_spec output plain (W32.to_uint len) k Glob.mem); last first.
-    + move=> &hr /> ???? h result mem h1 h2 h3 h4 h5. 
-      apply (h result mem _). 
-      by rewrite h1 /= h3 h4 h5 W32.of_intS /= => *;apply h2.
-    ecall (sum_states_spec (rounds st0) st0).
-    ecall (rounds_spec st0).
-    ecall (copy_state_spec st).
-    skip => /> &hr hnot hout hplain hout0 hmod hiter. 
-    rewrite W32.ultE /= => hult.
-    pose len1 := min 64 (to_uint len{hr}). 
-    have hlen1 : to_uint (W32.of_int len1) = len1 by rewrite W32.to_uint_small /#.
-    have hlen1' : to_uint (W64.of_int len1) = len1 by rewrite W64.to_uint_small /#.
+         (loads_8 Glob.mem output0 splain1, loads_8 Glob.mem plain len, c) /\
+      mem_eq_except (in_range output0 (size plain1)) Glob.mem mem0).
+  + inline M.increment_counter; wp.
+    ecall (store_spec output plain len k Glob.mem).
+    ecall (sum_states_spec k st).
+    ecall (rounds_spec st); skip => /> &hr hinv h0len0 plain1 c1 hmod hiter heq_on hlen.
     split; 1: smt().
-    move=> hlen ho64 hp64 hop [output' plain' len'] mem hload hdiff /= 3!->>.
-    rewrite W32.to_uintB. 
-    + by rewrite W32.uleE hlen1 /#.
-    rewrite !W64.to_uintD_small hlen1' //.
-    split; 1:smt().
-    exists (plain1 ++ loads_8 Glob.mem{hr} plain{hr} len1) (counter1 + W32.of_int 1).
-    split. 
-    + by rewrite size_cat size_loads_8 /#.  
+    move=> hinvmin [output' plain' len'] mem' hloads heq_on' /= 3!->>. 
+    split; [smt() | split; 1:smt()].
+    exists (plain1 ++ loads_8 Glob.mem{hr} plain{hr} (min 64 len{hr})) (c1 + W32.of_int 1).
     split.
-    + rewrite -catA; congr.
-      rewrite hlen1.     
-      have -> : loads_8 mem (plain{hr} + W64.of_int len1) (to_uint len{hr} - len1) = 
-                loads_8 Glob.mem{hr} (plain{hr} + W64.of_int len1) (to_uint len{hr} - len1).
-      + apply loads_8_eq. 
-        + by rewrite W64.to_uintD_small hlen1' // /#.
-        by move=> i; rewrite W64.to_uintD_small hlen1' 1://; smt (W64.to_uint_cmp).
-      by rewrite -loads_8D 1:// /#. 
+    + by rewrite size_cat size_loads_8 /#.
+    split.
+    + have {1}-> : len{hr} = min 64 len{hr} + (len{hr} - min 64 len{hr})  by ring.
+      rewrite loads_8D 1,2:/# catA; congr.
+      by apply loads_8_eq => /#.
     split.
     + rewrite /setup /=; apply Array16.all_eq_eq. 
       rewrite -!catA /Array16.all_eq /=.
       by rewrite !nth_cat; rewrite Array8.size_to_list /=.
     split.
-    + rewrite hlen1 size_cat size_loads_8 /max => h.
-      have -> /= : len1 = 64 by smt().
-      rewrite modzDr;apply hmod => /#.
+    + move=> hlen1; have -> : min 64 len{hr} = 64 by smt().
+      by rewrite size_cat size_loads_8 /max /= modzDr hmod.
+    split; 2: by rewrite size_cat size_loads_8;smt (size_ge0).
+    pose len1 := min 64 len{hr}.
     pose plain2 := plain1 ++ loads_8 Glob.mem{hr} plain{hr} len1.
     have -> : size plain2 %/ 64 + b2i (size plain2 %% 64 <> 0) = 
               ((size plain1 %/ 64 + b2i (size plain1 %% 64 <> 0))) + 1.
     + rewrite /plain2 size_cat size_loads_8 (_ : max 0 len1 = len1) 1:/# hmod 1:// /b2i /=.
       have ?: 64 %| size plain1 by rewrite /(%|) hmod. 
       rewrite dvdz_modzDl 1:// divzDl 1://.
-      case: (64 <= to_uint len{hr}) => hlt.
+      case: (64 <= len{hr}) => hlt.
       + smt (modzz divzz).
-      smt (divz_small modz_small W32.to_uint_cmp). 
+      smt (divz_small modz_small). 
     rewrite iterS. 
     + smt (modz_ge0 divz_ge0 size_ge0).
     rewrite hiter /ctr_round /=;split.
     + rewrite /plain2 size_cat size_loads_8 /max (_: 0 < len1) 1:/# /=.
       rewrite loads_8D 1:size_ge0 1:/#;congr.
-      + apply loads_8_eq;1:by rewrite hout0 /#.
-        by move=> i hi;rewrite hdiff 3://; smt (W64.to_uint_cmp).
-      have -> : output0 + W64.of_int (size plain1) = output{hr}.
-      + have hplain1 : to_uint (W64.of_int (size plain1)) = size plain1.
-        + rewrite W64.to_uint_small; smt (W64.to_uint_cmp size_ge0).
-        by apply to_uint_eq; rewrite W64.to_uintD_small hplain1 /#. 
-      rewrite hload /chacha20_block /chacha20_core /=.
+      + by apply loads_8_eq => /#.
+      have -> : output{hr} - size plain1 + size plain1 = output{hr} by ring.
+      rewrite hloads /chacha20_block /chacha20_core /=.
       rewrite map2C; 1:by apply W8.xorwC.
-      case : (to_uint len{hr} < 64) => hlt; 1:smt().
-      have -> : len1 = 64 by smt().
+      case : (len{hr} < 64) => hlt; 1:smt().
+      have -> : min 64 len{hr} = 64 by smt().
       by rewrite map2_take2 size_bytes_of_block take_loads_8 1:/#.
-    case : (64 < to_uint len{hr}) => hlt;last first.
+    case : (64 < len{hr}) => hlt;last first.
     + by rewrite drop_oversize 1:size_loads_8 1:/# /len1 /min hlt /= /loads_8.
-    have {1} -> : to_uint len{hr} = len1 + (to_uint len{hr} - len1) by ring.
+    have {1} -> : len{hr} = len1 + (len{hr} - len1) by ring.
     rewrite loads_8D 1,2:/#.
     have -> : len1 = 64 by rewrite /len1 /min hlt.
     rewrite drop_size_cat 1:size_loads_8 1:// /=.
-    have h : to_uint (plain{hr} + W64.of_int 64) + (to_uint len{hr} - 64) = to_uint plain{hr} + to_uint len{hr}. 
-    + by rewrite W64.to_uintD_small /= 1:/#; ring.
-    apply loads_8_eq; smt(W64.to_uint_cmp).
-  skip => &hr /> h1 h2 h3 plain1 c ??? mem len0 output1 plain2.
-  rewrite W32.ultE /= => hlen0.
-  have -> /= : to_uint len0 = 0 by smt (W32.to_uint_cmp).
-  move=> ??? plain3 c2 h4.
-  have -> : loads_8 mem plain2 0 = [] by rewrite /loads_8.
-  by rewrite cats0 => -> ->.
+    by apply loads_8_eq => /#.
+  inline M.init.
+  do 2! unroll for ^while; wp; skip => &m /> ??;split.
+  + exists [] counter{m}.
+    rewrite /(%/) /(%%) /b2i /= iter0 // /loads_8 /=.
+    rewrite /setup /loads_32 /=;split;2:smt().
+    rewrite Array8.of_listK 1:// Array3.of_listK 1:// /=.
+    by apply Array16.all_eq_eq; rewrite /Array16.all_eq.
+  move=> mem len0 output1 plain1 ? hinv ? plain2 c.
+  have ->> : len0 = 0 by smt().
+  rewrite {2}/loads_8 /= cats0 => <<-.
+  by rewrite size_loads_8 (max_ler _ _ H) => ->. 
 qed.
+
