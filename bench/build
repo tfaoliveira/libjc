@@ -25,6 +25,17 @@ rename_lib()
 
 if [ "$#" -eq 0 ]; then
 
+  # boring ssl
+  (mkdir -p third_party/boringssl/build/ && \
+   cd third_party/boringssl/build/ && \
+   export CC=/usr/local/bin/gcc &&  \
+   export CXX=/usr/local/bin/g++ && \
+   cmake .. && \
+   make && \
+   cp crypto/libcrypto.a ../../../$idir/boringssl_static.a
+  )
+  rename_lib boringssl_static;
+
   # libsodium static
   (cd third_party/libsodium/ && \
     make distclean && ./configure --enable-static && make && make check && \

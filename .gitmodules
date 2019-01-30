@@ -22,3 +22,6 @@
 	path = proof/third_party/easycrypt/easycrypt
 	url = https://github.com/EasyCrypt/easycrypt.git
 	branch = deploy-kms
+[submodule "bench/third_party/boringssl"]
+	path = bench/third_party/boringssl
+	url = git@github.com:google/boringssl.git

@@ -6,11 +6,11 @@ ls data/crypto_scalarmult_curve25519_* | xargs rm -f
 # copy implementations and bindings into supercop-*
 ./sync
 ./sync openssl
-./sync libsodium
+./sync boringssl
 ./sync hacl_star
 
 ## run benchmarks... this should take some time
-./bench curve25519
+#./bench curve25519
 
 ## move openssl static results to openssl static avx2
 #mv data/crypto_onetimeauth_poly1305_openssl_static.data data/crypto_onetimeauth_poly1305_openssl_static_avx2.data

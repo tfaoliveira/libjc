@@ -8,19 +8,13 @@ version=`cat config/version`
 unxz < supercop-$version.tar.xz | tar -xf -
 
 cp ./patch/$version/okcompilers/* supercop-$version/okcompilers/
+
+(cd supercop-$version/ && ./do-part used)
+
 cp ./patch/$version/do-part supercop-$version/do-part
 cp ./patch/$version/measure-anything.c supercop-$version/measure-anything.c
 cp ./patch/$version/crypto_stream/measure.c supercop-$version/crypto_stream/measure.c
-
-(cd supercop-$version/ \
- && ./do-part init \
- && ./do-part crypto_verify 32 \
- && ./do-part crypto_verify 16 \
- && ./do-part crypto_verify 8
-)
-
-#./do-part used # seems to do a lot of stuff
-#./do-part crypto_verify 
+cp ./patch/$version/crypto_onetimeauth/measure.c supercop-$version/crypto_onetimeauth/measure.c
 
 echo "bench" > config/work
 mkdir -p data/
