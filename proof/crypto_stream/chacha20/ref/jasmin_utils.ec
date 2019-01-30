@@ -247,11 +247,11 @@ proof.
 qed.
 
 (* FIXME: we can not do l1 = "[]", l2= _ => l2 *)
-op interleave (l1 l2: 'a list) = 
+op _interleave (l1 l2: 'a list) = 
  with l1 = "[]", l2= "[]" => []
  with l1 = "[]", l2= _::_ => l2
  with l1 = _::_, l2 = "[]" => l1
- with l1 = a1::l1', l2 = a2::l2' => a1::a2::interleave l1' l2'.
+ with l1 = a1::l1', l2 = a2::l2' => a1::a2::_interleave l1' l2'.
 
 (* ------------------------------------------------------------------- *)
 (* Safety                                                              *)

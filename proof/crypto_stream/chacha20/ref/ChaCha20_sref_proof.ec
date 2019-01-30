@@ -1,5 +1,4 @@
-require import AllCore List Jasmin_model Int IntDiv IntExtra CoreMap.
-require Loop.
+require import AllCore List Jasmin_model Int IntDiv IntExtra CoreMap LoopTransform.
 import IterOp.
 require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref.
 require import Array3 Array8 Array16.
@@ -80,9 +79,11 @@ proof.
   wp; skip => />.
 qed.
 
-clone import Loop as Loop0 with
+clone import ExactIter as Loop0 with
    type t <- W64.t * W64.t * W32.t Array16.t,
-   op c <- 4.
+   op c <- 4,
+   op step <- 1
+   proof * by done.
 
 module Body = {
   proc body (t: W64.t * W64.t * W32.t Array16.t, i:int) = {
@@ -127,7 +128,7 @@ proof.
         len{1} = len0).
   + by move=> /> &2 *;exists Glob.mem{2} k{2} len{2} output{2} plain{2}. 
   + by move=> />.
-  + by call (loop1_loopc Body _ _);[islossless | | skip].
+  + by call (loop1_loopc Body); skip.
   inline *;wp.
   while ( ={Glob.mem, k, output, plain, len} /\ inv_ptr output{1} plain{1} (to_uint len{1}) /\ 64 <= to_uint len{1} /\
           n0{1} = 16 /\ i0{1} = i{2} /\  0 <= i{2} /\ (t = (output, plain, k)){1}).

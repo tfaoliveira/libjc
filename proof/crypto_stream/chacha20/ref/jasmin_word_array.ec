@@ -200,7 +200,7 @@ abstract theory WArray.
 
 end WArray.
 
-clone export WArray as WArray0  with op size <- 0.
+(*clone export WArray as WArray0  with op size <- 0.
 clone export WArray as WArray1  with op size <- 1.
 clone export WArray as WArray2  with op size <- 2.
 clone export WArray as WArray3  with op size <- 3.
@@ -254,7 +254,7 @@ clone export WArray as WArray46  with op size <- 46.
 clone export WArray as WArray47  with op size <- 47.
 clone export WArray as WArray48  with op size <- 48.
 clone export WArray as WArray49  with op size <- 49. 
-
+*)
 
 
  

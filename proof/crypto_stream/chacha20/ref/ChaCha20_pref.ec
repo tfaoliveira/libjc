@@ -30,7 +30,6 @@ module M = {
   }
   
   proc copy_state (st:W32.t Array16.t) : W32.t Array16.t = {
-    
     var k:W32.t Array16.t;
     k <- witness;
     k <- st;
@@ -38,27 +37,13 @@ module M = {
   }
   
   proc line (k:W32.t Array16.t, a:int, b:int, c:int, r:int) : W32.t Array16.t = {
-    var aux_0: bool;
-    var aux: bool;
-    var aux_1: W32.t;
-    
-    var  _0:bool;
-    var  _1:bool;
-    
     k.[a] <- (k.[a] + k.[b]);
     k.[c] <- (k.[c] `^` k.[a]);
-    (aux_0, aux, aux_1) <- x86_ROL_32 k.[c] (W8.of_int r);
-     _0 <- aux_0;
-     _1 <- aux;
-    k.[c] <- aux_1;
+    k.[c] <- rol k.[c] r;
     return (k);
   }
   
-  proc quarter_round (k:W32.t Array16.t, a:int, b:int, c:int, d:int) : 
-  W32.t Array16.t = {
-    
-    
-    
+  proc quarter_round (k:W32.t Array16.t, a:int, b:int, c:int, d:int) : W32.t Array16.t = {
     k <@ line (k, a, b, d, 16);
     k <@ line (k, c, d, b, 12);
     k <@ line (k, a, b, d, 8);
@@ -67,9 +52,6 @@ module M = {
   }
   
   proc column_round (k:W32.t Array16.t) : W32.t Array16.t = {
-    
-    
-    
     k <@ quarter_round (k, 0, 4, 8, 12);
     k <@ quarter_round (k, 2, 6, 10, 14);
     k <@ quarter_round (k, 1, 5, 9, 13);
@@ -78,9 +60,6 @@ module M = {
   }
   
   proc diagonal_round (k:W32.t Array16.t) : W32.t Array16.t = {
-    
-    
-    
     k <@ quarter_round (k, 1, 6, 11, 12);
     k <@ quarter_round (k, 0, 5, 10, 15);
     k <@ quarter_round (k, 2, 7, 8, 13);
@@ -89,9 +68,6 @@ module M = {
   }
   
   proc round (k:W32.t Array16.t) : W32.t Array16.t = {
-    
-    
-    
     k <@ column_round (k);
     k <@ diagonal_round (k);
     return (k);
@@ -99,13 +75,13 @@ module M = {
   
   proc rounds (k:W32.t Array16.t) : W32.t Array16.t = {
     
-    var c:W32.t;
+    var c:int;
     
-    c <- (W32.of_int 0);
+    c <- 0;
     
-    while ((c \ult (W32.of_int 10))) {
+    while (c < 10) {
       k <@ round (k);
-      c <- (c + (W32.of_int 1));
+      c <- c + 1;
     }
     return (k);
   }
