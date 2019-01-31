@@ -11,6 +11,9 @@ poly1305_avx2:
 	pushq	%r14
 	pushq	%r15
 	subq	$656, %rsp
+	movq  %rsp, %r15
+	andq  $-31, %rsp
+	movq  %r15, -8(%rsp)
 	cmpq	$257, %rdx
 	jb  	Lpoly1305_avx2$1
 	movq	%rdx, %r8
@@ -244,6 +247,7 @@ poly1305_avx2:
 	vpor	160(%rsp), %ymm10, %ymm10
 	vpand	%ymm5, %ymm9, %ymm5
 	jmp 	Lpoly1305_avx2$13
+.p2align 5,,
 Lpoly1305_avx2$14:
 	vmovdqu	320(%rsp), %ymm9
 	vmovdqu	352(%rsp), %ymm11
@@ -700,6 +704,7 @@ Lpoly1305_avx2$3:
 	movq	%rax, (%rdi)
 	movq	%rdx, 8(%rdi)
 Lpoly1305_avx2$2:
+	movq -8(%rsp), %rsp
 	addq	$656, %rsp
 	popq	%r15
 	popq	%r14
