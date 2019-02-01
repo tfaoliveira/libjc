@@ -1,34 +1,10 @@
 require import List Jasmin_model Int IntDiv CoreMap.
 require import Array8 Array16.
 require import WArray64.
-require import ChaCha20_pref ChaCha20_avx2_pv.
-
-(*
-(* Merge this with Ops poly *)
-type t8u32 = W32.t Array8.t.
-
-module Ops = {
-  proc ivadd8u32(x y:t8u32) : t8u32 = {
-    var r : t8u32;
-    r.[0] <- x.[0] + y.[0];
-    r.[1] <- x.[1] + y.[1];
-    r.[2] <- x.[2] + y.[2];
-    r.[3] <- x.[3] + y.[3];
-    return r; 
-  }
-
-  proc ixor8u32 (x y:t8u32) : t8u32 = {
-    var r : t4u64;
-    r.[0] <- x.[0] `^` y.[0];
-    r.[1] <- x.[1] `^` y.[1];
-    r.[2] <- x.[2] `^` y.[2];
-    r.[3] <- x.[3] `^` y.[3];
-    return r;
-  }
-*)
+require import ChaCha20_pref ChaCha20_pavx2_cf.
 
 module M = {
-  proc init_x2(key:W64.t, nonce:W64.t, counter:W32.t) : W32.t Array16.t * W32.t Array16.t = {
+  proc init_x2(key nonce: int, counter:W32.t) : W32.t Array16.t * W32.t Array16.t = {
     var st_1, st_2: W32.t Array16.t;
     st_1 <@ ChaCha20_pref.M.init (key, nonce, counter);
     st_2 <@ ChaCha20_pref.M.increment_counter(st_1);
@@ -181,13 +157,6 @@ module M = {
     return (k1_1, k1_2);
   }
 
-(*
-  proc diagonal_round_x2_aux(k1_1 k1_2: W32.t Array16.t) : W32.t Array16.t * W32.t Array16.t = {
-    k1_1 <@  ChaCha20_pref.M.diagonal_round(k1_1);
-    k1_2 <@  ChaCha20_pref.M.diagonal_round(k1_2);
-    return (k1_1, k1_2);
-  } *)
-
   proc rounds_x2_aux(k1_1 k1_2: W32.t Array16.t) : W32.t Array16.t * W32.t Array16.t = {
     k1_1 <@ rounds(k1_1);
     k1_2 <@ rounds(k1_2);
@@ -206,12 +175,6 @@ module M = {
     st_2.[12] <- st_2.[12] + W32.of_int 2;
     return (st_1, st_2);
   }
-
- (* proc rounds_x4_aux (st_1, st_2, st_3, st_4 :  W32.t Array16.t) = {
-    (st_1, st_2) <@ rounds_x2 (st_1, st_2);
-    (st_3, st_4) <@ rounds_x2 (st_3, st_4);
-    return (st_1, st_2, st_3, st_4);
-  }*)
 
   proc column_round_x4 (k1_1 k1_2 k2_1 k2_2: W32.t Array16.t) = {
     (k1_1, k1_2) = column_round_x2(k1_1, k1_2);
@@ -257,20 +220,19 @@ module M = {
     return (k1_1, k1_2, k2_1, k2_2);
   }
 
-  proc chacha20_less_than_257(output:W64.t, plain:W64.t, len:W32.t,
-                               key:W64.t, nonce:W64.t, counter:W32.t) : unit = {
+  proc chacha20_less_than_257(output plain len: int, key nonce: int, counter:W32.t) : unit = {
     var st_1, st_2, st_3, st_4, k1_1, k1_2, k2_1, k2_2: W32.t Array16.t;
     (st_1, st_2) <@ init_x2(key, nonce, counter);
-    if (W32.of_int 128 \ult len) {
+    if (128 < len) {
        (st_3, st_4) <@ copy_state_x4(st_1, st_2);
        (k1_1, k1_2, k2_1, k2_2) <@ rounds_x4(st_1, st_2, st_3, st_4);
        (k1_1, k1_2, k2_1, k2_2) <@ sum_states_x4(k1_1, k1_2, k2_1, k2_2, st_1, st_2);
-       (output, plain, len) <@ ChaCha20_avx2_pv.M.store_x2(output, plain, len, k1_1, k1_2);
-       ChaCha20_avx2_pv.M.store_x2_last(output, plain, len, k2_1, k2_2);
+       (output, plain, len) <@ ChaCha20_pavx2_cf.M.store_x2(output, plain, len, k1_1, k1_2);
+       ChaCha20_pavx2_cf.M.store_x2_last(output, plain, len, k2_1, k2_2);
     } else {
       (k1_1, k1_2) <@ rounds_x2 (st_1, st_2);
       (k1_1, k1_2) <@ sum_states_x2(k1_1, k1_2, st_1, st_2);
-      ChaCha20_avx2_pv.M.store_x2_last(output, plain, len, k1_1, k1_2);
+      ChaCha20_pavx2_cf.M.store_x2_last(output, plain, len, k1_1, k1_2);
     } 
   }
 
@@ -467,31 +429,29 @@ module M = {
     return (k, st);
   }
 
-  proc chacha20_more_than_256(output:W64.t, plain:W64.t, len:W32.t,
-                               key:W64.t, nonce:W64.t, counter:W32.t) : unit = {
+  proc chacha20_more_than_256(output plain len: int, key nonce: int, counter:W32.t) : unit = {
     var st, k: W32.t Array16.t Array8.t;
     
     st <@ init_x8(key, nonce, counter);
 
-    while( W32.of_int 512 \ule len) {
+    while( 512 <= len) {
       k <@ rounds_x8(st);
       k <@ sum_states_x8(k, st);
-      (output, plain, len) <@ ChaCha20_avx2_pv.M.store_x8(output, plain, len, k.[0], k.[1], k.[2], k.[3],
+      (output, plain, len) <@ ChaCha20_pavx2_cf.M.store_x8(output, plain, len, k.[0], k.[1], k.[2], k.[3],
                                                                               k.[4], k.[5], k.[6], k.[7]);
       st <@ increment_counter_x8(st);
     }
 
-    if(W32.of_int 0 \ult len) {
+    if(0 < len) {
       k <@ rounds_x8(st);
       k <@ sum_states_x8(k, st);
-      ChaCha20_avx2_pv.M.store_x8_last(output, plain, len, k.[0], k.[1], k.[2], k.[3],
+      ChaCha20_pavx2_cf.M.store_x8_last(output, plain, len, k.[0], k.[1], k.[2], k.[3],
                                                       k.[4], k.[5], k.[6], k.[7]);
     }
   }
 
-  proc chacha20_avx2(output:W64.t, plain:W64.t, len:W32.t,
-                               key:W64.t, nonce:W64.t, counter:W32.t) : unit = {
-    if (len \ult W32.of_int 257) {
+  proc chacha20_avx2(output plain len : int, key nonce: int, counter:W32.t) : unit = {
+    if (len < 257) {
       chacha20_less_than_257(output, plain, len, key, nonce, counter);
     } else {
       chacha20_more_than_256(output, plain, len, key, nonce, counter);     
@@ -510,24 +470,19 @@ qed.
 
 equiv eq_column_round :ChaCha20_pref.M.column_round ~ M.column_round : ={k} ==> ={res}.
 proof.
-(* Take few secondes *)
-(*  proc. 
+  proc. 
   conseq (_: Array16.all_eq k{1} k{2}).
   + by move=> ?????;apply Array16.all_eq_eq.
   by rewrite /all_eq /=; inline *; wp; skip. 
-qed. *)
-admitted.
+qed. 
 
 equiv eq_diagonal_round :ChaCha20_pref.M.diagonal_round ~ M.diagonal_round : ={k} ==> ={res}.
 proof.
-(* Take few secondes *)
-(*  proc. 
+  proc. 
   conseq (_: Array16.all_eq k{1} k{2}).
   + by move=> ?????;apply Array16.all_eq_eq.
   by rewrite /all_eq /=; inline *; wp; skip.
 qed.
-*)
-admitted.
 
 equiv eq_rounds : ChaCha20_pref.M.rounds ~ M.rounds : ={k} ==> ={res}.
 proof.
@@ -538,25 +493,19 @@ qed.
 
 equiv eq_column_round_x1 : ChaCha20_pref.M.column_round ~M.column_round_x1 : ={k} ==> = {res}.
 proof.
-(* Take few secondes *)
-(*  proc.
+  proc.
   conseq (_: Array16.all_eq k{1} k{2}).
   + by move=> ?????;apply Array16.all_eq_eq.
   by rewrite /all_eq /=; inline *; wp; skip.
 qed.
-*)
-admitted.
 
 equiv eq_diagonal_round_x1 : ChaCha20_pref.M.diagonal_round ~M.diagonal_round_x1 : ={k} ==> = {res}.
 proof.
-(* Take few secondes *)
-(*  proc.
+  proc.
   conseq (_: Array16.all_eq k{1} k{2}).
   + by move=> ?????;apply Array16.all_eq_eq.
   by rewrite /all_eq /=; inline *; wp; skip.
 qed.
-*)
-admitted.
 
 equiv eq_rounds_x1 : ChaCha20_pref.M.rounds ~ M.rounds_x1 : ={k} ==> ={res}.
 proof.
@@ -591,7 +540,7 @@ proof.
                       }
                     }.
   + smt(). + done.
-  + unroll for{1} 4; unroll for{1} 2; unroll for{2} 2.
+  + do 2! unroll for{1} ^while; unroll for{2} ^while.
     by interleave{1} [1:3] [32:3] 10; sim.
   while (#post /\ ={c});last by auto.
   wp; swap{1} 3 -1; conseq />.
@@ -606,7 +555,7 @@ proof.
   sim (_: true); conseq eq_column_round_x2_aux.
 qed.
 
-equiv eq_chacha20_less_than_257 : ChaCha20_avx2_pv.M.chacha20_less_than_257 ~ M.chacha20_less_than_257 :
+equiv eq_chacha20_less_than_257 : ChaCha20_pavx2_cf.M.chacha20_less_than_257 ~ M.chacha20_less_than_257 :
    ={output, plain, len, key, nonce, counter, Glob.mem} ==> 
    ={Glob.mem}.
 proof.
@@ -614,7 +563,7 @@ proof.
   seq 1 1 : (#pre /\ st_1{1} = st_1{2} /\ st_2{2} = st_1{1}.[12 <- st_1{1}.[12] + W32.of_int 1]).
   + by call eq_chacha20_init_x2; skip.
   if => //; last first.
-  + inline ChaCha20_avx2_pv.M.chacha20_less_than_128; sim.
+  + inline ChaCha20_pavx2_cf.M.chacha20_less_than_128; sim.
     swap{1} 7 -2. interleave{1} [6:1] [8:1] 2.  
     inline [-tuple] M.sum_states_x2 ChaCha20_pref.M.increment_counter; sim.
     sp 7 0.  
@@ -623,7 +572,7 @@ proof.
     + inline M.rounds_x2_aux; wp.
       by do 2! call eq_rounds; wp; skip.
     by call eq_rounds_x2; auto.
-  inline{1} ChaCha20_avx2_pv.M.chacha20_between_128_255; sim.
+  inline{1} ChaCha20_pavx2_cf.M.chacha20_between_128_255; sim.
   swap{1} 7 -2. swap{1} 10 -4. swap{1} 13 -6. 
   interleave{1} [8:1] [10:1] [12:1] [14:1] 2.
   inline ChaCha20_pref.M.increment_counter M.copy_state_x4 M.rounds_x4.
@@ -653,7 +602,7 @@ proof.
        c <- c + 1;
      } }.
     + smt(). + done.
-    + unroll for{1} 4; unroll for{1} 2; unroll for{2} 2.
+    + do 2!unroll for{1} ^while; unroll for{2} ^while.
       by interleave{1} [1:3] [32:3] 10; sim.
     while (#post /\ ={c}); last by auto.
     wp; swap{1} 3 -1; conseq />.
@@ -670,8 +619,7 @@ proof.
              Array16.all_eq k_3{1} k1{2}.[12 <- k1{2}.[12] + (of_int 2)%W32]).
   + by move=> |> ???? /Array16.all_eq_eq -> /Array16.all_eq_eq ->.
   (* FIXME : unroll for 7; unroll for 2. *)
-  unroll for{1} 7; unroll for{1} 2.
-  unroll for{2} 7; unroll for{2} 2.
+  do 2! (unroll for{1} ^while; unroll for{2} ^while). 
   rewrite /Array16.all_eq /=; wp; skip => />.
   (* FIXME: move=> &2; ring. *)
   move=> &2; split; ring.
@@ -693,7 +641,7 @@ proof.
   conseq (_: Array8.all_eq k{2} 
              (Array8.of_list witness [k1{1}; k2{1}; k3{1}; k4{1}; k5{1}; k6{1}; k7{1}; k8{1}])).
   + by move=> *;apply Array8.all_eq_eq.
-  unroll for{2} 2.
+  unroll for{2} ^while.
   by do !(wp; call (_:true) => /=; 1: by sim); wp; skip.
 qed.
 
@@ -710,7 +658,7 @@ proof.
   conseq (_: Array8.all_eq k{2} 
              (Array8.of_list witness [k1{1}; k2{1}; k3{1}; k4{1}; k5{1}; k6{1}; k7{1}; k8{1}])).
   + by move=> *;apply Array8.all_eq_eq.
-  unroll for{2} 2.
+  unroll for{2} ^while.
   by do !(wp; call (_:true) => /=; 1: by sim); wp; skip.
 qed.
 
@@ -746,7 +694,7 @@ proof.
   call eq_line_x1_x8; do 3! call eq_line_2_x1_x8; call eq_line_x1_x8; wp; skip => />.
 qed.
 
-equiv eq_body_x8 : ChaCha20_avx2_pv.M.body_x8 ~ M.body_x8 : 
+equiv eq_body_x8 : ChaCha20_pavx2_cf.M.body_x8 ~ M.body_x8 : 
    is_incr_count8 st_1{1} st{2} ==>
    is_incr_count8 res{1}.`1 res{2}.`2 /\
    res{2}.`1 = Array8.of_list witness [res{1}.`2; res{1}.`3; res{1}.`4; res{1}.`5;
@@ -804,11 +752,10 @@ proof.
     }. + smt(). + done.
     + interleave{1} [1:1] [5:1] [9:1] [13:1] [17:1] [21:1] [25:1] [29:1] 1.
       interleave{1} [9:2] [12:2] [15:2] [18:2] [21:2] [24:2] [27:2] [30:2] 1.
-      (* FIXME unroll for{1} 10 12 14 16 18 20 22 24. *)
-      wp; unroll for{1} 24; unroll for{1} 22; unroll for{1} 20; unroll for{1} 18; unroll for{1} 16;
-        unroll for{1} 14; unroll for{1} 12; unroll for{1} 10.
+
+      wp; do 8! unroll for{1} ^while.
       interleave{1} [9:3] [40:3] [71:3] [102:3] [133:3] [164:3] [195:3] [226:3] 10.
-      by unroll for{2} 3; sim.
+      by unroll for{2} ^while; sim.
     inline M.rounds_x8;wp.
     while (={c} /\ #post);last by auto.
     wp; conseq />.
@@ -844,15 +791,15 @@ proof.
     by do 2! call eq_double_quarter_round_x1_x8; skip.
   seq 8 1 : (#pre).  
   + conseq />; inline M.sum_states_x8.      
-    unroll for{2} 4.
+    unroll for{2} ^while.
     do !(wp; call (_:true) =>/=;1: by sim); wp; skip => />.
     by move=> &1 ? 8?; apply Array8.all_eq_eq.
   conseq />; inline *; rewrite /is_incr_count8.
-  unroll for{2} 3; wp; skip=> &1 &2 [#] -> /Array8.ext_eq_all /> ?.
+  unroll for{2} ^while; wp; skip=> &1 &2 [#] -> /Array8.ext_eq_all /> ?.
   by apply Array8.all_eq_eq; rewrite /Array8.all_eq /=.
 qed.
 
-equiv eq_chacha20_more_than_256 : ChaCha20_avx2_pv.M.chacha20_more_than_256 ~ M.chacha20_more_than_256 :
+equiv eq_chacha20_more_than_256 : ChaCha20_pavx2_cf.M.chacha20_more_than_256 ~ M.chacha20_more_than_256 :
    ={output, plain, len, key, nonce, counter, Glob.mem} ==> 
    ={Glob.mem}.
 proof.
@@ -864,15 +811,15 @@ proof.
     move=> &2 st; rewrite /is_incr_count8.
     by apply Array8.all_eq_eq => />; rewrite set_notmod.
   transitivity* {2} {
-    while (W32.of_int 512 \ule len) {                          
+    while (512 <= len) {                          
       (k,st) <@ M.body_x8(st);
-      (output, plain, len) <@ ChaCha20_avx2_pv.M.store_x8(output, plain, len, 
+      (output, plain, len) <@ ChaCha20_pavx2_cf.M.store_x8(output, plain, len, 
                                                           k.[0], k.[1], k.[2], k.[3], 
                                                           k.[4], k.[5], k.[6], k.[7]);
     }
-    if (W32.zero \ult len) {   
+    if (0 < len) {   
       (k,st) <@ M.body_x8(st);                                  
-      ChaCha20_avx2_pv.M.store_x8_last(output, plain, len, k.[0], k.[1], k.[2], k.[3], 
+      ChaCha20_pavx2_cf.M.store_x8_last(output, plain, len, k.[0], k.[1], k.[2], k.[3], 
                                                      k.[4], k.[5], k.[6], k.[7]);
     }
   }; [1:smt () |2: done]; last first.
@@ -881,7 +828,7 @@ proof.
       inline [-tuple] M.body_x8. 
       by swap{1} 4 1, {1}[5..6] 1, {1} [6..8] 1; sim.
     if => //.
-    by inline [-tuple] M.increment_counter_x8 M.body_x8; unroll for{1} 6; sim.
+    by inline [-tuple] M.increment_counter_x8 M.body_x8; unroll for{1} ^while; sim.
   seq 1 1 : (#pre).
   + while (#pre); last by auto.
     call (_: ={Glob.mem}) => /=; 1:sim. 
@@ -891,7 +838,7 @@ proof.
   by call eq_body_x8; skip;rewrite /is_incr_count8 => |> &2 _ ??? ->.
 qed.
 
-equiv eq_chacha20_avx2 : ChaCha20_avx2_pv.M.chacha20_avx2 ~ M.chacha20_avx2 :
+equiv eq_chacha20_avx2 : ChaCha20_pavx2_cf.M.chacha20_avx2 ~ M.chacha20_avx2 :
    ={output, plain, len, key, nonce, counter, Glob.mem} ==> 
    ={Glob.mem}.
 proof.
@@ -899,6 +846,20 @@ proof.
   if => //; 1: by call eq_chacha20_less_than_257; auto.
   by call eq_chacha20_more_than_256;auto.  
 qed.
+
+equiv eq_pref_pavx2_chacha20 : ChaCha20_pref.M.chacha20_ref ~ M.chacha20_avx2 :
+   ={output, plain, len, key, nonce, counter, Glob.mem} /\ 0 <= len{1} ==> 
+   ={Glob.mem}. 
+proof.
+  transitivity ChaCha20_pavx2_cf.M.chacha20_avx2 
+    (={output, plain, len, key, nonce, counter, Glob.mem} /\ 0 <= len{1} ==> ={Glob.mem})
+    (={output, plain, len, key, nonce, counter, Glob.mem} ==> ={Glob.mem}).
+  + smt(). + done.
+  + by apply pref_pavx2_cf_chacha20.
+  by apply eq_chacha20_avx2.
+qed.
+
+
 
   
 
