@@ -183,6 +183,9 @@ abstract theory WArray.
 
   (* ------------------------------------------------- *)
 
+  op init8 (f:int -> W8.t) = 
+    init f.
+
   op init16 (f:int -> W16.t) =
     init (fun i => f (i %/ 2) \bits8 (i%%2)).
 
