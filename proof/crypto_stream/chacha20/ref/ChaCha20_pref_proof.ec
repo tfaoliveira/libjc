@@ -250,10 +250,11 @@ hoare store_spec output0 plain0 len0 k0 mem0 : M.store :
 proof.
   proc; inline *; wp => /=.
   pose len1 := min 64 len0.
-  sp 1.
-  seq 2 : (#pre /\ 
+  sp 2.
+  seq 2 : (#{/~k8}pre /\ 
            forall j, 0 <= j < len1 => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain0 + j)).
-  + while (#pre /\ 0 <= i <= len1 /\ forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain0 + j)).  
+  + while (#{/~k8}pre /\ 0 <= i <= len1 /\ 
+            forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain0 + j)).  
     + wp; skip; smt (WArray64.get_setE).
     by wp; skip => /#.
   while (0 <= i <= len1 /\ output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ 0 <= len0 /\
@@ -285,7 +286,6 @@ proof.
   by rewrite (nth_loads_8 (min 64 len0)).
 qed.
   
-
 hoare sum_states_spec k0 st0 : M.sum_states : 
   k = k0 /\ st = st0
   ==>
@@ -385,5 +385,32 @@ proof.
   have ->> : len0 = 0 by smt().
   rewrite {2}/loads_8 /= cats0 => <<-.
   by rewrite size_loads_8 (max_ler _ _ H) => ->. 
+qed.
+
+(* ----------------------------------------------------------------------------------------- *)
+(* Extra spec usefull for other part of the proof                                            *)
+
+phoare store_pref_spec output0 plain0 len0 k0 mem0 : [ChaCha20_pref.M.store : 
+  output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
+  0 <= len /\ inv_ptr output plain len 
+  ==>
+  inv_ptr res.`1 res.`2 res.`3 /\ res = (output0 + min 64 len0, plain0 + min 64 len0, len0 - min 64 len0) /\
+  forall j, 
+    Glob.mem.[j] =
+      if in_range output0 (min 64 len0) j then
+        let j = j - output0 in
+        (init32 (fun (i0 : int) => k0.[i0])).[j] `^` mem0.[plain0 + j]
+      else mem0.[j]]= 1%r.
+proof.
+  proc; inline *; wp.
+  while (0 <= i <= min 64 len /\ 
+    forall j, Glob.mem.[j] = if in_range output i j then k8.[j - output] else mem0.[j]) (min 64 len - i).
+  + move=> z;wp; skip => /> &hr h0i _ hj hi; split; 2: smt().
+    split; 1: smt().
+    by move=> j; rewrite storeW8E get_setE hj; smt().
+  wp; while(0 <= i <= min 64 len /\
+    forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` loadW8 Glob.mem (plain + j)) (min 64 len - i).
+  + move=> z;wp; skip => />; smt (WArray64.get_setE).
+  by wp; skip => /> /#.
 qed.
 

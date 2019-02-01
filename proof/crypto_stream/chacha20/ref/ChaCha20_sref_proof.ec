@@ -56,41 +56,6 @@ module M = {
 
 end ChaCha20_srefi.
 
-lemma get_storesE m p l j: (stores m p l).[j] = if p <= j < p + size l then nth W8.zero l (j - p) else m.[j].
-proof.
-  elim: l m p => [ | w l hrec] m p.
-  + by rewrite /stores /= /#.
-  rewrite stores_cons hrec /= get_setE.  smt (size_ge0).
-qed.
-  
-lemma get_storeW32E m p (w:W32.t) j :
-  (storeW32 m p w).[j] = if p <= j < p + 4 then w \bits8 (j - p) else m.[j].
-proof. rewrite storeW32E /= get_storesE /= /#. qed.
-
-phoare store_pref_spec output0 plain0 len0 k0 mem0 : [ChaCha20_pref.M.store : 
-  output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
-  0 <= len /\ inv_ptr output plain len 
-  ==>
-  inv_ptr res.`1 res.`2 res.`3 /\ res = (output0 + min 64 len0, plain0 + min 64 len0, len0 - min 64 len0) /\
-  forall j, 
-    Glob.mem.[j] =
-      if in_range output0 (min 64 len0) j then
-        let j = j - output0 in
-        (init32 (fun (i0 : int) => k0.[i0])).[j] `^` mem0.[plain0 + j]
-      else mem0.[j]]= 1%r.
-proof.
-  proc; inline *; wp.
-  while (0 <= i <= min 64 len /\ 
-    forall j, Glob.mem.[j] = if in_range output i j then k8.[j - output] else mem0.[j]) (min 64 len - i).
-  + move=> z;wp; skip => /> &hr h0i _ hj hi; split; 2: smt().
-    split; 1: smt().
-    by move=> j; rewrite storeW8E get_setE hj; smt().
-  wp; while(0 <= i <= min 64 len /\
-    forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` loadW8 Glob.mem (plain + j)) (min 64 len - i).
-  + move=> z;wp; skip => />; smt (WArray64.get_setE).
-  by wp; skip => /> /#.
-qed.
-
 phoare store_srefi_spec output0 plain0 len0 k0 mem0 : [ChaCha20_srefi.M.store : 
   output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
   64 <= len /\ inv_ptr output plain len 
@@ -157,9 +122,6 @@ proof.
   move=> mem j0; split; 1: smt().
   move=> ???; have ->> /= : j0 = len{hr}; smt().
 qed.
-
-(* FIXME: move this *)
-axiom mem_eq_ext (m1 m2:global_mem_t) : (forall j, m1.[j] = m2.[j]) => m1 = m2.
 
 equiv eq_store32_pref_srefi len0 : ChaCha20_pref.M.store ~ ChaCha20_srefi.M.store :
   ={output, plain, len, k, Glob.mem} /\ len{1} = len0 /\ (inv_ptr output plain len){1} /\ 64 <= len{1} ==> 

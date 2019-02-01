@@ -17,6 +17,8 @@ type global_mem_t.
 op "_.[_]" : global_mem_t -> address -> W8.t.
 op "_.[_<-_]" : global_mem_t -> address -> W8.t -> global_mem_t.
 
+axiom mem_eq_ext (m1 m2:global_mem_t) : (forall j, m1.[j] = m2.[j]) => m1 = m2.
+
 axiom get_setE m x y w : 
   m.[x <- w].[y] = if y = x then w else m.[y].
 
@@ -60,6 +62,13 @@ proof.
   by rewrite stores_cons hrec allocated8_setE.
 qed.
 
+lemma get_storesE m p l j: (stores m p l).[j] = if p <= j < p + size l then nth W8.zero l (j - p) else m.[j].
+proof.
+  elim: l m p => [ | w l hrec] m p.
+  + by rewrite /stores /= /#.
+  rewrite stores_cons hrec /= get_setE.  smt (size_ge0).
+qed.
+  
 (* ------------------------------------------------------------------- *)
 op loadW8   (m : global_mem_t) (a : address) = m.[a].
 
@@ -193,6 +202,10 @@ lemma store4u8 mem ptr w0 w1 w2 w3 :
        (ptr + 2) w2)
     (ptr + 3) w3.
 proof. by rewrite storeW32E !storeW8E. qed.
+
+lemma get_storeW32E m p (w:W32.t) j :
+  (storeW32 m p w).[j] = if p <= j < p + 4 then w \bits8 (j - p) else m.[j].
+proof. rewrite storeW32E /= get_storesE /= /#. qed.
 
 (* ------------------------------------------------------------------- *)
 (* Global Memory                                                       *)

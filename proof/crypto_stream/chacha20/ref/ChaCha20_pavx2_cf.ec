@@ -4,11 +4,7 @@ require import WArray64.
 require import ChaCha20_pref.
 
 module M = {
-    
-  proc store_last (output plain len: int, k :W32.t Array16.t) : unit = {
-    ChaCha20_pref.M.store (output, plain, len, k);
-  }
-  
+      
   proc store_x2 (output plain len: int, k_1 k_2: W32.t Array16.t) : int * int * int = {
     (output, plain, len) <@ ChaCha20_pref.M.store (output, plain, len, k_1);
     (output, plain, len) <@ ChaCha20_pref.M.store (output, plain, len, k_2);
@@ -22,7 +18,7 @@ module M = {
       (output, plain, len) <@ ChaCha20_pref.M.store (output, plain, len, r);
       r <- k_2;
     }
-    store_last (output, plain, len, r);
+    ChaCha20_pref.M.store (output, plain, len, r);
   }
   
   proc store_x4 (output plain len: int, k_1 k_2 k_3 k_4: W32.t Array16.t) : int * int * int = {
@@ -201,10 +197,10 @@ module M = {
     return (k, st1);
   }
 
-  proc chacha20_ref_loop (output plain len: int, st : W32.t Array16.t) : unit = {
+  proc chacha20_ref_loop (output plain len: int, st_1 : W32.t Array16.t) : unit = {
      var k:W32.t Array16.t;
      while (0 < len) {
-      (k, st) <@ chacha20_body(st);
+      (k, st_1) <@ chacha20_body(st_1);
       (output, plain, len) <@ ChaCha20_pref.M.store (output, plain, len, k);
     }
     return ();
