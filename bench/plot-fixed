@@ -1,0 +1,49 @@
+#!/bin/bash
+
+if [ "$#" -eq 0 ]; then
+ echo "usage: ./plot-fixed (curve25519) (base_cycles|cycles) (jazz|hacl|openssl|boringssl)"
+ exit
+fi
+
+operation="$1"
+type="$2"
+filter="$3"
+
+id=${3//[(|)]/_}
+csv=data/$1_$2_$id.csv
+gnu=data/$1_$2_$id.gnu
+png=data/$1_$2_$id.svg
+
+idx=0
+
+echo -n "" > $csv
+
+for file in $( ls data/*${operation}*.data | egrep "${filter}" )
+do
+ filef=${file//data\//}
+ filef=${filef//\.data/}
+ echo -n "${filef}," >> $csv
+ egrep -o " $type - [0-9]+" "$file" |
+ awk '{print $3}' |
+ sort | head -n1  >> $csv
+done
+
+
+#if [ $idx -gt 0 ]; then
+
+# echo "set term svg enhanced background rgb 'white'" > $gnu
+# echo "set output \"$png\"" >> $gnu
+
+# echo -n "plot " >> $gnu
+# while [ $idx -gt 1 ]
+# do
+#  idx=$((idx-1))
+#  title=${list[$idx]//_/\\_}
+#  echo "\"${list[$idx]}\" using 1:2 title '$title' with lines, \\"  >> $gnu
+# done
+# title=${list[0]//_/\\_}
+# echo "\"${list[0]}\" using 1:2 title '$title' with lines"  >> $gnu
+#fi
+
+#gnuplot $gnu
+

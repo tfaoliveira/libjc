@@ -9,7 +9,7 @@ ls data/crypto_onetimeauth_poly1305_* | xargs rm
 ./sync libsodium
 ./sync hacl_star
 
-## run benchmarks... this should take some time
+## run benchmarks... this can take some time
 ./bench poly1305
 
 # move openssl static results to openssl static avx2
