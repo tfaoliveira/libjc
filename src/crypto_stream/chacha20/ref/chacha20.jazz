@@ -129,7 +129,7 @@ fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u
 }
 
 
-
+/*
 fn store(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k15) -> stack u64, stack u64, stack u32
 {
   inline int i;
@@ -155,6 +155,87 @@ fn store(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k
   for i=12 to 16
   { k[i] ^= (u32)[plain + 4*i];
     (u32)[output + 4*i] = k[i]; }
+
+  output, plain, len = update_ptr(output, plain, len, 64);
+
+  s_output = output;
+  s_plain = plain;
+  s_len = len;
+
+  return s_output, s_plain, s_len;
+}
+*/
+
+/*
+fn store(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k15) -> stack u64, stack u64, stack u32
+{
+  inline int i;
+  // stack u32[3] s_k;
+  reg u64[8] kk;
+  reg u64 output, plain, aux;
+  reg u32 len;
+
+  for i=0 to 8
+  { kk[i] = (64u)((i == 7) ? k15 : k[2*i+1]);
+    kk[i] <<= 32;
+    aux = (64u)k[2*i];
+    kk[i] ^= aux; }
+
+  output = s_output;
+  plain = s_plain;
+  len = s_len;
+
+  for i=0 to 8
+  { kk[i] ^= (u64)[plain + 8*i];
+    (u64)[output + 8*i] = kk[i]; }
+
+  output, plain, len = update_ptr(output, plain, len, 64);
+
+  s_output = output;
+  s_plain = plain;
+  s_len = len;
+
+  return s_output, s_plain, s_len;
+}
+*/
+
+fn store(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k15) -> stack u64, stack u64, stack u32
+{
+  inline int i;
+  reg u64[8] kk;
+  reg u64 output, plain, aux;
+  reg u32 len;
+
+  // i = 0 : 1 dead
+  kk[0] = (64u) k[1];
+  kk[0] <<= 32;
+  aux = (64u)k[0];
+  kk[0] ^= aux;
+  plain = s_plain;
+  kk[0] ^= (u64)[plain + 8*0];
+
+  // i = 1 : 2 dead
+  kk[1] = (64u) k[3];
+  kk[1] <<= 32;
+  aux = (64u)k[2];
+  kk[1] ^= aux;
+  kk[1] ^= (u64)[plain + 8*1];
+  output = s_output;
+  (u64)[output + 8*0] = kk[0];
+
+  for i=2 to 8
+  {
+    kk[i] = (64u)((i == 7) ? k15 : k[2*i+1]);
+    kk[i] <<= 32;
+    aux = (64u)k[2*i];
+    kk[i] ^= aux;
+    kk[i] ^= (u64)[plain + 8*i];
+    (u64)[output + 8*(i-1)] = kk[i-1];
+  }
+
+  (u64)[output + 8*7] = kk[7];
+
+  len = s_len;
 
   output, plain, len = update_ptr(output, plain, len, 64);
 
