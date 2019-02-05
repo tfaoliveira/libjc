@@ -10,12 +10,14 @@ end W8List.
 export W8List.
 
 (* -------------------------------------------------------------------- *)
-type address = W64.t.
+type address = int.
 
 type global_mem_t.
   
 op "_.[_]" : global_mem_t -> address -> W8.t.
 op "_.[_<-_]" : global_mem_t -> address -> W8.t -> global_mem_t.
+
+axiom mem_eq_ext (m1 m2:global_mem_t) : (forall j, m1.[j] = m2.[j]) => m1 = m2.
 
 axiom get_setE m x y w : 
   m.[x <- w].[y] = if y = x then w else m.[y].
@@ -37,7 +39,7 @@ axiom allocated8_setE y w m x: allocated8 m.[y<-w] x = allocated8 m x.
 (* ------------------------------------------------------------------- *)
 
 op stores (m : global_mem_t) (a : address) (w : W8.t list) =
-  foldl (fun (m:global_mem_t) i => m.[a + W64.of_int i <- w.[i]]) m (iota_ 0 (size w)).
+  foldl (fun (m:global_mem_t) i => m.[a + i <- w.[i]]) m (iota_ 0 (size w)).
 
 lemma foldl_in_eq (f1 f2:'a -> 'b -> 'a) (s:'b list) a : 
    (forall a b, b \in s => f1 a b = f2 a b) => foldl f1 a s = foldl f2 a s.
@@ -46,7 +48,7 @@ proof.
   by rewrite hin // hrec // => ?? h;apply hin;rewrite h.
 qed.
 
-lemma stores_cons m a w ws : stores m a (w::ws) = stores (m.[a <- w]) (a+ W64.of_int 1) ws.
+lemma stores_cons m a w ws : stores m a (w::ws) = stores (m.[a <- w]) (a + 1) ws.
 proof.
   rewrite /stores /= iota_add 1:// 1:List.size_ge0.
   rewrite foldl_cat (addzC 0 1) iota_addl /=.
@@ -60,34 +62,41 @@ proof.
   by rewrite stores_cons hrec allocated8_setE.
 qed.
 
+lemma get_storesE m p l j: (stores m p l).[j] = if p <= j < p + size l then nth W8.zero l (j - p) else m.[j].
+proof.
+  elim: l m p => [ | w l hrec] m p.
+  + by rewrite /stores /= /#.
+  rewrite stores_cons hrec /= get_setE.  smt (size_ge0).
+qed.
+  
 (* ------------------------------------------------------------------- *)
 op loadW8   (m : global_mem_t) (a : address) = m.[a].
 
 op loadW16  (m : global_mem_t) (a : address) = 
-  pack2_t (W2u8.Pack.init (fun i => m.[a + W64.of_int i])).
+  pack2_t (W2u8.Pack.init (fun i => m.[a + i])).
 
 op loadW32  (m : global_mem_t) (a : address) = 
-  pack4_t (W4u8.Pack.init (fun i => m.[a + W64.of_int i])).
+  pack4_t (W4u8.Pack.init (fun i => m.[a + i])).
 
 op loadW64  (m : global_mem_t) (a : address) = 
-  pack8_t (W8u8.Pack.init (fun i => m.[a + W64.of_int i])).
+  pack8_t (W8u8.Pack.init (fun i => m.[a + i])).
 
 op loadW128 (m : global_mem_t) (a : address) = 
-  pack16_t (W16u8.Pack.init (fun i => m.[a + W64.of_int i])).
+  pack16_t (W16u8.Pack.init (fun i => m.[a + i])).
 
 op loadW256 (m : global_mem_t) (a : address) = 
-  pack32_t (W32u8.Pack.init (fun i => m.[a + W64.of_int i])).
+  pack32_t (W32u8.Pack.init (fun i => m.[a + i])).
 
 lemma loadW32_bits8 m p i : 0 <= i < 4 =>
-  loadW32 m p \bits8 i = loadW8 m (p + W64.of_int i).
+  loadW32 m p \bits8 i = loadW8 m (p + i).
 proof. by move=> hi;rewrite /loadW32 pack4bE // initiE. qed.
 
 lemma loadW128_bits8 m p i : 0 <= i < 16 =>
-  loadW128 m p \bits8 i = loadW8 m (p + W64.of_int i).
+  loadW128 m p \bits8 i = loadW8 m (p + i).
 proof. by move=> hi;rewrite /loadW128 pack16bE // initiE. qed.
 
 lemma loadW128_bits32 m p i : 0 <= i < 4 =>
-  loadW128 m p \bits32 i = loadW32 m (p + W64.of_int i * W64.of_int 4).
+  loadW128 m p \bits32 i = loadW32 m (p + i * 4).
 proof. 
   move=> hi; rewrite /loadW128 /loadW32.
   apply W32.wordP => j hj.
@@ -95,21 +104,21 @@ proof.
   rewrite pack16wE; 1:by apply W4u32.in_bound. 
   rewrite initiE /=; 1:by apply divz_cmp => //=;apply W4u32.in_bound.
   have -> : i * 32 = (i * 4) * 8 by ring. 
-  by rewrite modzMDl divzMDl // -addrA. 
+  by rewrite modzMDl divzMDl // -addzA. 
 qed.
 
 lemma load4u8 mem p : 
   pack4
     [loadW8 mem p;
-     loadW8 mem (p + W64.of_int 1);
-     loadW8 mem (p + W64.of_int 2);
-     loadW8 mem (p + W64.of_int 3)] =
+     loadW8 mem (p + 1);
+     loadW8 mem (p + 2);
+     loadW8 mem (p + 3)] =
   loadW32 mem p.
 proof.
   have -> : W4u8.Pack.of_list
-          [loadW8 mem p; loadW8 mem (p + (of_int 1)%W64);
-           loadW8 mem (p + (of_int 2)%W64); loadW8 mem (p + (of_int 3)%W64)] =
-         W4u8.Pack.init (fun i => loadW8 mem (p + W64.of_int i)).
+          [loadW8 mem p; loadW8 mem (p + 1);
+           loadW8 mem (p + 2); loadW8 mem (p + 3)] =
+         W4u8.Pack.init (fun i => loadW8 mem (p + i)).
   + by apply W4u8.Pack.all_eqP; rewrite /all_eq.
   apply (can_inj _ _ W4u8.unpack8K); apply W4u8.Pack.packP => i hi.
   by rewrite pack4K initiE.
@@ -118,15 +127,15 @@ qed.
 lemma load4u32 mem p : 
   pack4
     [loadW32 mem p;
-     loadW32 mem (p + W64.of_int 4);
-     loadW32 mem (p + W64.of_int 8);
-     loadW32 mem (p + W64.of_int 12)] =
+     loadW32 mem (p + 4);
+     loadW32 mem (p + 8);
+     loadW32 mem (p + 12)] =
   loadW128 mem p.
 proof.
   have -> : W4u32.Pack.of_list
-          [loadW32 mem p; loadW32 mem (p + (of_int 4)%W64);
-           loadW32 mem (p + (of_int 8)%W64); loadW32 mem (p + (of_int 12)%W64)] =
-         W4u32.Pack.init (fun i => loadW32 mem (p + W64.of_int (i * 4))).
+          [loadW32 mem p; loadW32 mem (p + 4);
+           loadW32 mem (p + 8); loadW32 mem (p + 12)] =
+         W4u32.Pack.init (fun i => loadW32 mem (p + i * 4)).
   + by apply W4u32.Pack.all_eqP; rewrite /all_eq.
   apply (can_inj _ _ W4u32.unpack32K); apply W4u32.Pack.packP => i hi.
   by rewrite pack4K initiE //=  get_unpack32 // loadW128_bits32.
@@ -174,9 +183,9 @@ lemma store4u32 mem ptr w0 w1 w2 w3 :
     (storeW32 
        (storeW32 
           (storeW32 mem ptr w0) 
-          (ptr + W64.of_int 4) w1) 
-       (ptr + W64.of_int 8) w2)
-    (ptr + W64.of_int 12) w3.
+          (ptr + 4) w1) 
+       (ptr + 8) w2)
+    (ptr + 12) w3.
 proof.
   rewrite storeW128E !storeW32E.
   rewrite /W4u8.Pack.to_list /mkseq /= /stores /=.
@@ -189,10 +198,14 @@ lemma store4u8 mem ptr w0 w1 w2 w3 :
     (storeW8 
        (storeW8 
           (storeW8 mem ptr w0) 
-          (ptr + W64.of_int 1) w1) 
-       (ptr + W64.of_int 2) w2)
-    (ptr + W64.of_int 3) w3.
+          (ptr + 1) w1) 
+       (ptr + 2) w2)
+    (ptr + 3) w3.
 proof. by rewrite storeW32E !storeW8E. qed.
+
+lemma get_storeW32E m p (w:W32.t) j :
+  (storeW32 m p w).[j] = if p <= j < p + 4 then w \bits8 (j - p) else m.[j].
+proof. rewrite storeW32E /= get_storesE /= /#. qed.
 
 (* ------------------------------------------------------------------- *)
 (* Global Memory                                                       *)
@@ -205,17 +218,17 @@ module Glob = {
 (* Safety                                                              *)
 
 op is_align (ws:wsize) (a:address) = 
-  wsize_i ws %| to_uint a.
+  wsize_i ws %| a.
 
-op allocated (m:global_mem_t) (p:W64.t) (N:int) : bool = 
-  forall i, 0 <= i < N => allocated8 m (p + W64.of_int i).
+op allocated (m:global_mem_t) (p:address) (N:int) : bool = 
+  forall i, 0 <= i < N => allocated8 m (p + i).
 
-op is_valid (m:global_mem_t) (a:W64.t) (ws:wsize) = 
+op is_valid (m:global_mem_t) (a:address) (ws:wsize) = 
   allocated m a (wsize_i ws) /\ is_align ws a
 axiomatized by is_validE.
 
-op valid_range (w:wsize) (mem:global_mem_t) (ptr:W64.t) (len:int) =
-  forall i, 0 <= i < len => is_valid mem (ptr + W64.of_int (wsize_i w * i)) w.
+op valid_range (w:wsize) (mem:global_mem_t) (ptr:address) (len:int) =
+  forall i, 0 <= i < len => is_valid mem (ptr + wsize_i w * i) w.
 
 (* ------------------------------------------------------------------- *)
 
@@ -226,11 +239,9 @@ proof.
 qed.
 
 lemma is_align_add w ptr ofs: 
-  wsize_i w %| W64.to_uint ofs => is_align w ptr => is_align w (ptr + ofs).
+  wsize_i w %| ofs => is_align w ptr => is_align w (ptr + ofs).
 proof.
-  rewrite /is_align W64.to_uintD => h1 h2. 
-  have c1 := W64.to_uint_cmp ptr; have c2 := W64.to_uint_cmp ofs.
-  by apply dvdmodz => //; apply dvdzD.
+  by rewrite /is_align => h1 h2; apply dvdzD.
 qed.
 
 (* ------------------------------------------------------------------- *)
@@ -262,11 +273,9 @@ lemma is_valid_valid_range w1 w2 mem ptr :
 proof.
   rewrite /valid_range is_validE => hw [ha hia] i hi.
   rewrite is_validE is_align_add /=.
-  + by rewrite of_uintK;apply dvdmodz => //; apply modzMr.
+  + by apply modzMr. 
   + by apply: is_align_le hia.
-  move=> k hk /=;apply ha;split.
-  + smt (gt0_wsize_i).
-  move=> ?.
+  move=> k hk /=;rewrite -addzA;apply ha;split;[smt (gt0_wsize_i)|move=> ?].
   apply: (ltr_le_trans ((i + 1) * wsize_i w1)); 1: smt ().
   rewrite (divz_eq (wsize_i w2) (wsize_i w1)). 
   smt (modz_cmp gt0_wsize_i).
@@ -286,8 +295,8 @@ proof.
   move=> /(is_valid_valid_range _ _ _ _ hw) /(_ (i %% dw) _) /=.
   + by apply modz_cmp.  
   have <- := divzK _ _ (div_le_wsize _ _ hw); rewrite -/dw.
-  have -> : dw * wsize_i w1 * (i %/ dw) + wsize_i w1 * (i %% dw) = 
-            wsize_i w1 * ((i %/ dw) * dw + i %% dw) by ring.
+  have -> : ptr + dw * wsize_i w1 * (i %/ dw) + wsize_i w1 * (i %% dw) = 
+            ptr + wsize_i w1 * ((i %/ dw) * dw + i %% dw) by ring.
   by rewrite -divz_eq.
 qed.
 
@@ -308,7 +317,7 @@ proof.
     move=> ?;apply ltz_divRL => //; 1: by apply div_le_wsize. 
     by have := divz_eq i (wsize_i w1); have := modz_cmp i (wsize_i w1) _ => // /#.
   rewrite is_validE; move => [] /(_ (i%%wsize_i w1) _); 1: by apply modz_cmp.
-  by rewrite /= mulzC -divz_eq.
+  by rewrite mulzC -addzA -divz_eq.
 qed.
   
 lemma valid_range_size_ge w1 w2 mem ptr len1 len2 :
@@ -321,7 +330,7 @@ proof.
   move=> hia hw hl hv.
   have {hv} hv:= valid_range_le _ _ _ _ _ hl hv.
   move=> i hi; apply (valid_range_is_valid w1) => //.
-  + by apply is_align_add => //;rewrite W64.of_uintK dvdmodz 1://; apply modzMr.
+  + by apply is_align_add => //; apply modzMr.
   move=> k hk /=.
   have gt0_dw : 0 < wsize_i w2 %/ wsize_i w1.
   + by apply ltz_divRL => //; apply div_le_wsize.
@@ -330,17 +339,17 @@ proof.
     move=> ?;apply (ltr_le_trans (wsize_i w2 %/ wsize_i w1 * (i + 1))).
     + smt(). 
     by apply ler_wpmul2l;[apply ltzW | smt()].
-  rewrite Ring.IntID.mulrDr -mulzA (mulzC(wsize_i w1)) divzK //.
+  rewrite Ring.IntID.mulrDr -mulzA (mulzC(wsize_i w1)) divzK ?addzA //.
   by apply div_le_wsize.
 qed.
 
 lemma valid_range_add (k:int) w mem ptr len :
   0 <= k <= len =>   
   valid_range w mem ptr len =>
-  valid_range w mem (ptr + W64.of_int (k * wsize_i w)) (len - k).
+  valid_range w mem (ptr + k * wsize_i w) (len - k).
 proof.
   move=> hk hv i hi /=. 
-  have -> : k * wsize_i w + wsize_i w * i = wsize_i w * (k + i) by ring.
+  have -> : ptr + k * wsize_i w + wsize_i w * i = ptr + wsize_i w * (k + i) by ring.
   apply hv => /#.
 qed.
 
@@ -348,7 +357,7 @@ lemma valid_range_add_split p n w mem ptr :
   0 <= p <= n =>
   valid_range w mem ptr n =>
   valid_range w mem ptr p /\
-  valid_range w mem (ptr + W64.of_int (p * wsize_i w)) (n - p).
+  valid_range w mem (ptr + p * wsize_i w) (n - p).
 proof.
   move=> hp hv; split.
   + by apply: valid_range_le hv;case hp.

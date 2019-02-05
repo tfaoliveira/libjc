@@ -106,23 +106,23 @@ poly1305_avx:
 	vpmuludq	528(%rsp), %xmm0, %xmm0
 	vmovdqu	%xmm0, 448(%rsp)
 	vpbroadcastq	464(%rsp), %xmm0
-	vmovdqu	%xmm0, 320(%rsp)
+	vmovdqu	%xmm0, 176(%rsp)
 	vpbroadcastq	480(%rsp), %xmm0
-	vmovdqu	%xmm0, 336(%rsp)
+	vmovdqu	%xmm0, 192(%rsp)
 	vpbroadcastq	496(%rsp), %xmm0
-	vmovdqu	%xmm0, 352(%rsp)
+	vmovdqu	%xmm0, 208(%rsp)
 	vpbroadcastq	512(%rsp), %xmm0
-	vmovdqu	%xmm0, 368(%rsp)
+	vmovdqu	%xmm0, 224(%rsp)
 	vpbroadcastq	528(%rsp), %xmm0
-	vmovdqu	%xmm0, 384(%rsp)
+	vmovdqu	%xmm0, 240(%rsp)
 	vpbroadcastq	400(%rsp), %xmm0
-	vmovdqu	%xmm0, 256(%rsp)
+	vmovdqu	%xmm0, 112(%rsp)
 	vpbroadcastq	416(%rsp), %xmm0
-	vmovdqu	%xmm0, 272(%rsp)
+	vmovdqu	%xmm0, 128(%rsp)
 	vpbroadcastq	432(%rsp), %xmm0
-	vmovdqu	%xmm0, 288(%rsp)
+	vmovdqu	%xmm0, 144(%rsp)
 	vpbroadcastq	448(%rsp), %xmm0
-	vmovdqu	%xmm0, 304(%rsp)
+	vmovdqu	%xmm0, 160(%rsp)
 	movq	%r11, %rbx
 	imulq	%r12, %rbx
 	movq	%r11, %rax
@@ -185,55 +185,55 @@ poly1305_avx:
 	adcq	$0, %r12
 	movq	%rax, %rdx
 	andq	$67108863, %rdx
-	movq	%rdx, 176(%rsp)
+	movq	%rdx, 320(%rsp)
 	movq	%rax, %rdx
 	shrq	$26, %rdx
 	andq	$67108863, %rdx
-	movq	%rdx, 192(%rsp)
+	movq	%rdx, 336(%rsp)
 	shrdq	$52, %r15, %rax
 	movq	%rax, %rdx
 	andq	$67108863, %rax
-	movq	%rax, 208(%rsp)
+	movq	%rax, 352(%rsp)
 	shrq	$26, %rdx
 	andq	$67108863, %rdx
-	movq	%rdx, 224(%rsp)
+	movq	%rdx, 368(%rsp)
 	movq	%r15, %rax
 	shrdq	$40, %r12, %rax
-	movq	%rax, 240(%rsp)
-	movq	176(%rsp), %rax
-	movq	%rax, 184(%rsp)
-	movq	192(%rsp), %rax
-	movq	%rax, 200(%rsp)
-	movq	208(%rsp), %rax
-	movq	%rax, 216(%rsp)
-	movq	224(%rsp), %rax
-	movq	%rax, 232(%rsp)
-	movq	240(%rsp), %rax
-	movq	%rax, 248(%rsp)
+	movq	%rax, 384(%rsp)
+	movq	320(%rsp), %rax
+	movq	%rax, 328(%rsp)
+	movq	336(%rsp), %rax
+	movq	%rax, 344(%rsp)
+	movq	352(%rsp), %rax
+	movq	%rax, 360(%rsp)
+	movq	368(%rsp), %rax
+	movq	%rax, 376(%rsp)
+	movq	384(%rsp), %rax
+	movq	%rax, 392(%rsp)
 	vpbroadcastq	five_u64(%rip), %xmm0
-	vpmuludq	192(%rsp), %xmm0, %xmm1
-	vmovdqu	%xmm1, 112(%rsp)
-	vpmuludq	208(%rsp), %xmm0, %xmm1
-	vmovdqu	%xmm1, 128(%rsp)
-	vpmuludq	224(%rsp), %xmm0, %xmm1
-	vmovdqu	%xmm1, 144(%rsp)
-	vpmuludq	240(%rsp), %xmm0, %xmm0
-	vmovdqu	%xmm0, 160(%rsp)
+	vpmuludq	336(%rsp), %xmm0, %xmm1
+	vmovdqu	%xmm1, 256(%rsp)
+	vpmuludq	352(%rsp), %xmm0, %xmm1
+	vmovdqu	%xmm1, 272(%rsp)
+	vpmuludq	368(%rsp), %xmm0, %xmm1
+	vmovdqu	%xmm1, 288(%rsp)
+	vpmuludq	384(%rsp), %xmm0, %xmm0
+	vmovdqu	%xmm0, 304(%rsp)
 	vpbroadcastq	zero_u64(%rip), %xmm0
 	vpbroadcastq	zero_u64(%rip), %xmm1
 	vpbroadcastq	zero_u64(%rip), %xmm2
 	vpbroadcastq	zero_u64(%rip), %xmm3
 	vpbroadcastq	zero_u64(%rip), %xmm4
 	vpbroadcastq	mask26_u64(%rip), %xmm5
-	vmovdqu	%xmm5, (%rsp)
-	vpbroadcastq	bit25_u64(%rip), %xmm5
 	vmovdqu	%xmm5, 96(%rsp)
+	vpbroadcastq	bit25_u64(%rip), %xmm5
+	vmovdqu	%xmm5, 80(%rsp)
 	jmp 	Lpoly1305_avx$13
 .p2align 5,,
 Lpoly1305_avx$14:
-	vmovdqu	176(%rsp), %xmm5
-	vmovdqu	192(%rsp), %xmm6
-	vmovdqu	160(%rsp), %xmm7
+	vmovdqu	320(%rsp), %xmm5
+	vmovdqu	336(%rsp), %xmm6
+	vmovdqu	304(%rsp), %xmm7
 	vpmuludq	%xmm5, %xmm0, %xmm8
 	vpmuludq	%xmm6, %xmm0, %xmm9
 	vpmuludq	%xmm5, %xmm1, %xmm10
@@ -250,7 +250,7 @@ Lpoly1305_avx$14:
 	vpmuludq	%xmm7, %xmm1, %xmm6
 	vmovdqu	(%rsi), %xmm12
 	vpmuludq	%xmm7, %xmm2, %xmm13
-	vmovdqu	208(%rsp), %xmm14
+	vmovdqu	352(%rsp), %xmm14
 	vpmuludq	%xmm7, %xmm3, %xmm15
 	vpmuludq	%xmm7, %xmm4, %xmm7
 	vpaddq	%xmm6, %xmm8, %xmm6
@@ -264,7 +264,7 @@ Lpoly1305_avx$14:
 	vpunpckhqdq	%xmm8, %xmm12, %xmm8
 	vpmuludq	%xmm14, %xmm2, %xmm12
 	vpaddq	%xmm11, %xmm10, %xmm10
-	vmovdqu	144(%rsp), %xmm11
+	vmovdqu	288(%rsp), %xmm11
 	vpaddq	%xmm15, %xmm7, %xmm7
 	vpaddq	%xmm12, %xmm5, %xmm5
 	vpmuludq	%xmm11, %xmm2, %xmm2
@@ -272,66 +272,66 @@ Lpoly1305_avx$14:
 	vmovdqu	%xmm13, %xmm14
 	vpmuludq	%xmm11, %xmm4, %xmm11
 	vpsrlq	$26, %xmm14, %xmm14
-	vpand	(%rsp), %xmm14, %xmm14
-	vmovdqu	224(%rsp), %xmm15
+	vpand	96(%rsp), %xmm14, %xmm14
+	vmovdqu	368(%rsp), %xmm15
 	vpaddq	%xmm2, %xmm6, %xmm2
 	vpaddq	%xmm12, %xmm9, %xmm6
 	vpaddq	%xmm10, %xmm11, %xmm9
 	vpmuludq	%xmm15, %xmm0, %xmm10
 	vmovdqu	%xmm8, %xmm11
-	vmovdqu	%xmm9, 48(%rsp)
+	vmovdqu	%xmm9, 32(%rsp)
 	vpmuludq	%xmm15, %xmm1, %xmm1
 	vpsrlq	$40, %xmm11, %xmm9
-	vpor	96(%rsp), %xmm9, %xmm9
-	vmovdqu	128(%rsp), %xmm11
+	vpor	80(%rsp), %xmm9, %xmm9
+	vmovdqu	272(%rsp), %xmm11
 	vpaddq	%xmm10, %xmm7, %xmm7
 	vpaddq	%xmm1, %xmm5, %xmm1
 	vpmuludq	%xmm11, %xmm3, %xmm3
 	vmovdqu	%xmm13, %xmm5
-	vmovdqu	%xmm7, 64(%rsp)
+	vmovdqu	%xmm7, 48(%rsp)
 	vpmuludq	%xmm11, %xmm4, %xmm7
 	vpsrlq	$52, %xmm5, %xmm5
 	vpaddq	%xmm3, %xmm2, %xmm2
 	vpaddq	%xmm6, %xmm7, %xmm3
-	vpmuludq	112(%rsp), %xmm4, %xmm4
+	vpmuludq	256(%rsp), %xmm4, %xmm4
 	vpsllq	$12, %xmm8, %xmm6
-	vmovdqu	%xmm3, 32(%rsp)
-	vpmuludq	240(%rsp), %xmm0, %xmm0
+	vmovdqu	%xmm3, 16(%rsp)
+	vpmuludq	384(%rsp), %xmm0, %xmm0
 	vpor	%xmm6, %xmm5, %xmm3
-	vmovdqu	(%rsp), %xmm5
+	vmovdqu	96(%rsp), %xmm5
 	vpaddq	%xmm4, %xmm2, %xmm2
 	vpaddq	%xmm0, %xmm1, %xmm0
-	vmovdqu	%xmm2, 16(%rsp)
-	vmovdqu	%xmm0, 80(%rsp)
+	vmovdqu	%xmm2, (%rsp)
+	vmovdqu	%xmm0, 64(%rsp)
 	vpand	%xmm5, %xmm13, %xmm0
 	vpand	%xmm5, %xmm3, %xmm1
 	vpsrlq	$14, %xmm8, %xmm2
 	vpand	%xmm5, %xmm2, %xmm2
-	vmovdqu	320(%rsp), %xmm3
-	vmovdqu	336(%rsp), %xmm4
-	vmovdqu	304(%rsp), %xmm5
+	vmovdqu	176(%rsp), %xmm3
+	vmovdqu	192(%rsp), %xmm4
+	vmovdqu	160(%rsp), %xmm5
 	vpmuludq	%xmm3, %xmm0, %xmm6
 	vpmuludq	%xmm4, %xmm0, %xmm7
 	vpmuludq	%xmm3, %xmm14, %xmm8
 	vpmuludq	%xmm4, %xmm14, %xmm10
 	vpmuludq	%xmm3, %xmm1, %xmm11
 	vpmuludq	%xmm4, %xmm1, %xmm12
-	vpaddq	16(%rsp), %xmm6, %xmm6
+	vpaddq	(%rsp), %xmm6, %xmm6
 	vpmuludq	%xmm3, %xmm2, %xmm13
-	vpaddq	32(%rsp), %xmm8, %xmm8
+	vpaddq	16(%rsp), %xmm8, %xmm8
 	vpaddq	%xmm7, %xmm8, %xmm7
 	vpmuludq	%xmm4, %xmm2, %xmm4
-	vpaddq	48(%rsp), %xmm11, %xmm8
+	vpaddq	32(%rsp), %xmm11, %xmm8
 	vpaddq	%xmm10, %xmm8, %xmm8
 	vpmuludq	%xmm3, %xmm9, %xmm3
-	vpaddq	64(%rsp), %xmm13, %xmm10
+	vpaddq	48(%rsp), %xmm13, %xmm10
 	vpaddq	%xmm12, %xmm10, %xmm10
-	vpaddq	80(%rsp), %xmm3, %xmm3
+	vpaddq	64(%rsp), %xmm3, %xmm3
 	vpaddq	%xmm4, %xmm3, %xmm3
 	vpmuludq	%xmm5, %xmm14, %xmm4
 	vmovdqu	32(%rsi), %xmm11
 	vpmuludq	%xmm5, %xmm1, %xmm12
-	vmovdqu	352(%rsp), %xmm13
+	vmovdqu	208(%rsp), %xmm13
 	vpmuludq	%xmm5, %xmm2, %xmm15
 	vpmuludq	%xmm5, %xmm9, %xmm5
 	vpaddq	%xmm4, %xmm6, %xmm4
@@ -345,7 +345,7 @@ Lpoly1305_avx$14:
 	vpunpckhqdq	%xmm6, %xmm11, %xmm6
 	vpmuludq	%xmm13, %xmm1, %xmm11
 	vpaddq	%xmm10, %xmm8, %xmm8
-	vmovdqu	288(%rsp), %xmm10
+	vmovdqu	144(%rsp), %xmm10
 	vpaddq	%xmm15, %xmm5, %xmm5
 	vpaddq	%xmm11, %xmm3, %xmm3
 	vpmuludq	%xmm10, %xmm1, %xmm1
@@ -353,8 +353,8 @@ Lpoly1305_avx$14:
 	vmovdqu	%xmm12, %xmm13
 	vpmuludq	%xmm10, %xmm9, %xmm10
 	vpsrlq	$26, %xmm13, %xmm13
-	vpand	(%rsp), %xmm13, %xmm13
-	vmovdqu	368(%rsp), %xmm15
+	vpand	96(%rsp), %xmm13, %xmm13
+	vmovdqu	224(%rsp), %xmm15
 	vpaddq	%xmm1, %xmm4, %xmm1
 	vpaddq	%xmm11, %xmm7, %xmm4
 	vpaddq	%xmm8, %xmm10, %xmm7
@@ -362,8 +362,8 @@ Lpoly1305_avx$14:
 	vmovdqu	%xmm6, %xmm10
 	vpmuludq	%xmm15, %xmm14, %xmm11
 	vpsrlq	$40, %xmm10, %xmm10
-	vpor	96(%rsp), %xmm10, %xmm10
-	vmovdqu	272(%rsp), %xmm14
+	vpor	80(%rsp), %xmm10, %xmm10
+	vmovdqu	128(%rsp), %xmm14
 	vpaddq	%xmm8, %xmm5, %xmm5
 	vpaddq	%xmm11, %xmm3, %xmm3
 	vpmuludq	%xmm14, %xmm2, %xmm2
@@ -372,11 +372,11 @@ Lpoly1305_avx$14:
 	vpsrlq	$52, %xmm8, %xmm8
 	vpaddq	%xmm2, %xmm1, %xmm1
 	vpaddq	%xmm4, %xmm11, %xmm2
-	vpmuludq	256(%rsp), %xmm9, %xmm4
+	vpmuludq	112(%rsp), %xmm9, %xmm4
 	vpsllq	$12, %xmm6, %xmm9
-	vpmuludq	384(%rsp), %xmm0, %xmm0
+	vpmuludq	240(%rsp), %xmm0, %xmm0
 	vpor	%xmm9, %xmm8, %xmm8
-	vmovdqu	(%rsp), %xmm9
+	vmovdqu	96(%rsp), %xmm9
 	vpaddq	%xmm4, %xmm1, %xmm1
 	vmovdqu	%xmm5, %xmm5
 	vpaddq	%xmm0, %xmm3, %xmm0
@@ -470,7 +470,7 @@ Lpoly1305_avx$13:
 	vpaddq	%xmm4, %xmm2, %xmm2
 	vmovdqu	%xmm7, %xmm7
 	vpaddq	%xmm0, %xmm1, %xmm0
-	vmovdqu	(%rsp), %xmm1
+	vmovdqu	96(%rsp), %xmm1
 	vpsrlq	$26, %xmm2, %xmm4
 	vpsrlq	$26, %xmm7, %xmm5
 	vpand	%xmm1, %xmm2, %xmm2

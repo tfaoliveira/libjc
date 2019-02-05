@@ -224,7 +224,7 @@ op interleave_gen ['elem]
    (src1 src2: W128.t) = 
   let l1 = split_v (get src1) in
   let l2 = split_v (get src2) in
-  pack_2v (interleave l1 l2).
+  pack_2v (_interleave l1 l2).
 
 op get_lo_2u64 (w:W128.t) = w \bits64 0.
 op get_hi_2u64 (w:W128.t) = w \bits64 1.
@@ -294,10 +294,13 @@ op x86_VPSRLDQ_128 (w1:W128.t) (w2:W8.t) =
 op x86_VPSRLDQ_256 (w1:W256.t) (w2:W8.t) = 
   map (fun w => x86_VPSRLDQ_128 w w2) w1.
 (* ------------------------------------------------------------------- *)
+abbrev [-printing] (\vshr32u256) (w1:W256.t) (w2:W8.t) = x86_VPSRL_8u32 w1 w2.
+abbrev [-printing] (\vshl32u256) (w1:W256.t) (w2:W8.t) = x86_VPSLL_8u32 w1 w2.
 
 abbrev [-printing] (\vshr64u256) (w1:W256.t) (w2:W8.t) = x86_VPSRL_4u64 w1 w2.
 abbrev [-printing] (\vshl64u256) (w1:W256.t) (w2:W8.t) = x86_VPSLL_4u64 w1 w2.
 
+abbrev [-printing] (\vadd32u256) (w1 w2:W256.t) = x86_VPADD_8u32 w1 w2.
 abbrev [-printing] (\vadd64u256) (w1 w2:W256.t) = x86_VPADD_4u64 w1 w2.
 (*abbrev [-printing] (\vsub64u256) (w1:W256.t) (w2:W8.t) = x86_VPSUB_4u64 w1 w2.*)
   

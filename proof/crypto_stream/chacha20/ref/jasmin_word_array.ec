@@ -183,6 +183,9 @@ abstract theory WArray.
 
   (* ------------------------------------------------- *)
 
+  op init8 (f:int -> W8.t) = 
+    init f.
+
   op init16 (f:int -> W16.t) =
     init (fun i => f (i %/ 2) \bits8 (i%%2)).
 
@@ -200,7 +203,7 @@ abstract theory WArray.
 
 end WArray.
 
-clone export WArray as WArray0  with op size <- 0.
+(*clone export WArray as WArray0  with op size <- 0.
 clone export WArray as WArray1  with op size <- 1.
 clone export WArray as WArray2  with op size <- 2.
 clone export WArray as WArray3  with op size <- 3.
@@ -254,7 +257,7 @@ clone export WArray as WArray46  with op size <- 46.
 clone export WArray as WArray47  with op size <- 47.
 clone export WArray as WArray48  with op size <- 48.
 clone export WArray as WArray49  with op size <- 49. 
-
+*)
 
 
  

@@ -21,14 +21,15 @@ module M = {
     st.[3] <- (W32.of_int 1797285236);
     i <- 0;
     while (i < 8) {
-      k.[i] <- (loadW32 Glob.mem (key + (W64.of_int (4 * i))));
+      k.[i] <- (loadW32 Glob.mem (W64.to_uint (key + (W64.of_int (4 * i)))));
       st.[(4 + i)] <- k.[i];
       i <- i + 1;
     }
     st.[12] <- counter;
     i <- 0;
     while (i < 3) {
-      n.[i] <- (loadW32 Glob.mem (nonce + (W64.of_int (4 * i))));
+      n.[i] <-
+      (loadW32 Glob.mem (W64.to_uint (nonce + (W64.of_int (4 * i)))));
       st.[(13 + i)] <- n.[i];
       i <- i + 1;
     }
@@ -160,8 +161,11 @@ module M = {
     len <- s_len;
     i <- 0;
     while (i < 12) {
-      k.[i] <- (k.[i] `^` (loadW32 Glob.mem (plain + (W64.of_int (4 * i)))));
-      Glob.mem <- storeW32 Glob.mem (output + (W64.of_int (4 * i))) k.[i];
+      k.[i] <-
+      (k.[i] `^` (loadW32 Glob.mem (W64.to_uint (plain + (W64.of_int (4 * i))))));
+      Glob.mem <-
+      storeW32 Glob.mem (W64.to_uint (output + (W64.of_int (4 * i)))) 
+      k.[i];
       i <- i + 1;
     }
     i <- 0;
@@ -172,8 +176,11 @@ module M = {
     k.[15] <- k15;
     i <- 12;
     while (i < 16) {
-      k.[i] <- (k.[i] `^` (loadW32 Glob.mem (plain + (W64.of_int (4 * i)))));
-      Glob.mem <- storeW32 Glob.mem (output + (W64.of_int (4 * i))) k.[i];
+      k.[i] <-
+      (k.[i] `^` (loadW32 Glob.mem (W64.to_uint (plain + (W64.of_int (4 * i))))));
+      Glob.mem <-
+      storeW32 Glob.mem (W64.to_uint (output + (W64.of_int (4 * i)))) 
+      k.[i];
       i <- i + 1;
     }
     (output, plain, len) <@ update_ptr (output, plain, len, 64);
@@ -209,10 +216,10 @@ module M = {
     j <- (W64.of_int 0);
     
     while (((truncateu32 j) \ult len)) {
-      pi <- (loadW8 Glob.mem (plain + j));
+      pi <- (loadW8 Glob.mem (W64.to_uint (plain + j)));
       pi <-
       (pi `^` (get8 (WArray64.init32 (fun i => s_k.[i])) (W64.to_uint j)));
-      Glob.mem <- storeW8 Glob.mem (output + j) pi;
+      Glob.mem <- storeW8 Glob.mem (W64.to_uint (output + j)) pi;
       j <- (j + (W64.of_int 1));
     }
     return ();

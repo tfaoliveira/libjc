@@ -15,7 +15,7 @@ abbrev zero_u64 = W64.of_int 0.
 
 
 module M = {
-  proc load (p:W64.t) : W64.t Array2.t = {
+  proc load2 (p:W64.t) : W64.t Array2.t = {
     
     var x:W64.t Array2.t;
     x <- witness;
@@ -81,7 +81,7 @@ module M = {
     return (h);
   }
   
-  proc store (p:W64.t, x:W64.t Array3.t) : unit = {
+  proc store2 (p:W64.t, x:W64.t Array2.t) : unit = {
     
     
     
@@ -104,7 +104,7 @@ module M = {
     return (r);
   }
   
-  proc add (h:W64.t Array3.t, s:W64.t Array2.t) : W64.t Array3.t = {
+  proc add2 (h:W64.t Array2.t, s:W64.t Array2.t) : W64.t Array2.t = {
     var aux: bool;
     var aux_0: W64.t;
     
@@ -183,34 +183,35 @@ module M = {
     return (h);
   }
   
-  proc freeze (h:W64.t Array3.t) : W64.t Array3.t = {
+  proc freeze (h:W64.t Array3.t) : W64.t Array2.t = {
     var aux: bool;
     var aux_0: W64.t;
     
-    var g:W64.t Array3.t;
+    var g:W64.t Array2.t;
+    var g2:W64.t;
     var cf:bool;
     var mask:W64.t;
     var  _0:bool;
     g <- witness;
-    g <- h;
+    g.[0] <- h.[0];
+    g.[1] <- h.[1];
+    g2 <- h.[2];
     (aux, aux_0) <- addc_64 g.[0] (W64.of_int 5) false;
     cf <- aux;
     g.[0] <- aux_0;
     (aux, aux_0) <- addc_64 g.[1] (W64.of_int 0) cf;
     cf <- aux;
     g.[1] <- aux_0;
-    (aux, aux_0) <- addc_64 g.[2] (W64.of_int 0) cf;
-     _0 <- aux;
-    g.[2] <- aux_0;
-    g.[2] <- (g.[2] `>>` (W8.of_int 2));
-    mask <- (- g.[2]);
+    ( _0, g2) <- addc_64 g2 (W64.of_int 0) cf;
+    g2 <- (g2 `>>` (W8.of_int 2));
+    mask <- (- g2);
     g.[0] <- (g.[0] `^` h.[0]);
     g.[1] <- (g.[1] `^` h.[1]);
     g.[0] <- (g.[0] `&` mask);
     g.[1] <- (g.[1] `&` mask);
-    h.[0] <- (h.[0] `^` g.[0]);
-    h.[1] <- (h.[1] `^` g.[1]);
-    return (h);
+    g.[0] <- (g.[0] `^` h.[0]);
+    g.[1] <- (g.[1] `^` h.[1]);
+    return (g);
   }
   
   proc poly1305_ref3_setup (k:W64.t) : W64.t Array3.t * W64.t Array3.t *
@@ -251,7 +252,9 @@ module M = {
   proc poly1305_ref3_last (out:W64.t, in_0:W64.t, inlen:W64.t, k:W64.t,
                            h:W64.t Array3.t, r:W64.t Array3.t) : unit = {
     
+    var h2:W64.t Array2.t;
     var s:W64.t Array2.t;
+    h2 <- witness;
     s <- witness;
     if (((W64.of_int 0) \ult inlen)) {
       h <@ load_last_add (h, in_0, inlen);
@@ -259,10 +262,10 @@ module M = {
     } else {
       
     }
-    h <@ freeze (h);
-    s <@ load (k);
-    h <@ add (h, s);
-    store (out, h);
+    h2 <@ freeze (h);
+    s <@ load2 (k);
+    h2 <@ add2 (h2, s);
+    store2 (out, h2);
     return ();
   }
   
