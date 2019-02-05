@@ -348,7 +348,7 @@ proof.
 qed.
 
 equiv eq_chacha20_srefi_sref : ChaCha20_srefi.M.chacha20_ref ~ ChaCha20_sref.M.chacha20_ref : 
-  key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\  (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
+  key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
   (good_ptr output plain len){1} /\
   ={Glob.mem, counter} 
