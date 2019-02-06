@@ -1,1 +1,1 @@
-crypto_scalarmult curve25519 boringssl/static
+crypto_scalarmult curve25519 jazz/ref4

@@ -30,6 +30,8 @@ do
  sort | head -n1  >> $csv
 done
 
+sort -t, -g -k2 -o $csv $csv
+
 echo "" > $gnu
 echo "set term svg enhanced background rgb 'white'" >> $gnu
 echo "set title \"curve25519\"" >> $gnu

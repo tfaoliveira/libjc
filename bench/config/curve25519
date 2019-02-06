@@ -7,3 +7,4 @@ crypto_scalarmult curve25519 openssl/static_no_asm
 crypto_scalarmult curve25519 boringssl/static
 crypto_scalarmult curve25519 hacl_star/gcc
 #crypto_scalarmult curve25519 hacl_star/compcert
+crypto_scalarmult curve25519 jazz/ref4
