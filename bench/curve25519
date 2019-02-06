@@ -3,27 +3,23 @@
 # remove previous benchmarks files related to curve25519
 ls data/crypto_scalarmult_curve25519_* | xargs rm
 
-## copy implementations and bindings into supercop-*
-#./sync
-#./sync openssl
-#./sync boringssl
-#./sync hacl_star
+# copy implementations and bindings into supercop-*
+./sync
+./sync openssl
+./sync boringssl
+./sync hacl_star
 
-## run benchmarks... this can take some time
-#./bench curve25519
+# run benchmarks... this can take some time
+./bench curve25519
 
-### move openssl static results to openssl static avx2
-#mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_avx2.data
+# move openssl static results to openssl static avx2
+mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_avx2.data
 
-### disable avx and avx2 and avx run openssl benchmarks
-#(export OPENSSL_ia32cap=~0x201000000000000000 && ./bench curve25519-openssl && unset OPENSSL_ia32cap)
-#mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_ref.data
+# disable avx and avx2 and avx run openssl benchmarks
+(export OPENSSL_ia32cap=~0x201000000000000000 && ./bench curve25519-openssl && unset OPENSSL_ia32cap)
+mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_ref.data
 
-### disable avx2 and run openssl benchmarks
-#(export OPENSSL_ia32cap=~0x200000000000000000 && ./bench curve25519-openssl && unset OPENSSL_ia32cap)
-#mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_avx.data
-
-## plot
+# plot
 ./plot-fixed curve25519 cycles
 
 today=`date "+%Y%m%d"`

@@ -1,8 +1,5 @@
-crypto_scalarmult curve25519 ref
-crypto_scalarmult curve25519 ref10
 crypto_scalarmult curve25519 amd64-51
 crypto_scalarmult curve25519 amd64-64
-crypto_scalarmult curve25519 donna
 crypto_scalarmult curve25519 donna_c64
 crypto_scalarmult curve25519 sandy2x
 crypto_scalarmult curve25519 openssl/static

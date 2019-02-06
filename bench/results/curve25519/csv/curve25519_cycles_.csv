@@ -1,0 +1,9 @@
+amd64-51, 149302
+amd64-64, 148746
+boringssl-static, 164810
+donna-c64, 163818
+hacl-star-gcc, 157132
+openssl-static-avx2, 123032
+openssl-static-no-asm, 163428
+openssl-static-ref, 153356
+sandy2x, 139540

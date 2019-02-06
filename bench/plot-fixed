@@ -9,10 +9,10 @@ operation="$1"
 type="$2"
 filter="$3"
 
-id=${3//[(|)]/_}
+id=${3//[(|)]/_} # removes (, | and ) from the filter
 csv=data/$1_$2_$id.csv
 gnu=data/$1_$2_$id.gnu
-png=data/$1_$2_$id.svg
+svg=data/$1_$2_$id.svg
 
 idx=0
 
@@ -22,28 +22,24 @@ for file in $( ls data/*${operation}*.data | egrep "${filter}" )
 do
  filef=${file//data\//}
  filef=${filef//\.data/}
- echo -n "${filef}," >> $csv
+ filef=${filef//crypto_scalarmult_curve25519_/}
+ filef=${filef//_/-}
+ echo -n "${filef}, " >> $csv
  egrep -o " $type - [0-9]+" "$file" |
  awk '{print $3}' |
  sort | head -n1  >> $csv
 done
 
+echo "" > $gnu
+echo "set term svg enhanced background rgb 'white'" >> $gnu
+echo "set title \"curve25519\"" >> $gnu
+echo "set output \"$svg\"" >> $gnu
+echo "set boxwidth 0.5 relative" >> $gnu
+echo "set style fill solid 0.5" >> $gnu
+echo "set xlabel \"implementations\"" >> $gnu
+echo "set ylabel \"cycles\"" >> $gnu
+echo "set xtics rotate" >> $gnu
+echo "plot \"$csv\" using 0:2:xticlabels(1) with boxes notitle" >> $gnu
 
-#if [ $idx -gt 0 ]; then
-
-# echo "set term svg enhanced background rgb 'white'" > $gnu
-# echo "set output \"$png\"" >> $gnu
-
-# echo -n "plot " >> $gnu
-# while [ $idx -gt 1 ]
-# do
-#  idx=$((idx-1))
-#  title=${list[$idx]//_/\\_}
-#  echo "\"${list[$idx]}\" using 1:2 title '$title' with lines, \\"  >> $gnu
-# done
-# title=${list[0]//_/\\_}
-# echo "\"${list[0]}\" using 1:2 title '$title' with lines"  >> $gnu
-#fi
-
-#gnuplot $gnu
+gnuplot $gnu
 

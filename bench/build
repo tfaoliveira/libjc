@@ -25,13 +25,13 @@ rename_lib()
 
 if [ "$#" -eq 0 ]; then
 
-  # boring ssl
+  # boring ssl # (building in release mode;gcc 8.1.0;libunwind 1.1.0(~?); breaks the build; #CHECKME)
   (mkdir -p third_party/boringssl/build/ && \
    cd third_party/boringssl/build/ && \
    export CC=/usr/local/bin/gcc &&  \
    export CXX=/usr/local/bin/g++ && \
-   cmake .. && \
-   make && \
+   cmake -DCMAKE_BUILD_TYPE=Release .. && \
+   make -k && \
    cp crypto/libcrypto.a ../../../$idir/boringssl_static.a
   )
   rename_lib boringssl_static;
