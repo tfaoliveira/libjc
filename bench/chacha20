@@ -39,6 +39,10 @@ mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_o
 ./plot chacha20 xor_cycles 512 4096 "(jazz|libsodium)"
 ./plot chacha20 xor_cycles 4096 16384 "(jazz|libsodium)"
 
+./plot chacha20 xor_cycles 16 512 "(jazz|usuba)"
+./plot chacha20 xor_cycles 512 4096 "(jazz|usuba)"
+./plot chacha20 xor_cycles 4096 16384 "(jazz|usuba)"
+
 ./plot chacha20 xor_cycles 16 512
 ./plot chacha20 xor_cycles 512 4096
 ./plot chacha20 xor_cycles 4096 16384

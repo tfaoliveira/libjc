@@ -141,8 +141,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(  0, 255,   0)'  d='M516.2,34.7 L558.4,34.7 M41.0,142.2 L80.3,140.6 L119.6,141.7 L159.0,141.7 L198.3,142.2 L237.6,141.7
-		L277.0,141.7 L316.3,141.7 L355.6,141.7 L394.9,141.7 L434.3,141.7 L473.6,141.7 L512.9,141.7  '/></g>
+	<path stroke='rgb(  0, 255,   0)'  d='M516.2,34.7 L558.4,34.7 M41.0,140.1 L80.3,140.6 L119.6,140.6 L159.0,140.6 L198.3,140.6 L237.6,141.7
+		L277.0,141.2 L316.3,141.2 L355.6,141.2 L394.9,141.2 L434.3,141.2 L473.6,141.2 L512.9,141.2  '/></g>
 	</g>
 	<g id="gnuplot_plot_2" ><title>Jasmin - ref</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -151,8 +151,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(  0,   0, 255)'  d='M516.2,52.7 L558.4,52.7 M41.0,155.0 L80.3,155.0 L119.6,155.0 L159.0,155.0 L198.3,155.6 L237.6,155.6
-		L277.0,155.6 L316.3,155.6 L355.6,155.0 L394.9,155.0 L434.3,155.0 L473.6,155.0 L512.9,155.0  '/></g>
+	<path stroke='rgb(  0,   0, 255)'  d='M516.2,52.7 L558.4,52.7 M41.0,159.3 L80.3,159.3 L119.6,159.8 L159.0,159.8 L198.3,160.4 L237.6,159.8
+		L277.0,160.4 L316.3,159.8 L355.6,159.8 L394.9,159.8 L434.3,159.8 L473.6,159.8 L512.9,160.4  '/></g>
 	</g>
 	<g id="gnuplot_plot_3" ><title>Jasmin - AVX</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -161,8 +161,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(255,   0,   0)'  d='M516.2,70.7 L558.4,70.7 M41.0,372.4 L80.3,373.5 L119.6,373.0 L159.0,373.0 L198.3,373.5 L237.6,373.5
-		L277.0,373.0 L316.3,373.0 L355.6,373.0 L394.9,373.5 L434.3,373.5 L473.6,373.0 L512.9,373.0  '/></g>
+	<path stroke='rgb(255,   0,   0)'  d='M516.2,70.7 L558.4,70.7 M41.0,372.4 L80.3,372.4 L119.6,373.0 L159.0,373.0 L198.3,373.5 L237.6,373.0
+		L277.0,373.0 L316.3,373.0 L355.6,373.0 L394.9,373.0 L434.3,373.5 L473.6,373.0 L512.9,373.0  '/></g>
 	</g>
 	<g id="gnuplot_plot_4" ><title>Libsodium (GCC 8.1)</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -171,8 +171,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(238, 130, 238)'  d='M516.2,88.7 L558.4,88.7 M41.0,417.3 L80.3,417.8 L119.6,417.3 L159.0,418.4 L198.3,417.8 L237.6,418.4
-		L277.0,418.4 L316.3,418.4 L355.6,418.4 L394.9,418.4 L434.3,418.4 L473.6,418.9 L512.9,418.4  '/></g>
+	<path stroke='rgb(238, 130, 238)'  d='M516.2,88.7 L558.4,88.7 M41.0,416.8 L80.3,417.3 L119.6,417.3 L159.0,417.3 L198.3,417.8 L237.6,417.8
+		L277.0,417.8 L316.3,417.8 L355.6,417.8 L394.9,417.8 L434.3,417.8 L473.6,417.8 L512.9,417.8  '/></g>
 	</g>
 	<g id="gnuplot_plot_5" ><title>Jasmin - AVX2</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -181,8 +181,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(  0,   0,   0)'  d='M516.2,106.7 L558.4,106.7 M41.0,433.3 L80.3,432.8 L119.6,432.8 L159.0,432.8 L198.3,432.8 L237.6,433.3
-		L277.0,433.3 L316.3,433.3 L355.6,433.3 L394.9,433.3 L434.3,432.8 L473.6,433.3 L512.9,433.3  '/></g>
+	<path stroke='rgb(  0,   0,   0)'  d='M516.2,106.7 L558.4,106.7 M41.0,433.3 L80.3,432.8 L119.6,432.8 L159.0,432.8 L198.3,432.8 L237.6,432.8
+		L277.0,432.8 L316.3,432.8 L355.6,432.8 L394.9,432.8 L434.3,432.8 L473.6,432.8 L512.9,433.3  '/></g>
 	</g>
 <g fill="none" color="#FFFFFF" stroke="rgb(  0,   0,   0)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>

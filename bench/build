@@ -77,6 +77,9 @@ if [ "$#" -eq 0 ]; then
   rename_lib hacl_star_gcc;
   rename_lib hacl_star_gcc_vec;
 
+  # usuba : not really a build... its just a copy
+  find third_party/usuba/supercop/crypto_stream/chacha20 -name "usuba*" -exec cp -r {} supercop-`cat config/version`/crypto_stream/chacha20/ \;
+
   exit
 fi
 

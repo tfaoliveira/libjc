@@ -18,3 +18,8 @@ Cycles per byte over message length. Each following section contains 3 images, t
 ![Jazz / HACL* (GCC 8.1) - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_hacl_star_4096.svg)
 ![Jazz / HACL* (GCC 8.1) - 4K to 16K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_hacl_star_16384.svg)
 
+# Jazz / usuba
+![Jazz / usuba - 16 to 512 bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_usuba_512.svg)
+![Jazz / usuba - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_usuba_4096.svg)
+![Jazz / usuba - 4K to 16K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_usuba_16384.svg)
+

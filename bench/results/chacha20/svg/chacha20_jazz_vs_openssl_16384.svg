@@ -141,8 +141,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(255, 255,   0)'  d='M516.2,34.7 L558.4,34.7 M41.0,147.0 L80.3,146.5 L119.6,147.0 L159.0,147.6 L198.3,147.0 L237.6,147.6
-		L277.0,147.6 L316.3,147.6 L355.6,147.6 L394.9,147.0 L434.3,147.0 L473.6,147.6 L512.9,147.0  '/></g>
+	<path stroke='rgb(255, 255,   0)'  d='M516.2,34.7 L558.4,34.7 M41.0,147.0 L80.3,147.0 L119.6,147.0 L159.0,147.0 L198.3,147.0 L237.6,147.0
+		L277.0,147.0 L316.3,147.0 L355.6,147.0 L394.9,147.0 L434.3,147.0 L473.6,148.1 L512.9,147.0  '/></g>
 	</g>
 	<g id="gnuplot_plot_2" ><title>Jasmin - ref</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -151,8 +151,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(  0,   0, 255)'  d='M516.2,52.7 L558.4,52.7 M41.0,155.0 L80.3,155.0 L119.6,155.0 L159.0,155.0 L198.3,155.6 L237.6,155.6
-		L277.0,155.6 L316.3,155.6 L355.6,155.0 L394.9,155.0 L434.3,155.0 L473.6,155.0 L512.9,155.0  '/></g>
+	<path stroke='rgb(  0,   0, 255)'  d='M516.2,52.7 L558.4,52.7 M41.0,159.3 L80.3,159.3 L119.6,159.8 L159.0,159.8 L198.3,160.4 L237.6,159.8
+		L277.0,160.4 L316.3,159.8 L355.6,159.8 L394.9,159.8 L434.3,159.8 L473.6,159.8 L512.9,160.4  '/></g>
 	</g>
 	<g id="gnuplot_plot_3" ><title>OpenSSL 1.1.1 stable - AVX</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -161,8 +161,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(255, 165,   0)'  d='M516.2,70.7 L558.4,70.7 M41.0,370.3 L80.3,370.3 L119.6,370.3 L159.0,370.8 L198.3,370.8 L237.6,370.8
-		L277.0,370.8 L316.3,371.4 L355.6,370.8 L394.9,370.3 L434.3,370.8 L473.6,370.8 L512.9,370.8  '/></g>
+	<path stroke='rgb(255, 165,   0)'  d='M516.2,70.7 L558.4,70.7 M41.0,369.8 L80.3,370.3 L119.6,370.3 L159.0,370.3 L198.3,370.3 L237.6,370.3
+		L277.0,370.3 L316.3,370.3 L355.6,370.3 L394.9,370.3 L434.3,370.3 L473.6,370.8 L512.9,370.8  '/></g>
 	</g>
 	<g id="gnuplot_plot_4" ><title>Jasmin - AVX</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -171,8 +171,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(255,   0,   0)'  d='M516.2,88.7 L558.4,88.7 M41.0,372.4 L80.3,373.5 L119.6,373.0 L159.0,373.0 L198.3,373.5 L237.6,373.5
-		L277.0,373.0 L316.3,373.0 L355.6,373.0 L394.9,373.5 L434.3,373.5 L473.6,373.0 L512.9,373.0  '/></g>
+	<path stroke='rgb(255,   0,   0)'  d='M516.2,88.7 L558.4,88.7 M41.0,372.4 L80.3,372.4 L119.6,373.0 L159.0,373.0 L198.3,373.5 L237.6,373.0
+		L277.0,373.0 L316.3,373.0 L355.6,373.0 L394.9,373.0 L434.3,373.5 L473.6,373.0 L512.9,373.0  '/></g>
 	</g>
 	<g id="gnuplot_plot_5" ><title>OpenSSL 1.1.1 stable - AVX2</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -181,8 +181,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(238, 130, 238)'  d='M516.2,106.7 L558.4,106.7 M41.0,432.8 L80.3,432.8 L119.6,432.8 L159.0,432.8 L198.3,432.8 L237.6,433.3
-		L277.0,433.3 L316.3,433.3 L355.6,433.3 L394.9,432.8 L434.3,432.8 L473.6,433.3 L512.9,432.8  '/></g>
+	<path stroke='rgb(238, 130, 238)'  d='M516.2,106.7 L558.4,106.7 M41.0,432.8 L80.3,432.8 L119.6,432.8 L159.0,432.8 L198.3,432.8 L237.6,432.8
+		L277.0,432.8 L316.3,432.8 L355.6,432.8 L394.9,432.8 L434.3,432.8 L473.6,433.3 L512.9,432.8  '/></g>
 	</g>
 	<g id="gnuplot_plot_6" ><title>Jasmin - AVX2</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -191,8 +191,8 @@
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb(  0,   0,   0)'  d='M516.2,124.7 L558.4,124.7 M41.0,433.3 L80.3,432.8 L119.6,432.8 L159.0,432.8 L198.3,432.8 L237.6,433.3
-		L277.0,433.3 L316.3,433.3 L355.6,433.3 L394.9,433.3 L434.3,432.8 L473.6,433.3 L512.9,433.3  '/></g>
+	<path stroke='rgb(  0,   0,   0)'  d='M516.2,124.7 L558.4,124.7 M41.0,433.3 L80.3,432.8 L119.6,432.8 L159.0,432.8 L198.3,432.8 L237.6,432.8
+		L277.0,432.8 L316.3,432.8 L355.6,432.8 L394.9,432.8 L434.3,432.8 L473.6,432.8 L512.9,433.3  '/></g>
 	</g>
 <g fill="none" color="#FFFFFF" stroke="rgb(  0,   0,   0)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
