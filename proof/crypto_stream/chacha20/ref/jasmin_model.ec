@@ -204,7 +204,7 @@ op x86_VPMULU_256 (w1 w2: W256.t) =
   map2 mulu64 w1 w2.
 
 (* FIXME: check this *)
-op x86_VPERM2I128 (w2 w1: W256.t) (i:W8.t) : W256.t = 
+op x86_VPERM2I128 (w1 w2: W256.t) (i:W8.t) : W256.t = 
   let choose = fun n =>
      if i.[n+3] then W128.zero
      else
