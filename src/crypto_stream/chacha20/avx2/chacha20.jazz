@@ -1076,6 +1076,7 @@ fn double_quarter_round_x8(reg u256[16] k, inline int a0 b0 c0 d0
   return k;
 }
 
+/*
 fn column_round_x8(reg u256[16] k, stack u256 k15 k14 s_r16 s_r8) -> reg u256[16], stack u256
 {
   k = double_quarter_round_x8(k, 0, 4, 8,  12,
@@ -1099,6 +1100,35 @@ fn diagonal_round_x8(reg u256[16] k, stack u256 k15 k14 s_r16 s_r8) -> reg u256[
                                  3, 4, 9, 14, s_r16, s_r8);
   return k, k15;
 }
+*/
+
+fn column_round_x8(reg u256[16] k, stack u256 k15 s_r16 s_r8) -> reg u256[16], stack u256
+{
+  stack u256 k_;
+
+  k = double_quarter_round_x8(k, 0, 4, 8,  12,
+                                 2, 6, 10, 14, s_r16, s_r8);
+  k[15] = k15;
+  k_ = k[14];
+
+  k = double_quarter_round_x8(k, 1, 5, 9,  13,
+                                 3, 7, 11, 15, s_r16, s_r8);
+  return k, k_;
+}
+
+fn diagonal_round_x8(reg u256[16] k, stack u256 k14 s_r16 s_r8) -> reg u256[16], stack u256
+{
+  stack u256 k_;
+
+  k = double_quarter_round_x8(k, 1, 6, 11, 12,
+                                 0, 5, 10, 15, s_r16, s_r8);
+  k[14] = k14;
+  k_ = k[15];
+
+  k = double_quarter_round_x8(k, 2, 7, 8, 13,
+                                 3, 4, 9, 14, s_r16, s_r8);
+  return k, k_;
+}
 
 
 fn rounds_x8(reg u256[16] k, stack u256 s_r16 s_r8) -> reg u256[16]
@@ -1111,8 +1141,8 @@ fn rounds_x8(reg u256[16] k, stack u256 s_r16 s_r8) -> reg u256[16]
   c = 0;
   while(c < 10)
   {
-    k, k14 = column_round_x8(k, k15, k14, s_r16, s_r8);
-    k, k15 = diagonal_round_x8(k, k15, k14, s_r16, s_r8);
+    k, k14 = column_round_x8(k, k15, s_r16, s_r8);
+    k, k15 = diagonal_round_x8(k, k14, s_r16, s_r8);
     c += 1;
   }
 

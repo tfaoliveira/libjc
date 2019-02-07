@@ -25,3 +25,6 @@
 [submodule "bench/third_party/boringssl"]
 	path = bench/third_party/boringssl
 	url = git@github.com:google/boringssl.git
+[submodule "bench/third_party/usuba"]
+	path = bench/third_party/usuba
+	url = https://github.com/DadaIsCrazy/usuba.git
