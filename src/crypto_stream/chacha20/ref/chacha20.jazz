@@ -247,7 +247,7 @@ fn store(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k
 }
 
 
-
+/*
 fn store_last(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k15)
 {
   inline int i;
@@ -276,6 +276,49 @@ fn store_last(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack 
     j += 1;
   }
 } 
+*/
+
+
+
+fn store_last(stack u64 s_output s_plain, stack u32 s_len, reg u32[16] k, stack u32 k15)
+{
+  inline int i;
+  reg u64 j output plain;
+  reg u32 t len len4;
+  stack u32[16] s_k;
+  reg u8 pi;
+
+  // copy k to stack
+  for i=0 to 15
+  { s_k[i] = k[i]; }
+  t = k15;
+  s_k[15] = t;
+
+  // store
+  output = s_output;
+  plain = s_plain;
+  len = s_len;
+
+  //len4 = len >> 2; // was causing "conflicting variables"
+  len4 = len;
+  len4 >>= 2;
+  j = 0;
+  while(j < len4)
+  {
+    t = (u32)[plain + 4*j];
+    t ^= s_k[(int)j];
+    (u32)[output + 4*j] = t;
+    j += 1;
+  }
+  j *= 4;
+  while(j < len)
+  {
+    pi = (u8)[plain + j];
+    pi ^= s_k[u8 (int)j];
+    (u8)[output + j] = pi;
+    j += 1;
+  }
+}
 
 
 
