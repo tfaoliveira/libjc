@@ -12,12 +12,12 @@ ls data/crypto_scalarmult_curve25519_* | xargs rm
 # run benchmarks... this can take some time
 ./bench curve25519
 
-# move openssl static results to openssl static avx2
-mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_avx2.data
+# move openssl static results to openssl static x25519_fe64_eligible or just fe64 (0x80100 bits 64+8 and 64+19 : man OPENSSL_ia32cap)
+mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_fe64.data
 
-# disable avx and avx2 and avx run openssl benchmarks
-(export OPENSSL_ia32cap=~0x201000000000000000 && ./bench curve25519-openssl && unset OPENSSL_ia32cap)
-mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_ref.data
+# disable x25519_fe64_eligible (adcx adox bmi2)
+(export OPENSSL_ia32cap=~0x801000000000000000000 && ./bench curve25519-openssl && unset OPENSSL_ia32cap)
+mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_disable_fe64.data
 
 # plot
 ./plot-fixed curve25519 cycles
