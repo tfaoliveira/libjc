@@ -367,6 +367,14 @@ proof.
   by do !(rewrite -W32.of_int_mod; cbv delta).
 qed.
 
+lemma g_p2_pack :
+  g_p2 = pack8[W32.of_int 2; W32.zero; W32.zero; W32.zero; W32.of_int 2; W32.zero; W32.zero; W32.zero].
+proof.
+  rewrite -(W8u32.unpack32K g_p2); congr.
+  apply W8u32.Pack.all_eq_eq; rewrite /all_eq /= !W8u32.bits32_div //; cbv delta.
+  by do !(rewrite -W32.of_int_mod; cbv delta).
+qed.
+
 lemma pack2_2u32_4u32 (w0 w1 w2 w3 : W32.t):
   pack2 [pack2 [w0; w1]; pack2 [w2; w3]] = pack4 [w0; w1; w2; w3].
 proof. by apply W128.all_eq_eq;cbv W128.all_eq (%/) (%%). qed.
@@ -435,7 +443,7 @@ proof.
   proc; conseq (_: Array4.all_eq pk (x2_ k1 k2)).
   + by move=>*; rewrite Array4.ext_eq_all.
   wp; skip => />; rewrite /Array4.all_eq /(%%) /= /x86_VPERM2I128 /x2_ /x2 /=.
-  by rewrite !W8.of_intwE /int_bit /= /(%%) /(%/) /b2i /= -!pack2_4u32_8u32. 
+  by rewrite !W8.of_intwE /int_bit /= /(%%) /(%/) /b2i /= -!pack2_4u32_8u32 /=. 
 qed.
 
 equiv eq_sum_states_x2 : ChaCha20_pavx2.M.sum_states_x2 ~ M.sum_states_x2 :
@@ -449,6 +457,17 @@ proof.
   rewrite /x2 /Array4.all_eq.
   inline *; do 2! unroll for{1} ^while; unroll for{2} ^while.
   by wp; skip => />; rewrite /x86_VPADD_8u32 /=.
+qed.
+
+equiv eq_sum_states_x4 : ChaCha20_pavx2.M.sum_states_x4 ~ M.sum_states_x4 :
+  k1{2} = (x2 k1_1 k1_2){1} /\ k2{2} = (x2 k2_1 k2_2){1} /\ st{2} = (x2 st_1 st_2){1} 
+  ==>
+  res{2}.`1 = x2 res{1}.`1 res{1}.`2 /\
+  res{2}.`2 = x2 res{1}.`3 res{1}.`4.
+proof.
+  proc => /=; wp.
+  do 2!call eq_sum_states_x2; wp; skip => />.
+  by move=> [k3 k4]; apply Array4.all_eq_eq; rewrite /x2 /Array4.all_eq /x86_VPADD_8u32 /= g_p2_pack.
 qed.
 
 module M' = {
@@ -550,14 +569,19 @@ proof.
   proc => /=.
   inline *; wp; skip => /> &1.
   rewrite /x2 /x86_VPSHUFD_256 /(%%) /(%/) /= -3!pack2_4u32_8u32 /=; cbv delta; rewrite !pack2_4u32_8u32.
-  apply Array4.all_eq_eq; rewrite /Array4.all_eq => /=.
-  rewrite /x86_VPSHUFD_128 /x86_VPSHUFD_128_B /(%%) /=.
+  by apply Array4.all_eq_eq; rewrite /Array4.all_eq.
+qed.
 
- cbv delta => />.
-  conseq (_: eq_x2 k{2} k1{1} k2{1}).
-  + by move=> *; apply eq_x2P.
-  inline *; wp; skip; cbv delta => />.
-
+equiv eq_reverse_shuffle_state : ChaCha20_pavx2.M.reverse_shuffle_state ~ M.reverse_shuffle_state :
+  k{2} = (x2 k1 k2){1} 
+  ==>
+  res{2} = x2 res{1}.`1 res{1}.`2.
+proof.
+  proc => /=.
+  inline *; wp; skip => /> &1.
+  rewrite /x2 /x86_VPSHUFD_256 /(%%) /(%/) /= -3!pack2_4u32_8u32 /=; cbv delta; rewrite !pack2_4u32_8u32.
+  by apply Array4.all_eq_eq; rewrite /Array4.all_eq.
+qed.
 
 equiv eq_diagonal_round_x2 : ChaCha20_pavx2.M.diagonal_round_x2 ~ M.diagonal_round_x2 : 
   k{2} = (x2 k1 k2){1} /\ (r16 = g_r16 /\ r8 = g_r8){2} 
@@ -565,21 +589,10 @@ equiv eq_diagonal_round_x2 : ChaCha20_pavx2.M.diagonal_round_x2 ~ M.diagonal_rou
   res{2} = x2 res{1}.`1 res{1}.`2.
 proof.
   proc => /=.
-  transitivity{2} { k <@ M.shuffle_state(k);
-                    k <@ M'.round_x2(k);
-                    k <@ M.reverse_shuffle_state(k);
-                  }
-    ( k{2} = (x2 k1 k2){1} ==> k{2} = (x2 k1 k2){1} )
-    ( ={k} /\ (r16 = g_r16 /\ r8 = g_r8){2} ==> ={k} ).
-  + smt(). + done.
-  + 
-
-  + conseq (_: eq_x2 k{2} k1{1} k2{1}).
-    + by move=> *; apply eq_x2P.
-    by inline *; wp; skip; cbv delta => &1 &2 -> /=.
-  by call eq_round_x2; skip => />.
+  call eq_reverse_shuffle_state. 
+  call eq_column_round_x2_aux.
+  by call eq_shuffle_state; skip.
 qed.
-
 
 equiv eq_rounds_x2 : ChaCha20_pavx2.M.rounds_x2 ~ M.rounds_x2 :
   k{2} = (x2 k1_1 k1_2){1}
@@ -587,14 +600,29 @@ equiv eq_rounds_x2 : ChaCha20_pavx2.M.rounds_x2 ~ M.rounds_x2 :
   res{2} = x2 res{1}.`1 res{1}.`2.
 proof.
   proc => /=.
-  while (#pre /\ (r16 = g_r16 /\ r8 = g_r8){2} /\ c{1} = to_uint c{2}).
-  + wp.
+  while (#pre /\ (r16 = g_r16 /\ r8 = g_r8){2} /\ c{1} = to_uint c{2} /\ 0 <= c{1} ); last by auto.
+  wp; call eq_diagonal_round_x2; call eq_column_round_x2; skip => /> *.
+  by rewrite ultE /= W64.to_uintD_small /= /#.
+qed.
 
-  conseq (_: Array4.all_eq k{2} (x2 k1{1} k2{1})).
-  + by move=> *; apply Array4.all_eq_eq.
-  rewrite /x2 /Array4.all_eq.
-  inline *; do 2! unroll for{1} ^while; unroll for{2} ^while.
-  by wp; skip => />; rewrite /x86_VPADD_8u32 /=.
+equiv eq_rounds_x4 : ChaCha20_pavx2.M.rounds_x4 ~ M.rounds_x4 :
+  k1{2} = (x2 k1_1 k1_2){1} /\ k2{2} = (x2 k2_1 k2_2){1}
+  ==>
+  res{2}.`1 = x2 res{1}.`1 res{1}.`2 /\
+  res{2}.`2 = x2 res{1}.`3 res{1}.`4.
+proof.
+  proc => /=.
+  while (#pre /\ (r16 = g_r16 /\ r8 = g_r8){2} /\ c{1} = to_uint c{2} /\ 0 <= c{1} ); last by auto.
+  inline ChaCha20_pavx2.M.column_round_x4 ChaCha20_pavx2.M.diagonal_round_x4 
+     M.column_round_x4 M.diagonal_round_x4 M.round_x4 
+     M.shuffle_state_x2 ChaCha20_pavx2.M.shuffle_state_x2
+     M.reverse_shuffle_state_x2 ChaCha20_pavx2.M.reverse_shuffle_state_x2.
+  wp.
+  do 2! call eq_reverse_shuffle_state; wp.
+  do 2! call eq_column_round_x2_aux; wp => /=.
+  do 2! call eq_shuffle_state; wp.
+  do 2!  call eq_column_round_x2_aux; wp; skip => /> *.
+  by rewrite ultE /= W64.to_uintD_small /= /#.
 qed.
 
 equiv eq_chacha20_less_than_257 :
@@ -611,9 +639,18 @@ proof.
             st{2} = (x2 st_1 st_2) {1} /\ (good_ptr output plain len){1} /\ ={Glob.mem}).
   + call eq_init_x2; wp; skip => />.
   if; 1: by move=> /> *; rewrite ultE.
-  + admit.
+  + call eq_store_x2_last => /=. 
+    call eq_store_x2 => /=.
+    inline M.perm_x4; wp.
+    ecall{2} (perm_x2_spec k2_1{1} k2_2{1}).
+    ecall{2} (perm_x2_spec k1_1{1} k1_2{1}); wp => /=.
+    call eq_sum_states_x4; call eq_rounds_x4 => /=.
+    inline ChaCha20_pavx2.M.copy_state_x4 M.copy_state_x4; wp; skip => /> *.
+    by apply Array4.all_eq_eq; rewrite /x86_VPADD_8u32 /Array4.all_eq /x2 /= g_p2_pack.
   call eq_store_x2_last => /=.  
   ecall{2} (perm_x2_spec k1_1{1} k1_2{1}).
   call eq_sum_states_x2.
-
+  call eq_rounds_x2.
+  by inline M.copy_state_x2; auto.
+qed.
 
