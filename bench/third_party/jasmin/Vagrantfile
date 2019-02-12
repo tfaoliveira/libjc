@@ -18,7 +18,7 @@ Vagrant.configure(2) do |config|
     opam remote add coq-released  https://coq.inria.fr/opam/released
   	opam remote add coq-core-dev  https://coq.inria.fr/opam/core-dev
 	  opam remote add coq-extra-dev https://coq.inria.fr/opam/extra-dev
-    opam pin add -n coq 8.7.2 # 8.8.2
+    opam pin add -n coq 8.8.2
     opam pin add -n coq-mathcomp-ssreflect 1.7.0
     opam install depext
     opam depext conf-m4.1
@@ -27,7 +27,7 @@ Vagrant.configure(2) do |config|
     opam install conf-ppl
     opam install apron
     (cd /home/vagrant/libjc/bench/third_party/jasmin/coqword/ && make distclean && make config && make && make install)
-    (cd /home/vagrant/libjc/bench/third_party/jasmin/jasmin/ && make clean && opam pin -y add -n jasmin `pwd`/compiler && opam install --deps-only jasmin && cd compiler && make CIL && make && sudo make install)
+    (cd /home/vagrant/libjc/bench/third_party/jasmin/jasmin/ && make clean && opam pin -y add -n jasmin `pwd`/compiler && opam install --deps-only jasmin && cd compiler && make clean && make CIL && make && sudo make install)
   SHELL
 
 end
