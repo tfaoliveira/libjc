@@ -153,8 +153,8 @@ sub dump_eval
   my $eval_r = shift;
   foreach my $k (keys %$eval_r)
   { print "$k\n";
-    dump_u256_as_u32s($_) foreach (@{$eval_r->{$k}});
-    #dump_u256_as_u64s($_) foreach (@{$eval_r->{$k}});
+    #dump_u256_as_u32s($_) foreach (@{$eval_r->{$k}});
+    dump_u256_as_u64s($_) foreach (@{$eval_r->{$k}});
     #dump_u128_as_u64s($_) foreach (@{$eval_r->{$k}});
   }
 }
