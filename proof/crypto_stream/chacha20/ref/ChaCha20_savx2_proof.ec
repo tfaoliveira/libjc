@@ -1,7 +1,7 @@
 require import AllCore List Jasmin_model Int IntDiv CoreMap.
-require import Array4 Array8 Array16.
+require import Array2 Array4 Array8 Array16.
 require import WArray64.
-require import ChaCha20_pref ChaCha20_sref_proof ChaCha20_pavx2 ChaCha20_savx2.
+require import ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref_proof ChaCha20_pavx2 ChaCha20_savx2.
 
 op x8 (k1 k2 k3 k4 k5 k6 k7 k8: W32.t Array16.t) =
   Array16.init (fun i => W8u32.pack8 [k1.[i]; k2.[i]; k3.[i]; k4.[i]; k5.[i]; k6.[i]; k7.[i]; k8.[i]]).
@@ -345,6 +345,11 @@ op x2_ (k1 k2:W32.t Array16.t) =
     W8u32.pack8 [k2.[0]; k2.[1]; k2.[2]; k2.[3]; k2.[4]; k2.[5]; k2.[6]; k2.[7]];
     W8u32.pack8 [k2.[8]; k2.[9]; k2.[10]; k2.[11]; k2.[12]; k2.[13]; k2.[14]; k2.[15]] ].
 
+op x_ (k1:W32.t Array16.t) = 
+  Array2.of_list witness [
+    W8u32.pack8 [k1.[0]; k1.[1]; k1.[2]; k1.[3]; k1.[4]; k1.[5]; k1.[6]; k1.[7]];
+    W8u32.pack8 [k1.[8]; k1.[9]; k1.[10]; k1.[11]; k1.[12]; k1.[13]; k1.[14]; k1.[15]] ].
+
 (* FIXME need more lemmas *)
 lemma g_sigma_pack : g_sigma = pack4 [g_sigma0; g_sigma1; g_sigma2; g_sigma3].
 proof.
@@ -419,23 +424,178 @@ proof.
   by rewrite pack2_2u32_4u32 pack2_4u32_8u32 g_p1_pack /x86_VPADD_8u32.
 qed.
 
+lemma get_storeW256E m p w j: 
+    (storeW256 m p w).[j] = if p <= j < p + 32 then w \bits8 j - p else m.[j].
+proof. rewrite storeW256E /= get_storesE /= /#. qed.
+
+lemma get8_pack8u32 f j: 
+  pack8_t (W8u32.Pack.init f) \bits8 j = 
+    if 0 <= j < 32 then f (j %/ 4) \bits8 (j %% 4) else W8.zero.
+proof.
+  rewrite pack8E W8.wordP => i hi.
+  rewrite bits8E /= initE hi /= initE.
+  have -> /= : (0 <= j * 8 + i < 256) <=> (0 <= j < 32) by smt().
+  case : (0 <= j < 32) => hj //=.
+  rewrite bits8E /= initE.
+  have -> : (j * 8 + i) %/ 32 = j %/4.
+  + rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA divzMDl //.
+    by rewrite (divz_small _ 32) //; smt (modz_cmp).
+  rewrite initE hi /= divz_cmp //=; congr.
+  rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA modzMDl modz_small //; smt (modz_cmp).
+qed.
+
+lemma pack8_init_shift8 (k:W32.t Array16.t) : 
+  pack8 [k.[8]; k.[9]; k.[10]; k.[11]; k.[12]; k.[13]; k.[14]; k.[15]] = 
+  pack8_t (W8u32.Pack.init (fun i => k.[8 + i])).
+proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
+
+lemma pack8_init (k:W32.t Array16.t) : 
+  pack8 [k.[0]; k.[1]; k.[2]; k.[3]; k.[4]; k.[5]; k.[6]; k.[7]] = 
+  pack8_t (W8u32.Pack.init (fun i => k.[i])).
+proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
+
+lemma store_256_xor_spec output (k1:W32.t Array16.t) mem plain j:
+  (if output + 32 <= j < output + 64 then
+     (pack8 [k1.[8]; k1.[9]; k1.[10]; k1.[11]; k1.[12]; k1.[13]; k1.[14]; k1.[15]] \bits8 j - (output + 32)) `^`
+     (loadW256 mem (plain + 32) \bits8 j - (output + 32))
+   else if output <= j < output + 32 then
+     (pack8 [k1.[0]; k1.[1]; k1.[2]; k1.[3]; k1.[4]; k1.[5]; k1.[6]; k1.[7]] \bits8 j - output) `^`
+     (loadW256 mem plain \bits8 j - output)
+   else mem.[j]) =
+   if in_range output 64 j then (init32 ("_.[_]" k1)).[j - output] `^` mem.[plain + (j - output)]
+   else mem.[j].
+proof.
+  case: (output + 32 <= j < output + 64) => hin2.
+  + have -> /= : in_range output 64 j by smt().
+    rewrite /init32 /loadW256 /= initiE; 1: smt (W64.to_uint_cmp).
+    have h1 : 0 <= j - (output + 32) < 32 by smt().
+    rewrite /= pack32bE 1:// initiE 1:// /=. 
+    have -> : plain + 32 + (j - (output + 32)) = plain + (j - output) by ring.
+    congr; rewrite pack8_init_shift8 get8_pack8u32 h1 /=.    
+    by rewrite Ring.IntID.opprD addzA divzDr 1:// dvdz_modzDr 1://;congr.
+  case:(output <= j < output + 32) => hin3.  
+  + have -> /= : in_range output 64 j by smt().
+    rewrite /init32 /loadW256 /= initiE; 1: smt (W64.to_uint_cmp).
+    have h1 : 0 <= j - output < 32 by smt().
+    rewrite /= pack8_init get8_pack8u32 h1 /=. 
+    by rewrite pack32bE 1:// initiE.
+  have -> // : !(in_range output 64 j) by smt().
+qed.
+
+phoare store_x2_spec output0 plain0 len0 k1 k2 mem0 : [ChaCha20_savx2.M.store_x2 : 
+  to_uint output = output0 /\ to_uint plain = plain0 /\ to_uint len = len0 /\ k = x2_ k1 k2 /\ Glob.mem = mem0 /\ 
+  128 <= to_uint len /\ (good_ptr output0 plain0 len0) 
+  ==>
+  to_uint res.`1 = output0 + 128 /\
+  to_uint res.`2 = plain0 + 128 /\
+  to_uint res.`3 = len0 - 128 /\
+  forall j, 
+    Glob.mem.[j] =
+      if in_range output0 64 j then
+        let j = j - output0 in
+        (init32 (fun (i0 : int) => k1.[i0])).[j] `^` mem0.[plain0 + j]
+      else if in_range (output0 + 64) 64 j then
+        let j = j - (output0 + 64) in
+        (init32 (fun (i0 : int) => k2.[i0])).[j] `^` mem0.[plain0 + 64 + j]
+      else mem0.[j]]= 1%r.
+proof.
+  proc => /=.
+  inline M.update_ptr; wp.
+  do 2! unroll for ^while.
+  wp; skip => &hr /> hlen hout hplain.
+  rewrite !W64.to_uintD_small /= 1..-2:/#.
+  rewrite W32.to_uintB 1:uleE /= 1:/# => j.
+  rewrite !get_storeW256E /x2_ /=.
+  case: (in_range (to_uint output{hr}) 64 j) => hin.
+  + have -> : !(to_uint output{hr} + 96 <= j < to_uint output{hr} + 128) by smt().
+    have -> /= : !(to_uint output{hr} + 64 <= j < to_uint output{hr} + 96) by smt().
+    by rewrite store_256_xor_spec hin.
+  have -> : !(to_uint output{hr} + 32 <= j < to_uint output{hr} + 64) by smt().
+  have -> /= : !(to_uint output{hr} <= j < to_uint output{hr} + 32) by smt().
+  by rewrite -store_256_xor_spec.
+qed.
+
 equiv eq_store_x2 : ChaCha20_pavx2_cf.M.store_x2 ~ M.store_x2 :
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
-  (good_ptr output plain len){1} /\
+  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ 128 <= len{1} /\
   k{2} = (x2_ k_1 k_2){1} 
   ==>
   res{1}.`1 = to_uint res{2}.`1 /\ res{1}.`2 = to_uint res{2}.`2 /\ res{1}.`3 = to_uint res{2}.`3 /\ 
-  (good_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ ={Glob.mem}.
+  (good_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ (inv_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ ={Glob.mem}.
 proof.
-admitted.
+  proc *.
+  ecall{2} (store_x2_spec output{1} plain{1} len{1} k_1{1} k_2{1} Glob.mem{2}).
+  inline{1} ChaCha20_pavx2_cf.M.store_x2; wp.
+  ecall{1} (store_pref_spec output0{1} plain0{1} len0{1} k_2{1} Glob.mem{1}).
+  ecall{1} (store_pref_spec output0{1} plain0{1} len0{1} k_1{1} Glob.mem{1}). 
+  wp; skip => |>.
+  move=> &1 &2 3! -> hgood hinv hlen ?; split; 1: smt().
+  move=> _ mem1.
+  have -> : min 64 (to_uint len{2}) = 64 by smt().
+  move=> hinv1 hmem1; split; 1: smt().
+  move=> _ mem2.
+  have -> /= :  min 64 (to_uint len{2} - 64) = 64 by smt().
+  rewrite hlen /= => hinv2 hmem2 r mem 3!-> hmem /=; split; 1: smt().
+  apply mem_eq_ext => j; smt().
+qed.
+
+phoare store_last_spec output0 plain0 len0 k0 mem0 : 
+   [ M.store_last :
+      output0 = to_uint output /\ plain0 = to_uint plain /\ len0 = to_uint len /\ mem0 = Glob.mem /\
+      k = x_ k0 /\ (good_ptr output0 plain0 len0) /\ (inv_ptr output0 plain0 len0) /\ len0 < 64 
+      ==> 
+      forall (j : address),
+        Glob.mem.[j] =
+          if in_range output0 len0 j then
+            let j0 = j - output0 in (init32 (fun (i0 : int) => k0.[i0])).[j0] `^` mem0.[plain0 + j0]
+          else mem0.[j] ] = 1%r.
+proof.
+  proc => /=.
+
+equiv eq_store_last : ChaCha20_pref.M.store ~ M.store_last :
+  output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
+  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ len{1} < 64 /\
+  k{2} = x_ k{1} 
+  ==>
+  ={Glob.mem}.
+proof.
+  proc *.
+  ecall{1} (store_pref_spec output{1} plain{1} len{1} k{1} Glob.mem{1}).
+
+print store_pref_spec.
+
+
+                   forall (j : address),
+                   Glob.mem.[j]m.[j] =
+      if in_range output{1} (min 64 len{1}) j then
+        let j0 = j - output{1} in (init32 (fun (i0 : int) => k{1}.[i0])).[j0] `^` Glob.mem{1}.[plain{1} + j0]
+      else Glob.mem{1}.[j]
+ 
+
+
+
+
 
 equiv eq_store_x2_last : ChaCha20_pavx2_cf.M.store_x2_last ~ M.store_x2_last :
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
-  (good_ptr output plain len){1} /\
+  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ len{1} < 128 /\
   k{2} = (x2_ k_1 k_2){1} 
   ==>
   ={Glob.mem}.
 proof.
+  proc => /=.
+  sp 1 3.
+
+equiv eq_store_last : ChaCha20_pavx2_cf.M.store ~ M.store_last :
+  output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
+  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ len{1} < 64 /\
+  k{2} = (x2_ k_1 k_2){1} 
+  ==>
+  ={Glob.mem}.
+proof.
+  proc => /=.
+  sp 1 3.
+
 admitted.
 
 phoare perm_x2_spec k1 k2 : [M.perm_x2 : k = x2 k1 k2 ==> res = x2_ k1 k2] = 1%r.
@@ -630,13 +790,13 @@ equiv eq_chacha20_less_than_257 :
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
   key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
   (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
-  (good_ptr output plain len){1}
+  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} 
   ==>
   ={Glob.mem}.
 proof. 
   proc => /=.
   seq 1 4 : (output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
-            st{2} = (x2 st_1 st_2) {1} /\ (good_ptr output plain len){1} /\ ={Glob.mem}).
+            st{2} = (x2 st_1 st_2) {1} /\ (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ ={Glob.mem}).
   + call eq_init_x2; wp; skip => />.
   if; 1: by move=> /> *; rewrite ultE.
   + call eq_store_x2_last => /=. 
@@ -646,6 +806,7 @@ proof.
     ecall{2} (perm_x2_spec k1_1{1} k1_2{1}); wp => /=.
     call eq_sum_states_x4; call eq_rounds_x4 => /=.
     inline ChaCha20_pavx2.M.copy_state_x4 M.copy_state_x4; wp; skip => /> *.
+    split; 2: smt().
     by apply Array4.all_eq_eq; rewrite /x86_VPADD_8u32 /Array4.all_eq /x2 /= g_p2_pack.
   call eq_store_x2_last => /=.  
   ecall{2} (perm_x2_spec k1_1{1} k1_2{1}).

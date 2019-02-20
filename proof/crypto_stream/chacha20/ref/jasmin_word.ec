@@ -1069,24 +1069,24 @@ abstract theory W_WS.
     by move=> hi;rewrite pack'RbE // map2iE // !initiE.
   qed.
 
-  lemma andb'SE (w1 w2:WB.t) i : 0 <= i < r =>
+  lemma andb'SE (w1 w2:WB.t) i : 
     (WB.andw w1 w2) \bits'S i = WS.andw (w1 \bits'S i) (w2 \bits'S i).
   proof.
-    move=> hi; apply WS.wordP => j hj.
+    apply WS.wordP => j hj.
     by rewrite bits'SiE // WB.andwE WS.andwE !bits'SiE.
   qed.
 
-  lemma orb'SE (w1 w2:WB.t) i : 0 <= i < r =>
+  lemma orb'SE (w1 w2:WB.t) i : 
     (WB.orw w1 w2) \bits'S i = WS.orw (w1 \bits'S i) (w2 \bits'S i).
   proof.
-    move=> hi; apply WS.wordP => j hj.
+    apply WS.wordP => j hj.
     by rewrite bits'SiE // WB.orwE WS.orwE !bits'SiE.
   qed.
 
-  lemma xorb'SE (w1 w2:WB.t) i : 0 <= i < r =>
+  lemma xorb'SE (w1 w2:WB.t) i :
     (WB.(+^) w1 w2) \bits'S i = WS.(+^) (w1 \bits'S i) (w2 \bits'S i).
   proof.
-    move=> hi; apply WS.wordP => j hj.
+   apply WS.wordP => j hj.
     by rewrite bits'SiE // WB.xorwE WS.xorwE !bits'SiE.
   qed.
 
