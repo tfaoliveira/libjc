@@ -31,3 +31,4 @@
 [submodule "bench/third_party/fiat-crypto"]
 	path = bench/third_party/fiat-crypto
 	url = https://github.com/mit-plv/fiat-crypto
+  ignore = dirty
