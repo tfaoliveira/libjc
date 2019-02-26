@@ -33,33 +33,33 @@ Lpoly1305_ref3$5:
 	adcq	$1, %r10
 	movq	%rbx, %r13
 	imulq	%r10, %r13
-	movq	%rbx, %rax
-	mulq	%r9
-	addq	%rdx, %r13
-	movq	%rax, %r14
-	movq	%r11, %rax
-	mulq	%r9
-	movq	%rdx, %r15
-	movq	%rax, %r9
 	imulq	%r11, %r10
 	movq	%r11, %rax
 	mulq	%r8
-	addq	%rdx, %r9
-	adcq	%r15, %r10
-	movq	%rax, %r15
+	movq	%rax, %r14
+	movq	%rdx, %r15
+	movq	%r11, %rax
+	mulq	%r9
+	addq	%rax, %r15
+	adcq	%rdx, %r10
+	movq	%rbx, %rax
+	mulq	%r9
+	movq	%rdx, %r9
+	addq	%r13, %r9
+	movq	%rax, %r13
 	movq	%rbp, %rax
 	mulq	%r8
-	addq	%r15, %r14
-	adcq	%rax, %r9
+	addq	%r13, %r14
+	adcq	%rax, %r15
 	adcq	%rdx, %r10
 	movq	$-4, %r8
 	andq	%r10, %r8
-	andq	$3, %r10
 	movq	%r8, %rax
 	shrq	$2, %rax
 	addq	%rax, %r8
+	andq	$3, %r10
 	addq	%r14, %r8
-	adcq	%r13, %r9
+	adcq	%r15, %r9
 	adcq	$0, %r10
 	addq	$16, %rsi
 	addq	$-16, %r12
@@ -85,33 +85,33 @@ Lpoly1305_ref3$2:
 	adcq	$0, %r10
 	movq	%rbx, %rsi
 	imulq	%r10, %rsi
-	movq	%rbx, %rax
-	mulq	%r9
-	addq	%rdx, %rsi
-	movq	%rax, %rbx
-	movq	%r11, %rax
-	mulq	%r9
-	movq	%rdx, %r12
-	movq	%rax, %r9
 	imulq	%r11, %r10
 	movq	%r11, %rax
 	mulq	%r8
-	addq	%rdx, %r9
-	adcq	%r12, %r10
-	movq	%rax, %r11
+	movq	%rax, %r12
+	movq	%rdx, %r13
+	movq	%r11, %rax
+	mulq	%r9
+	addq	%rax, %r13
+	adcq	%rdx, %r10
+	movq	%rbx, %rax
+	mulq	%r9
+	movq	%rdx, %r9
+	addq	%rsi, %r9
+	movq	%rax, %rsi
 	movq	%rbp, %rax
 	mulq	%r8
-	addq	%r11, %rbx
-	adcq	%rax, %r9
+	addq	%rsi, %r12
+	adcq	%rax, %r13
 	adcq	%rdx, %r10
 	movq	$-4, %r8
 	andq	%r10, %r8
-	andq	$3, %r10
 	movq	%r8, %rax
 	shrq	$2, %rax
 	addq	%rax, %r8
-	addq	%rbx, %r8
-	adcq	%rsi, %r9
+	andq	$3, %r10
+	addq	%r12, %r8
+	adcq	%r13, %r9
 	adcq	$0, %r10
 Lpoly1305_ref3$1:
 	movq	%r8, %rax
@@ -126,14 +126,14 @@ Lpoly1305_ref3$1:
 	xorq	%r9, %rdx
 	andq	%rsi, %rax
 	andq	%rsi, %rdx
-	xorq	%rax, %r8
-	xorq	%rdx, %r9
-	movq	(%rcx), %rax
+	xorq	%r8, %rax
+	xorq	%r9, %rdx
+	movq	(%rcx), %rsi
 	movq	8(%rcx), %rcx
-	addq	%rax, %r8
-	adcq	%rcx, %r9
-	movq	%r8, (%rdi)
-	movq	%r9, 8(%rdi)
+	addq	%rsi, %rax
+	adcq	%rcx, %rdx
+	movq	%rax, (%rdi)
+	movq	%rdx, 8(%rdi)
 	addq	$16, %rsp
 	popq	%r15
 	popq	%r14
