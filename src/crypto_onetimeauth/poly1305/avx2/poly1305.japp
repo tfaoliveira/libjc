@@ -81,7 +81,7 @@ fn add2(reg u64[2] h, reg u64[2] s) -> reg u64[2]
 }
 
 
-
+/*
 fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
 {
   reg bool cf;
@@ -141,6 +141,69 @@ fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
 
   return h;
 }
+*/
+
+
+fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
+{
+  reg bool cf;
+  reg u64 t0 t1 t2;
+  reg u64 rax rdx;
+
+  t2 = r[2];
+  t2 *= h[2];			// (* t2 = h[2]*r[2] *)
+
+  h[2] *= r[0];			// (* h[2] = h[2]*r[0] *)
+
+  rax = r[0];
+  rdx, rax = rax * h[0];
+  t0 = rax;			// (* t0 = h[0]*r[0] *)
+  t1 = rdx;			// (* t1 = mulhi h[0] r[0] *)
+
+  rax = r[0];
+  rdx, rax = rax * h[1];
+
+  cf, t1 += rax;		// (* t1 = h[1]*r[0] + mulhi h[0] r[0]*)
+  _ , h[2] += rdx + cf;		// (* h[2] = h[2]*r[0] + mulhi h[1] r[0] + CF *)
+ 				// (* OBS: CF not set! *)
+
+  rax = r[2];
+  rdx, rax = rax * h[1];
+  h[1] = rdx;
+  h[1] += t2;		// (* h[1] = h[2]*r[2] + mulhi h[1] r[2] *)
+  t2 = rax;			// (* t2 = h[1]*r[2] *)
+
+  rax = r[1];
+  rdx, rax = rax * h[0];
+
+  cf, t0 += t2;			// (* t0 = h[0]*r[0] + h[1]*r[2] *)
+  cf, t1 += rax + cf;		// (* t1 = h[0]*r[1] + t1 + CF *)
+  _ , h[2] += rdx + cf;	// (* h[2] = mulhi h[0] r[1] + h[2] + CF *)
+ 				// (* OBS: CF not set! *)
+
+  h[0] = 0xfffffffffffffffc;
+    t2 = h[2]; 
+    t2 >>= 2;
+  h[0] &= h[2];
+
+  h[0] += t2;
+  h[2] &= 0x03;
+
+
+/*  t2 = h[0]; */
+/*  t2 >>= 2;*/
+/*  h[0] += t2;*/
+/*  h[2] &= 0x03;*/
+
+  cf, h[0] += t0;
+  cf, h[1] += t1 + cf;
+  _ , h[2] +=  0 + cf;
+ 				// (* OBS: CF not set! *)
+
+  return h;
+}
+
+
 
 fn freeze(reg u64[3] h) -> reg u64[2]
 {
