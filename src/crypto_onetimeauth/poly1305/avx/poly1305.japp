@@ -1,5 +1,5 @@
 // assuming little endian for loads and stores
-fn load(reg u64 p) -> reg u64[2]
+fn load2(reg u64 p) -> reg u64[2]
 {
   reg u64[2] x;
   x[0] = [p + 0];
@@ -48,7 +48,7 @@ fn load_last_add(reg u64[3] h, reg u64 in, reg u64 len) -> reg u64[3]
 
 
 
-fn store(reg u64 p, reg u64[3] x)
+fn store2(reg u64 p, reg u64[2] x)
 {
   [p + 0] = x[0];
   [p + 8] = x[1];
@@ -72,7 +72,7 @@ fn clamp(reg u64 k) -> reg u64[3]
 
 
 // h += s
-fn add(reg u64[3] h, reg u64[2] s) -> reg u64[3]
+fn add2(reg u64[2] h, reg u64[2] s) -> reg u64[2]
 {
   reg bool cf;
   cf, h[0] += s[0];
@@ -81,7 +81,7 @@ fn add(reg u64[3] h, reg u64[2] s) -> reg u64[3]
 }
 
 
-
+/*
 fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
 {
   reg bool cf;
@@ -141,27 +141,93 @@ fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
 
   return h;
 }
+*/
 
-fn freeze(reg u64[3] h) -> reg u64[3]
+
+fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
 {
   reg bool cf;
-  reg u64[3] g;
+  reg u64 t0 t1 t2;
+  reg u64 rax rdx;
+
+  t2 = r[2];
+  t2 *= h[2];			// (* t2 = h[2]*r[2] *)
+
+  h[2] *= r[0];			// (* h[2] = h[2]*r[0] *)
+
+  rax = r[0];
+  rdx, rax = rax * h[0];
+  t0 = rax;			// (* t0 = h[0]*r[0] *)
+  t1 = rdx;			// (* t1 = mulhi h[0] r[0] *)
+
+  rax = r[0];
+  rdx, rax = rax * h[1];
+
+  cf, t1 += rax;		// (* t1 = h[1]*r[0] + mulhi h[0] r[0]*)
+  _ , h[2] += rdx + cf;		// (* h[2] = h[2]*r[0] + mulhi h[1] r[0] + CF *)
+ 				// (* OBS: CF not set! *)
+
+  rax = r[2];
+  rdx, rax = rax * h[1];
+  h[1] = rdx;
+  h[1] += t2;		// (* h[1] = h[2]*r[2] + mulhi h[1] r[2] *)
+  t2 = rax;			// (* t2 = h[1]*r[2] *)
+
+  rax = r[1];
+  rdx, rax = rax * h[0];
+
+  cf, t0 += t2;			// (* t0 = h[0]*r[0] + h[1]*r[2] *)
+  cf, t1 += rax + cf;		// (* t1 = h[0]*r[1] + t1 + CF *)
+  _ , h[2] += rdx + cf;	// (* h[2] = mulhi h[0] r[1] + h[2] + CF *)
+ 				// (* OBS: CF not set! *)
+
+  h[0] = 0xfffffffffffffffc;
+    t2 = h[2]; 
+    t2 >>= 2;
+  h[0] &= h[2];
+
+  h[0] += t2;
+  h[2] &= 0x03;
+
+
+/*  t2 = h[0]; */
+/*  t2 >>= 2;*/
+/*  h[0] += t2;*/
+/*  h[2] &= 0x03;*/
+
+  cf, h[0] += t0;
+  cf, h[1] += t1 + cf;
+  _ , h[2] +=  0 + cf;
+ 				// (* OBS: CF not set! *)
+
+  return h;
+}
+
+
+
+fn freeze(reg u64[3] h) -> reg u64[2]
+{
+  reg bool cf;
+  reg u64[2] g;
+  reg u64 g2;
   reg u64 mask;
 
-  g = h;
+  g[0] = h[0];
+  g[1] = h[1];
+  g2 = h[2];
 
   //                  <= 6 then g[2] can be at most 7 (111b)
   // if h[2] value is <= 4 then g[2] can be at most 5 (101b)
   cf, g[0] += 5;
   cf, g[1] += 0 + cf;
-   _, g[2] += 0 + cf;
+   _, g2 += 0 + cf;
 
   // which means that by shifting right by 2 we are left with only 1 bit set
-  g[2] >>= 2;
+  g2 >>= 2;
 
   // and if this bit is set g[2]: mask will be 2**64-1 (all bits are set) otherwise
   // the mask will be zero
-  mask = -g[2];
+  mask = -g2;
 
   g[0] ^= h[0];
   g[1] ^= h[1];
@@ -171,11 +237,11 @@ fn freeze(reg u64[3] h) -> reg u64[3]
 
   // if bit == 1 then h[0..1] ^= (g[0..1] ^ h[0..1])
   // else             h[0..1] ^= 0
-  h[0] ^= g[0];
-  h[1] ^= g[1];
+  g[0] ^= h[0];
+  g[1] ^= h[1];
 
   // at this point we only need the first 128 bits
-  return h;
+  return g;
 }
 
 
@@ -216,17 +282,18 @@ fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -
 fn poly1305_ref3_last(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[3] h, reg u64[3] r)
 {
   reg u64[2] m, s;
+  reg u64[2] h2;
 
   if(inlen > 0)
   { h = load_last_add(h, in, inlen);
     h = mulmod(h, r);
   }
 
-  h = freeze(h);
-  s = load(k);
-  h = add(h, s);
+  h2 = freeze(h);
+  s = load2(k);
+  h2 = add2(h2, s);
 
-  store(out, h);
+  store2(out, h2);
 }
 
 
