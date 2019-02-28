@@ -53,9 +53,9 @@ Lpoly1305_ref3$5:
 	adcq	%rax, %r15
 	adcq	%rdx, %r10
 	movq	$-4, %r8
-	andq	%r10, %r8
-	movq	%r8, %rax
+	movq	%r10, %rax
 	shrq	$2, %rax
+	andq	%r10, %r8
 	addq	%rax, %r8
 	andq	$3, %r10
 	addq	%r14, %r8
@@ -105,9 +105,9 @@ Lpoly1305_ref3$2:
 	adcq	%rax, %r13
 	adcq	%rdx, %r10
 	movq	$-4, %r8
-	andq	%r10, %r8
-	movq	%r8, %rax
+	movq	%r10, %rax
 	shrq	$2, %rax
+	andq	%r10, %r8
 	addq	%rax, %r8
 	andq	$3, %r10
 	addq	%r12, %r8

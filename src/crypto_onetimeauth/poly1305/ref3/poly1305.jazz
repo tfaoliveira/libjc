@@ -182,11 +182,18 @@ fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
  				// (* OBS: CF not set! *)
 
   h[0] = 0xfffffffffffffffc;
+    t2 = h[2]; 
+    t2 >>= 2;
   h[0] &= h[2];
-  t2 = h[0]; 
-  t2 >>= 2;
+
   h[0] += t2;
   h[2] &= 0x03;
+
+
+/*  t2 = h[0]; */
+/*  t2 >>= 2;*/
+/*  h[0] += t2;*/
+/*  h[2] &= 0x03;*/
 
   cf, h[0] += t0;
   cf, h[1] += t1 + cf;
