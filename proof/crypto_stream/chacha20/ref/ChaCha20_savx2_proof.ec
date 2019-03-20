@@ -1,7 +1,7 @@
 require import AllCore List Jasmin_model Int IntDiv CoreMap.
-require import Array2 Array4 Array8 Array16.
-require import WArray64.
-require import ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref_proof ChaCha20_pavx2 ChaCha20_savx2.
+require import Array2 Array3 Array4 Array8 Array16. 
+require import WArray16 WArray32 WArray64.
+require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref_proof ChaCha20_pavx2 ChaCha20_savx2.
 
 op x8 (k1 k2 k3 k4 k5 k6 k7 k8: W32.t Array16.t) =
   Array16.init (fun i => W8u32.pack8 [k1.[i]; k2.[i]; k3.[i]; k4.[i]; k5.[i]; k6.[i]; k7.[i]; k8.[i]]).
@@ -261,6 +261,8 @@ equiv eq_store_x8 : ChaCha20_pavx2_cf.M.store_x8 ~  M.store_x8 :
   res{1}.`1 = to_uint res{2}.`1 /\ res{1}.`2 = to_uint res{2}.`2 /\ res{1}.`3 = to_uint res{2}.`3 /\ 
   (good_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ ={Glob.mem}.
 proof.
+  proc.
+  inline M.rotate_first_half_x8.
 admitted.
 
 equiv eq_store_x8_last : ChaCha20_pavx2_cf.M.store_x8_last ~  M.store_x8_last :
@@ -424,9 +426,29 @@ proof.
   by rewrite pack2_2u32_4u32 pack2_4u32_8u32 g_p1_pack /x86_VPADD_8u32.
 qed.
 
+lemma get_storeW128E m p w j: 
+    (storeW128 m p w).[j] = if p <= j < p + 16 then w \bits8 j - p else m.[j].
+proof. rewrite storeW128E /= get_storesE /= /#. qed.
+
 lemma get_storeW256E m p w j: 
     (storeW256 m p w).[j] = if p <= j < p + 32 then w \bits8 j - p else m.[j].
 proof. rewrite storeW256E /= get_storesE /= /#. qed.
+
+lemma get8_pack4u32 f j: 
+  pack4_t (W4u32.Pack.init f) \bits8 j = 
+    if 0 <= j < 16 then f (j %/ 4) \bits8 (j %% 4) else W8.zero.
+proof.
+  rewrite pack4E W8.wordP => i hi.
+  rewrite bits8E /= initE hi /= initE.
+  have -> /= : (0 <= j * 8 + i < 128) <=> (0 <= j < 16) by smt().
+  case : (0 <= j < 16) => hj //=.
+  rewrite bits8E /= initE.
+  have -> : (j * 8 + i) %/ 32 = j %/4.
+  + rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA divzMDl //.
+    by rewrite (divz_small _ 32) //; smt (modz_cmp).
+  rewrite initE hi /= divz_cmp //=; congr.
+  rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA modzMDl modz_small //; smt (modz_cmp).
+qed.
 
 lemma get8_pack8u32 f j: 
   pack8_t (W8u32.Pack.init f) \bits8 j = 
@@ -449,9 +471,14 @@ lemma pack8_init_shift8 (k:W32.t Array16.t) :
   pack8_t (W8u32.Pack.init (fun i => k.[8 + i])).
 proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
 
-lemma pack8_init (k:W32.t Array16.t) : 
-  pack8 [k.[0]; k.[1]; k.[2]; k.[3]; k.[4]; k.[5]; k.[6]; k.[7]] = 
-  pack8_t (W8u32.Pack.init (fun i => k.[i])).
+lemma pack4_init (k:int ->  W32.t) : 
+  pack4 [k 0; k 1; k 2; k 3] = 
+  pack4_t (W4u32.Pack.init k).
+proof. by congr; apply W4u32.Pack.all_eq_eq; cbv delta. qed.
+
+lemma pack8_init (k:int -> W32.t) : 
+  pack8 [k 0; k 1; k 2; k 3; k 4; k 5; k 6; k 7] = 
+  pack8_t (W8u32.Pack.init k).
 proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
 
 lemma store_256_xor_spec output (k1:W32.t Array16.t) mem plain j:
@@ -462,7 +489,7 @@ lemma store_256_xor_spec output (k1:W32.t Array16.t) mem plain j:
      (pack8 [k1.[0]; k1.[1]; k1.[2]; k1.[3]; k1.[4]; k1.[5]; k1.[6]; k1.[7]] \bits8 j - output) `^`
      (loadW256 mem plain \bits8 j - output)
    else mem.[j]) =
-   if in_range output 64 j then (init32 ("_.[_]" k1)).[j - output] `^` mem.[plain + (j - output)]
+   if in_range output 64 j then (WArray64.init32 ("_.[_]" k1)).[j - output] `^` mem.[plain + (j - output)]
    else mem.[j].
 proof.
   case: (output + 32 <= j < output + 64) => hin2.
@@ -477,7 +504,7 @@ proof.
   + have -> /= : in_range output 64 j by smt().
     rewrite /init32 /loadW256 /= initiE; 1: smt (W64.to_uint_cmp).
     have h1 : 0 <= j - output < 32 by smt().
-    rewrite /= pack8_init get8_pack8u32 h1 /=. 
+    rewrite /= (pack8_init (fun i => k1.[i])) get8_pack8u32 h1 /=. 
     by rewrite pack32bE 1:// initiE.
   have -> // : !(in_range output 64 j) by smt().
 qed.
@@ -493,10 +520,10 @@ phoare store_x2_spec output0 plain0 len0 k1 k2 mem0 : [ChaCha20_savx2.M.store_x2
     Glob.mem.[j] =
       if in_range output0 64 j then
         let j = j - output0 in
-        (init32 (fun (i0 : int) => k1.[i0])).[j] `^` mem0.[plain0 + j]
+        (WArray64.init32 (fun (i0 : int) => k1.[i0])).[j] `^` mem0.[plain0 + j]
       else if in_range (output0 + 64) 64 j then
         let j = j - (output0 + 64) in
-        (init32 (fun (i0 : int) => k2.[i0])).[j] `^` mem0.[plain0 + 64 + j]
+        (WArray64.init32 (fun (i0 : int) => k2.[i0])).[j] `^` mem0.[plain0 + 64 + j]
       else mem0.[j]]= 1%r.
 proof.
   proc => /=.
@@ -515,12 +542,13 @@ proof.
   by rewrite -store_256_xor_spec.
 qed.
 
-equiv eq_store_x2 : ChaCha20_pavx2_cf.M.store_x2 ~ M.store_x2 :
-  output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
+equiv eq_store_x2 len_ : ChaCha20_pavx2_cf.M.store_x2 ~ M.store_x2 :
+  output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ len{1} = len_ /\ ={Glob.mem} /\
   (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ 128 <= len{1} /\
   k{2} = (x2_ k_1 k_2){1} 
   ==>
   res{1}.`1 = to_uint res{2}.`1 /\ res{1}.`2 = to_uint res{2}.`2 /\ res{1}.`3 = to_uint res{2}.`3 /\ 
+  res{1}.`3 = len_ - 128 /\
   (good_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ (inv_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ ={Glob.mem}.
 proof.
   proc *.
@@ -539,64 +567,420 @@ proof.
   apply mem_eq_ext => j; smt().
 qed.
 
-phoare store_last_spec output0 plain0 len0 k0 mem0 : 
-   [ M.store_last :
-      output0 = to_uint output /\ plain0 = to_uint plain /\ len0 = to_uint len /\ mem0 = Glob.mem /\
-      k = x_ k0 /\ (good_ptr output0 plain0 len0) /\ (inv_ptr output0 plain0 len0) /\ len0 < 64 
-      ==> 
-      forall (j : address),
-        Glob.mem.[j] =
-          if in_range output0 len0 j then
-            let j0 = j - output0 in (init32 (fun (i0 : int) => k0.[i0])).[j0] `^` mem0.[plain0 + j0]
-          else mem0.[j] ] = 1%r.
+module Store = {
+ 
+  proc store32 (output plain: address, len: int, k:W32.t Array8.t) = {
+    var i:int;
+    var k8_0, k8: WArray32.t;
+    k8 <- witness;
+    k8_0 <- WArray32.init32 (fun i => k.[i]);
+    i <- 0;  
+    while (i < len) {
+      k8.[i] <- k8_0.[i] `^` loadW8 Glob.mem (plain + i);
+      i <- i + 1;
+    }
+    i <- 0;
+    while (i < len) {
+      Glob.mem <- storeW8 Glob.mem (output + i) k8.[i];
+      i <- i + 1;
+    }
+  }
+
+  proc store16 (output plain: address, len: int, k:W32.t Array4.t) = {
+    var i:int;
+    var k8_0, k8: WArray16.t;
+    k8_0 <- WArray16.init32 (fun i => k.[i]);
+    i <- 0;  
+    while (i < len) {
+      k8.[i] <- k8_0.[i] `^` loadW8 Glob.mem (plain + i);
+      i <- i + 1;
+    }
+    i <- 0;
+    while (i < len) {
+      Glob.mem <- storeW8 Glob.mem (output + i) k8.[i];
+      i <- i + 1;
+    }
+  }
+
+  proc store64_1 (output plain: address, len: int, k:W32.t Array16.t) = {
+    var k1 : W32.t Array8.t; 
+    k1 <- Array8.init (fun i => k.[i]);
+    if (32 <= len) {
+      store32(output, plain, 32, k1);
+      (output, plain, len) <@ ChaCha20_pref.M.update_ptr(output, plain, len, 32);
+      k1 <- Array8.init (fun i => k.[i + 8]);
+    }
+    store32(output, plain, len, k1); 
+  }
+
+  proc store32_1 (output plain: address, len: int, k:W32.t Array8.t) = {
+    var k1 : W32.t Array4.t; 
+    k1 <- Array4.init (fun i => k.[i]);
+    if (16 <= len) {
+      store16(output, plain, 16, k1);
+      (output, plain, len) <@ ChaCha20_pref.M.update_ptr(output, plain, len, 16);
+      k1 <- Array4.init (fun i => k.[i + 4]);
+    }
+    store16(output, plain, len, k1); 
+  }
+
+  proc store64_2 (output plain: address, len: int, k:W32.t Array16.t) = {
+    var k1 : W32.t Array8.t; 
+    k1 <- Array8.init (fun i => k.[i]);
+    if (32 <= len) {
+      store32(output, plain, 32, k1);
+      (output, plain, len) <@ ChaCha20_pref.M.update_ptr(output, plain, len, 32);
+      k1 <- Array8.init (fun i => k.[i + 8]);
+    }
+    store32_1(output, plain, len, k1); 
+  }
+}.
+
+equiv eq_store64_1 : ChaCha20_pref.M.store ~ Store.store64_1 : 
+   ={Glob.mem, output, plain, len, k} /\ 0 <= len{1} <= 64 /\ (inv_ptr output plain len){1} ==> ={Glob.mem}.
 proof.
   proc => /=.
+  sp 2 1; if{2}; last first.
+  + inline *; wp.
+    while (={i, Glob.mem} /\ output{1} = output0{2} /\ plain{1} = plain0{2} /\ len{1} = len0{2} /\ len{1} <= 32 /\ 0 <= i{1} /\
+           (forall j, 0 <= j < len{1} => k8{1}.[j] = k8{2}.[j])).
+    + by auto => /> /#.
+    wp;while(={i,Glob.mem} /\ plain{1} = plain0{2} /\ len{1} = len0{2} /\ len{1} <= 32 /\ 0 <= i{1} <= len{1} /\
+           (forall j, 0 <= j < 32 => k8_0{1}.[j] = k8_0{2}.[j]) /\
+           (forall j, 0 <= j < i{1} => k8{1}.[j] = k8{2}.[j])).
+    + by auto; smt(WArray64.get_setE WArray32.get_setE).
+    auto => /> &m ????.    
+    have -> /= : len{m} <= 32 by smt().
+    split;last by smt().
+    split;last by smt().
+    split;last by smt().
+    rewrite /WArray64.init32 /WArray32.init32 => j h1 h2.
+    rewrite WArray64.initE WArray32.initE /= Array8.initE /=.
+    by rewrite divz_ge0 1:// h1 ltz_divLR // h2 /#.
+  inline ChaCha20_pref.M.update_ptr; wp.
+  exlim Glob.mem{1} => mem0.
+  seq 2 0 : (#{/~k8{1}}pre /\ (forall j, 0 <= j < len => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain + j)){1}).
+  + while{1} ((forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain + j)) /\ 
+                mem0 = Glob.mem /\ 0 <= i <= len /\ 0 <= len <= 64){1} (len{1} - i{1}).     
+    + by move=> _ z; wp; skip => />; smt (WArray64.get_setE). 
+    by auto => /> /#.     
+  splitwhile{1} 2: (i < 32);inline *.
+  while (={Glob.mem} /\ output2{2} = output{1} + 32 /\ len2{2} = len{1} - 32 /\ 
+           i{1} = i0{2} + 32 /\ 32 <= len{1} <= 64 /\ 0 <= i0{2} <= len2{2} /\
+           (forall j, 0 <= j < len2{2} => k80{2}.[j] = k8{1}.[j+32])).
+  + by wp; skip => /> /#. 
+  wp.
+  while{2} ((forall j, 0 <= j < i0{2} => k80{2}.[j] = k8_00{2}.[j] `^` loadW8 mem0 (plain2{2} + j)) /\
+            (0 <= i0 <= len2){2} /\ 0 <= len2{2} <= 32 /\
+            (forall j, 0 <= j < len2{2} => Glob.mem.[plain2 + j] = mem0.[plain2 + j]){2}) (len2 - i0){2}.
+  + by move=> _ z; wp; skip => />; smt (WArray32.get_setE).
+  wp.
+  while (={Glob.mem, i} /\ output{1} = output1{2} /\ len1{2} = 32 /\ (inv_ptr output plain len /\ 0 <= i <= 32 /\ 32 <= len <= 64){1} /\ 
+         (forall j, 32 <= j < len => Glob.mem.[plain + j] = mem0.[plain + j]){1} /\
+         (forall j, 0 <= j < 32 => k8{1}.[j] = k8{2}.[j])).
+  + by wp; skip => />; smt (storeW8E Jasmin_memory.get_setE).
+  wp; while{2} ((forall j,  0 <= j < i{2} => k8{2}.[j] = k8_0{2}.[j] `^` loadW8 Glob.mem{2} (plain1{2} + j)) /\
+                (0 <= i <= len1){2} /\ len1{2} = 32) (len1 - i){2}.
+  + by move=> _ z; wp; skip => />; smt (WArray32.get_setE).
+  wp; skip => /> &1 &2 h1 h2 h3 h4 h5.
+  split; 1: smt(). 
+  move=> i_R k8_R;split; 1: smt().
+  move=> h6 h7 h8 h9.
+  have ->> : i_R = 32 by smt().
+  split. 
+  + split; 2: smt().
+    move=> j h10 h11; rewrite h5 1:/# h7 1:// /WArray64.init32 /WArray32.init32.
+    rewrite WArray64.initE WArray32.initE /= Array8.initE /=.
+    by rewrite divz_ge0 1:// h10 ltz_divLR // h11 /#.
+  move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
+  have ->> /= : i_R0 = 32 by smt().
+  split; 1: smt().
+  move=> i0_R k80_R; split; 1: smt().
+  move=> h16 h17 h18 h19 h20 h21 h22; split; 2:smt().
+  move=> j h23 h24.
+  rewrite h17 1:/# h5 1:/#.
+  rewrite /WArray64.init32 /WArray32.init32.
+  rewrite WArray64.initE WArray32.initE /= Array8.initE /=.
+  rewrite divz_ge0 1:// h23 ltz_divLR //=.
+  have -> : (j + 32) %/ 4 = j%/4 + 8.
+  + by rewrite (_: 32 = 8 * 4) 1:// divzMDr //; ring.
+  have -> /#: (j + 32) %% 4 = j%%4.
+  by rewrite (_: 32 = 8 * 4) 1:// modzMDr.
+qed.
+
+equiv eq_store32_1 : Store.store32 ~ Store.store32_1 : 
+   ={Glob.mem, output, plain, len, k} /\ 0 <= len{1} <= 32 /\ (inv_ptr output plain len){1} ==> ={Glob.mem}.
+proof.
+  proc => /=.
+  sp 2 1; if{2}; last first.
+  + inline *; wp.
+    while (={i, Glob.mem} /\ output{1} = output0{2} /\ plain{1} = plain0{2} /\ len{1} = len0{2} /\ len{1} <= 16 /\ 0 <= i{1} /\
+           (forall j, 0 <= j < len{1} => k8{1}.[j] = k8{2}.[j])).
+    + by auto => /> /#.
+    wp;while(={i,Glob.mem} /\ plain{1} = plain0{2} /\ len{1} = len0{2} /\ len{1} <= 16 /\ 0 <= i{1} <= len{1} /\
+           (forall j, 0 <= j < 16 => k8_0{1}.[j] = k8_0{2}.[j]) /\
+           (forall j, 0 <= j < i{1} => k8{1}.[j] = k8{2}.[j])).
+    + by auto; smt(WArray32.get_setE WArray16.get_setE).
+    wp; skip => /> &2 ????.    
+    have -> /= : len{2} <= 16 by smt().
+    split;last by smt().
+    split;last by smt().
+    rewrite /WArray32.init32 /WArray16.init32 => j h1 h2.
+    rewrite WArray32.initE WArray16.initE /= Array4.initE /=.
+    by rewrite divz_ge0 1:// h1 ltz_divLR // h2 /#.
+  inline ChaCha20_pref.M.update_ptr; wp.
+  exlim Glob.mem{1} => mem0.
+  seq 2 0 : (#{/~k8{1}}pre /\ (forall j, 0 <= j < len => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain + j)){1}).
+  + while{1} ((forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain + j)) /\ 
+                mem0 = Glob.mem /\ 0 <= i <= len /\ 0 <= len <= 32){1} (len{1} - i{1}).     
+    + by move=> _ z; wp; skip => />; smt (WArray32.get_setE). 
+    by auto => /> /#.     
+  splitwhile{1} 2: (i < 16);inline *.
+  while (={Glob.mem} /\ output2{2} = output{1} + 16 /\ len2{2} = len{1} - 16 /\ 
+           i{1} = i0{2} + 16 /\ 16 <= len{1} <= 32 /\ 0 <= i0{2} <= len2{2} /\
+           (forall j, 0 <= j < len2{2} => k80{2}.[j] = k8{1}.[j+16])).
+  + by wp; skip => /> /#. 
+  wp.
+  while{2} ((forall j, 0 <= j < i0{2} => k80{2}.[j] = k8_00{2}.[j] `^` loadW8 mem0 (plain2{2} + j)) /\
+            (0 <= i0 <= len2){2} /\ 0 <= len2{2} <= 16 /\
+            (forall j, 0 <= j < len2{2} => Glob.mem.[plain2 + j] = mem0.[plain2 + j]){2}) (len2 - i0){2}.
+  + by move=> _ z; wp; skip => />; smt (WArray16.get_setE).
+  wp.
+  while (={Glob.mem, i} /\ output{1} = output1{2} /\ len1{2} = 16 /\ (inv_ptr output plain len /\ 0 <= i <= 16 /\ 16 <= len <= 32){1} /\ 
+         (forall j, 16 <= j < len => Glob.mem.[plain + j] = mem0.[plain + j]){1} /\
+         (forall j, 0 <= j < 16 => k8{1}.[j] = k8{2}.[j])).
+  + by wp; skip => />; smt (storeW8E Jasmin_memory.get_setE).
+  wp; while{2} ((forall j,  0 <= j < i{2} => k8{2}.[j] = k8_0{2}.[j] `^` loadW8 Glob.mem{2} (plain1{2} + j)) /\
+                (0 <= i <= len1){2} /\ len1{2} = 16) (len1 - i){2}.
+  + by move=> _ z; wp; skip => />; smt (WArray16.get_setE).
+  wp; skip => /> &1 &2 h1 h2 h3 h4 h5.
+  split; 1: smt(). 
+  move=> i_R k8_R;split; 1: smt().
+  move=> h6 h7 h8 h9.
+  have ->> : i_R = 16 by smt().
+  split. 
+  + split; 2: smt().
+    move=> j h10 h11; rewrite h5 1:/# h7 1:// /WArray32.init32 /WArray16.init32.
+    rewrite WArray32.initE WArray16.initE /= Array4.initE /=.
+    by rewrite divz_ge0 1:// h10 ltz_divLR // h11 /#.
+  move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
+  have ->> /= : i_R0 = 16 by smt().
+  split. 
+  + split; smt().
+  move=> i0_R k80_R; split; 1: smt().
+  move=> h16 h17 h18 h19 h20 h21 h22; split; 2:smt().
+  move=> j h23 h24.
+  rewrite h17 1:/# h5 1:/#.
+  rewrite /WArray32.init32 /WArray16.init32.
+  rewrite WArray32.initE WArray16.initE /= Array4.initE /=.
+  rewrite divz_ge0 1:// h23 ltz_divLR //=.
+  have -> : (j + 16) %/ 4 = j%/4 + 4.
+  + by rewrite (_: 16 = 4 * 4) 1:// divzMDr //; ring.
+  have -> /#: (j + 16) %% 4 = j%%4.
+  by rewrite (_: 16 = 4 * 4) 1:// modzMDr.
+qed.
+
+equiv eq_store64_2 : ChaCha20_pref.M.store ~ Store.store64_2 : 
+   ={Glob.mem, output, plain, len, k} /\ 0 <= len{1} <= 64 /\ (inv_ptr output plain len){1} ==> ={Glob.mem}.
+proof.
+  transitivity Store.store64_1 
+    (={Glob.mem, output, plain, len, k} /\ 0 <= len{1} <= 64 /\ (inv_ptr output plain len){1} ==> ={Glob.mem})
+    (={Glob.mem, output, plain, len, k} /\ 0 <= len{1} <= 64 /\ (inv_ptr output plain len){1} ==> ={Glob.mem}).
+  + smt(). + done.
+  + apply eq_store64_1.
+  proc => /=.
+  call eq_store32_1; conseq />.
+  sp; if; [done | | skip => /> /#].
+  inline ChaCha20_pref.M.update_ptr; wp.
+  conseq (_ : ={output, plain, len, Glob.mem, k}); 1: by move=> /> /#.
+  by sim.
+qed.
+
+equiv eq_update_ptr output0 plain0 len0 n0 : ChaCha20_pref.M.update_ptr ~  M.update_ptr :
+   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
+   output{1} = output0 /\ plain{1} = plain0 /\ len{1} = len0 /\ n{1} = n0 /\
+   good_ptr output{1} plain{1} len{1} /\ ={n} /\ 0 <= n{1} <= len{1} ==>
+   res{1}.`1 = to_uint res{2}.`1 /\
+   res{1}.`2 = to_uint res{2}.`2 /\
+   res{1}.`3 = to_uint res{2}.`3 /\ 
+   res{1}.`1 = output0 + n0 /\
+   res{1}.`2 = plain0 + n0 /\
+   res{1}.`3 = len0 - n0 /\
+   good_ptr res{1}.`1 res{1}.`2 res{1}.`3.
+proof.
+  proc; wp; skip => /> &2 h1 h2 h3 h4.
+  have hn: W64.to_uint (W64.of_int n{2}) = n{2}.
+  + rewrite W64.to_uint_small /=; smt (W64.to_uint_cmp).
+  rewrite !W64.to_uintD_small hn 1,2:/#. 
+  have hn1: W32.to_uint (W32.of_int n{2}) = n{2}.
+  + rewrite W32.to_uint_small //=. 
+    by have /# := W32.to_uint_cmp len{2}.
+  by rewrite W32.to_uintB 1:W32.uleE hn1 // /#.
+qed.
+
+phoare store32_spec output0 plain0 k0 mem0 : 
+  [Store.store32 : 
+    output = output0 /\ plain = plain0 /\ len = 32 /\ k = k0 /\ Glob.mem = mem0  
+     ==>
+  forall j, 
+    Glob.mem.[j] =
+      if in_range output0 32 j then
+        let j = j - output0 in
+        (WArray32.init32 (fun (i0 : int) => k0.[i0])).[j] `^` mem0.[plain0 + j]
+      else mem0.[j]]= 1%r.
+proof.
+  proc.
+  while (0 <= i <= len /\
+         forall j, 
+          Glob.mem.[j] = if in_range output i j then k8.[j-output] else mem0.[j]) (len - i).
+  + move=> z; wp; skip => /> &hr *;smt(storeW8E Jasmin_memory.get_setE).
+  wp; while (0 <= i <= len /\ len = 32 /\
+             forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` Glob.mem.[plain + j]) (len - i).
+  + by move=> z; wp; skip => />; smt (WArray32.get_setE).
+  wp; skip => /> &hr /#.
+qed.
+
+phoare store16_spec output0 plain0 k0 mem0 : 
+  [Store.store16 : 
+    output = output0 /\ plain = plain0 /\ len = 16 /\ k = k0 /\ Glob.mem = mem0  
+     ==>
+  forall j, 
+    Glob.mem.[j] =
+      if in_range output0 16 j then
+        let j = j - output0 in
+        (WArray16.init32 (fun (i0 : int) => k0.[i0])).[j] `^` mem0.[plain0 + j]
+      else mem0.[j]]= 1%r.
+proof.
+  proc.
+  while (0 <= i <= len /\
+         forall j, 
+          Glob.mem.[j] = if in_range output i j then k8.[j-output] else mem0.[j]) (len - i).
+  + move=> z; wp; skip => /> &hr *;smt(storeW8E Jasmin_memory.get_setE).
+  wp; while (0 <= i <= len /\ len = 16 /\
+             forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` Glob.mem.[plain + j]) (len - i).
+  + by move=> z; wp; skip => />; smt (WArray16.get_setE).
+  wp; skip => /> &hr /#.
+qed.
 
 equiv eq_store_last : ChaCha20_pref.M.store ~ M.store_last :
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
-  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ len{1} < 64 /\
+  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ 0 <= len{1} <= 64 /\
   k{2} = x_ k{1} 
   ==>
   ={Glob.mem}.
 proof.
+  transitivity Store.store64_2 
+    (={Glob.mem, output, plain, len, k} /\ 0 <= len{1} <= 64 /\ (inv_ptr output plain len){1} ==> ={Glob.mem})
+    (output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
+        (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ 0 <= len{1} <= 64 /\
+        k{2} = x_ k{1} ==> ={Glob.mem}).
+  + by move=> /> &1 &2 *; exists Glob.mem{2} (output,plain,len, k){1} => />.
+  + done.  
+  + by apply eq_store64_2.
+  proc => /=.  
+  sp 1 2.
+  seq 1 1 : (r0{2} = (W8u32.pack8 [k1.[0]; k1.[1]; k1.[2]; k1.[3]; k1.[4]; k1.[5]; k1.[6]; k1.[7]]){1} /\
+            ={Glob.mem} /\ output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ (inv_ptr output plain len){1} /\
+            (good_ptr output plain len){1} /\ 0 <= len{1} <= 32).
+  + if.
+    + by move=> /> *; rewrite W32.uleE.
+    + wp; ecall (eq_update_ptr output{1} plain{1} len{1} 32).
+      ecall{1} (store32_spec output{1} plain{1} k1{1} Glob.mem{1}); wp; skip => 
+        /> &1 &2 h1 h2 hinv h3 h4 h5 mem h6 res_L res_R *.
+      rewrite /x_ /=;split; 2: smt().
+      apply mem_eq_ext => j; rewrite h6 get_storeW256E /in_range.
+      case: (to_uint output{2} <= j < to_uint output{2} + 32) => [h | //].
+      have hh : 0 <= j - to_uint output{2} < 32 by smt().
+      rewrite /init32 /loadW256 /= initiE 1://.
+      rewrite /= (pack8_init (fun i => k{1}.[i])) get8_pack8u32 hh /=. 
+      by rewrite pack32bE 1:// !initiE // divz_ge0 1:// ltz_divLR.
+    by skip => /> *; rewrite /x_ /= /#.
+  inline Store.store32_1.
+  sp 5 1.
+  seq 1 1 : (r1{2} = (W4u32.pack4 [k10.[0]; k10.[1];k10.[2];k10.[3]]){1} /\
+     ={Glob.mem} /\ output0{1} = to_uint output{2} /\ plain0{1} = to_uint plain{2} /\ len0{1} = to_uint len{2} /\ 
+       (inv_ptr output0 plain0 len0){1} /\ (good_ptr output0 plain0 len0){1} /\ 0 <= len0{1} <= 16).
+  + if.
+    + by move=> /> *; rewrite W32.uleE.
+    + wp; ecall (eq_update_ptr output0{1} plain0{1} len0{1} 16).
+      ecall{1} (store16_spec output0{1} plain0{1} k10{1} Glob.mem{1}); wp; skip => 
+        /> &1 &2 hinv h1 h2 h3 h4 h5 mem h6 res_L res_R *.
+      rewrite /x86_VEXTRACTI128 b2i_get 1:// /= /(%/) /(%%) -pack2_4u32_8u32 /=; split; 2:smt().
+      apply mem_eq_ext => j; rewrite h6 get_storeW128E /in_range.
+      case: (to_uint output{2} <= j < to_uint output{2} + 16) => [h | //].
+      have hh : 0 <= j - to_uint output{2} < 16 by smt().
+      rewrite /init32 /loadW128 /= initiE 1:// /b2i /=.
+      rewrite (pack4_init (fun i=> k1{1}.[i])) get8_pack4u32 hh /=. 
+      by rewrite pack16bE 1:// !initiE // divz_ge0 1:// ltz_divLR.
+    by skip => /> *; rewrite /x86_VEXTRACTI128 b2i_get 1:// /= /(%/) /(%%) -pack2_4u32_8u32 /= /#.
+  inline Store.store16; exlim Glob.mem{1} => mem0.
+  while (i{1} = to_uint j{2} /\ 0 <= len1{1} <= 16 /\ 0 <= i{1} /\
+        len1{1} = to_uint len{2} /\ output1{1} = to_uint output{2} /\ plain1{1} = to_uint plain{2} /\
+         ={Glob.mem} /\ 
+         (inv_ptr output1 plain1 len1 /\ good_ptr output1 plain1 len1){1} /\
+         (forall k, !(in_range output1{1} i{1} k) => Glob.mem{1}.[k] = mem0.[k]) /\
+         (forall k, in_range 0 len1{1} k => k8{1}.[k] = s0{2}.[k] `^` mem0.[plain1{1} + k])).
+  + wp; skip => /> &1 &2 h1 h2 h3 hinv h4 h5 hmem hk h6 h7.
+    rewrite ultE W2u32.to_uint_truncateu32 /=. 
+    rewrite !to_uintD_small /= 1..3:/# modz_small 1:/# /=.
+    split; 1:smt().
+    rewrite hk 1:/# /loadW8 hmem 1:/# W8.xorwC /=.
+    by move=> k1 hk1; rewrite storeW8E get_setE /#.
+  wp; while{1} (0 <= i <= len1 /\ len1 <= 16 /\
+               (forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` Glob.mem.[plain1 + j])){1}
+              (len1 - i){1}.
+  + by move=> _ z; wp; skip => />; smt(WArray16.get_setE).
+  wp; skip => /> &1 &2 *; split; 1:smt().
+  move=> i_L k8_L; split; 1:smt().
+  move=> h1 h2 h3 h4 ; rewrite ultE W2u32.to_uint_truncateu32 /= modz_small 1:// /=.
+  have ->> : i_L = to_uint len{2} by smt().
+  move=> k3 *; rewrite h4 1://.
+  rewrite /init32 !initE.
+  have h : 0 <= k3 < 16 by smt().
+  by rewrite h /= (pack4_init (fun i => k10{1}.[i])) get8_pack4u32 h.
+qed.
+
+equiv eq_store len0 : ChaCha20_pref.M.store ~ M.store :
+  output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\ len{1} = len0 /\
+  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ 64 <= len{1} /\
+  k{2} = (x_ k){1} 
+  ==>
+  res{1}.`1 = to_uint res{2}.`1 /\ res{1}.`2 = to_uint res{2}.`2 /\ res{1}.`3 = to_uint res{2}.`3 /\ 
+  (good_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ (inv_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ ={Glob.mem} /\ res{1}.`3 = len0 - 64.
+proof.
   proc *.
   ecall{1} (store_pref_spec output{1} plain{1} len{1} k{1} Glob.mem{1}).
-
-print store_pref_spec.
-
-
-                   forall (j : address),
-                   Glob.mem.[j]m.[j] =
-      if in_range output{1} (min 64 len{1}) j then
-        let j0 = j - output{1} in (init32 (fun (i0 : int) => k{1}.[i0])).[j0] `^` Glob.mem{1}.[plain{1} + j0]
-      else Glob.mem{1}.[j]
- 
-
-
-
-
+  inline *; wp; skip => /> &1 &2 3!-> ???? ->; split; 1: smt (W32.to_uint_cmp).
+  move=> ? mem_L.
+  have -> : min 64 (to_uint len{2}) = 64 by smt().
+  rewrite to_uintB 1:uleE 1:// !to_uintD_small /= 1..4:/# => hinv hmem.
+  split; 1:smt().
+  apply mem_eq_ext => j.
+  rewrite hmem get_storeW256E.
+  have <- /= := store_256_xor_spec 
+            (to_uint output{2}) k{1} Glob.mem{2} (to_uint plain{2}) j.
+  by rewrite /x_ /= get_storeW256E.
+qed.
 
 equiv eq_store_x2_last : ChaCha20_pavx2_cf.M.store_x2_last ~ M.store_x2_last :
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
-  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ len{1} < 128 /\
+  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ len{1} <= 128 /\
   k{2} = (x2_ k_1 k_2){1} 
   ==>
   ={Glob.mem}.
 proof.
   proc => /=.
-  sp 1 3.
-
-equiv eq_store_last : ChaCha20_pavx2_cf.M.store ~ M.store_last :
-  output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
-  (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ len{1} < 64 /\
-  k{2} = (x2_ k_1 k_2){1} 
-  ==>
-  ={Glob.mem}.
-proof.
-  proc => /=.
-  sp 1 3.
-
-admitted.
+  call eq_store_last => /=; sp 1 3.
+  if.
+  + move=> *; rewrite uleE /= /#.
+  + wp; ecall (eq_store len{1}); skip => /> &1 &2 *.
+    rewrite /x2_ /= /x_ /=; split.
+    + by apply Array2.all_eq_eq.
+    move=> *;split;1: smt().
+    by apply Array2.all_eq_eq.
+  skip => /> &1 &2 *; rewrite /x_ /x2_ /=;split; 1:smt(W32.to_uint_cmp).
+  by apply Array2.all_eq_eq.
+qed.
 
 phoare perm_x2_spec k1 k2 : [M.perm_x2 : k = x2 k1 k2 ==> res = x2_ k1 k2] = 1%r.
 proof.
@@ -788,6 +1172,7 @@ qed.
 equiv eq_chacha20_less_than_257 :
   ChaCha20_pavx2.M.chacha20_less_than_257 ~ ChaCha20_savx2.M.chacha20_less_than_257 : 
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
+  0 <= len{1} <= 256 /\
   key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
   (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
   (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} 
@@ -796,22 +1181,110 @@ equiv eq_chacha20_less_than_257 :
 proof. 
   proc => /=.
   seq 1 4 : (output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
+             0 <= len{1} <= 256 /\
             st{2} = (x2 st_1 st_2) {1} /\ (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ ={Glob.mem}).
   + call eq_init_x2; wp; skip => />.
   if; 1: by move=> /> *; rewrite ultE.
   + call eq_store_x2_last => /=. 
-    call eq_store_x2 => /=.
+    ecall (eq_store_x2 len{1})=> /=.
     inline M.perm_x4; wp.
     ecall{2} (perm_x2_spec k2_1{1} k2_2{1}).
     ecall{2} (perm_x2_spec k1_1{1} k1_2{1}); wp => /=.
     call eq_sum_states_x4; call eq_rounds_x4 => /=.
-    inline ChaCha20_pavx2.M.copy_state_x4 M.copy_state_x4; wp; skip => /> *.
-    split; 2: smt().
+    inline ChaCha20_pavx2.M.copy_state_x4 M.copy_state_x4; wp; skip => /> * /=.
+    split; 2: smt(). 
     by apply Array4.all_eq_eq; rewrite /x86_VPADD_8u32 /Array4.all_eq /x2 /= g_p2_pack.
   call eq_store_x2_last => /=.  
   ecall{2} (perm_x2_spec k1_1{1} k1_2{1}).
   call eq_sum_states_x2.
   call eq_rounds_x2.
-  by inline M.copy_state_x2; auto.
+  by inline M.copy_state_x2; auto => /> /#.
 qed.
+
+equiv eq_chacha20_avx2 : 
+   ChaCha20_pavx2.M.chacha20_avx2 ~ ChaCha20_savx2.M.chacha20_avx2 : 
+     output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
+     key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
+     (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
+     (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} 
+   ==>
+   ={Glob.mem}.
+proof.
+  proc => /=.
+  if.
+  + by move=> /> *;rewrite ultE.
+  + by call eq_chacha20_less_than_257; skip => />; smt (W32.to_uint_cmp).
+  by call eq_chacha20_more_than_256; skip.
+qed.
+
+equiv eq_pref_savx2_chacha20 : 
+   ChaCha20_pref.M.chacha20_ref ~ ChaCha20_savx2.M.chacha20_avx2 : 
+     output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
+     key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
+     (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
+     (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} 
+   ==>
+   ={Glob.mem}.
+proof.
+  transitivity ChaCha20_pavx2.M.chacha20_avx2
+    ( ={output, plain, len, key, nonce, counter, Glob.mem} /\ 0 <= len{1} ==> 
+      ={Glob.mem})
+    ( output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
+      key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
+      (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
+      (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} 
+      ==> ={Glob.mem}).
+  + smt(W32.to_uint_cmp). + done.
+  + by apply eq_pref_pavx2_chacha20.
+  by apply eq_chacha20_avx2.
+qed.
+
+hoare chacha20_avx2_spec mem0 output0 plain0 key0 len0 nonce0 counter0 : ChaCha20_savx2.M.chacha20_avx2 :
+  mem0 = Glob.mem /\ output0 = to_uint output /\ len0 = to_uint len /\
+  plain0 = loads_8 Glob.mem (to_uint plain) (to_uint len) /\
+  key0 = Array8.of_list W32.zero (loads_32 Glob.mem (to_uint key) 8) /\
+  nonce0 = Array3.of_list W32.zero (loads_32 Glob.mem (to_uint nonce) 3) /\
+  counter0 = counter /\
+  inv_ptr (to_uint output) (to_uint plain) (to_uint len) /\
+  good_ptr (to_uint output) (to_uint plain) (to_uint len) /\
+  to_uint key + 32 < W64.modulus /\ 
+  to_uint nonce + 12 < W64.modulus 
+  ==> 
+  (chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 = 
+     loads_8 Glob.mem output0 len0 /\
+  mem_eq_except (in_range output0 len0) Glob.mem mem0.
+proof.
+  bypr.
+  move=> &m [#] h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11. 
+  have <-: 
+   Pr[ChaCha20_pref.M.chacha20_ref(output0, to_uint plain{m}, len0, to_uint key{m}, 
+                                   to_uint nonce{m}, counter{m}) @ &m :
+       !((chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 =loads_8 Glob.mem output0 len0 /\
+        mem_eq_on (predC (in_range output0 len0)) Glob.mem mem0)] =
+   Pr[M.chacha20_avx2(output{m}, plain{m}, len{m}, key{m}, nonce{m}, counter{m}) @ &m :
+    ! ((chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 = loads_8 Glob.mem output0 len0 /\
+       mem_eq_on (predC (in_range output0 len0)) Glob.mem mem0)].
+  + by byequiv eq_pref_savx2_chacha20 => />;rewrite h2 h3;case: h9.
+  pose plain1 := to_uint plain{m}; 
+  pose key1 := to_uint key{m};
+  pose nonce1 := to_uint nonce{m}.
+   byphoare (_: mem0 = Glob.mem /\
+   0 <= len /\
+   output = output0 /\ plain = plain1 /\ len = len0 /\ key = key1 /\ nonce = nonce1 /\
+   inv_ptr output0 plain1 len0 /\
+   plain0 = loads_8 mem0 plain1 len0 /\
+   key0 = Array8.of_list W32.zero (loads_32 mem0 key1 8) /\
+   nonce0 = Array3.of_list W32.zero (loads_32 mem0 nonce1 3) /\
+   counter0 = counter 
+   ==> 
+   !((chacha20_CTR_encrypt_bytes key0 nonce0 counter0 plain0).`1 = loads_8 Glob.mem output0 len0 /\
+     mem_eq_except (in_range output0 len0) Glob.mem mem0)) => //; last first.
+  + move=> />; rewrite h1 h2 h3 h4 /plain1 /key1 /nonce1 h8 h5 h6 /=;
+     case: (W32.to_uint_cmp len{m}) => -> //.
+  hoare => //.
+  conseq (chacha20_ref_spec mem0 output0 plain0 key0 nonce0 counter0) => //.
+  move: h1 h2 h3 h4 h5 h6 h7; rewrite /plain1 /key1 /nonce1 => /> &hr 7? mem1.
+  rewrite size_loads_8 max_ler => />; case: (W32.to_uint_cmp len{m}) => -> //.
+qed.
+
 
