@@ -326,7 +326,7 @@ qed.
 op xor_mem_half (o:int) (mem:global_mem_t) output plain i (k:W32.t Array8.t) j = 
   if o <= j < o + 32 then
      (WArray32.init32
-       (fun (i0 : int) => k.[i0])).[j-o] `^` mem.[plain + 64 * i + (j-o)]
+       (fun (i0 : int) => k.[i0])).[j-o] `^` mem.[plain + 64 * i + j]
   else mem.[output + 64 * i + j].
 
 op disj_or_eq (output plain len: int) = 
@@ -379,14 +379,37 @@ rewrite rangeS addzCA addzA (@addzC 1) -(@cat1s x).
 by rewrite map2_cat //= -ih.
 qed.
 
-lemma size_mapi n (f : int -> 'a -> 'b) s : size (mapi n f s) = size s.
-proof. by rewrite mapi_map2 size_map2 size_range /#. qed.
+lemma pack4_init (k:int ->  W32.t) : 
+  pack4 [k 0; k 1; k 2; k 3] = 
+  pack4_t (W4u32.Pack.init k).
+proof. by congr; apply W4u32.Pack.all_eq_eq; cbv delta. qed.
+
+lemma pack8_init (k:int -> W32.t) : 
+  pack8 [k 0; k 1; k 2; k 3; k 4; k 5; k 6; k 7] = 
+  pack8_t (W8u32.Pack.init k).
+proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
+
+lemma get8_pack8u32 f j: 
+  pack8_t (W8u32.Pack.init f) \bits8 j = 
+    if 0 <= j < 32 then f (j %/ 4) \bits8 (j %% 4) else W8.zero.
+proof.
+  rewrite pack8E W8.wordP => i hi.
+  rewrite bits8E /= initE hi /= initE.
+  have -> /= : (0 <= j * 8 + i < 256) <=> (0 <= j < 32) by smt().
+  case : (0 <= j < 32) => hj //=.
+  rewrite bits8E /= initE.
+  have -> : (j * 8 + i) %/ 32 = j %/4.
+  + rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA divzMDl //.
+    by rewrite (divz_small _ 32) //; smt (modz_cmp).
+  rewrite initE hi /= divz_cmp //=; congr.
+  rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA modzMDl modz_small //; smt (modz_cmp).
+qed.
 
 phoare pavx2_half_store_x8_spec mem0 k0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0:
   [ StoreHalfInt.store_half_x8 :
        disj_or_eq output plain len
     /\ k0 = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
-    /\ 0 <= o0 < 32
+    /\ (o0 = 0 \/ o0 = 32)
     /\ k = k0
     /\ output = output0
     /\ plain = plain0
@@ -403,7 +426,7 @@ proof.
 conseq (_ : true ==> true) (_ :
       disj_or_eq output plain len
     /\ k0 = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
-    /\ 0 <= o0 < 32
+    /\ (o0 = 0 \/ o0 = 32)
     /\ k = k0
     /\ output = output0
     /\ plain = plain0
@@ -432,24 +455,37 @@ conseq (_ : true ==> true) (_ :
   - auto=> /> &hr *; split; 1: by smt().
     move=> j; rewrite /T (@take_nth witness) // -/(T _).
     pose k' := nth _ _ _; rewrite mapi_rcons upd_mem_rcons.
-    rewrite /in_range size_mapi {1}/T size_take //= H7 /=.
-    pose c := (_ <= _ < _)%Int; have ->{c}: c = 
-      i{hr} * 64 <= j - output{hr} < i{hr} * 64 + 64 by smt().
-    rewrite -H6 get_storeW256E; pose c := (_ <= _ < _)%Int; have ->{c}: c =
-      i{hr} * 64 + o{hr} <= j - output{hr} < i{hr} * 64 + 32 + o{hr} by smt().
-    do! (case _: (_ <= _ < _)%Int => ?) => //=; 2: smt().
-    + rewrite /xor_mem_half; pose c := (_ <= _ < _)%Int; have ^hc-> /=: c.
-      * rewrite /c. admit.
-      rewrite H5 1:// xorb8E; congr.
-      * pose j' := j - _; have ->: j' = (j - output{hr}) %% 64.
-          admit.
-        rewrite /k'. admit.
-      * pose j' := j - _; have ->: j' = (j - output{hr}) %% 64.
-          admit.
-      admit.
-      admit.
-  - by auto=> /> /#.
-+ by proc; do 2! unroll for ^while; islossless.
+    rewrite size_mapi {1}/T size_take //= H6 /=.
+    rewrite get_storeW256E H5.
+    case (output{hr} + o{hr} + 64 * i{hr} <= j < output{hr} + o{hr} + 64 * i{hr} + 32) => hj.
+    + have -> /= : in_range (output{hr} + 64 * i{hr}) 64 j by smt().
+      rewrite /xor_mem_half. 
+      have -> : (j - output{hr}) %% 64 =  j - (output{hr} + 64 * i{hr}).
+      + have -> : j - output{hr} = j - (output{hr} + 64 * i{hr}) + i{hr} * 64 by ring.
+        by rewrite modzMDr modz_small /#.  
+      have -> /= : o{hr} <= j - (output{hr} + 64 * i{hr}) < o{hr} + 32 by smt().
+      rewrite H4 1:// W32u8.xorb8E; congr.
+      + rewrite /init32 initiE 1:/#. beta.
+        have -> : (half_x8 k1 k2 k3 k4 k5 k6 k7 k8).[i{hr}] = W8u32.pack8 (Array8.to_list k').
+        + rewrite /k'; have : i{hr} \in (iota_ 0 8) by rewrite mem_iota.
+          by move: (i{hr}); apply List.allP; rewrite /= /half_x8 /=.
+        rewrite /to_list /mkseq /= (pack8_init (fun j => k'.[j])) get8_pack8u32.
+        by have -> /# : 0 <= j - (output{hr} + o{hr} + 64 * i{hr}) < 32 by smt().
+      by rewrite /loadW256 pack32bE 1:/#  initiE 1:/# /= /#.
+    case (in_range (output{hr} + 64 * i{hr}) 64 j) => [hj1 | //].
+    rewrite {2}/xor_mem_half.
+    have -> : (j - output{hr}) %% 64 =  j - (output{hr} + 64 * i{hr}).
+    + have -> : j - output{hr} = j - (output{hr} + 64 * i{hr}) + i{hr} * 64 by ring.
+      by rewrite modzMDr modz_small /#.  
+    have -> : !(o{hr} <= j - (output{hr} + 64 * i{hr}) < o{hr} + 32) by smt().
+    rewrite /= /upd_mem size_mapi {1}/T size_take // /= H6 /= /#.
+  skip => /> /#.
+proc.
+while true (8-i). 
++ by move=> z;wp;skip => /#.
+wp;while true (8-i). 
++ by move=> z;wp;skip => /#.
+wp; skip => /> /#.
 qed.
 
 lemma upd_mem_comp (mem0 mem1 mem2:global_mem_t) output plain len ks (k:W32.t Array16.t) : 
@@ -726,35 +762,9 @@ proof.
   rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA modzMDl modz_small //; smt (modz_cmp).
 qed.
 
-lemma get8_pack8u32 f j: 
-  pack8_t (W8u32.Pack.init f) \bits8 j = 
-    if 0 <= j < 32 then f (j %/ 4) \bits8 (j %% 4) else W8.zero.
-proof.
-  rewrite pack8E W8.wordP => i hi.
-  rewrite bits8E /= initE hi /= initE.
-  have -> /= : (0 <= j * 8 + i < 256) <=> (0 <= j < 32) by smt().
-  case : (0 <= j < 32) => hj //=.
-  rewrite bits8E /= initE.
-  have -> : (j * 8 + i) %/ 32 = j %/4.
-  + rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA divzMDl //.
-    by rewrite (divz_small _ 32) //; smt (modz_cmp).
-  rewrite initE hi /= divz_cmp //=; congr.
-  rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA modzMDl modz_small //; smt (modz_cmp).
-qed.
-
 lemma pack8_init_shift8 (k:W32.t Array16.t) : 
   pack8 [k.[8]; k.[9]; k.[10]; k.[11]; k.[12]; k.[13]; k.[14]; k.[15]] = 
   pack8_t (W8u32.Pack.init (fun i => k.[8 + i])).
-proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
-
-lemma pack4_init (k:int ->  W32.t) : 
-  pack4 [k 0; k 1; k 2; k 3] = 
-  pack4_t (W4u32.Pack.init k).
-proof. by congr; apply W4u32.Pack.all_eq_eq; cbv delta. qed.
-
-lemma pack8_init (k:int -> W32.t) : 
-  pack8 [k 0; k 1; k 2; k 3; k 4; k 5; k 6; k 7] = 
-  pack8_t (W8u32.Pack.init k).
 proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
 
 lemma store_256_xor_spec output (k1:W32.t Array16.t) mem plain j:
