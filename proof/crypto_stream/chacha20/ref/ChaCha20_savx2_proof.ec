@@ -296,6 +296,9 @@ lemma mapi_rcons n (f:int -> 'a -> 'b) xs x :
    mapi n f (rcons xs x) = rcons (mapi n f xs) (f (n + size xs) x).
 proof. elim: xs n => //= xs hrec n;rewrite hrec /#. qed.
 
+lemma size_mapi  n (f:int -> 'a -> 'b) xs : size (mapi n f xs) = size xs.
+proof. by elim: xs n => //= xs hrec n;rewrite hrec. qed.
+
 hoare store64_spec output0 plain0 len0 k0 mem0 : ChaCha20_pref.M.store : 
   output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
   64 <= len /\ inv_ptr output plain len 
@@ -449,6 +452,38 @@ conseq (_ : true ==> true) (_ :
 + by proc; do 2! unroll for ^while; islossless.
 qed.
 
+lemma upd_mem_comp (mem0 mem1 mem2:global_mem_t) output plain len ks (k:W32.t Array16.t) : 
+   inv_ptr output plain len =>
+   64 * size ks + 64 <= len =>
+   let ofs = 64 * size ks in
+   (forall j, mem1.[j] = upd_mem (mapi 0 (xor_mem mem0 plain) ks) mem0 output j) =>
+   (forall j, mem2.[j] = 
+         if in_range (output + ofs) 64 j then
+            (WArray64.init32 (fun (i0 : int) => k.[i0])).[j - (output + ofs)] `^`
+             mem1.[plain + ofs + (j - (output + ofs))]
+         else mem1.[j]) =>
+   forall j, mem2.[j] = upd_mem (mapi 0 (xor_mem mem0 plain) (rcons ks k)) mem0 output j.
+proof.
+  move=> /= hinv hlen hmem1 hupd j.
+  rewrite mapi_rcons upd_mem_rcons hupd size_mapi !hmem1.
+  case: (in_range (output + 64 * size ks) 64 j) => [hj | //].
+  rewrite /upd_mem /= size_mapi /xor_mem.
+  have -> /= : !in_range output (64 * size ks) (plain + 64 * size ks + (j - (output + 64 * size ks))) by smt (size_ge0).
+  have -> // : j - (output + 64*size ks) = (j - output) %% 64.
+  have -> : j - output = j - (output + 64*size ks) + size ks * 64 by ring.
+  by rewrite modzMDr modz_small /#.  
+qed.
+  
+phoare pref_store_ll : [ChaCha20_pref.M.store : true ==> true] = 1%r.
+proof.
+  proc;inline *;wp.
+  while true (min 64 len -i).
+  + by move=> z; wp; skip => /#.
+  wp; while true (min 64 len -i).
+  + by move=> z; wp; skip => /#.
+  by wp; skip => /#.  
+qed.
+
 phoare pavx2_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0:
   [ ChaCha20_pavx2_cf.M.store_x8 : 
     inv_ptr output plain len /\
@@ -468,77 +503,38 @@ proof.
     res = (output0 + 512, plain0 + 512, len0 - 512) /\
     (forall j, 
        Glob.mem.[j] =
-       upd_mem (mapi 0 (xor_mem mem0 plain0) [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j)).
+       upd_mem (mapi 0 (xor_mem mem0 plain0) [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j)); last first.
+  + by proc; do 8!call pref_store_ll; skip.
   + by move=> />.
-  + proc => /=.
-    ecall (store64_spec output{hr} plain{hr} len{hr} k8 Glob.mem{hr}).
-    ecall (store64_spec output{hr} plain{hr} len{hr} k7 Glob.mem{hr}).
-    ecall (store64_spec output{hr} plain{hr} len{hr} k6 Glob.mem{hr}).
-    ecall (store64_spec output{hr} plain{hr} len{hr} k5 Glob.mem{hr}).
-    ecall (store64_spec output{hr} plain{hr} len{hr} k4 Glob.mem{hr}).
-    ecall (store64_spec output{hr} plain{hr} len{hr} k3 Glob.mem{hr}).
-    ecall (store64_spec output{hr} plain{hr} len{hr} k2 Glob.mem{hr}).
-    ecall (store64_spec output{hr} plain{hr} len{hr} k1 Glob.mem{hr}).
-    skip. move=> &hr [#] hinv 11!->> ? ->> /= />.
-    split; [smt() | move=> h1 h2 {h1 h2} mem1 hinv1 hmem1].
-    split; [smt() | move=> h {h} mem2 hinv2 hmem2].
-    split; [smt() | move=> h {h} mem3 hinv3 hmem3].
-    split; [smt() | move=> h {h} mem4 hinv4 hmem4].
-    split; [smt() | move=> h {h} mem5 hinv5 hmem5].
-    split; [smt() | move=> h {h} mem6 hinv6 hmem6].
-    split; [smt() | move=> h {h} mem7 hinv7 hmem7].
-    split; [smt() | move=> h {h} mem8 hinv8 hmem8].
-    have hup2 : forall j,
-      mem2.[j] =
-       upd_mem (mapi 0 (xor_mem mem0 plain0) (rcons [k1] k2)) mem0 output0 j.
-    + move=> j; rewrite hmem2 !hmem1 mapi_rcons upd_mem_rcons /= upd_mem_one. 
-      case: (in_range (output0 + 64) 64 j) => hj.
-      + have -> /=: !in_range output0 64 (plain0 + 64 + (j - (output0 + 64))) by smt().
-        rewrite /xor_mem.
-        have -> //: j - (output0 + 64) = (j - output0) %% 64. 
-        have -> : j - output0 = j - (output0 + 64) + 1*64 by ring.
-        by rewrite modzMDr modz_small /#.
-      case: (in_range output0 64 j) => [hj1 | //]. 
-      by rewrite /xor_mem /= modz_small 1:/#. 
-    have hup3 : forall j,
-      mem3.[j] =
-        upd_mem (mapi 0 (xor_mem mem0 plain0) (rcons [k1;k2] k3)) mem0 output0 j.
-    + move=> j; rewrite mapi_rcons upd_mem_rcons hmem3 !hup2 /=.
-      case: (in_range (output0 + 128) 64 j) => [hj | //].
-      rewrite /upd_mem /=. 
-print inv_ptr.
+  proc => /=.
+  ecall (store64_spec output{hr} plain{hr} len{hr} k8 Glob.mem{hr}).
+  ecall (store64_spec output{hr} plain{hr} len{hr} k7 Glob.mem{hr}).
+  ecall (store64_spec output{hr} plain{hr} len{hr} k6 Glob.mem{hr}).
+  ecall (store64_spec output{hr} plain{hr} len{hr} k5 Glob.mem{hr}).
+  ecall (store64_spec output{hr} plain{hr} len{hr} k4 Glob.mem{hr}).
+  ecall (store64_spec output{hr} plain{hr} len{hr} k3 Glob.mem{hr}).
+  ecall (store64_spec output{hr} plain{hr} len{hr} k2 Glob.mem{hr}).
+  ecall (store64_spec output{hr} plain{hr} len{hr} k1 Glob.mem{hr}).
+  skip. move=> &hr [#] hinv 11!->> ? ->> /= />.
+  split; [smt() | move=> h1 h2 {h1 h2} mem1 hinv1 hmem1].
+  split; [smt() | move=> h {h} mem2 hinv2 hmem2].
+  split; [smt() | move=> h {h} mem3 hinv3 hmem3].
+  split; [smt() | move=> h {h} mem4 hinv4 hmem4].
+  split; [smt() | move=> h {h} mem5 hinv5 hmem5].
+  split; [smt() | move=> h {h} mem6 hinv6 hmem6].
+  split; [smt() | move=> h {h} mem7 hinv7 hmem7].
+  split; [smt() | move=> h {h} mem8 hinv8 hmem8].
+  have hup1 := upd_mem_comp mem0 mem0 mem1 output0 plain0 len0 [] k1 hinv _ _ hmem1.
+  + smt(). + by move=> j /=; rewrite /upd_mem /= (_:!in_range output0 0 j) 1:/#.
+  have hup2 := upd_mem_comp mem0 mem1 mem2 output0 plain0 len0 [k1] k2 hinv _ hup1 hmem2; 1: by smt().
+  have hup3 := upd_mem_comp mem0 mem2 mem3 output0 plain0 len0 [k1;k2] k3 hinv _ hup2 hmem3; 1: by smt().
+  have hup4 := upd_mem_comp mem0 mem3 mem4 output0 plain0 len0 [k1;k2;k3] k4 hinv _ hup3 hmem4; 1: by smt().
+  have hup5 := upd_mem_comp mem0 mem4 mem5 output0 plain0 len0 [k1;k2;k3;k4] k5 hinv _ hup4 hmem5; 1: by smt().
+  have hup6 := upd_mem_comp mem0 mem5 mem6 output0 plain0 len0 [k1;k2;k3;k4;k5] k6 hinv _ hup5 hmem6; 1: by smt().
+  have hup7 := upd_mem_comp mem0 mem6 mem7 output0 plain0 len0 [k1;k2;k3;k4;k5;k6] k7 hinv _ hup6 hmem7; 1: by smt().
+  by apply (upd_mem_comp mem0 mem7 mem8 output0 plain0 len0 [k1;k2;k3;k4;k5;k6;k7] k8 hinv _ hup7 hmem8); smt().
+qed.
 
- upd_mem_rcons.
-
-       
-search (%%) ( * ) (+).
-admit.
-      + have -> : j - output0 = 
-      + rewrite Ring.IntID.opprD addzA.
-search [-] (+).
-      have /# : j - output0 = 64 + (j - output0) %% 64.
-      
-      smt().
-
-       if in_range output0 128 j then
-         let j = j - output0 in
-         let ks = [; k2] in
-         (WArray64.init32 (fun i0 => (nth witness ks (j%/64)).[i0])).[j%%64] `^` mem0.[plain0 + j]        else mem0.[j].
-    + move=> j; rewrite hmem2 !hmem1.
-      case: (in_range output0 128 j) => hj; 2: smt().
-      case: (in_range (output0 + 64) 64 j) => hj1.
-      + have -> /= : !(in_range output0 64 (plain0 + 64 + (j - (output0 + 64)))) by smt().  
-        have -> /= :  (j - output0) %/ 64 = 1. + admit.
-        congr.
-        + have -> // : (j - output0) %% 64 = j - (output0 + 64).
-          admit.
-        by congr;ring.
-      have -> /= : in_range output0 64 j by  smt().
-      have -> /=: (j - output0) %/ 64 = 0. + admit.
-      have -> // : (j - output0) %% 64 = j -output0. 
-      admit. 
-admitted.
-*)
 equiv eq_store_x8 : ChaCha20_pavx2_cf.M.store_x8 ~  M.store_x8 :
   k{2} = (x8 k_1 k_2 k_3 k_4 k_5 k_6 k_7 k_8){1} /\
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
@@ -551,21 +547,6 @@ proof.
   swap{2} 6 -1.
   inline M.store_half_x8.
 
-     
-  to_uint res.`1 = output0 + 128 /\
-  to_uint res.`2 = plain0 + 128 /\
-  to_uint res.`3 = len0 - 128 /\
-  forall j, 
-    Glob.mem.[j] =
-      if in_range output0 64 j then
-        let j = j - output0 in
-        (WArray64.init32 (fun (i0 : int) => k1.[i0])).[j] `^` mem0.[plain0 + j]
-      else if in_range (output0 + 64) 64 j then
-        let j = j - (output0 + 64) in
-        (WArray64.init32 (fun (i0 : int) => k2.[i0])).[j] `^` mem0.[plain0 + 64 + j]
-      else mem0.[j]]= 1%r.
-
-  inline M.rotate_first_half_x8.
 admitted.
 
 equiv eq_store_x8_last : ChaCha20_pavx2_cf.M.store_x8_last ~  M.store_x8_last :
