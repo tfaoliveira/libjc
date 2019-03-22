@@ -2,6 +2,8 @@ require import AllCore List Jasmin_model Int IntDiv CoreMap.
 require import Array2 Array3 Array4 Array8 Array16. 
 require import WArray16 WArray32 WArray64.
 require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref_proof ChaCha20_pavx2 ChaCha20_savx2.
+require import StdRing StdOrder.
+import IntOrder.
 
 op x8 (k1 k2 k3 k4 k5 k6 k7 k8: W32.t Array16.t) =
   Array16.init (fun i => W8u32.pack8 [k1.[i]; k2.[i]; k3.[i]; k4.[i]; k5.[i]; k6.[i]; k7.[i]; k8.[i]]).
@@ -320,13 +322,132 @@ qed.
 
 op xor_mem_half (o:int) (mem:global_mem_t) output plain i (k:W32.t Array8.t) j = 
   if o <= j < o + 32 then
-     (WArray32.init32 (fun (i0 : int) => k.[i0])).[j] `^` mem.[plain + 64 * i + j]
+     (WArray32.init32
+       (fun (i0 : int) => k.[i0])).[j-o] `^` mem.[plain + 64 * i + (j-o)]
   else mem.[output + 64 * i + j].
 
 op disj_or_eq (output plain len: int) = 
-   plain = output \/
-   plain + len <= output \/
-   output + len <= plain.
+   plain = output \/ plain + len <= output \/ output + len <= plain.
+
+lemma get_storeW128E m p w j: 
+    (storeW128 m p w).[j] = if p <= j < p + 16 then w \bits8 j - p else m.[j].
+proof. rewrite storeW128E /= get_storesE /= /#. qed.
+
+lemma get_storeW256E m p w j: 
+    (storeW256 m p w).[j] = if p <= j < p + 32 then w \bits8 j - p else m.[j].
+proof. rewrite storeW256E /= get_storesE /= /#. qed.
+
+module StoreHalfInt = {
+  proc store_half_x8
+    (output:int, plain:int, len:int, k:W256.t Array8.t, o:int) : unit =
+  {
+    var aux, i : int;
+    
+    i <- 0;
+    while (i < 8) {
+      k.[i] <- k.[i] `^` (loadW256 Glob.mem (plain + o + (64 * i)));
+      i <- i + 1;
+    }
+    i <- 0;
+    while (i < 8) {
+      Glob.mem <- storeW256 Glob.mem (output + o + (64 * i)) k.[i];
+      i <- i + 1;
+    }
+  }
+}.
+
+op half_x8 (k1 k2 k3 k4 k5 k6 k7 k8 : W32.t Array8.t) =
+  Array8.of_list witness [
+    W8u32.pack8 [k1.[0]; k1.[1]; k1.[2]; k1.[3]; k1.[4]; k1.[5]; k1.[6]; k1.[7]];
+    W8u32.pack8 [k2.[0]; k2.[1]; k2.[2]; k2.[3]; k2.[4]; k2.[5]; k2.[6]; k2.[7]];
+    W8u32.pack8 [k3.[0]; k3.[1]; k3.[2]; k3.[3]; k3.[4]; k3.[5]; k3.[6]; k3.[7]];
+    W8u32.pack8 [k4.[0]; k4.[1]; k4.[2]; k4.[3]; k4.[4]; k4.[5]; k4.[6]; k4.[7]];
+    W8u32.pack8 [k5.[0]; k5.[1]; k5.[2]; k5.[3]; k5.[4]; k5.[5]; k5.[6]; k5.[7]];
+    W8u32.pack8 [k6.[0]; k6.[1]; k6.[2]; k6.[3]; k6.[4]; k6.[5]; k6.[6]; k6.[7]];
+    W8u32.pack8 [k7.[0]; k7.[1]; k7.[2]; k7.[3]; k7.[4]; k7.[5]; k7.[6]; k7.[7]];
+    W8u32.pack8 [k8.[0]; k8.[1]; k8.[2]; k8.[3]; k8.[4]; k8.[5]; k8.[6]; k8.[7]]].
+
+lemma mapi_map2 n (f : int -> 'a -> 'b) (s : 'a list) :
+  mapi n f s = map2 (fun i x => f i x) (range n (n + size s)) s.
+proof.
+elim: s n => //= [@/range //|x s ih] n.
+rewrite (@range_cat (n + 1)); 1,2:smt(size_ge0).
+rewrite rangeS addzCA addzA (@addzC 1) -(@cat1s x).
+by rewrite map2_cat //= -ih.
+qed.
+
+lemma size_mapi n (f : int -> 'a -> 'b) s : size (mapi n f s) = size s.
+proof. by rewrite mapi_map2 size_map2 size_range /#. qed.
+
+phoare pavx2_half_store_x8_spec mem0 k0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0:
+  [ StoreHalfInt.store_half_x8 :
+       disj_or_eq output plain len
+    /\ k0 = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
+    /\ 0 <= o0 < 32
+    /\ k = k0
+    /\ output = output0
+    /\ plain = plain0
+    /\ o = o0
+    /\ len = len0
+    /\ 512 <= len
+    /\ Glob.mem = mem0 
+  ==>
+    forall j, Glob.mem.[j] =
+       upd_mem
+         (mapi 0 (xor_mem_half o0 mem0 output0 plain0)
+         [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j] = 1%r.
+proof.
+conseq (_ : true ==> true) (_ :
+      disj_or_eq output plain len
+    /\ k0 = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
+    /\ 0 <= o0 < 32
+    /\ k = k0
+    /\ output = output0
+    /\ plain = plain0
+    /\ o = o0
+    /\ len = len0
+    /\ 512 <= len
+    /\ Glob.mem = mem0 
+  ==>
+    forall j, Glob.mem.[j] =
+       upd_mem
+         (mapi 0 (xor_mem_half o0 mem0 output0 plain0)
+         [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j); 1: by move=> />.
++ proc=> /=.
+  seq 2 : (#{~k=_}pre /\ forall j, 0 <= j < 8 => 
+    k.[j] = k0.[j] `^` loadW256 mem0 (plain0 + o0 + 64 * j)).
+  sp; while {1} (0 <= i <= 8 /\ #[/2:]{~k=_}pre /\ forall j, 0 <= j < 8 =>
+    if j < i then
+      k.[j] = k0.[j] `^` loadW256 Glob.mem (plain0 + o0 + 64 * j)
+    else k.[j] = k0.[j]).
+  - by auto=> /> *; smt(Array8.get_setE).
+  - by auto=> /> /#.
+  pose T j := take j [k1; k2; k3; k4; k5; k6; k7; k8].
+  sp; while {1} (0 <= i <= 8 /\ #[/2:]{~Glob.mem=_}pre /\ forall (j : address),
+    Glob.mem.[j] = upd_mem
+      (mapi 0 (xor_mem_half o0 mem0 output0 plain0) (T i)) mem0 output0 j).
+  - auto=> /> &hr *; split; 1: by smt().
+    move=> j; rewrite /T (@take_nth witness) // -/(T _).
+    pose k' := nth _ _ _; rewrite mapi_rcons upd_mem_rcons.
+    rewrite /in_range size_mapi {1}/T size_take //= H7 /=.
+    pose c := (_ <= _ < _)%Int; have ->{c}: c = 
+      i{hr} * 64 <= j - output{hr} < i{hr} * 64 + 64 by smt().
+    rewrite -H6 get_storeW256E; pose c := (_ <= _ < _)%Int; have ->{c}: c =
+      i{hr} * 64 + o{hr} <= j - output{hr} < i{hr} * 64 + 32 + o{hr} by smt().
+    do! (case _: (_ <= _ < _)%Int => ?) => //=; 2: smt().
+    + rewrite /xor_mem_half; pose c := (_ <= _ < _)%Int; have ^hc-> /=: c.
+      * rewrite /c. admit.
+      rewrite H5 1:// xorb8E; congr.
+      * pose j' := j - _; have ->: j' = (j - output{hr}) %% 64.
+          admit.
+        rewrite /k'. admit.
+      * pose j' := j - _; have ->: j' = (j - output{hr}) %% 64.
+          admit.
+      admit.
+      admit.
+  - by auto=> /> /#.
++ by proc; do 2! unroll for ^while; islossless.
+qed.
 
 phoare pavx2_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0:
   [ ChaCha20_pavx2_cf.M.store_x8 : 
@@ -607,14 +728,6 @@ proof.
   rewrite /x86_VPINSR_4u32 /(%%) /= -pack2_2u32_4u32 -load2u32 /x86_VPINSR_2u64 /(%%) /=.
   by rewrite pack2_2u32_4u32 pack2_4u32_8u32 g_p1_pack /x86_VPADD_8u32.
 qed.
-
-lemma get_storeW128E m p w j: 
-    (storeW128 m p w).[j] = if p <= j < p + 16 then w \bits8 j - p else m.[j].
-proof. rewrite storeW128E /= get_storesE /= /#. qed.
-
-lemma get_storeW256E m p w j: 
-    (storeW256 m p w).[j] = if p <= j < p + 32 then w \bits8 j - p else m.[j].
-proof. rewrite storeW256E /= get_storesE /= /#. qed.
 
 lemma get8_pack4u32 f j: 
   pack4_t (W4u32.Pack.init f) \bits8 j = 
