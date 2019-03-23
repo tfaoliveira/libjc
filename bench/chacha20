@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # remove previous benchmarks files related to chacha20
-ls data/crypto_stream_chacha20_* | xargs rm
+##ls data/crypto_stream_chacha20_* | xargs rm
 
 # copy implementations and bindings into supercop-*
 ./sync
@@ -15,8 +15,8 @@ ls data/crypto_stream_chacha20_* | xargs rm
 # move openssl static results to openssl static avx2
 mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_openssl_static_avx2.data
 
-# disable avx and avx2 and avx run openssl benchmarks
-(export OPENSSL_ia32cap=~0x201000000000000000 && ./bench chacha20-openssl && unset OPENSSL_ia32cap)
+# disable avx and avx2/avx/sse/sse2/ssse3 run openssl benchmarks
+(export OPENSSL_ia32cap=~0x201000020006000000 && ./bench chacha20-openssl && unset OPENSSL_ia32cap)
 mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_openssl_static_ref.data
 
 (export OPENSSL_ia32cap=~0x200000000000000000 && ./bench chacha20-openssl && unset OPENSSL_ia32cap)

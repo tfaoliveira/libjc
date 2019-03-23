@@ -8,7 +8,7 @@ chacha20_avx2:
 	pushq   %r15
 	subq	$1156, %rsp
 	movq %rsp, %r15
-	andq $-31, %rsp
+	andq $-32, %rsp
 	cmpl	$257, %edx
 	jb  	Lchacha20_avx2$1
 	vmovdqu	g_r16(%rip), %ymm0

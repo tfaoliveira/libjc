@@ -127,6 +127,7 @@ void printentry(long long mbytes,const char *measuring,long long *m,long long ml
   long long j;
   long long belowj;
   long long abovej;
+  long long sum;
 
   printword(measuring);
   if (mbytes >= 0) printnum(mbytes); else printword("");
@@ -139,9 +140,15 @@ void printentry(long long mbytes,const char *measuring,long long *m,long long ml
       if (belowj * 2 < mlen && abovej * 2 < mlen) break;
     } 
     printnum(m[j]);
-    /*    if (mlen > 1) { */
-    /*      for (i = 0;i < mlen;++i) printnum(m[i]);*/
-    /*    } */
+/*        if (mlen > 1) { */
+/*          for (i = 0;i < mlen;++i) printnum(m[i]);*/
+/*        } */
+    if (mlen > 1) {
+      sum = 0;
+      for (i = 0;i < mlen;++i) sum += m[i];
+      printnum(sum/mlen);
+    }
+
   } 
   printf("\n"); fflush(stdout);
 }

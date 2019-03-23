@@ -13,7 +13,20 @@ crypto_stream chacha20 libsodium/static
 crypto_stream chacha20 libsodium/static_disable_asm
 
 crypto_stream chacha20 usuba-std
-crypto_stream chacha20 usuba-sse-fast
-crypto_stream chacha20 usuba-avx
 crypto_stream chacha20 usuba-avx-fast
+
+#crypto_stream chacha20 usuba-sse-fast
+#crypto_stream chacha20 usuba-avx
 #crypto_stream chacha20 usuba-sse #chacha20.s:253: Error: unknown pseudo-op: `.addrsig'
+
+## and some supercop implementations
+crypto_stream chacha20 dolbeau/amd64-avx2
+crypto_stream chacha20 goll_gueron
+crypto_stream chacha20 krovetz/vec128
+crypto_stream chacha20 krovetz/avx2
+
+crypto_stream chacha20 moon/avx/64
+crypto_stream chacha20 moon/avx2/64
+crypto_stream chacha20 e/ref
+crypto_stream chacha20 e/amd64-3
+

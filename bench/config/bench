@@ -1,5 +1,4 @@
-#crypto_onetimeauth poly1305 jazz/ref3
-
+crypto_scalarmult curve25519 fiat-crypto/C64
 crypto_scalarmult curve25519 fiat/amd64
 crypto_scalarmult curve25519 fiat/donna32
 crypto_scalarmult curve25519 fiat/donna64

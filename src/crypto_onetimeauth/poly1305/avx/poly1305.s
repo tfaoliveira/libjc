@@ -12,7 +12,7 @@ poly1305_avx:
 	pushq	%r15
 	subq	$560, %rsp
 	movq  %rsp, %r15
-	andq  $-31, %rsp
+	andq  $-32, %rsp
 	movq  %r15, -8(%rsp)
 	cmpq	$1024, %rdx
 	jb  	Lpoly1305_avx$1

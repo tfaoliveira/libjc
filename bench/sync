@@ -28,8 +28,53 @@ if [ "$#" -eq 0 ]; then
   exit
 fi
 
-# sync third_party libraries bindings
 impl="$1"
+
+# sync fiat-crypto src Specific X25519 C64
+#  usage : ./sync fiat-crypto
+#     or : ./sync fiat-crypto inline
+if [ "$impl" = "fiat-crypto" ]; then
+find  bindings/ -name "api.h" | grep $impl | while read binding
+do
+  bindingdir=`dirname $binding`
+  supercopdir=supercop-$version/`echo $bindingdir | sed -e 's/^bindings\///'`
+  impldir=third_party/fiat-crypto/src/Specific/X25519/C64/
+  libdir=third_party/fiat-crypto/liblow/
+
+  # create/clean supercop dir
+  mkdir -p $supercopdir
+  rm -fr $supercopdir/*
+
+  # copy headers from third_party/fiat-crypto
+  find $impldir -name "*.h" -exec  cp {} $supercopdir \;
+  find $libdir -name "*.h" -exec  cp {} $supercopdir \;
+
+  # copy api.h
+  cp $binding $supercopdir
+
+  # build curve25519-fiat64d.c
+  cat $bindingdir/include.c > $supercopdir/curve25519-fiat64d.c
+  cat $libdir/cmovznz.c >> $supercopdir/curve25519-fiat64d.c
+  cat $impldir/femul.c >> $supercopdir/curve25519-fiat64d.c
+  cat $bindingdir/u51.c >> $supercopdir/curve25519-fiat64d.c
+  cat $impldir/freeze.c >> $supercopdir/curve25519-fiat64d.c
+  cat $impldir/fesquare.c >> $supercopdir/curve25519-fiat64d.c
+  cat $impldir/ladderstep.c >> $supercopdir/curve25519-fiat64d.c
+  cat $impldir/scalarmult.c >> $supercopdir/curve25519-fiat64d.c
+  cat $bindingdir/scalarmult_base.c >> $supercopdir/curve25519-fiat64d.c
+
+  # check if it is to patch headers to declare functions as static
+  if [ "$#" -eq 2 ] && [ "$2" = "inline" ]; then
+    cp $bindingdir/ladderstep.h $supercopdir
+    cp $bindingdir/fesquare.h $supercopdir
+    cp $bindingdir/femul.h $supercopdir
+    cp $bindingdir/freeze.h $supercopdir
+  fi
+done
+exit
+fi
+
+# sync third_party libraries bindings
 find  bindings/ -name "api.h" | grep $impl | while read binding
 do
   bindingdir=`dirname $binding`

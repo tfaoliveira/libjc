@@ -11,6 +11,9 @@ chacha20_ref:
 	pushq	%r14
 	pushq	%r15
 	subq	$96, %rsp
+	movq  %rsp, %r15
+	andq  $-32, %rsp
+	movq  %r15, -8(%rsp)
 	movq	%rdi, 72(%rsp)
 	movq	%rsi, 64(%rsp)
 	movl	%edx, 92(%rsp)
@@ -62,6 +65,7 @@ Lchacha20_ref$9:
 	movl	56(%rsp), %r15d
 	movl	$0, 84(%rsp)
 	jmp 	Lchacha20_ref$10
+.p2align 5,,
 Lchacha20_ref$11:
 	addl	%edi, %eax
 	xorl	%eax, %r13d
@@ -439,6 +443,7 @@ Lchacha20_ref$2:
 	cmpl	%edx, %edi
 	jb  	Lchacha20_ref$3
 Lchacha20_ref$1:
+	movq -8(%rsp), %rsp
 	addq	$96, %rsp
 	popq	%r15
 	popq	%r14
