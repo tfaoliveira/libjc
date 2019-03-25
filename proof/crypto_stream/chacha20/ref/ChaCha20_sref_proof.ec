@@ -82,7 +82,7 @@ proof.
     have hhi: 0 <= 4 * i{hr} /\ 4 * i{hr} + 4 <= 64 by smt(). 
     case: (output{hr} + 4 * i{hr} <= j < output{hr} + 4 * i{hr} + 4)=> [ h1 | /#].
     rewrite (_: in_range output{hr} (4 * (i{hr} +1)) j) 1:/# /=. 
-    rewrite xorb8E 1:/# /init32 WArray64.initE /= (_:0 <= j - output{hr} < 64) 1:/# /=.
+    rewrite /init32 WArray64.initE /= (_:0 <= j - output{hr} < 64) 1:/# /=.
     rewrite loadW32_bits8 1:/# /loadW8 hj.
     rewrite (_: !in_range output{hr} (4 * i{hr}) (plain{hr} + 4 * i{hr} + (j - (output{hr} + 4 * i{hr})))) 1:/#.
     by have [h2 h3] /# := euclideUl 4 i{hr} ((j - output{hr}) - 4*i{hr}) (j-output{hr}) _ _;

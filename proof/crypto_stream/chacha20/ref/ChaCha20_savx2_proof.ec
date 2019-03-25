@@ -405,12 +405,11 @@ proof.
   rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA modzMDl modz_small //; smt (modz_cmp).
 qed.
 
-phoare pavx2_half_store_x8_spec mem0 k0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0:
-  [ StoreHalfInt.store_half_x8 :
+hoare pavx2_half_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0:
+  StoreHalfInt.store_half_x8 :
        disj_or_eq output plain len
-    /\ k0 = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
+    /\ k = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
     /\ (o0 = 0 \/ o0 = 32)
-    /\ k = k0
     /\ output = output0
     /\ plain = plain0
     /\ o = o0
@@ -421,31 +420,15 @@ phoare pavx2_half_store_x8_spec mem0 k0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 l
     forall j, Glob.mem.[j] =
        upd_mem
          (mapi 0 (xor_mem_half o0 mem0 output0 plain0)
-         [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j] = 1%r.
+         [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j.
 proof.
-conseq (_ : true ==> true) (_ :
-      disj_or_eq output plain len
-    /\ k0 = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
-    /\ (o0 = 0 \/ o0 = 32)
-    /\ k = k0
-    /\ output = output0
-    /\ plain = plain0
-    /\ o = o0
-    /\ len = len0
-    /\ 512 <= len
-    /\ Glob.mem = mem0 
-  ==>
-    forall j, Glob.mem.[j] =
-       upd_mem
-         (mapi 0 (xor_mem_half o0 mem0 output0 plain0)
-         [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j); 1: by move=> />.
-+ proc=> /=.
+  proc=> /=.
   seq 2 : (#{~k=_}pre /\ forall j, 0 <= j < 8 => 
-    k.[j] = k0.[j] `^` loadW256 mem0 (plain0 + o0 + 64 * j)).
+    k.[j] = (half_x8 k1 k2 k3 k4 k5 k6 k7 k8).[j] `^` loadW256 mem0 (plain0 + o0 + 64 * j)).
   sp; while {1} (0 <= i <= 8 /\ #[/2:]{~k=_}pre /\ forall j, 0 <= j < 8 =>
     if j < i then
-      k.[j] = k0.[j] `^` loadW256 Glob.mem (plain0 + o0 + 64 * j)
-    else k.[j] = k0.[j]).
+      k.[j] = (half_x8 k1 k2 k3 k4 k5 k6 k7 k8).[j] `^` loadW256 Glob.mem (plain0 + o0 + 64 * j)
+    else k.[j] = (half_x8 k1 k2 k3 k4 k5 k6 k7 k8).[j]).
   - by auto=> /> *; smt(Array8.get_setE).
   - by auto=> /> /#.
   pose T j := take j [k1; k2; k3; k4; k5; k6; k7; k8].
@@ -480,12 +463,371 @@ conseq (_ : true ==> true) (_ :
     have -> : !(o{hr} <= j - (output{hr} + 64 * i{hr}) < o{hr} + 32) by smt().
     rewrite /= /upd_mem size_mapi {1}/T size_take // /= H6 /= /#.
   skip => /> /#.
-proc.
-while true (8-i). 
-+ by move=> z;wp;skip => /#.
-wp;while true (8-i). 
-+ by move=> z;wp;skip => /#.
-wp; skip => /> /#.
+qed.
+
+hoare savx2_half_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0:
+  M.store_half_x8 :
+       disj_or_eq output0 plain0 len0 /\ good_ptr output0 plain0 len0 
+    /\ k = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
+    /\ (o0 = 0 \/ o0 = 32)
+    /\ to_uint output = output0
+    /\ to_uint plain = plain0
+    /\ o = o0
+    /\ to_uint len = len0
+    /\ 512 <= len0
+    /\ Glob.mem = mem0 
+  ==>
+    forall j, Glob.mem.[j] =
+       upd_mem
+         (mapi 0 (xor_mem_half o0 mem0 output0 plain0)
+         [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j.
+proof.
+  bypr => &m [#] h1 h2 h3 h4 hout hplain ho hlen h5 hmem.
+  have <- : 
+    Pr[StoreHalfInt.store_half_x8(output0, plain0, len0, k{m}, o0) @ &m :
+      ! (forall (j : address),
+        Glob.mem.[j] =
+        upd_mem (mapi 0 (xor_mem_half o0 mem0 output0 plain0) [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j)] =
+    Pr[M.store_half_x8(output{m}, plain{m}, len{m}, k{m}, o{m}) @ &m :
+      ! (forall (j : address),
+        Glob.mem.[j] =
+        upd_mem (mapi 0 (xor_mem_half o0 mem0 output0 plain0) [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j)].
+  + byequiv (_ : output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ 512 <= len{1} /\
+                 (o = 0 \/ o = 32){1} /\
+                 ={Glob.mem, o, k} /\ good_ptr output{1} plain{1} len{1} ==> ={Glob.mem}).
+    + proc.
+      while (={i,o,k,Glob.mem} /\ good_ptr output{1} plain{1} len{1} /\ 0 <= i{1} /\
+             output{1} = to_uint output{2} /\ 512 <= len{1} /\ (o = 0 \/ o = 32){1}).
+      + wp;skip => /> *;split;2:smt().
+        have h : to_uint (W64.of_int (o{2} + 64 * i{2})) = o{2} + 64 * i{2}.
+        + by apply W64.to_uint_small => /= /#.
+        by rewrite W64.to_uintD_small h /= /#.
+      wp; while (={i,o,k,Glob.mem} /\ good_ptr output{1} plain{1} len{1} /\ 0 <= i{1} /\
+             plain{1} = to_uint plain{2} /\ 512 <= len{1} /\ (o = 0 \/ o = 32){1}). 
+      + wp; skip=> /> *; split; 2:smt().
+        have h : to_uint (W64.of_int (o{2} + 64 * i{2})) = o{2} + 64 * i{2}.
+        + by apply W64.to_uint_small => /= /#.
+        by rewrite W64.to_uintD_small h /= /#.
+      by wp; skip => />.
+    + by move=> />; rewrite hout hplain hlen ho.
+    done.
+  byphoare (_:    disj_or_eq output plain len
+               /\ k = half_x8 k1 k2 k3 k4 k5 k6 k7 k8
+               /\ (o0 = 0 \/ o0 = 32)
+               /\ output = output0
+               /\ plain = plain0
+               /\ o = o0
+               /\ len = len0
+               /\ 512 <= len
+               /\ Glob.mem = mem0 
+             ==>
+               !forall j, Glob.mem.[j] =
+                  upd_mem
+                  (mapi 0 (xor_mem_half o0 mem0 output0 plain0)
+                  [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j) => //.
+  by hoare; conseq (pavx2_half_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0).
+qed.
+
+op x4 (k1 k2 k3 k4 k5 k6 k7 k8: W32.t Array8.t) =
+  Array8.init (fun i => W8u32.pack8 [k1.[i]; k2.[i]; k3.[i]; k4.[i]; k5.[i]; k6.[i]; k7.[i]; k8.[i]]).
+
+lemma W8u32_bits128_0 (w:W8u32.Pack.pack_t) :
+  pack8_t w \bits128 0 = pack4 [w.[0]; w.[1]; w.[2]; w.[3]].
+proof. by rewrite -{1}(W8u32.Pack.to_listK w) /= -pack2_4u32_8u32. qed.
+
+lemma W8u32_bits128_1 (w:W8u32.Pack.pack_t) :
+  pack8_t w \bits128 1 = pack4 [w.[4]; w.[5]; w.[6]; w.[7]].
+proof. by rewrite -{1}(W8u32.Pack.to_listK w) /= -pack2_4u32_8u32. qed.
+
+lemma pack2_2u32_4u32 (w0 w1 w2 w3 :W32.t) :
+   pack2 [pack2 [w0;w1]; pack2 [w2; w3]] =
+   pack4 [w0; w1; w2; w3].
+proof. by apply W128.all_eq_eq;cbv W128.all_eq (%/) (%%). qed.
+
+lemma W4u32_bits64_0 (w:W4u32.Pack.pack_t) :
+  pack4_t w \bits64 0 = pack2 [w.[0]; w.[1]].
+proof. by rewrite -{1}(W4u32.Pack.to_listK w) /= -pack2_2u32_4u32. qed.
+
+lemma W4u32_bits64_1 (w:W4u32.Pack.pack_t) :
+  pack4_t w \bits64 1 = pack2 [w.[2]; w.[3]].
+proof. by rewrite -{1}(W4u32.Pack.to_listK w) /= -pack2_2u32_4u32. qed.
+
+(*lemma W2u128_W8u32 (w:W2u128.Pack.pack_t) : 
+   pack2_t w = pack8 [w.[0] \bits32 0 ; w.[0] \bits32 1; w.[0] \bits32 2 ; w.[0] \bits32 3;
+                      w.[1] \bits32 0 ; w.[1] \bits32 1; w.[1] \bits32 2 ; w.[1] \bits32 3].
+proof.
+  rewrite -pack2_4u32_8u32; congr.
+  apply W2u128.Pack.all_eq_eq; rewrite /all_eq /=.
+  rewrite -{1}(W4u32.unpack32K w.[0]) -{1}(W4u32.unpack32K w.[1]).
+  by rewrite /unpack32;split;congr;rewrite W4u32.Pack.init_of_list.
+qed.*)
+
+hint simplify (W8u32_bits128_0, W8u32_bits128_1, W4u32_bits64_0, W4u32_bits64_1).
+
+lemma x86_VPUNPCKH_8u32_spec (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) 
+                             (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t): 
+  x86_VPUNPCKH_8u32 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7])
+                    (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
+  W8u32.pack8 [v2; w2; v3; w3; v6; w6; v7; w7].
+proof.
+  by cbv delta; rewrite -(pack2_4u32_8u32 v2); congr; apply W2u128.Pack.all_eq_eq; rewrite /all_eq.
+qed.
+
+lemma x86_VPUNPCKL_8u32_spec (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) 
+                             (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t): 
+  x86_VPUNPCKL_8u32 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7])
+                    (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
+  W8u32.pack8 [v0; w0; v1; w1; v4; w4; v5; w5].
+proof.
+  by cbv delta; rewrite -(pack2_4u32_8u32 v0 w0); congr; apply W2u128.Pack.all_eq_eq; rewrite /all_eq.
+qed.
+
+lemma x86_VPERM2I128_8u32_spec_32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
+  x86_VPERM2I128 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) (W8.of_int 32) =
+  W8u32.pack8 [v0; v1; v2; v3; w0; w1; w2; w3].
+proof.
+  by cbv delta; rewrite !of_intwE; cbv delta; rewrite pack2_4u32_8u32.
+qed.
+
+lemma x86_VPERM2I128_8u32_spec_49 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
+  x86_VPERM2I128 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) (W8.of_int 49) =
+  W8u32.pack8 [v4; v5; v6; v7; w4; w5; w6; w7].
+proof.
+  by cbv delta; rewrite !of_intwE; cbv delta; rewrite pack2_4u32_8u32.
+qed.
+
+lemma x86_VPUNPCKL_4u64_8u32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
+  x86_VPUNPCKL_4u64 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
+  W8u32.pack8 [v0;v1;w0;w1;v4;v5;w4;w5].
+proof.
+  by cbv delta; rewrite W2u128.Pack.init_of_list /= !pack2_2u32_4u32 pack2_4u32_8u32 .
+qed.
+
+lemma x86_VPUNPCKH_4u64_8u32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
+  x86_VPUNPCKH_4u64 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
+  W8u32.pack8 [v2;v3;w2;w3;v6;v7;w6;w7].
+proof.
+  by cbv delta; rewrite W2u128.Pack.init_of_list /= !pack2_2u32_4u32 pack2_4u32_8u32 .
+qed.
+
+hint simplify (x86_VPUNPCKH_8u32_spec, x86_VPUNPCKL_8u32_spec, x86_VPERM2I128_8u32_spec_32, x86_VPERM2I128_8u32_spec_49,
+               x86_VPUNPCKL_4u64_8u32, x86_VPUNPCKH_4u64_8u32).
+
+hoare rotate_spec k1 k2 k3 k4 k5 k6 k7 k8 : ChaCha20_savx2.M.rotate :
+   x = x4 k1 k2 k3 k4 k5 k6 k7 k8 ==>
+   res = half_x8 k1 k2 k3 k4 k5 k6 k7 k8.
+proof.
+  conseq (_: Array8.all_eq res (half_x8 k1 k2 k3 k4 k5 k6 k7 k8)).
+  + by move=> *;apply Array8.all_eq_eq.
+  proc.
+  inline M.sub_rotate.
+  unroll for ^while.   
+  unroll for ^while.
+  wp; skip => &hr /= ->.
+  have -> : W8.of_int (1 %% 16 + 48) = W8.of_int 49 by cbv delta.
+  have -> : W8.of_int (0 %% 16 + 32) = W8.of_int 32 by cbv delta.
+  by rewrite /all_eq /x4 /half_x8 /= .
+qed.
+
+hoare rotate_stack_spec k1 k2 k3 k4 k5 k6 k7 k8 : ChaCha20_savx2.M.rotate_stack :
+   s = x4 k1 k2 k3 k4 k5 k6 k7 k8 ==>
+   res = half_x8 k1 k2 k3 k4 k5 k6 k7 k8.
+proof.
+  conseq (_: Array8.all_eq res (half_x8 k1 k2 k3 k4 k5 k6 k7 k8)).
+  + by move=> *;apply Array8.all_eq_eq.
+  proc.
+  inline M.sub_rotate.
+  do 3!(unroll for ^while).   
+  wp; skip => &hr /= ->.
+  have -> : W8.of_int (1 %% 16 + 48) = W8.of_int 49 by cbv delta.
+  have -> : W8.of_int (0 %% 16 + 32) = W8.of_int 32 by cbv delta.
+  by rewrite /all_eq /x4 /half_x8 /= .
+qed.
+
+op sub8 i (k:'a Array16.t) = Array8.of_list witness (Array16.sub k i 8).
+
+hoare rotate_first_half_x8_spec k1 k2 k3 k4 k5 k6 k7 k8 : M.rotate_first_half_x8 : 
+   k = x8 k1 k2 k3 k4 k5 k6 k7 k8 ==>
+   res.`1 = half_x8 (sub8 0 k1) (sub8 0 k2) (sub8 0 k3) (sub8 0 k4) (sub8 0 k5) (sub8 0 k6) (sub8 0 k7) (sub8 0 k8) /\
+   res.`2 = x4 (sub8 8 k1) (sub8 8 k2) (sub8 8 k3) (sub8 8 k4) (sub8 8 k5) (sub8 8 k6) (sub8 8 k7) (sub8 8 k8).
+proof.
+  proc.
+  ecall (rotate_spec (sub8 0 k1) (sub8 0 k2) (sub8 0 k3) (sub8 0 k4) (sub8 0 k5) (sub8 0 k6) (sub8 0 k7) (sub8 0 k8)).
+  while (0 <= i <= 8 /\ forall j, 0 <= j < i => k0_7.[j] = k.[j]).
+  + by wp; skip; smt (Array8.get_setE).
+  wp; while (0 <= i <= 8 /\ forall j, 0 <= j < i => s_k8_15.[j] = k.[8 + j]).
+  + by wp; skip; smt (Array8.get_setE).
+  wp; skip => />; split; 1:smt().
+  move=> i0 s_k8_15 ??? h1; split; 1:smt().
+  move=> i1 k0_7 ??? h2.
+  have ->> : i0 = 8 by smt().
+  have ->> : i1 = 8 by smt().
+  split; apply Array8.all_eq_eq; rewrite /Array8.all_eq /=.
+  + by rewrite !h2; cbv delta.
+  by rewrite !h1; cbv delta.
+qed.
+
+lemma sub8_second_half k j: 
+  32 <= j < 64 =>
+  (WArray32.init32 ("_.[_]" (sub8 8 k))).[j - 32] = (WArray64.init32 ("_.[_]" k)).[j].
+proof.
+  move=> h;rewrite /WArray32.init32 /WArray64.init32 !initiE /=.
+  + smt (). + smt().
+  rewrite /sub8 /= /Array16.sub /mkseq /=.
+  have -> : -32 = (-8) * 4 by done.
+  rewrite modzMDr divzMDr 1://;congr.
+  have hj1 : 8 <= j %/ 4 < 16.
+  + rewrite lez_divRL //= ltz_divLR //.
+  by rewrite  Array8.get_of_list /#.
+qed.
+
+lemma sub8_first_half k j: 
+  0 <= j < 32 =>
+  (WArray32.init32 ("_.[_]" (sub8 0 k))).[j] = (WArray64.init32 ("_.[_]" k)).[j].
+proof.
+  move=> h;rewrite /WArray32.init32 /WArray64.init32 !initiE /=.
+  + smt (). + smt().
+  rewrite /sub8 /= /Array16.sub /mkseq /=.
+  have hj1 : 0 <= j %/ 4 < 8.
+  + rewrite lez_divRL //= ltz_divLR //.
+  by rewrite  Array8.get_of_list /#.
+qed.
+
+lemma nth_mapi k (f: int -> 'a -> 'b) al dfl j : 
+  nth dfl (mapi k f al) j = 
+   if 0 <= j < size al then f (k+j) (nth witness al j) else dfl.
+proof. elim: al k j => /= [ /# | a al hrec k j]; smt(size_ge0). qed.
+
+lemma upd_mem_mapi_8 output (f : int -> W32.t Array8.t -> int -> W8.t) ks mem j: 
+   upd_mem (mapi 0 f ks) mem output j = 
+    if in_range output (64 * size ks) j then
+      f ((j - output) %/64) (nth witness ks ((j - output) %/64)) ((j-output) %% 64)
+    else mem.[j].
+proof. 
+  rewrite /upd_mem size_mapi; case: (in_range output (64 * size ks) j) => //= hin.
+  rewrite nth_mapi ltz_divLR 1:// lez_divRL 1:// /= /#.
+qed.
+
+lemma upd_mem_mapi_16 output (f : int -> W32.t Array16.t -> int -> W8.t) ks mem j: 
+   upd_mem (mapi 0 f ks) mem output j = 
+    if in_range output (64 * size ks) j then
+      f ((j - output) %/64) (nth witness ks ((j - output) %/64)) ((j-output) %% 64)
+    else mem.[j].
+proof. 
+  rewrite /upd_mem size_mapi; case: (in_range output (64 * size ks) j) => //= hin.
+  rewrite nth_mapi ltz_divLR 1:// lez_divRL 1:// /= /#.
+qed.
+
+lemma upd_mem_half_2 len (mem1 mem0 mem2:global_mem_t) output plain k1 k2 k3 k4 k5 k6 k7 k8:
+  disj_or_eq output plain len =>  512 <= len => 
+  (forall (j : address),
+      mem1.[j] =
+      upd_mem (mapi 0 (xor_mem_half 0 mem0 output plain)
+                 [sub8 0 k1; sub8 0 k2; sub8 0 k3; sub8 0 k4; sub8 0 k5; sub8 0 k6; sub8 0 k7; sub8 0 k8]) mem0 output j) =>
+  (forall (j : address),
+      mem2.[j] =
+      upd_mem (mapi 0 (xor_mem_half 32 mem1 output plain)
+                 [sub8 8 k1; sub8 8 k2; sub8 8 k3; sub8 8 k4; sub8 8 k5; sub8 8 k6; sub8 8 k7; sub8 8 k8]) mem1 output j) =>
+   (forall (j:address),
+      mem2.[j] = 
+         upd_mem (mapi 0 (xor_mem mem0 plain) [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output j).
+proof.
+  move=> hd hlen hmem1 hmem2 j.
+  rewrite upd_mem_mapi_16 hmem2 upd_mem_mapi_8.
+  have -> : [sub8 8 k1; sub8 8 k2; sub8 8 k3; sub8 8 k4; sub8 8 k5; sub8 8 k6; sub8 8 k7; sub8 8 k8] = 
+            map (sub8 8) [k1;k2;k3;k4;k5;k6;k7;k8] by done.
+  have heq : [sub8 0 k1; sub8 0 k2; sub8 0 k3; sub8 0 k4; sub8 0 k5; sub8 0 k6; sub8 0 k7; sub8 0 k8] = 
+            map (sub8 0) [k1;k2;k3;k4;k5;k6;k7;k8] by done.
+  have hs : size [k1; k2; k3; k4; k5; k6; k7; k8] = 8 by done.
+  rewrite size_map hs.
+  pose k := nth witness [k1; k2; k3; k4; k5; k6; k7; k8] ((j - output) %/ 64).
+  case _ : (in_range output (64 * 8) j) => /= hj;last first.
+  + by rewrite hmem1 /upd_mem size_mapi /= hj.
+  rewrite (nth_map witness witness (sub8 8) ((j - output) %/ 64) [k1;k2;k3;k4;k5;k6;k7;k8]).
+  + by rewrite lez_divRL 1:// ltz_divLR //= /#.
+  rewrite -/k /xor_mem_half /xor_mem.
+  case: (32 <= (j -output) %% 64 < 32 + 32) => h. 
+  + congr; 1: by apply sub8_second_half.
+    rewrite hmem1 upd_mem_mapi_8 heq size_map hs.
+    pose k' := (map (sub8 0) [k1; k2; k3; k4; k5; k6; k7; k8]).   
+    case: (in_range output (64 * 8) (plain + 64 * ((j - output) %/ 64) + (j - output) %% 64)) => [h1 | //].
+    have ->> : plain = output by smt(divz_eq).
+    have -> : output + 64 * ((j - output) %/ 64) + (j - output) %% 64 - output = 
+              (j - output) %% 64 + ((j - output) %/ 64) * 64 by ring.
+    rewrite modzMDr divzMDr 1:// modz_mod (divz_small ((j - output) %% 64)); 1:smt(modz_cmp).
+    rewrite /= /k' (nth_map witness witness (sub8 0)).
+    + by rewrite lez_divRL 1:// ltz_divLR //= /#.
+    rewrite -/k /xor_mem_half; smt(modz_cmp).
+  rewrite hmem1 upd_mem_mapi_8 heq size_map hs.
+  pose k' := (map (sub8 0) [k1; k2; k3; k4; k5; k6; k7; k8]). 
+  have -> /= : output + 64 * ((j - output) %/ 64) + (j - output) %% 64 = j by smt(divz_eq).  
+  rewrite hj /= /k' (nth_map witness witness (sub8 0)).
+  + by rewrite lez_divRL 1:// ltz_divLR //= /#.
+  rewrite -/k /xor_mem_half. 
+  have h1 :  0 <= (j - output) %% 64 < 0 + 32 by smt(modz_cmp).
+  by rewrite h1 /=; congr; rewrite sub8_first_half.
+qed.
+
+hoare savx2_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0:
+  ChaCha20_savx2.M.store_x8 : 
+    disj_or_eq output0 plain0 len0 /\ good_ptr output0 plain0 len0 /\
+    k = x8 k1 k2 k3 k4 k5 k6 k7 k8 /\ 
+    to_uint output = output0 /\ to_uint plain = plain0 /\ to_uint len = len0 /\ 512 <= len0 /\ Glob.mem = mem0 
+    ==>
+    to_uint res.`1 = output0 + 512 /\ to_uint res.`2 = plain0 + 512 /\ to_uint res.`3 = len0 - 512 /\
+    (forall j, 
+       Glob.mem.[j] =
+       upd_mem (mapi 0 (xor_mem mem0 plain0) [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j).
+proof.
+  proc.
+  inline M.update_ptr;wp.
+  ecall (savx2_half_store_x8_spec Glob.mem{hr} (sub8 8 k1) (sub8 8 k2) (sub8 8 k3) (sub8 8 k4) (sub8 8 k5) (sub8 8 k6) (sub8 8 k7) (sub8 8 k8)
+            output0 plain0 len0 32).
+  inline M.rotate_second_half_x8;wp.
+  ecall (rotate_stack_spec (sub8 8 k1) (sub8 8 k2) (sub8 8 k3) (sub8 8 k4) (sub8 8 k5) (sub8 8 k6) (sub8 8 k7) (sub8 8 k8)).
+  wp.
+  ecall (savx2_half_store_x8_spec Glob.mem{hr} (sub8 0 k1) (sub8 0 k2) (sub8 0 k3) (sub8 0 k4) (sub8 0 k5) (sub8 0 k6) (sub8 0 k7) (sub8 0 k8)
+            output0 plain0 len0 0).
+  ecall (rotate_first_half_x8_spec k1 k2 k3 k4 k5 k6 k7 k8); wp; skip => /> &hr h1 h2 h3 h4 [r1 r2] /= ?? mem1 w1 mem2 w2.
+  rewrite !W64.to_uintD_small /= 1..2:/#.
+  rewrite W32.to_uintB 1:uleE 1:// /=.
+  by apply (upd_mem_half_2 (to_uint len{hr}) mem1 Glob.mem{hr} mem2 (to_uint output{hr}) (to_uint plain{hr}) k1 k2 k3 k4 k5 k6 k7 k8).
+qed.
+
+phoare store_half_x8_ll : [ M.store_half_x8 : true ==> true] = 1%r.
+proof.
+  proc.
+  while true (8 - i); 1: by move=> z;auto => /#.
+  wp; while true (8 - i); 1: by move=> z;auto => /#.
+  by auto => /#.
+qed.
+
+phoare sub_rotate_ll : [ M.sub_rotate : true ==> true] = 1%r.   
+proof. by proc; while true (4 - i); auto => /#. qed.
+
+phoare savx2_store_x8 mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0:
+  [ChaCha20_savx2.M.store_x8 : 
+    disj_or_eq output0 plain0 len0 /\ good_ptr output0 plain0 len0 /\
+    k = x8 k1 k2 k3 k4 k5 k6 k7 k8 /\ 
+    to_uint output = output0 /\ to_uint plain = plain0 /\ to_uint len = len0 /\ 512 <= len0 /\ Glob.mem = mem0 
+    ==>
+    to_uint res.`1 = output0 + 512 /\ to_uint res.`2 = plain0 + 512 /\ to_uint res.`3 = len0 - 512 /\
+    (forall j, 
+       Glob.mem.[j] =
+       upd_mem (mapi 0 (xor_mem mem0 plain0) [k1; k2; k3; k4; k5; k6; k7; k8]) mem0 output0 j)] = 1%r.
+proof.
+  conseq (_: true ==> true) (savx2_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0);1:done.
+  proc;  inline M.rotate_second_half_x8 M.rotate_first_half_x8 M.rotate M.rotate_stack.
+  call (_: true); 1: by auto.
+  call store_half_x8_ll; wp.
+  call sub_rotate_ll; wp.
+  while true (4 - i1); 1: by auto => /#.
+  wp; while true (4 - i1); 1: by auto => /#.
+  wp; call store_half_x8_ll; wp.
+  call sub_rotate_ll; wp.
+  wp; while true (4 - i0); 1: by auto => /#.
+  wp; while true (8 - i); 1: by auto => /#.
+  wp; while true (8 - i); auto => /#.
 qed.
 
 lemma upd_mem_comp (mem0 mem1 mem2:global_mem_t) output plain len ks (k:W32.t Array16.t) : 
@@ -572,23 +914,28 @@ proof.
 qed.
 
 equiv eq_store_x8 : ChaCha20_pavx2_cf.M.store_x8 ~  M.store_x8 :
-  k{2} = (x8 k_1 k_2 k_3 k_4 k_5 k_6 k_7 k_8){1} /\
+  k{2} = (x8 k_1 k_2 k_3 k_4 k_5 k_6 k_7 k_8){1} /\ 
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
-  (good_ptr output plain len){1} /\ ={Glob.mem} 
+  (good_ptr output plain len){1} /\ disj_or_eq output{1} plain{1} len{1} /\ 512 <= len{1} /\
+  ={Glob.mem} 
   ==>
   res{1}.`1 = to_uint res{2}.`1 /\ res{1}.`2 = to_uint res{2}.`2 /\ res{1}.`3 = to_uint res{2}.`3 /\ 
-  (good_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ ={Glob.mem}.
+  (good_ptr res{1}.`1 res{1}.`2 res{1}.`3){1} /\ (disj_or_eq res{1}.`1 res{1}.`2 res{1}.`3){1} /\
+  ={Glob.mem}.
 proof.
-  proc => /=.
-  swap{2} 6 -1.
-  inline M.store_half_x8.
-
-admitted.
+  proc *.
+  ecall{1} (pavx2_store_x8_spec Glob.mem{1} k_1{1} k_2{1} k_3{1} k_4{1} k_5{1} k_6{1} k_7{1} k_8{1} output{1} plain{1} len{1}).
+  ecall{2} (savx2_store_x8 Glob.mem{1} k_1{1} k_2{1} k_3{1} k_4{1} k_5{1} k_6{1} k_7{1} k_8{1} output{1} plain{1} len{1}).
+  skip => |> &1 &2 _ 3!-> hg hd hlen /= [r1 r2 r3] mem1 /= 3!-> hmem1; split; 1:smt().
+  move=> _ mem2 hmem2 /=;split; [smt() | split;1:smt()].
+  by apply Jasmin_memory.mem_eq_ext => j;rewrite hmem1 hmem2.
+qed.
 
 equiv eq_store_x8_last : ChaCha20_pavx2_cf.M.store_x8_last ~  M.store_x8_last :
   k{2} = (x8 k_1 k_2 k_3 k_4 k_5 k_6 k_7 k_8){1} /\
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
-  (good_ptr output plain len){1} /\ ={Glob.mem} 
+  (good_ptr output plain len){1} /\ disj_or_eq output{1} plain{1} len{1} /\ 
+  ={Glob.mem} 
   ==>
   ={Glob.mem}.
 proof.
@@ -627,14 +974,14 @@ equiv eq_chacha20_more_than_256 :
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
   key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
   (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
-  (good_ptr output plain len){1}
+  (good_ptr output plain len){1} /\ (disj_or_eq output plain len){1} 
   ==>
   ={Glob.mem}.
 proof.
   proc => /=.
   seq 1 4 : (s_r16{2} = g_r16 /\ s_r8{2} = g_r8 /\ st{2} = (x8 st1 st2 st3 st4 st5 st6 st7 st8){1} /\
             output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
-            (good_ptr output plain len){1} /\ ={Glob.mem}).
+            (good_ptr output plain len){1} /\ (disj_or_eq output plain len){1} /\ ={Glob.mem}).
   + call eq_init_x8; inline{2} M.load_shufb_cmd; wp; skip => />.
   seq 1 1 : (#pre).
   + while (#pre). 
@@ -642,14 +989,14 @@ proof.
       call eq_store_x8 => /=.
       call eq_sum_states_x8 => /=.   
       call eq_rounds_x8 => /=. 
-      by inline M.copy_state_x8; wp; skip => |> &2 ?? _ r1 r2 _ _ h _; rewrite uleE /= -h.
+      by inline M.copy_state_x8; wp; skip => |> &2 hg hd hl _ [r11 ri2 r13] [r21 r22 r23] /= 3!->> _ _;rewrite uleE.
     by skip => |> *; rewrite uleE.
   if; last by done.
   + by move=> /> *; rewrite ultE.
   call eq_store_x8_last.
   call eq_sum_states_x8 => /=.   
   call eq_rounds_x8 => /=. 
-  by inline M.copy_state_x8; wp; skip.
+  inline M.copy_state_x8; wp; skip => />.
 qed.
 
 (* --------------------------------------------------------------------- *)
@@ -701,10 +1048,6 @@ proof.
   apply W8u32.Pack.all_eq_eq; rewrite /all_eq /= !W8u32.bits32_div //; cbv delta.
   by do !(rewrite -W32.of_int_mod; cbv delta).
 qed.
-
-lemma pack2_2u32_4u32 (w0 w1 w2 w3 : W32.t):
-  pack2 [pack2 [w0; w1]; pack2 [w2; w3]] = pack4 [w0; w1; w2; w3].
-proof. by apply W128.all_eq_eq;cbv W128.all_eq (%/) (%%). qed.
 
 lemma loadW64_bits32 m p i : 0 <= i < 2 =>
   loadW64 m p \bits32 i = loadW32 m (p + i * 4).
@@ -1492,7 +1835,7 @@ equiv eq_chacha20_avx2 :
      output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
      key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
      (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
-     (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} 
+     (good_ptr output plain len){1} /\ (disj_or_eq output plain len){1} 
    ==>
    ={Glob.mem}.
 proof.
@@ -1508,7 +1851,7 @@ equiv eq_pref_savx2_chacha20 :
      output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
      key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
      (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
-     (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} 
+     (good_ptr output plain len){1} /\ (disj_or_eq output plain len){1} 
    ==>
    ={Glob.mem}.
 proof.
@@ -1518,7 +1861,7 @@ proof.
     ( output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
       key{1} = to_uint key{2} /\ nonce{1} = to_uint nonce{2} /\ ={counter,Glob.mem} /\
       (key + 32 < W64.modulus /\ nonce + 12 < W64.modulus){1} /\
-      (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} 
+      (good_ptr output plain len){1} /\ (disj_or_eq output plain len){1} 
       ==> ={Glob.mem}).
   + smt(W32.to_uint_cmp). + done.
   + by apply eq_pref_pavx2_chacha20.
@@ -1531,7 +1874,7 @@ hoare chacha20_avx2_spec mem0 output0 plain0 key0 len0 nonce0 counter0 : ChaCha2
   key0 = Array8.of_list W32.zero (loads_32 Glob.mem (to_uint key) 8) /\
   nonce0 = Array3.of_list W32.zero (loads_32 Glob.mem (to_uint nonce) 3) /\
   counter0 = counter /\
-  inv_ptr (to_uint output) (to_uint plain) (to_uint len) /\
+  disj_or_eq (to_uint output) (to_uint plain) (to_uint len) /\
   good_ptr (to_uint output) (to_uint plain) (to_uint len) /\
   to_uint key + 32 < W64.modulus /\ 
   to_uint nonce + 12 < W64.modulus 
@@ -1557,7 +1900,7 @@ proof.
    byphoare (_: mem0 = Glob.mem /\
    0 <= len /\
    output = output0 /\ plain = plain1 /\ len = len0 /\ key = key1 /\ nonce = nonce1 /\
-   inv_ptr output0 plain1 len0 /\
+   disj_or_eq output0 plain1 len0 /\
    plain0 = loads_8 mem0 plain1 len0 /\
    key0 = Array8.of_list W32.zero (loads_32 mem0 key1 8) /\
    nonce0 = Array3.of_list W32.zero (loads_32 mem0 nonce1 3) /\
@@ -1569,6 +1912,7 @@ proof.
      case: (W32.to_uint_cmp len{m}) => -> //.
   hoare => //.
   conseq (chacha20_ref_spec mem0 output0 plain0 key0 nonce0 counter0) => //.
-  move: h1 h2 h3 h4 h5 h6 h7; rewrite /plain1 /key1 /nonce1 => /> &hr 7? mem1.
-  rewrite size_loads_8 max_ler => />; case: (W32.to_uint_cmp len{m}) => -> //.
+  + by move=> &hr /> /#.
+  move: h1 h2 h3 h4 h5 h6 h7; rewrite /plain1 /key1 /nonce1 => /> &hr H1 H2 H3 H4 H5 H6 H7 H8 mem.
+  by rewrite -H2 -H3 -H4 -H5 -H6 size_loads_8 max_ler.
 qed.
