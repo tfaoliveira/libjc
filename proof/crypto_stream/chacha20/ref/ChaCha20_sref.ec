@@ -1,4 +1,4 @@
-require import List Jasmin_model Int IntDiv CoreMap.
+require import List Jasmin_model Int IntExtra IntDiv CoreMap.
 require import Array3 Array8 Array16.
 require import WArray12 WArray32 WArray64.
 
@@ -143,46 +143,47 @@ module M = {
   
   proc store (s_output:W64.t, s_plain:W64.t, s_len:W32.t, k:W32.t Array16.t,
               k15:W32.t) : W64.t * W64.t * W32.t = {
-    var aux: int;
+    var aux_0: int;
     
-    var i:int;
-    var s_k:W32.t Array3.t;
-    var output:W64.t;
+    var kk:W64.t Array8.t;
+    var aux:W64.t;
     var plain:W64.t;
+    var output:W64.t;
+    var i:int;
     var len:W32.t;
-    s_k <- witness;
-    i <- 0;
-    while (i < 3) {
-      s_k.[i] <- k.[(12 + i)];
-      i <- i + 1;
-    }
-    output <- s_output;
+    kk <- witness;
+    kk.[0] <- (zeroextu64 k.[1]);
+    kk.[0] <- (kk.[0] `<<` (W8.of_int 32));
+    aux <- (zeroextu64 k.[0]);
+    kk.[0] <- (kk.[0] `^` aux);
     plain <- s_plain;
+    kk.[0] <-
+    (kk.[0] `^` (loadW64 Glob.mem (W64.to_uint (plain + (W64.of_int (8 * 0))))));
+    kk.[1] <- (zeroextu64 k.[3]);
+    kk.[1] <- (kk.[1] `<<` (W8.of_int 32));
+    aux <- (zeroextu64 k.[2]);
+    kk.[1] <- (kk.[1] `^` aux);
+    kk.[1] <-
+    (kk.[1] `^` (loadW64 Glob.mem (W64.to_uint (plain + (W64.of_int (8 * 1))))));
+    output <- s_output;
+    Glob.mem <-
+    storeW64 Glob.mem (W64.to_uint (output + (W64.of_int (8 * 0)))) kk.[0];
+    i <- 2;
+    while (i < 8) {
+      kk.[i] <- (zeroextu64 ((i = 7) ? k15 : k.[((2 * i) + 1)]));
+      kk.[i] <- (kk.[i] `<<` (W8.of_int 32));
+      aux <- (zeroextu64 k.[(2 * i)]);
+      kk.[i] <- (kk.[i] `^` aux);
+      kk.[i] <-
+      (kk.[i] `^` (loadW64 Glob.mem (W64.to_uint (plain + (W64.of_int (8 * i))))));
+      Glob.mem <-
+      storeW64 Glob.mem (W64.to_uint (output + (W64.of_int (8 * (i - 1))))) 
+      kk.[(i - 1)];
+      i <- i + 1;
+    }
+    Glob.mem <-
+    storeW64 Glob.mem (W64.to_uint (output + (W64.of_int (8 * 7)))) kk.[7];
     len <- s_len;
-    i <- 0;
-    while (i < 12) {
-      k.[i] <-
-      (k.[i] `^` (loadW32 Glob.mem (W64.to_uint (plain + (W64.of_int (4 * i))))));
-      Glob.mem <-
-      storeW32 Glob.mem (W64.to_uint (output + (W64.of_int (4 * i)))) 
-      k.[i];
-      i <- i + 1;
-    }
-    i <- 0;
-    while (i < 3) {
-      k.[(12 + i)] <- s_k.[i];
-      i <- i + 1;
-    }
-    k.[15] <- k15;
-    i <- 12;
-    while (i < 16) {
-      k.[i] <-
-      (k.[i] `^` (loadW32 Glob.mem (W64.to_uint (plain + (W64.of_int (4 * i))))));
-      Glob.mem <-
-      storeW32 Glob.mem (W64.to_uint (output + (W64.of_int (4 * i)))) 
-      k.[i];
-      i <- i + 1;
-    }
     (output, plain, len) <@ update_ptr (output, plain, len, 64);
     s_output <- output;
     s_plain <- plain;
@@ -196,11 +197,13 @@ module M = {
     
     var i:int;
     var s_k:W32.t Array16.t;
-    var t:W32.t;
+    var u:W32.t;
     var output:W64.t;
     var plain:W64.t;
     var len:W32.t;
+    var len8:W32.t;
     var j:W64.t;
+    var t:W64.t;
     var pi:W8.t;
     s_k <- witness;
     i <- 0;
@@ -208,12 +211,24 @@ module M = {
       s_k.[i] <- k.[i];
       i <- i + 1;
     }
-    t <- k15;
-    s_k.[15] <- t;
+    u <- k15;
+    s_k.[15] <- u;
     output <- s_output;
     plain <- s_plain;
     len <- s_len;
+    len8 <- len;
+    len8 <- (len8 `>>` (W8.of_int 3));
     j <- (W64.of_int 0);
+    
+    while (((truncateu32 j) \ult len8)) {
+      t <- (loadW64 Glob.mem (W64.to_uint (plain + ((W64.of_int 8) * j))));
+      t <-
+      (t `^` (get64 (WArray64.init32 (fun i => s_k.[i])) (W64.to_uint j)));
+      Glob.mem <-
+      storeW64 Glob.mem (W64.to_uint (output + ((W64.of_int 8) * j))) t;
+      j <- (j + (W64.of_int 1));
+    }
+    j <- (j `<<` (W8.of_int 3));
     
     while (((truncateu32 j) \ult len)) {
       pi <- (loadW8 Glob.mem (W64.to_uint (plain + j)));

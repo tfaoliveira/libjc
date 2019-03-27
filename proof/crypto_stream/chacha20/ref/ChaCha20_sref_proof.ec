@@ -1,4 +1,4 @@
-require import AllCore List Jasmin_model Int IntDiv IntExtra CoreMap LoopTransform.
+require import AllCore List Jasmin_word Jasmin_model Int IntDiv IntExtra CoreMap LoopTransform.
 import IterOp.
 require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref.
 require import Array3 Array8 Array16.
@@ -11,27 +11,60 @@ theory ChaCha20_srefi.
 
 module M = {
   include ChaCha20_pref.M [init, line, quarter_round, column_round, diagonal_round, round, rounds, sum_states, update_ptr, increment_counter]
+  
+  proc merge (lo hi: W32.t) : W64.t = {
+    var w, aux : W64.t;
+    w <- zeroextu64 hi;
+    w <- w `<<` W8.of_int 32;
+    aux <- zeroextu64 lo;
+    w <- w `^` aux;
+    return w;
+  }
 
-  proc store (output plain:address, len: int, k:W32.t Array16.t) : int * int * int = {
+ proc store (output plain: address, len: int, k:W32.t Array16.t)  : int * int * int = {
+    var kk:W64.t Array8.t;
     var i:int;
-    
-    i <- 0;
-    while ((i < 16)) {
-      Glob.mem <- storeW32 Glob.mem (output + 4 * i) (k.[i] `^` loadW32 Glob.mem (plain + 4 * i));
-      i <- (i + 1);
+
+    kk <- witness;
+    kk.[0] <@ merge(k.[0], k.[1]);
+    kk.[0] <- kk.[0] `^` loadW64 Glob.mem (plain + 8 * 0);
+    kk.[1] <@ merge(k.[2], k.[3]);
+    kk.[1] <- kk.[1] `^` loadW64 Glob.mem (plain + 8 * 1);
+    Glob.mem <- storeW64 Glob.mem (output + 8 * 0) kk.[0];
+    i <- 2;
+    while (i < 8) {
+      kk.[i] <@ merge(k.[2*i], k.[2*i +1]);
+      kk.[i] <- kk.[i] `^` loadW64 Glob.mem (plain + 8 * i);
+      Glob.mem <- storeW64 Glob.mem (output + 8 * (i - 1)) kk.[i - 1];
+      i <- i + 1;
     }
+    Glob.mem <- storeW64 Glob.mem (output + 8 * 7) kk.[7];
     (output, plain, len) <@ update_ptr (output, plain, len, 64);
     return (output, plain, len);
   }
+  
+  proc store_last (output plain: address, len: int, k:W32.t Array16.t) : unit = {
+    var len8, j:int;
+    var t:W64.t;
+    var pi:W8.t;
 
-  proc store_last (output plain:address, len: int, k:W32.t Array16.t) = {
-    var j:int;
+    len8 <- len %/ 8;
     j <- 0;
-    while (j < len) {
-      Glob.mem <- storeW8 Glob.mem (output + j) 
-       (loadW8 Glob.mem (plain + j) `^` (get8 (WArray64.init32 (fun i => k.[i])) j));
+    while (j < len8) {
+      t <- loadW64 Glob.mem (plain + 8 * j);
+      t <- t `^` (get64 (WArray64.init32 (fun i => k.[i])) j);
+      Glob.mem <- storeW64 Glob.mem (output + 8 * j) t;
       j <- j + 1;
     }
+    j <- j * 8;
+    
+    while (j < len) {
+      pi <- loadW8 Glob.mem (plain + j);
+      pi <-  pi `^` get8 (WArray64.init32 (fun i => k.[i])) j;
+      Glob.mem <- storeW8 Glob.mem (output + j) pi;
+      j <- j + 1;
+    }
+    return ();
   }
 
   proc chacha20_ref (output plain:address, len:int, key nonce: address, counter:W32.t) : unit = {
@@ -56,7 +89,82 @@ module M = {
 
 end ChaCha20_srefi.
 
-phoare store_srefi_spec output0 plain0 len0 k0 mem0 : [ChaCha20_srefi.M.store : 
+lemma zeroextu64_bit (w:W32.t) i: (zeroextu64 w).[i] = ((0 <= i < 32) /\ w.[i]).
+proof.
+  rewrite /zeroextu64 W64.of_intwE /W64.int_bit (modz_small (to_uint w)).
+  + by have /= /# := W32.to_uint_cmp w.
+  have := W32.get_to_uint w i.
+  case: (0 <= i < 32) => hi /= hw;1: smt().
+  have [ /# | h]: (i < 0 \/ 32 <= i) by smt().
+  rewrite divz_small 2://.
+  by have /= /(_ h):= pow_Mle 32 i; have /= /# := W32.to_uint_cmp w.
+qed.
+
+hoare merge_spec lo0 hi0 : ChaCha20_srefi.M.merge : 
+   lo = lo0 /\ hi = hi0 ==> res = W2u32.pack2 [lo0; hi0].
+proof.
+  proc => /=; wp; skip => /> &hr.
+  apply W64.wordP=> i hi.
+  rewrite /(`<<`) /=  W2u32.pack2wE hi /= modz_small 1://.
+  rewrite !zeroextu64_bit.
+  case: (0 <= i < 32) => hi1. 
+  + have [-> ->] /#: i %/ 32 = 0 /\ i %% 32 = i by smt(modz_small divz_small).    
+  have [-> ->] /# : i %/ 32 = 1 /\ i %% 32 = i - 32.
+  have -> : i = (i - 32) + 1 * 32 by ring.
+  by rewrite divzMDr 1:// modzMDr; smt(modz_small divz_small).  
+qed.
+
+lemma get8_W2u32 (ws: W2u32.Pack.pack_t) i : 
+  W2u32.pack2_t ws \bits8 i = 
+   if 0 <= i < 8 then 
+     if i < 4 then ws.[0] \bits8 i else ws.[1] \bits8 (i - 4)
+  else W8.zero.
+proof.
+  apply W8.wordP => i0 hi0; rewrite bits8iE 1://.
+  case : (0 <= i < 8) => hi.
+  + rewrite pack2wE 1:/#. 
+    case : (i < 4) => hi'; rewrite bits8iE 1://.
+    + smt (modz_small divz_small).
+    have -> : (i * 8 + i0) = (i * 8 + i0 - 32) + 1 * 32 by ring.
+    by rewrite modzMDr divzMDr 1://;smt (modz_small divz_small).
+  by rewrite /= get_out /#.
+qed.
+
+lemma get_storeW64E m p w j: 
+    (storeW64 m p w).[j] = if p <= j < p + 8 then w \bits8 j - p else m.[j].
+proof. rewrite storeW64E /= get_storesE /= /#. qed.
+
+lemma storeW64_init32 (mem0 mem1:global_mem_t) (k:W32.t Array16.t) output plain i:
+  inv_ptr output plain (8 * i) =>
+  1 <= i <= 8 =>
+  (forall (j : address),
+    mem1.[j] =
+      if in_range output (8 * (i - 1)) j then
+        (init32 (fun (i0 : int) => k.[i0])).[j - output] `^` mem0.[plain + (j - output)]
+      else mem0.[j]) =>
+  (forall (j : address),
+     (storeW64 mem1 (output + 8 * (i - 1))
+        (pack2 [k.[2 * (i - 1)]; k.[2 * (i - 1) + 1]] `^` loadW64 mem0 (plain + 8 * (i - 1)))).[j] =
+    if in_range output (8 * i) j then
+      (init32 (fun (i0 : int) => k.[i0])).[j - output] `^` mem0.[plain + (j - output)]
+    else mem0.[j]).
+proof.
+  move=> hinv hi hmem1 j.
+  rewrite get_storeW64E.
+  case: (output + 8 * (i - 1) <= j < output + 8 * (i - 1) + 8) => h3;last by smt().
+  have -> /=: in_range output (8 * i) j by smt().
+  have hj': 0 <= j - (output + 8 * (i - 1)) < 8 by smt().
+  congr.
+  + rewrite /init32 initiE 1:/# /= get8_W2u32 hj' /=.
+    case: (j - (output + 8 * (i - 1)) < 4) => h4.
+    + have -> : (j - output) = (j -  (output + 8 * (i - 1))) + (2*(i-1)) * 4 by ring.    
+      by rewrite modzMDr divzMDr 1://; smt (modz_small divz_small).
+    have -> : (j - output) = (j -  (output + 8 * (i - 1)) - 4) + (2*(i-1) + 1) * 4 by ring. 
+    by rewrite modzMDr divzMDr 1://; smt (modz_small divz_small).
+  rewrite /loadW64 /= pack8bE 1:/# initiE 1:/# /=;congr;ring.
+qed.
+
+hoare store_srefi_spec output0 plain0 len0 k0 mem0 : ChaCha20_srefi.M.store : 
   output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
   64 <= len /\ inv_ptr output plain len 
   ==>
@@ -66,33 +174,61 @@ phoare store_srefi_spec output0 plain0 len0 k0 mem0 : [ChaCha20_srefi.M.store :
       if in_range output0 64 j then
         let j = j - output0 in
         (init32 (fun (i0 : int) => k0.[i0])).[j] `^` mem0.[plain0 + j]
-      else mem0.[j]]= 1%r.
+      else mem0.[j].
 proof.
-  proc; inline *; wp.
-  while (0 <= i <= 16 /\ inv_ptr output plain 64 /\ 
+  proc; inline ChaCha20_srefi.M.update_ptr; wp.
+  while (2 <= i <= 8 /\ inv_ptr output plain 64 /\ 
+    kk.[i-1] = pack2 [k.[2*(i-1)]; k.[2*(i-1)+1]] `^` loadW64 mem0 (plain + 8 * (i-1)) /\
     forall j, 
       Glob.mem.[j] = 
-      if in_range output (4 * i) j then 
+      if in_range output (8 * (i-1)) j then 
         let j = j - output in
         (init32 (fun (i0 : int) => k.[i0])).[j] `^` mem0.[plain + j]
-      else mem0.[j]) (16 - i).
-  + move=> z;wp; skip=> /> &hr _ hi16 hinv hj h0i; split; 2: smt().
-    split; 1: smt().
-    move=> j. rewrite get_storeW32E.
-    have hhi: 0 <= 4 * i{hr} /\ 4 * i{hr} + 4 <= 64 by smt(). 
-    case: (output{hr} + 4 * i{hr} <= j < output{hr} + 4 * i{hr} + 4)=> [ h1 | /#].
-    rewrite (_: in_range output{hr} (4 * (i{hr} +1)) j) 1:/# /=. 
-    rewrite /init32 WArray64.initE /= (_:0 <= j - output{hr} < 64) 1:/# /=.
-    rewrite loadW32_bits8 1:/# /loadW8 hj.
-    rewrite (_: !in_range output{hr} (4 * i{hr}) (plain{hr} + 4 * i{hr} + (j - (output{hr} + 4 * i{hr})))) 1:/#.
-    by have [h2 h3] /# := euclideUl 4 i{hr} ((j - output{hr}) - 4*i{hr}) (j-output{hr}) _ _;
-        [rewrite -divz_eq; ring |  smt()].
-  wp; skip => /> &hr hlen hinv;split; 1:smt().
-  move=> mem i0; split; 1: smt().
-  move=> ???; have ->> /= : i0 = 16; smt().
+      else mem0.[j]).
+  + wp; ecall (merge_spec (k.[2*i]){hr} (k.[2*i+1]){hr}); skip => /> &hr h1 h2 hinv hki hmem hi.
+    split; 1:smt().
+    have hi' : 0 <= i{hr} < 8 by smt().
+    rewrite !Array8.get_setE 1..3:// /=.
+    have -> /= : i{hr} - 1 <> i{hr} by smt().
+    split.
+    + congr.
+      rewrite /loadW64;congr; apply W8u8.Pack.packP => l hl /=.
+      rewrite !initiE 1,2:// /= hmem.
+      by have -> : !in_range output{hr} (8 * (i{hr} - 1)) (plain{hr} + 8 * i{hr} + l) by smt().
+    by rewrite hki;apply storeW64_init32 => // /#.
+  wp; ecall (merge_spec (k.[2]){hr} (k.[3]){hr}).
+  wp; ecall (merge_spec (k.[0]){hr} (k.[1]){hr}).
+  wp; skip => /> &hr hlen hinv; split.
+  + split; 1:smt().  
+    by have := storeW64_init32 Glob.mem{hr} Glob.mem{hr} k{hr} output{hr} plain{hr} 1 _ _ _; 1,3:smt().
+  move=> mem i0 kk h1 h2 h3 h4.
+  have ->> /= -> hmem: i0 = 8 by smt().
+  by apply (storeW64_init32 _ _ _ _ _ 8 h4 _ hmem).
 qed.
 
-phoare store_last_srefi_spec output0 plain0 len0 k0 mem0 : [ChaCha20_srefi.M.store_last : 
+phoare store_srefi_pspec output0 plain0 len0 k0 mem0 : 
+  [ChaCha20_srefi.M.store : 
+   output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
+   64 <= len /\ inv_ptr output plain len 
+   ==>
+   res = (output0 + 64, plain0 + 64, len0 - 64) /\ 
+   forall j, 
+    Glob.mem.[j] =
+      if in_range output0 64 j then
+        let j = j - output0 in
+        (init32 (fun (i0 : int) => k0.[i0])).[j] `^` mem0.[plain0 + j]
+      else mem0.[j]] = 1%r.
+proof.
+  conseq (_: true ==> true) (store_srefi_spec output0 plain0 len0 k0 mem0);1:done.
+  proc; inline *;wp; while true (8-i); auto => /#.
+qed.
+
+lemma pack2u32_8u8 (w0 w1 w2 w3 w4 w5 w6 w7: W8.t) :
+   pack2 [pack4 [w0;w1;w2;w3]; pack4 [w4;w5;w6;w7]] =
+   pack8 [w0; w1; w2; w3; w4; w5; w6; w7].
+proof. by apply W64.all_eq_eq;cbv W64.all_eq (%/) (%%). qed.
+
+hoare store_last_srefi_spec output0 plain0 len0 k0 mem0 : ChaCha20_srefi.M.store_last : 
   output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
   0 <= len < 64 /\ inv_ptr output plain len 
   ==>
@@ -101,26 +237,70 @@ phoare store_last_srefi_spec output0 plain0 len0 k0 mem0 : [ChaCha20_srefi.M.sto
       if in_range output0 len0 j then
         let j = j - output0 in
         (init32 (fun (i0 : int) => k0.[i0])).[j] `^` mem0.[plain0 + j]
-      else mem0.[j]]= 1%r.
+      else mem0.[j].
 proof.
-  proc; inline *; wp.
+  proc=> /=.
   while (0 <= j <= len /\ inv_ptr output plain len /\ 
     forall i, 
       Glob.mem.[i] = 
       if in_range output j i then 
         let i = i - output in
         (init32 (fun (i0 : int) => k.[i0])).[i] `^` mem0.[plain + i]
-      else mem0.[i]) (len - j).
-  + move=> z;wp; skip=> /> &hr _ hi16 hinv hj h0i; split; 2: smt().
-    split; 1: smt().
+      else mem0.[i]).
+  + wp; skip=> /> &hr _ hi16 hinv hj h0i; split; 1: smt().
     move=> i. 
     rewrite storeW8E get_setE W8.xorwC /get8 /loadW8.
     case: (i = output{hr} + j{hr}) => [-> | hne]. smt().
     rewrite hj.
     have -> // : in_range output{hr} j{hr} i = in_range output{hr} (j{hr} + 1) i. smt().
-  wp; skip => /> &hr h0len hlen hinv;split; 1: smt().
-  move=> mem j0; split; 1: smt().
-  move=> ???; have ->> /= : j0 = len{hr}; smt().
+  wp.
+  while (0 <= j <= len8 /\ len8 <= 8 /\ inv_ptr output plain len /\ 8 * len8 <= len /\
+    forall i, 
+      Glob.mem.[i] = 
+      if in_range output (8 * j) i then 
+        let i = i - output in
+         (init32 (fun (i0 : int) => k.[i0])).[i] `^` mem0.[plain + i]
+      else mem0.[i]).
+  + wp; skip => /> &hr h0j hj8 hl8 hinv hlen hmem hj;split; 1:smt().
+    have -> : get64 (init32 (fun (i0 : int) => k{hr}.[i0])) j{hr} = pack2 [k{hr}.[2*j{hr}];k{hr}.[2*j{hr} + 1]].
+    + rewrite get64E /init32 /=.
+      rewrite -(W4u8.unpack8K k{hr}.[2 * j{hr}]) -(W4u8.unpack8K k{hr}.[2 * j{hr} + 1]).
+      rewrite /unpack8 !W4u8.Pack.init_of_list /= pack2u32_8u8; congr.
+      apply W8u8.Pack.all_eq_eq; rewrite /all_eq /= !initiE; 1..8:smt().
+      rewrite /=.
+      have heq : forall i, (8 * j{hr} + i) = i + (2*j{hr})*4 by move=> *;ring. 
+      by rewrite !heq (heq 0) !modzMDr !divzMDr //.
+    have /= := storeW64_init32 mem0 Glob.mem{hr} k{hr} output{hr} plain{hr} (j{hr} + 1) _ _ _; 1..3:smt().
+    move=> h i; rewrite W64.xorwC.
+    have -> : loadW64 Glob.mem{hr} (plain{hr} + 8 * j{hr}) = loadW64 mem0 (plain{hr} + 8 * j{hr});last by apply h.
+    rewrite /loadW64;congr; apply W8u8.Pack.packP => l hl /=.
+    rewrite !initiE 1,2:// /= hmem.
+    by have -> : !in_range output{hr} (8 * j{hr}) (plain{hr} + 8 * j{hr} + l) by smt().
+  wp; skip => /> &hr h1 h2 h3;split.
+  + rewrite lez_divRL 1:// /= h1 /= mulzC floor_le 1:// /=; split; 2:smt().
+    have /= := leq_div2r 8 len{hr} 64.
+    by have -> /# :  64 %/ 8 = 8.
+  move=> mem j0 h4 h5 h6 h7 h8.        
+  have ->> : j0 = len{hr} %/ 8 by smt().
+  move=> h9;split; 1: by rewrite mulzC /#.
+  by move=> mem1 j1 h10 h11 h12 h13; have ->> : j1 = len{hr} by smt().
+qed.
+
+phoare store_last_srefi_pspec output0 plain0 len0 k0 mem0 : [ChaCha20_srefi.M.store_last : 
+  output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
+  0 <= len < 64 /\ inv_ptr output plain len 
+  ==>
+  forall j, 
+    Glob.mem.[j] =
+      if in_range output0 len0 j then
+        let j = j - output0 in
+        (init32 (fun (i0 : int) => k0.[i0])).[j] `^` mem0.[plain0 + j]
+      else mem0.[j]] = 1%r.
+proof.
+  conseq (_: true ==> true) (store_last_srefi_spec output0 plain0 len0 k0 mem0);1:done.
+  proc.
+  while true (len -j);1: by auto => /#.
+  wp; while true (len8 -j); auto => /#.
 qed.
 
 equiv eq_store32_pref_srefi len0 : ChaCha20_pref.M.store ~ ChaCha20_srefi.M.store :
@@ -129,7 +309,7 @@ equiv eq_store32_pref_srefi len0 : ChaCha20_pref.M.store ~ ChaCha20_srefi.M.stor
 proof.
   proc *.
   ecall{1}(store_pref_spec output{1} plain{1} len{1} k{1} Glob.mem{1}).
-  ecall{2}(store_srefi_spec output{1} plain{1} len{1} k{1} Glob.mem{1}).
+  ecall{2}(store_srefi_pspec output{1} plain{1} len{1} k{1} Glob.mem{1}).
   skip => /> &1 &2 4!<- /= h hlen. rewrite h hlen /= => m2 hm2.
   have -> : min 64 len{1} = 64 by smt().
   rewrite  /= (_: 0 <= len{1}) 1:/# /= => m1 hinv hm1.
@@ -142,7 +322,7 @@ equiv eq_store_last_pref_srefi : ChaCha20_pref.M.store ~ ChaCha20_srefi.M.store_
 proof.
   proc *.
   ecall{1}(store_pref_spec output{1} plain{1} len{1} k{1} Glob.mem{1}).
-  ecall{2}(store_last_srefi_spec output{1} plain{1} len{1} k{1} Glob.mem{1}).
+  ecall{2}(store_last_srefi_pspec output{1} plain{1} len{1} k{1} Glob.mem{1}).
   skip => /> &1 &2 4!<- /= h h0len hlen; rewrite h h0len hlen /= => m2 hm2 m1 _ hm1.
   by apply mem_eq_ext => j;rewrite hm1 hm2 /#.
 qed.
@@ -275,40 +455,25 @@ equiv eq_store_srefi_sref : ChaCha20_srefi.M.store ~ ChaCha20_sref.M.store :
 proof.
   proc => /=.
   inline *;wp.
-  splitwhile{1} ^while : (i < 12).
-  while (={i, Glob.mem} /\ (forall j, i{1} <= j <= 15 => k{1}.[j] = k{2}.[j]) /\ 12 <= i{1} /\
-          output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ (64 <= len /\ good_ptr output plain len){1}).
-  + wp; skip => /> &1 &2 hj hi hlen hgo hgp hi'.
-    have heq : to_uint (W64.of_int (4 * i{2})) = 4* i{2} by rewrite W64.to_uint_small /= /#.
-    have heq1 : to_uint (output{2} + W64.of_int (4 * i{2})) = to_uint output{2} + 4 * i{2}.
-    + by rewrite W64.to_uintD_small heq // /#. 
-    have heq2 : to_uint (plain{2} + W64.of_int (4 * i{2})) = to_uint plain{2} + 4 * i{2}.
-    + by rewrite W64.to_uintD_small heq // /#. 
-    smt(Array16.get_setE).
-  wp.
-  while{2} (0 <= i <= 3 /\ forall j, 0 <= j < i => k.[12 + j] = s_k.[j]){2} (3 - i{2}).
-  + move=> _ z; wp; skip => />; smt(Array16.get_setE).
-  wp.
-  while (={Glob.mem, i} /\ 0 <= i{1} <= 12 /\ (forall j, i{1} <= j < 15 => k{1}.[j] = k{2}.[j]) /\
-         output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ (64 <= len /\ good_ptr output plain len){1}).
-  + wp; skip => /> &1 &2 ? hj 4?. 
-    have heq : to_uint (W64.of_int (4 * i{2})) = 4* i{2} by rewrite W64.to_uint_small /= /#.
-    have heq1 : to_uint (output{2} + W64.of_int (4 * i{2})) = to_uint output{2} + 4 * i{2}.
-    + by rewrite W64.to_uintD_small heq // /#. 
-    have heq2 : to_uint (plain{2} + W64.of_int (4 * i{2})) = to_uint plain{2} + 4 * i{2}.
-    + by rewrite W64.to_uintD_small heq // /#. 
-    smt(Array16.get_setE).
-  wp.
-  while{2}(0 <= i <= 3 /\ forall j, 0 <= j < i => k.[12 + j] = s_k.[j]){2} (3 - i{2}).
-  + move=> _ z; wp; skip => /> *; smt(Array3.get_setE).
-  wp; skip => /> *.
-  have heq1 : to_uint (s_output{2} + W64.of_int 64) = to_uint s_output{2} + 64.
-  + by rewrite W64.to_uintD_small // /#. 
-  have heq2 : to_uint (s_plain{2} + W64.of_int 64) = to_uint s_plain{2} + 64.
-  + by rewrite W64.to_uintD_small // /#.
-  have heq3 : to_uint (s_len{2} - W32.of_int 64) = to_uint s_len{2} - 64.
-  + by rewrite W32.to_uintB // uleE. 
-  rewrite heq1 heq2 heq3 /=; smt(Array16.get_setE).
+  while (={i, Glob.mem, kk} /\ 2 <= i{1} /\ k{1} = k{2}.[15 <- k15{2}] /\
+          output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ 
+          (64 <= len /\ good_ptr output plain len){1}).
+  + wp;skip => /> &1 &2 h1 h2 h3 h4 h5.
+    have hb : 0 <= i{2} < 8 by smt().
+    rewrite !Array8.get_setE 1..6:// /=.
+    have -> : k{2}.[15 <- k15{2}].[2 * i{2} + 1] = if i{2} = 7 then k15{2} else k{2}.[2 * i{2} + 1].
+    + by rewrite Array16.get_setE 1:// /#.
+    have -> : k{2}.[15 <- k15{2}].[2 * i{2}] = k{2}.[2 * i{2}].
+    + by rewrite Array16.get_setE 1:// /#.
+    have heq1 : to_uint (W64.of_int (8 * i{2})) = 8 * i{2}.
+    + rewrite W64.to_uint_small /= /#.
+    have heq2 : to_uint (W64.of_int (8 * (i{2} - 1))) = 8 * (i{2} - 1).
+    + rewrite W64.to_uint_small /= /#.
+    by rewrite !W64.to_uintD_small ?heq1 ?heq2 /= /#.   
+  wp; skip => /> &2 h1 h2 h3.
+  rewrite to_uintD_small /= 1:/#.
+  move=> mem iR kkR h4 h5 h6.
+  by rewrite to_uintB 1:uleE //= !to_uintD_small /= /#.
 qed.
 
 equiv eq_store_last_srefi_sref : ChaCha20_srefi.M.store_last ~ ChaCha20_sref.M.store_last :
@@ -322,23 +487,29 @@ proof.
          j{1} = to_uint j{2} /\ output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
          (good_ptr output plain len){1}).
   + wp; skip => /> &2 ???; rewrite !ultE => ?. 
-    rewrite !W2u32.to_uint_truncateu32.
-    have heq1 : to_uint (output{2} +  j{2}) = to_uint output{2} + to_uint j{2}.
-    + by rewrite W64.to_uintD_small // /#. 
-    have heq2 : to_uint (plain{2} +  j{2}) = to_uint plain{2} + to_uint j{2}.
-    + by rewrite W64.to_uintD_small // /#. 
-    have heq3 : to_uint (j{2} + W64.one) = to_uint j{2} + 1.
-    + rewrite W64.to_uintD_small //= /#.
-    rewrite heq1 heq2 heq3 /= !modz_small; smt(W64.to_uint_cmp).
+    by rewrite !W2u32.to_uint_truncateu32 !W64.to_uintD_small /= 1..3:/# !modz_small; smt(W64.to_uint_cmp).
   wp.
-  while{2} (0 <= i <= 15 /\ forall j, 0 <= j < i => s_k.[j] = k.[j]){2} (15-i{2}).
+  while (0 <= j{1} <= len8{1} /\ ={Glob.mem} /\ k{1} = s_k{2} /\
+            j{1} = to_uint j{2} /\ output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\
+            len8{1} = to_uint len8{2} /\ (good_ptr output plain len){1} /\ 8 * len8{1} <= len{1} /\ len8{1} < 8).
+  + wp; skip => /> &2 h1 h2 h3 h4 h5 h6 h7.
+    rewrite !ultE !W2u32.to_uint_truncateu32 => h8.
+    have /= hcmp := W32.to_uint_cmp len{2}.
+    have heq : to_uint (W64.of_int 8 * j{2}) = 8 * to_uint j{2}.
+    + by rewrite to_uintM_small //= /#.
+    by rewrite !to_uintD_small /= 1..3:/# heq /= !modz_small /= /#.
+  wp.
+  while{2} (i<=15 /\ forall j, 0 <= j < i => s_k.[j] = k.[j]){2} (15-i{2}).
   + move=> ? z;wp; skip; smt(Array16.get_setE).    
-  wp; skip => /> &2 ???.
-  rewrite ultE /= W2u32.to_uint_truncateu32 /(%%) /=; split; 1: smt().
-  move=> i1 ?; split;1 : smt().
-  move=> ????.
-  have ->> : i1 = 15 by smt().
-  apply Array16.ext_eq=> j; rewrite !Array16.get_setE // /#.
+  wp; skip => /> &2 ???;split;1:smt().
+  move=> i sk;split;1:smt().
+  move=> ??; have ->> : i = 15 by smt().
+  move=> hsk; rewrite /(`<<`) /(`>>`) /= (_ : 3 %% 64 = 3) 1://; split.
+  + rewrite ultE W2u32.to_uint_truncateu32 /= (_: 0 %% 4294967296 = 0) 1:// W32.to_uint_shr 1:// /=.
+    rewrite mulzC floor_le 1:// ltz_divLR 1:// divz_ge0 1:// => />; split;1:smt(W32.to_uint_cmp).
+    by apply Array16.tP => j hj;rewrite !Array16.get_setE 1,2:// /#.
+  move=> jR; rewrite ltz_divLR 1:// lez_divRL 1:// /= => *.
+  rewrite ultE  W2u32.to_uint_truncateu32 W64.to_uint_shl 1:// /=; smt(modz_small).
 qed.
 
 equiv eq_increment_counter_srefi_sref: ChaCha20_srefi.M.increment_counter ~ ChaCha20_sref.M.increment_counter :
@@ -376,7 +547,6 @@ call eq_sum_states_srefi_sref.
 call eq_rounds_srefi_sref.
 by ecall{2} (copy_state_sref_spec st{2});skip.
 qed.
-
 
 hoare chacha20_sref_spec mem0 output0 plain0 key0 len0 nonce0 counter0 : ChaCha20_sref.M.chacha20_ref :
   mem0 = Glob.mem /\ output0 = to_uint output /\ len0 = to_uint len /\
