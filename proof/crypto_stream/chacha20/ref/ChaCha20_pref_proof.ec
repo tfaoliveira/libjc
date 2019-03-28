@@ -59,21 +59,22 @@ proof. by rewrite /bytes_of_block WArray64.size_to_list. qed.
 
 (* -------------------------------------------------------------------------------- *)
 op inv_ptr (output plain: address) (len:int) = 
-  !(plain < output /\ output <= plain + len).
+  !(plain < output /\ output < plain + len).
 (*
-(plain + len < output || output <= plain).
+(plain + len <= output || output <= plain).
  /\
    to_uint output + len < W64.modulus /\
    to_uint plain + len < W64.modulus.
 *)
-lemma inv_ptr_disj len output plain i1 i2:
+
+(*lemma inv_ptr_disj len output plain i1 i2:
   inv_ptr output plain len =>
   0 <= i1 <= len =>
   0 <= i2 <= len =>
   i1 < i2 => 
   plain + i2 <> output + i1.
 proof. smt (). qed.
-
+*)
 (*
 lemma inv_ptr_add_out output plain len i: 
    inv_ptr output plain len =>

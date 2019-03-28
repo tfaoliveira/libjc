@@ -89,57 +89,6 @@ module M = {
     return k';
   }
 
-(*
-  proc shuffle_state_1 (k: W32.t Array16.t) : W32.t Array16.t = {
-    var k' : W32.t Array16.t;
-
-    k'.[0]  <- k.[0] ;
-    k'.[1]  <- k.[1] ;
-    k'.[2]  <- k.[2] ;
-    k'.[3]  <- k.[3] ;
- 
-    k'.[4]  <- k.[4] ;
-    k'.[5]  <- k.[7] ;
-    k'.[6]  <- k.[6] ;
-    k'.[7]  <- k.[5] ;
-
-    k'.[8]  <- k.[9];
-    k'.[9]  <- k.[8];
-    k'.[10] <- k.[11] ;
-    k'.[11] <- k.[10] ;
-
-    k'.[12] <- k.[14];
-    k'.[13] <- k.[13];
-    k'.[14] <- k.[12];
-    k'.[15] <- k.[15];
-    return k';
-  }
-
-  proc reverse_shuffle_state_1 (k: W32.t Array16.t) : W32.t Array16.t = {
-    var k' : W32.t Array16.t;
-
-    k'.[0]  <- k.[0] ;
-    k'.[1]  <- k.[1] ;
-    k'.[2]  <- k.[2] ;
-    k'.[3]  <- k.[3] ;
-
-    k'.[5]  <- k.[7] ;
-    k'.[6]  <- k.[6] ;
-    k'.[7]  <- k.[5] ;
-    k'.[4]  <- k.[4] ;
-
-    k'.[10] <- k.[11] ;
-    k'.[11] <- k.[10] ;
-    k'.[8]  <- k.[9];
-    k'.[9]  <- k.[8];
-
-    k'.[15] <- k.[15];
-    k'.[12] <- k.[14];
-    k'.[13] <- k.[13];
-    k'.[14] <- k.[12];
-    return k';
-  }
-*)
   proc diagonal_round(k: W32.t Array16.t) : W32.t Array16.t = {
     k <@ shuffle_state_1(k);
     k <@ column_round(k);
@@ -406,30 +355,6 @@ module M = {
                                     3, 4, 9, 14);
     return k;
   }
-
- (* proc line_x8_v (k1 k2 k3 k4 k5 k6 k7 k8: W32.t Array16.t, a b c r:int) = {
-    k1 <@ ChaCha20_pref.M.line(k1, a, b, c, r);
-    k2 <@ ChaCha20_pref.M.line(k2, a, b, c, r);
-    k3 <@ ChaCha20_pref.M.line(k3, a, b, c, r);
-    k4 <@ ChaCha20_pref.M.line(k4, a, b, c, r);
-    k5 <@ ChaCha20_pref.M.line(k5, a, b, c, r);
-    k6 <@ ChaCha20_pref.M.line(k6, a, b, c, r);
-    k7 <@ ChaCha20_pref.M.line(k7, a, b, c, r);
-    k8 <@ ChaCha20_pref.M.line(k8, a, b, c, r);
-    return (k1,k2,k3,k4,k5,k6,k7,k8);
-  }
-
-  proc line_2_x8_v (k1 k2 k3 k4 k5 k6 k7 k8:W32.t Array16.t, a0 b0 c0 r0 a1 b1 c1 r1:int) = {
-    k1 <@ line_2(k1, a0, b0, c0, r0, a1, b1, c1, r1);
-    k2 <@ line_2(k2, a0, b0, c0, r0, a1, b1, c1, r1);
-    k3 <@ line_2(k3, a0, b0, c0, r0, a1, b1, c1, r1);
-    k4 <@ line_2(k4, a0, b0, c0, r0, a1, b1, c1, r1);
-    k5 <@ line_2(k5, a0, b0, c0, r0, a1, b1, c1, r1);
-    k6 <@ line_2(k6, a0, b0, c0, r0, a1, b1, c1, r1);
-    k7 <@ line_2(k7, a0, b0, c0, r0, a1, b1, c1, r1);
-    k8 <@ line_2(k8, a0, b0, c0, r0, a1, b1, c1, r1);
-    return (k1,k2,k3,k4,k5,k6,k7,k8);
-  }*)
 
   proc double_quarter_round_x8 (k1 k2 k3 k4 k5 k6 k7 k8:W32.t Array16.t, a0 b0 c0 d0 a1 b1 c1 d1 : int) = {
     (k1,k2,k3,k4,k5,k6,k7,k8) <@ line_x1_8  (k1,k2,k3,k4,k5,k6,k7,k8, a0, b0, d0, 16);
