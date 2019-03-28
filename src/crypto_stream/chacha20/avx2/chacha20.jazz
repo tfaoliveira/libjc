@@ -998,34 +998,6 @@ fn _quarter_round_x8(reg u256[16] k, inline int a b c d, stack u256 r16 r8) -> r
   return k;
 }
 
-fn _column_round_x8(reg u256[16] k, stack u256 k15 k14 r16 r8) -> reg u256[16], stack u256
-{
-  k = _quarter_round_x8(k, 0, 4, 8,  12, r16, r8);
-  k = _quarter_round_x8(k, 2, 6, 10, 14, r16, r8);
-
-  k[15] = k15;
-  k14 = k[14];
-
-  k = _quarter_round_x8(k, 1, 5, 9,  13, r16, r8);
-  k = _quarter_round_x8(k, 3, 7, 11, 15, r16, r8);
-
-  return k, k14;
-}
-
-fn _diagonal_round_x8(reg u256[16] k, stack u256 k15 k14 r16 r8) -> reg u256[16], stack u256
-{
-  k = _quarter_round_x8(k, 1, 6, 11, 12, r16, r8);
-  k = _quarter_round_x8(k, 0, 5, 10, 15, r16, r8);
-
-  k[14] = k14;
-  k15 = k[15];
-
-  k = _quarter_round_x8(k, 2, 7, 8, 13, r16, r8);
-  k = _quarter_round_x8(k,  3, 4, 9, 14, r16, r8);
-
-  return k, k15;
-}
-
 //
 // you can check the definition of rounds_x8 down bellow. But imagine that you want to
 // do some micro optimizations: let's say you wanted to merge both _quarter_round_x8 into
@@ -1076,31 +1048,6 @@ fn double_quarter_round_x8(reg u256[16] k, inline int a0 b0 c0 d0
   return k;
 }
 
-/*
-fn column_round_x8(reg u256[16] k, stack u256 k15 k14 s_r16 s_r8) -> reg u256[16], stack u256
-{
-  k = double_quarter_round_x8(k, 0, 4, 8,  12,
-                                 2, 6, 10, 14, s_r16, s_r8);
-  k[15] = k15;
-  k14 = k[14];
-
-  k = double_quarter_round_x8(k, 1, 5, 9,  13,
-                                 3, 7, 11, 15, s_r16, s_r8);
-  return k, k14;
-}
-
-fn diagonal_round_x8(reg u256[16] k, stack u256 k15 k14 s_r16 s_r8) -> reg u256[16], stack u256
-{
-  k = double_quarter_round_x8(k, 1, 6, 11, 12,
-                                 0, 5, 10, 15, s_r16, s_r8);
-  k[14] = k14;
-  k15 = k[15];
-
-  k = double_quarter_round_x8(k, 2, 7, 8, 13,
-                                 3, 4, 9, 14, s_r16, s_r8);
-  return k, k15;
-}
-*/
 
 fn column_round_x8(reg u256[16] k, stack u256 k15 s_r16 s_r8) -> reg u256[16], stack u256
 {
