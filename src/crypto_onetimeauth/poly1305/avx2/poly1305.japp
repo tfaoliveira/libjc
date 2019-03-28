@@ -318,43 +318,7 @@ u64 five_u64 = 5;
 u64 mask26_u64 = 0x3ffffff;
 u64 bit25_u64 = 0x1000000;
 
-fn unpack(stack u256[5] r1234, reg u64[3] rt, inline int o) -> stack u256[5]
-{
-  inline int mask26;
-  reg u64 h, l;
 
-  mask26 = 0x3ffffff;
-
-  l = rt[0];
-  l &= mask26;
-  r1234[u64 o + 0] = l;
-
-  l = rt[0];
-  l >>= 26;
-  l &= mask26;
-  r1234[u64 o + 4] = l;
-
-  l = rt[0];
-  l = #x86_SHRD(l, rt[1], 52);
-  h = l;
-  l &= mask26;
-  r1234[u64 o + 8] = l; // 12 bits from rt[0] and 14 bits from rt[1] 
-
-  l = h;
-  l >>= 26;
-  l &= mask26;
-  r1234[u64 o + 12] = l; // 26 bits from rt[1]; there are still some bits to copy:
-                         // - higher 24 bits of rt[1] and 2+x of rt[2] where x can be:
-                         //   - +1 bit if there is a carry propagated until the end (check last part of mulmod)
-                         //   - up until +3 bits (rt[2] can be 0,1,2,3 or 4 hence 4*5 = 20 (10100b))
-                         //   - total number of bits to copy should be at most 24+5 = 29 bits 
-
-  l = rt[1];
-  l = #x86_SHRD(l, rt[2], 40);
-  r1234[u64 o + 16] = l; // there should be no need to apply a mask to l... but check me during the proof.
-
-  return r1234;
-}
 
 
 fn times_5(stack u256[5] r1234) -> stack u256[4]
@@ -396,20 +360,63 @@ fn poly1305_avx2_setup(reg u64[3] r) ->
   stack u256[5], stack u256[4],
   stack u256[5], stack u256[4]
 {
-  inline int i;
+  inline int i mask26;
   stack u256[5] r4444   r1234;
   stack u256[4] r4444x5 r1234x5;
   reg u256 t;
   reg u64[3] rt;
+  reg u64 h l;
 
   // rt = r; store rt
   for i=0 to 2 { rt[i] = r[i]; } rt[2] = 0;
-  r1234 = unpack(r1234, rt, 3); // r^1
+  //r1234 = unpack(r1234, rt, 3); // r^1
+  
+    mask26 = 0x3ffffff;
+    l =  rt[0];
+    l &= mask26;
+    r1234[u64  3 + 0] = l;
+    l =  rt[0];
+    l >>= 26;
+    l &= mask26;
+    r1234[u64  3 + 4] = l;
+    l =  rt[0];
+    l = #x86_SHRD(l,  rt[1], 52);
+    h = l;
+    l &= mask26;
+    r1234[u64  3 + 8] = l;
+    l = h;
+    l >>= 26;
+    l &= mask26;
+    r1234[u64  3 + 12] = l;
+    l =  rt[1];
+    l = #x86_SHRD(l,  rt[2], 40);
+    r1234[u64  3 + 16] = l; // r^1
 
   // precompute r^2 r^3 r^4
   for i=0 to 3
   { rt = mulmod(rt, r);
-    r1234 = unpack(r1234, rt, 2-i);
+    //r1234 = unpack(r1234, rt, 2-i);
+    
+    mask26 = 0x3ffffff;
+    l =  rt[0];
+    l &= mask26;
+    r1234[u64  (2-i) + 0] = l;
+    l =  rt[0];
+    l >>= 26;
+    l &= mask26;
+    r1234[u64  (2-i) + 4] = l;
+    l =  rt[0];
+    l = #x86_SHRD(l,  rt[1], 52);
+    h = l;
+    l &= mask26;
+    r1234[u64  (2-i) + 8] = l;
+    l = h;
+    l >>= 26;
+    l &= mask26;
+    r1234[u64  (2-i) + 12] = l;
+    l =  rt[1];
+    l = #x86_SHRD(l,  rt[2], 40);
+    r1234[u64  (2-i) + 16] = l;
   }
 
   // compute r1234x5
