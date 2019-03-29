@@ -318,43 +318,7 @@ u64 five_u64 = 5;
 u64 mask26_u64 = 0x3ffffff;
 u64 bit25_u64 = 0x1000000;
 
-fn unpack(stack u128[5] r12, reg u64[3] rt, inline int o) -> stack u128[5]
-{
-  inline int mask26;
-  reg u64 h, l;
 
-  mask26 = 0x3ffffff;
-
-  l = rt[0];
-  l &= mask26;
-  r12[u64 o + 0] = l;
-
-  l = rt[0];
-  l >>= 26;
-  l &= mask26;
-  r12[u64 o + 2] = l;
-
-  l = rt[0];
-  l = #x86_SHRD(l, rt[1], 52);
-  h = l;
-  l &= mask26;
-  r12[u64 o + 4] = l; // 12 bits from rt[0] and 14 bits from rt[1] 
-
-  l = h;
-  l >>= 26;
-  l &= mask26;
-  r12[u64 o + 6] = l; // 26 bits from rt[1]; there are still some bits to copy:
-                      // - higher 24 bits of rt[1] and 2+x of rt[2] where x can be:
-                      //   - +1 bit if there is a carry propagated until the end (check last part of mulmod)
-                      //   - up until +3 bits (rt[2] can be 0,1,2,3 or 4 hence 4*5 = 20 (10100b))
-                      //   - total number of bits to copy should be at most 24+5 = 29 bits 
-
-  l = rt[1];
-  l = #x86_SHRD(l, rt[2], 40);
-  r12[u64 o + 8] = l; // there should be no need to apply a mask to l... but check me during the proof.
-
-  return r12;
-}
 
 
 fn times_5(stack u128[5] r12) -> stack u128[4]
@@ -392,12 +356,35 @@ fn broadcast_r2(stack u128[5] r12, stack u128[4] r12x5) -> stack u128[5], stack 
 
 fn broadcast_r4(reg u64[3] r4) -> stack u128[5], stack u128[4]
 {
-  inline int i;
+  inline int i mask26;
   stack u128[5] r44;
   stack u128[4] r44x5;
   reg u64[5] t;
+  reg u64 h, l;
 
-  r44 = unpack(r44, r4, 0);
+
+  //r44 = unpack(r44, r4, 0);
+  
+  mask26 = 0x3ffffff;
+  l =  r4[0];
+  l &= mask26;
+  r44[u64  0 + 0] = l;
+  l =  r4[0];
+  l >>= 26;
+  l &= mask26;
+  r44[u64  0 + 2] = l;
+  l =  r4[0];
+  l = #x86_SHRD(l,  r4[1], 52);
+  h = l;
+  l &= mask26;
+  r44[u64  0 + 4] = l;
+  l = h;
+  l >>= 26;
+  l &= mask26;
+  r44[u64  0 + 6] = l;
+  l =  r4[1];
+  l = #x86_SHRD(l,  r4[2], 40);
+  r44[u64  0 + 8] = l;
 
   for i=0 to 5
   { t[i] = r44[u64 2*i]; r44[u64 1+2*i] = t[i]; }
@@ -414,18 +401,62 @@ fn poly1305_avx_setup(reg u64[3] r) ->
   stack u128[5], stack u128[4],
   stack u128[5], stack u128[4]
 {
-  inline int i;
+  inline int i mask26;
   stack u128[5] r44 r22 r12;
   stack u128[4] r44x5 r22x5 r12x5;
   reg u128 t;
   reg u64[3] rt;
+  reg u64 h, l;
+
 
   // rt = r; store rt
   for i=0 to 2 { rt[i] = r[i]; } rt[2] = 0;
-  r12 = unpack(r12, rt, 1); // r^1
+  //r12 = unpack(r12, rt, 1); // r^1
+  
+  mask26 = 0x3ffffff;
+  l =  rt[0];
+  l &= mask26;
+  r12[u64  1 + 0] = l;
+  l =  rt[0];
+  l >>= 26;
+  l &= mask26;
+  r12[u64  1 + 2] = l;
+  l =  rt[0];
+  l = #x86_SHRD(l,  rt[1], 52);
+  h = l;
+  l &= mask26;
+  r12[u64  1 + 4] = l;
+  l = h;
+  l >>= 26;
+  l &= mask26;
+  r12[u64  1 + 6] = l;
+  l =  rt[1];
+  l = #x86_SHRD(l,  rt[2], 40);
+  r12[u64  1 + 8] = l;
 
   rt = mulmod(rt, r); // r^2
-  r12 = unpack(r12, rt, 0);
+  //r12 = unpack(r12, rt, 0);
+  
+  mask26 = 0x3ffffff;
+  l =  rt[0];
+  l &= mask26;
+  r12[u64  0 + 0] = l;
+  l =  rt[0];
+  l >>= 26;
+  l &= mask26;
+  r12[u64  0 + 2] = l;
+  l =  rt[0];
+  l = #x86_SHRD(l,  rt[1], 52);
+  h = l;
+  l &= mask26;
+  r12[u64  0 + 4] = l;
+  l = h;
+  l >>= 26;
+  l &= mask26;
+  r12[u64  0 + 6] = l;
+  l =  rt[1];
+  l = #x86_SHRD(l,  rt[2], 40);
+  r12[u64  0 + 8] = l;
 
   r12x5 = times_5(r12);
   r22, r22x5 = broadcast_r2(r12, r12x5);
