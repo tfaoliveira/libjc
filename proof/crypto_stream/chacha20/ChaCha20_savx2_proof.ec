@@ -1,9 +1,12 @@
-require import AllCore List Jasmin_model Int IntDiv CoreMap.
+require import AllCore List Int IntDiv CoreMap.
 require import Array2 Array3 Array4 Array8 Array16. 
 require import WArray16 WArray32 WArray64.
-require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref_proof ChaCha20_pavx2 ChaCha20_savx2.
+require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref_proof.
+require import ChaCha20_pavx2 ChaCha20_savx2.
 require import StdRing StdOrder.
 import IntOrder.
+
+from Jasmin require import JModel.
 
 (* --------------------------------------------------------------------- *)
 (*  chach20_less_than_257                                                *)
@@ -352,7 +355,7 @@ proof.
   while (={Glob.mem, i} /\ output{1} = output1{2} /\ len1{2} = 32 /\ (inv_ptr output plain len /\ 0 <= i <= 32 /\ 32 <= len <= 64){1} /\ 
          (forall j, 32 <= j < len => Glob.mem.[plain + j] = mem0.[plain + j]){1} /\
          (forall j, 0 <= j < 32 => k8{1}.[j] = k8{2}.[j])).
-  + by wp; skip => />; smt (storeW8E Jasmin_memory.get_setE).
+  + by wp; skip => />; smt (storeW8E JMemory.get_setE).
   wp; while{2} ((forall j,  0 <= j < i{2} => k8{2}.[j] = k8_0{2}.[j] `^` loadW8 Glob.mem{2} (plain1{2} + j)) /\
                 (0 <= i <= len1){2} /\ len1{2} = 32) (len1 - i){2}.
   + by move=> _ z; wp; skip => />; smt (WArray32.get_setE).
@@ -368,7 +371,8 @@ proof.
     by rewrite divz_ge0 1:// h10 ltz_divLR // h11 /#.
   move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
   have ->> /= : i_R0 = 32 by smt().
-  split; 1: smt().
+  do! split; 1..4: smt().
+  + by move=> j *; rewrite -addzA /#.
   move=> i0_R k80_R; split; 1: smt().
   move=> h16 h17 h18 h19 h20 h21 h22; split; 2:smt().
   move=> j h23 h24.
@@ -423,7 +427,7 @@ proof.
   while (={Glob.mem, i} /\ output{1} = output1{2} /\ len1{2} = 16 /\ (inv_ptr output plain len /\ 0 <= i <= 16 /\ 16 <= len <= 32){1} /\ 
          (forall j, 16 <= j < len => Glob.mem.[plain + j] = mem0.[plain + j]){1} /\
          (forall j, 0 <= j < 16 => k8{1}.[j] = k8{2}.[j])).
-  + by wp; skip => />; smt (storeW8E Jasmin_memory.get_setE).
+  + by wp; skip => />; smt (storeW8E JMemory.get_setE).
   wp; while{2} ((forall j,  0 <= j < i{2} => k8{2}.[j] = k8_0{2}.[j] `^` loadW8 Glob.mem{2} (plain1{2} + j)) /\
                 (0 <= i <= len1){2} /\ len1{2} = 16) (len1 - i){2}.
   + by move=> _ z; wp; skip => />; smt (WArray16.get_setE).
@@ -440,7 +444,7 @@ proof.
   move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
   have ->> /= : i_R0 = 16 by smt().
   split. 
-  + split; smt().
+  + by do! split => *; rewrite -1?addzA /#.
   move=> i0_R k80_R; split; 1: smt().
   move=> h16 h17 h18 h19 h20 h21 h22; split; 2:smt().
   move=> j h23 h24.
@@ -507,7 +511,7 @@ proof.
   while (0 <= i <= len /\
          forall j, 
           Glob.mem.[j] = if in_range output i j then k8.[j-output] else mem0.[j]) (len - i).
-  + move=> z; wp; skip => /> &hr *;smt(storeW8E Jasmin_memory.get_setE).
+  + move=> z; wp; skip => /> &hr *;smt(storeW8E JMemory.get_setE).
   wp; while (0 <= i <= len /\ len = 32 /\
              forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` Glob.mem.[plain + j]) (len - i).
   + by move=> z; wp; skip => />; smt (WArray32.get_setE).
@@ -529,7 +533,7 @@ proof.
   while (0 <= i <= len /\
          forall j, 
           Glob.mem.[j] = if in_range output i j then k8.[j-output] else mem0.[j]) (len - i).
-  + move=> z; wp; skip => /> &hr *;smt(storeW8E Jasmin_memory.get_setE).
+  + move=> z; wp; skip => /> &hr *;smt(storeW8E JMemory.get_setE).
   wp; while (0 <= i <= len /\ len = 16 /\
              forall j, 0 <= j < i => k8.[j] = k8_0.[j] `^` Glob.mem.[plain + j]) (len - i).
   + by move=> z; wp; skip => />; smt (WArray16.get_setE).
@@ -606,7 +610,7 @@ proof.
   + by move=> _ z; wp; skip => />; smt(WArray16.get_setE).
   wp; skip => /> &1 &2 *; split; 1:smt().
   move=> i_L k8_L; split; 1:smt().
-  move=> h1 h2 h3 h4 ; rewrite ultE W2u32.to_uint_truncateu32 /= modz_small 1:// /=.
+  move=> h1 h2 h3 h4 ; rewrite ultE W2u32.to_uint_truncateu32 //.
   have ->> : i_L = to_uint len{2} by smt().
   move=> k3 *; rewrite h4 1://.
   rewrite /init32 !initE.
@@ -1304,7 +1308,7 @@ proof.
       by rewrite modzMDr modz_small /#.  
     have -> : !(o{hr} <= j - (output{hr} + 64 * i{hr}) < o{hr} + 32) by smt().
     rewrite /= /upd_mem size_mapi {1}/T size_take // /= H6 /= /#.
-  skip => /> /#.
+  by skip => /> @/T; smt().
 qed.
 
 hoare savx2_half_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0:
@@ -1786,7 +1790,7 @@ proof.
   ecall{2} (savx2_store_x8 Glob.mem{1} k_1{1} k_2{1} k_3{1} k_4{1} k_5{1} k_6{1} k_7{1} k_8{1} output{1} plain{1} len{1}).
   skip => |> &1 &2 _ 3!-> hg hd hlen /= [r1 r2 r3] mem1 /= 3!-> hmem1; split; 1:smt().
   move=> _ mem2 hmem2 /=;split; [smt() | split;1:smt()].
-  by apply Jasmin_memory.mem_eq_ext => j;rewrite hmem1 hmem2.
+  by apply JMemory.mem_eq_ext => j;rewrite hmem1 hmem2.
 qed.
 
 op x4_ (k1 k2 k3 k4:W32.t Array16.t) = 
@@ -1967,7 +1971,7 @@ proof.
     ecall{1} (pavx2_store_x4_spec Glob.mem{1} k_1{1} k_2{1} k_3{1} k_4{1} output0 plain0 len0).
     ecall{2} (Store_x4_spec Glob.mem{1} k_1{1} k_2{1} k_3{1} k_4{1} output0 plain0 len0).
     skip => /> &1 &2 3!-> /= ?????? mem1 hmem1 mem2 hmem2; split;2: smt().
-    by apply Jasmin_memory.mem_eq_ext => j;rewrite hmem1 hmem2.
+    by apply JMemory.mem_eq_ext => j;rewrite hmem1 hmem2.
   proc => /=.
   inline ChaCha20_pref.M.update_ptr  M.update_ptr; wp.
   while (={i,Glob.mem, k} /\ output{1} = to_uint output{2} /\ (good_ptr output plain len){1} /\ 0 <= i{1} /\ 256 <= len{1}).

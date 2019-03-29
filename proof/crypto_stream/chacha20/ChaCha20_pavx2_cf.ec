@@ -1,8 +1,10 @@
-require import AllCore List Jasmin_model Int IntDiv CoreMap  LoopTransform.
+require import AllCore List Int IntDiv CoreMap  LoopTransform.
 import IterOp.
 require import Array16.
 require import WArray64.
-require import ChaCha20_pref  ChaCha20_pref_proof.
+require import ChaCha20_pref ChaCha20_pref_proof.
+
+from Jasmin require import JModel.
 
 module M = {
       

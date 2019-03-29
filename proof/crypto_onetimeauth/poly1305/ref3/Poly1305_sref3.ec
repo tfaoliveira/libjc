@@ -1,6 +1,8 @@
-require import List Jasmin_model Int IntDiv CoreMap.
+require import List Int IntDiv CoreMap.
 require import Array2 Array3.
 require import WArray16 WArray24.
+
+from Jasmin require import JModel.
 
 module M = {
   proc load (p:W64.t) : W64.t Array2.t = {

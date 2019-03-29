@@ -1,8 +1,10 @@
-require import AllCore List Jasmin_word Jasmin_model Int IntDiv IntExtra CoreMap LoopTransform.
+require import AllCore List Int IntDiv IntExtra CoreMap LoopTransform.
 import IterOp.
 require import ChaCha20_Spec ChaCha20_pref ChaCha20_pref_proof ChaCha20_sref.
 require import Array3 Array8 Array16.
 require import WArray64.
+
+from Jasmin require import JWord JModel.
 
 (* ------------------------------------------------------------------------------- *)
 (* We start by cloning ChaCha20_sref but using "int" instead of W64.t for pointer. *)
@@ -105,7 +107,7 @@ hoare merge_spec lo0 hi0 : ChaCha20_srefi.M.merge :
 proof.
   proc => /=; wp; skip => /> &hr.
   apply W64.wordP=> i hi.
-  rewrite /(`<<`) /=  W2u32.pack2wE hi /= modz_small 1://.
+  rewrite /(`<<`) /=  W2u32.pack2wE hi /=.
   rewrite !zeroextu64_bit.
   case: (0 <= i < 32) => hi1. 
   + have [-> ->] /#: i %/ 32 = 0 /\ i %% 32 = i by smt(modz_small divz_small).    
@@ -151,7 +153,7 @@ lemma storeW64_init32 (mem0 mem1:global_mem_t) (k:W32.t Array16.t) output plain 
 proof.
   move=> hinv hi hmem1 j.
   rewrite get_storeW64E.
-  case: (output + 8 * (i - 1) <= j < output + 8 * (i - 1) + 8) => h3;last by smt().
+  case _ : (_ <= j < _) => /= h3; last by rewrite hmem1 /#.
   have -> /=: in_range output (8 * i) j by smt().
   have hj': 0 <= j - (output + 8 * (i - 1)) < 8 by smt().
   congr.

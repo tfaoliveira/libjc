@@ -1,6 +1,7 @@
-require import AllCore StdOrder IntDiv IntExtra Jasmin_utils.
+require import AllCore StdOrder IntDiv IntExtra.
+from Jasmin require import JUtils.
 
-abbrev floor (n k:int) = (n %/ k) * k.
+abbrev [-printing] floor (n k:int) = (n %/ k) * k.
 
 lemma lt_floorE (k i n:int) : 0 < k =>  k %| i => i < floor n k <=> i + k <= floor n k.
 proof.
@@ -214,8 +215,9 @@ proof.
       have <- := IntOrder.ltr_pmul2l step step_gt0 (j{2} + 1) k0.
       smt (floor_le step_gt0).
     wp; skip => &1 &2 [#] 6!->> h1 h2 h3 h4 2!->> /=.
-    rewrite le_fromint lt_fromint h2 h1 -lt_floorE 2://; 1:smt (step_gt0).
-    smt (step_gt0 dvdzD dvdzz).
+    rewrite le_fromint lt_fromint h2 h1 -lt_floorE /= 2://; 1:smt (step_gt0).
+    (do! (split => *)); 1..-2: smt(step_gt0).
+    by case: H1 => [?] [-> ?]; rewrite dvdzD 1:/# (_ : j_R = k0) 1:/# dvdzz.
   + rcondf 1; skip => /#.
   + rcondf 1; skip => /#.
   by auto.
@@ -245,5 +247,3 @@ qed.
 end section.
 
 end ExactIter.
-
-

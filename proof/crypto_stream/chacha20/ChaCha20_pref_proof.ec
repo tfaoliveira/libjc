@@ -1,8 +1,10 @@
-require import AllCore List Jasmin_model Int IntDiv IntExtra CoreMap.
+require import AllCore List Int IntDiv IntExtra CoreMap.
 import IterOp.
 require import ChaCha20_Spec ChaCha20_pref.
 require import Array3 Array8 Array16.
 require import WArray64.
+
+from Jasmin require import JModel.
 
 op loads_8 (mem : global_mem_t) (from : address) (len: int) = 
   map (fun i => loadW8 mem (from + i)) (iota_ 0 len).

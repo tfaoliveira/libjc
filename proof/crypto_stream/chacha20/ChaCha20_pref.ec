@@ -1,6 +1,8 @@
-require import AllCore List Jasmin_model IntDiv CoreMap.
+require import AllCore List IntDiv CoreMap.
 require import Array16.
 require import WArray64.
+
+from Jasmin require import JModel.
 
 module M = {
   proc init (key nonce: address, counter:W32.t) : W32.t Array16.t = {

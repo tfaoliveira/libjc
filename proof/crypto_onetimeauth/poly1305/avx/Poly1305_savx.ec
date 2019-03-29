@@ -1,6 +1,8 @@
-require import List Jasmin_model Int IntDiv CoreMap.
+require import List Int IntDiv CoreMap.
 require import Array2 Array3 Array4 Array5.
 require import WArray16 WArray24 WArray32 WArray40 WArray48 WArray64 WArray80.
+
+from Jasmin require import JModel.
 
 abbrev bit25_u64 = W64.of_int 16777216.
 
