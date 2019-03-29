@@ -47,6 +47,8 @@ generate: $(ECSRC)
 
 clean:
 	rm -f $(ECSRC)
+	rm -f crypto_stream/chacha20/WArray*.ec
+	rm -f crypto_stream/chacha20/Array*.ec
 
 crypto_stream/chacha20/ChaCha20_s%_CT.ec: $(TOP)/src/crypto_stream/chacha20/%/chacha20.jazz
 	cd crypto_stream/chacha20 && jasminc -ec chacha20_$* -oec ChaCha20_s$*_CT.ec -CT $<
