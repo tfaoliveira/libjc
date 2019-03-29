@@ -1,9 +1,8 @@
-require import List Jasmin_model Int IntDiv CoreMap AllCore.
+require import List Int IntDiv CoreMap AllCore.
 require import Array3 Array8 Array16.
 require import WArray64.
 
-import Jasmin_memory.
-import Jasmin_array.
+from Jasmin require import JModel JMemory JArray.
 
 (* Constants *)
 op keylen : int = 32.   (* in bytes *)

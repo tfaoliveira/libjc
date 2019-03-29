@@ -1,7 +1,8 @@
-require import List Jasmin_model Int IntExtra IntDiv CoreMap.
+require import List Int IntExtra IntDiv CoreMap.
 require import Array3 Array8 Array16.
 require import WArray12 WArray32 WArray64.
 
+from Jasmin require import JModel.
 
 
 module M = {

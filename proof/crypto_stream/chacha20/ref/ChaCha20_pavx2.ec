@@ -1,7 +1,9 @@
-require import List Jasmin_model Int IntDiv CoreMap.
+require import List Int IntDiv CoreMap.
 require import Array8 Array16.
 require import WArray64.
 require import ChaCha20_pref ChaCha20_pavx2_cf.
+
+from Jasmin require import JModel.
 
 module M = {
   proc init_x2(key nonce: int, counter:W32.t) : W32.t Array16.t * W32.t Array16.t = {

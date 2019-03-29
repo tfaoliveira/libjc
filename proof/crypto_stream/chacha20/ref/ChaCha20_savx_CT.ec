@@ -1,6 +1,8 @@
-require import List Jasmin_model Int IntExtra IntDiv CoreMap.
+require import List Int IntExtra IntDiv CoreMap.
 require import Array2 Array4 Array8 Array16.
 require import WArray32 WArray64 WArray128 WArray256.
+
+from Jasmin require import JModel.
 
 abbrev g_sigma3 = W128.of_int 142395606795449994141864265039627707764.
 
