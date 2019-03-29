@@ -153,7 +153,7 @@ lemma storeW64_init32 (mem0 mem1:global_mem_t) (k:W32.t Array16.t) output plain 
 proof.
   move=> hinv hi hmem1 j.
   rewrite get_storeW64E.
-  case: (output + 8 * (i - 1) <= j < output + 8 * (i - 1) + 8) => h3;last by admit. (* smt().*)
+  case _ : (_ <= j < _) => /= h3; last by rewrite hmem1 /#.
   have -> /=: in_range output (8 * i) j by smt().
   have hj': 0 <= j - (output + 8 * (i - 1)) < 8 by smt().
   congr.

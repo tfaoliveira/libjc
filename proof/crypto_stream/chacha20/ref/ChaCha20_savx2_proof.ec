@@ -371,7 +371,8 @@ proof.
     by rewrite divz_ge0 1:// h10 ltz_divLR // h11 /#.
   move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
   have ->> /= : i_R0 = 32 by smt().
-  split; 1: admit. (* smt(). *)
+  do! split; 1..4: smt().
+  + by move=> j *; rewrite -addzA /#.
   move=> i0_R k80_R; split; 1: smt().
   move=> h16 h17 h18 h19 h20 h21 h22; split; 2:smt().
   move=> j h23 h24.
@@ -443,7 +444,7 @@ proof.
   move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
   have ->> /= : i_R0 = 16 by smt().
   split. 
-  + split; admit. (* smt(). *)
+  + by do! split => *; rewrite -1?addzA /#.
   move=> i0_R k80_R; split; 1: smt().
   move=> h16 h17 h18 h19 h20 h21 h22; split; 2:smt().
   move=> j h23 h24.
