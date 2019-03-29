@@ -1,4 +1,4 @@
-This file describe the contant of files for the security of ChaCha20.
+This file describes the content of files for the security of ChaCha20.
 
 1/ Functional specification of ChaCha20:
 

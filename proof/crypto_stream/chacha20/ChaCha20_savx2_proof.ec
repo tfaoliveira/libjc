@@ -1308,7 +1308,7 @@ proof.
       by rewrite modzMDr modz_small /#.  
     have -> : !(o{hr} <= j - (output{hr} + 64 * i{hr}) < o{hr} + 32) by smt().
     rewrite /= /upd_mem size_mapi {1}/T size_take // /= H6 /= /#.
-  skip => /> /#.
+  by skip => /> @/T; smt().
 qed.
 
 hoare savx2_half_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0:
