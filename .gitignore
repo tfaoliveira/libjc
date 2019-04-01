@@ -1,3 +1,4 @@
 *.a
 .vagrant
 *.log
+libjc.tar.gz
