@@ -5,10 +5,10 @@
 _chacha20_avx2:
 chacha20_avx2:
 	pushq	%rbp
-	pushq   %r15
+	pushq	%r15
 	subq	$1156, %rsp
-	movq %rsp, %r15
-	andq $-32, %rsp
+	movq	%rsp, %r15
+	andq	$-32, %rsp
 	cmpl	$257, %edx
 	jb  	Lchacha20_avx2$1
 	vmovdqu	g_r16(%rip), %ymm0
@@ -960,7 +960,7 @@ Lchacha20_avx2$5:
 	jb  	Lchacha20_avx2$6
 Lchacha20_avx2$4:
 Lchacha20_avx2$2:
-	movq %r15, %rsp
+	movq	%r15, %rsp
 	addq	$1156, %rsp
 	popq	%r15
 	popq	%rbp
@@ -1238,27 +1238,6 @@ g_r16:
 	.byte	15
 	.byte	12
 	.byte	13
-	.byte	2
-	.byte	3
-	.byte	0
-	.byte	1
-	.byte	6
-	.byte	7
-	.byte	4
-	.byte	5
-	.byte	10
-	.byte	11
-	.byte	8
-	.byte	9
-	.byte	14
-	.byte	15
-	.byte	12
-	.byte	13
-	.globl	_g_r16_u128
-	.globl	g_r16_u128
-	.p2align	4
-_g_r16_u128:
-g_r16_u128:
 	.byte	2
 	.byte	3
 	.byte	0
