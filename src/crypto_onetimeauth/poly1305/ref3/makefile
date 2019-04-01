@@ -13,3 +13,4 @@ clean:
 	rm -f poly1305.japp poly1305.s
 
 poly1305.japp: poly1305_export.jazz
+		gpp -o $@ $<
