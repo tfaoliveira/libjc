@@ -1,6 +1,9 @@
-require import List Jasmin_model Int IntDiv IntExtra CoreMap.
+require import List Int IntDiv IntExtra CoreMap.
 require import EClib Array5 Array4.
 require import W64limbs.
+
+from Jasmin require import JModel.
+
 require import Zp.
 require ZModP.
 import Zp.

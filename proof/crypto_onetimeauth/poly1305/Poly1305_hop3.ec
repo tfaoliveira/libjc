@@ -1,7 +1,9 @@
-require import List Jasmin_model Int IntExtra IntDiv CoreMap Real.
+require import List Int IntExtra IntDiv CoreMap Real.
 require import Array2 Array3 Array4 Array5.
 require import WArray16 WArray24 WArray64 WArray96 WArray128 WArray160. 
 require import Zp W64limbs EClib Rep3Limb Rep5Limb.
+
+from Jasmin require import JModel.
 
 import Zp.
 import Array5.

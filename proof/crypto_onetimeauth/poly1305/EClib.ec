@@ -1,4 +1,6 @@
-require import List Jasmin_model Int IntDiv IntExtra CoreMap.
+require import List Int IntDiv IntExtra CoreMap.
+
+from Jasmin require import JModel.
 
 lemma ltr_pmul2 x1 x2 y1 y2:
  0 <= x1 => 0 <= x2 => x1 < y1 => x2 < y2 => x1 * x2 < y1 * y2.

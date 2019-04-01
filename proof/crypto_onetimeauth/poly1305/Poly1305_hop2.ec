@@ -1,6 +1,8 @@
-require import List Jasmin_model Int IntExtra IntDiv CoreMap Real.
+require import List Int IntExtra IntDiv CoreMap Real.
 require import Zp.
 import Zp.
+
+from Jasmin require import JModel.
 
 (* Second equivalence proof: introduce paralellism and prove down to
    Horner formulae using ring tactics *)

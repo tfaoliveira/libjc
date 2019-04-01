@@ -1,5 +1,7 @@
-require import List Jasmin_model Int IntDiv IntExtra CoreMap.
+require import List Int IntDiv IntExtra CoreMap.
 require import EClib.
+
+from Jasmin require impot JModel .
 
 (* modular operations modulo P *)
 op p = 2^130 - 5 axiomatized by pE.

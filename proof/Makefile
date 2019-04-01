@@ -52,7 +52,7 @@ generate: $(ECSRC)
 clean:
 	rm -f $(ECSRC)
 	for i in crypto_stream/chacha20 crypto_onetimeauth/poly1305; do \
-	  rm -f $$I/WArray*.ec; rm -f $$i/Array*.ec; \
+	  rm -f $$i/WArray*.ec; rm -f $$i/Array*.ec; \
 	done
 
 crypto_stream/chacha20/ChaCha20_s%.ec: $(TOP)/src/crypto_stream/chacha20/%/chacha20.jazz

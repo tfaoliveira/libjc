@@ -1,5 +1,7 @@
 require import Int IntDiv IntExtra StdOrder. 
-require import List Jasmin_utils Jasmin_word.
+require import List.
+
+from Jasmin require import JUtils JWord.
 
 import IntOrder.
 

@@ -1,6 +1,8 @@
-require import List Jasmin_model Int IntDiv CoreMap.
+require import List Int IntDiv CoreMap.
 require import Array2 Array3 Array4 Array5.
 require import WArray16 WArray24 WArray64 WArray96 WArray128 WArray160.
+
+from Jasmin require import JModel.
 
 type t2u64 = W64.t Array2.t.
 type t4u64 = W64.t Array4.t.
