@@ -23,7 +23,7 @@ clean:
 dist: generate
 	rm -rf $(NAME) $(NAME).tar.gz
 	./scripts/distribution $(NAME) MANIFEST
-	tar czf $(NAME).tar.gz $(NAME) && rm -rf $(NAME)
+	tar -czf $(NAME).tar.gz --owner=0 --group=0 $(NAME) && rm -rf $(NAME)
 
 # --------------------------------------------------------------------
 distcheck: dist
