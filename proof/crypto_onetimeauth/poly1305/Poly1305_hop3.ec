@@ -163,7 +163,7 @@ module Mhop3 = {
 
  ******************************************************************************************)
 
-require import Poly1305_spec Poly1305_hop2.
+require import Poly1305_Spec Poly1305_hop2.
 
 equiv update_eq :
  Mhop2.poly1305_update ~ Mhop3.Rep3Impl.update:

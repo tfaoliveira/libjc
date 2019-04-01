@@ -7,7 +7,7 @@ from Jasmin require import JModel.
 (* Second equivalence proof: introduce paralellism and prove down to
    Horner formulae using ring tactics *)
 
-require import Poly1305_spec Poly1305_hop1.
+require import Poly1305_Spec Poly1305_hop1.
 
 module Mhop2 = {
 

@@ -6,7 +6,7 @@ from Jasmin require import JModel.
 
 (* First equivalence proof. Change control flow to match avx2 implementation. *)
 
-require import Poly1305_spec.
+require import Poly1305_Spec.
 
 module Mhop1 = { 
   proc poly1305_setup(k:W64.t): zp * W64.t = {

@@ -356,7 +356,7 @@ module Mrep3 = {
 
 (****************************        Rep3 specs              *******************************)
 
-require import Poly1305_spec.
+require import Poly1305_Spec.
 
 lemma clamp_spec mem kk:
  phoare [ Mrep3.clamp:
