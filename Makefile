@@ -20,7 +20,7 @@ clean:
 	$(MAKE) -C proof clean
 
 # --------------------------------------------------------------------
-dist:
+dist: generate
 	rm -rf $(NAME) $(NAME).tar.gz
 	./scripts/distribution $(NAME) MANIFEST
 	tar czf $(NAME).tar.gz $(NAME) && rm -rf $(NAME)
