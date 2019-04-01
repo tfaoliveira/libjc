@@ -1,13 +1,13 @@
 # -*- Makefile -*-
 
 # --------------------------------------------------------------------
--include ../Makefile.common
+SUBDIRS := ref3 avx avx2
 
 # --------------------------------------------------------------------
 .PHONY: default clean
 
-default: poly1305.japp poly1305.s
-	@true
+default:
+	for i in ref3 avx avx2; do $(MAKE) -C $$i; done
 
 clean:
-	rm -f poly1305.japp poly1305.s
+	for i in ref3 avx avx2; do $(MAKE) -C $$i clean; done

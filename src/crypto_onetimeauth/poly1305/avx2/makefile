@@ -1,8 +1,13 @@
-poly1305.s: poly1305.japp
-	jasminc -pasm $< > $@
+# -*- Makefile -*-
 
-poly1305.japp: poly1305.jazz
-	gpp -o $@ $<
+# --------------------------------------------------------------------
+-include ../Makefile.common
+
+# --------------------------------------------------------------------
+.PHONY: default clean
+
+default: poly1305.japp poly1305.s
+	@true
 
 clean:
-	rm -f poly1305.japp
+	rm -f poly1305.japp poly1305.s
