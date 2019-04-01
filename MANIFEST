@@ -10,23 +10,17 @@ find:proof:*.ec
 find:proof/eclib:*.ec
 
 # Jasmin sources
-src/crypto_scalarmult/curve25519/ref4/curve25519.jazz
-src/crypto_scalarmult/curve25519/ref4/curve25519.s
 src/crypto_onetimeauth/poly1305/Makefile
 src/crypto_onetimeauth/poly1305/Makefile.common
 src/crypto_onetimeauth/poly1305/ref3/Makefile
 src/crypto_onetimeauth/poly1305/ref3/poly1305.jazz
 src/crypto_onetimeauth/poly1305/ref3/poly1305_export.jazz
-src/crypto_onetimeauth/poly1305/avx/Makefile
-src/crypto_onetimeauth/poly1305/avx/poly1305.jazz
 src/crypto_onetimeauth/poly1305/avx2/Makefile
 src/crypto_onetimeauth/poly1305/avx2/poly1305.jazz
 src/crypto_stream/chacha20/avx2/chacha20.s
 src/crypto_stream/chacha20/avx2/chacha20.jazz
 src/crypto_stream/chacha20/ref/chacha20.s
 src/crypto_stream/chacha20/ref/chacha20.jazz
-src/crypto_stream/chacha20/avx/chacha20.s
-src/crypto_stream/chacha20/avx/chacha20.jazz
 
 # Scripts
 scripts/install-sh
