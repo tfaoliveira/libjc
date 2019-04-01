@@ -80,6 +80,9 @@ if [ "$#" -eq 0 ]; then
   # usuba : not really a build... its just a copy
   find third_party/usuba/supercop/crypto_stream/chacha20 -name "usuba*" -exec cp -r {} supercop-`cat config/version`/crypto_stream/chacha20/ \;
 
+  # vale :
+  mkdir -p supercop-`cat config/version`/crypto_onetimeauth/poly1305/vale/ && cp third_party/vale/poly1305/* supercop-`cat config/version`/crypto_onetimeauth/poly1305/vale/
+
   exit
 fi
 

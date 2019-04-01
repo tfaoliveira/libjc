@@ -11,6 +11,8 @@ crypto_onetimeauth poly1305 openssl/static_no_asm
 crypto_onetimeauth poly1305 libsodium/static
 crypto_onetimeauth poly1305 libsodium/static_disable_asm
 
+crypto_onetimeauth poly1305 vale
+
 ## and some supercop implementations
 crypto_onetimeauth poly1305 ref
 crypto_onetimeauth poly1305 53

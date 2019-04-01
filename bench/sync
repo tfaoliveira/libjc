@@ -74,6 +74,18 @@ done
 exit
 fi
 
+# vale (rewrite this script with functions)
+if [ "$impl" = "vale" ]; then
+find  bindings/ -name "api.h" | grep $impl | while read binding
+do
+  bindingdir=`dirname $binding`
+  supercopdir=supercop-$version/`echo $bindingdir | sed -e 's/^bindings\///'`
+  mkdir -p $supercopdir
+  find $bindingdir -maxdepth 1 -type f -exec cp {} $supercopdir \;
+done
+exit
+fi
+
 # sync third_party libraries bindings
 find  bindings/ -name "api.h" | grep $impl | while read binding
 do

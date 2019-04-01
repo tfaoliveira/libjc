@@ -8,6 +8,7 @@ ls data/crypto_onetimeauth_poly1305_* | xargs rm
 ./sync openssl
 ./sync libsodium
 ./sync hacl_star
+./sync vale
 
 ## run benchmarks... this can take some time
 ./bench poly1305
@@ -24,25 +25,21 @@ mv data/crypto_onetimeauth_poly1305_openssl_static.data data/crypto_onetimeauth_
 mv data/crypto_onetimeauth_poly1305_openssl_static.data data/crypto_onetimeauth_poly1305_openssl_static_avx.data
 
 # plot
-./plot poly1305 cycles 16 512 "(jazz|openssl)"
-./plot poly1305 cycles 512 4096 "(jazz|openssl)"
-./plot poly1305 cycles 4096 16384 "(jazz|openssl)"
+./plot poly1305 cycles 32 16384 "(jazz|openssl)"
 
-./plot poly1305 cycles 16 512 "(jazz|hacl_star_gcc)"
-./plot poly1305 cycles 512 4096 "(jazz|hacl_star_gcc)"
-./plot poly1305 cycles 4096 16384 "(jazz|hacl_star_gcc)"
+./plot poly1305 cycles 32 16384 "(jazz|hacl_star_gcc)"
 
-./plot poly1305 cycles 16 512 "(jazz|hacl_star_compcert)"
-./plot poly1305 cycles 512 4096 "(jazz|hacl_star_compcert)"
-./plot poly1305 cycles 4096 16384 "(jazz|hacl_star_compcert)"
+./plot poly1305 cycles 32 16384 "(jazz|hacl_star_compcert)"
 
-./plot poly1305 cycles 16 512 "(jazz|libsodium)"
-./plot poly1305 cycles 512 4096 "(jazz|libsodium)"
-./plot poly1305 cycles 4096 16384 "(jazz|libsodium)"
+./plot poly1305 cycles 32 16384 "(jazz|libsodium)"
 
-./plot poly1305 cycles 16 512
-./plot poly1305 cycles 512 4096
-./plot poly1305 cycles 4096 16384
+./plot poly1305 cycles 32 16384 "(jazz|moon)"
+
+./plot poly1305 cycles 32 16384 "(jazz|vale)"
+
+./plot poly1305 cycles 32 16384 "(jazz|53|amd64|avx)"
+
+./plot poly1305 cycles 32 16384
 
 today=`date "+%Y%m%d"`
 mkdir -p data/poly1305-$today

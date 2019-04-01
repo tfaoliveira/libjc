@@ -28,15 +28,11 @@ void allocate(void)
   c = alignedcalloc(MAXTEST_BYTES);
 }
 
-#define EST_TIMINGS (64)
-#define MAX_TIMINGS (8192*8)
-#define CPU_TIME (25000000)
+#define WARM_TIMINGS (128)
+#define TIMINGS (512)
+#define LOOPS 5
 
-#define LOOPS 3
-
-static long long est_cycles[EST_TIMINGS + 1]; // estimate cycles
-static long long cycles[MAX_TIMINGS + 1];
-static long long loops[LOOPS][MAXTEST_BYTES + 1];
+static long long cycles[TIMINGS+1];
 
 int update_increment_setup1(int mlen)
 {
@@ -66,29 +62,6 @@ int update_increment(int mlen)
   return update_increment_setup1(mlen);
 }
 
-
-/* copied and adapted from printentry from file measure-anything.c */
-long long getcycles(long long *cycles, long long timings)
-{
-  long long i;
-  long long j;
-  long long belowj;
-  long long abovej;
-  long long sum;
-
-  j = 0;
-  for (;j + 1 < timings;++j) { 
-    belowj = 0;
-    for (i = 0;i < timings;++i) if (cycles[i] < cycles[j]) ++belowj;
-    abovej = 0;
-    for (i = 0;i < timings;++i) if (cycles[i] > cycles[j]) ++abovej;
-    if (belowj * 2 < timings && abovej * 2 < timings) break;
-  }
-
-  return cycles[j];
-}
-
-
 void measure(void)
 {
   int i;
@@ -113,43 +86,24 @@ void measure(void)
       kernelrandombytes(m,mlen);
       kernelrandombytes(c,mlen);
 
-      // get an estimate of how many cycles it takes to execute crypto_stream_xor
-      for (i = 0;i <= EST_TIMINGS;++i) {
-        est_cycles[i] = cpucycles();
+      // warm up
+      for (i = 0;i < WARM_TIMINGS;++i) {
         crypto_stream_xor(c,m,mlen,n,k);
       }
-      for (i = 0;i < EST_TIMINGS;++i) {
-        est_cycles[i] = est_cycles[i + 1] - est_cycles[i];
-      }
 
-      // for example, if we estimate a function to take 1000 cpu cycles to execute
-      // and we want to measure it for 10M cpu cycles then we are going to measure
-      // it 10001 times
-      estimate = getcycles(est_cycles, EST_TIMINGS);
-      timings = (CPU_TIME > estimate) ? (CPU_TIME / estimate) : 1;
-      timings |= 1;
-      timings = (timings > MAX_TIMINGS) ? MAX_TIMINGS : timings;
-
-      for (i = 0;i <= timings;++i) {
+      // measure
+      for (i = 0;i <= TIMINGS;++i) {
         cycles[i] = cpucycles();
         crypto_stream_xor(c,m,mlen,n,k);
       }
 
-      for (i = 0;i < timings;++i) {
+      for (i = 0;i < TIMINGS;++i) {
         cycles[i] = cycles[i + 1] - cycles[i];
       }
-      real = getcycles(cycles, timings);
 
-      loops[loop][mlen] = real;
-
-      // this is already calculated TODO: implement a function that only dumps data in measure_anything.c
       printentry(mlen,"xor_cycles",cycles,timings);
 
       inc = update_increment(mlen);
     }
-  }
-
-  // run some statistical tests on loops to check if data is stable:
-  // -- between loops and across messages lengths
-  // -- and rerun the tests that are not stable until they are (or any given threshold) 
+  } 
 }

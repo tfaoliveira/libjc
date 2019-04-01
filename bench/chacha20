@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # remove previous benchmarks files related to chacha20
-##ls data/crypto_stream_chacha20_* | xargs rm
+ls data/crypto_stream_chacha20_* | xargs rm
 
 # copy implementations and bindings into supercop-*
 ./sync
@@ -23,29 +23,25 @@ mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_o
 mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_openssl_static_avx.data
 
 # plot
-./plot chacha20 xor_cycles 16 512 "(jazz|openssl)"
-./plot chacha20 xor_cycles 512 4096 "(jazz|openssl)"
-./plot chacha20 xor_cycles 4096 16384 "(jazz|openssl)"
+./plot chacha20 xor_cycles 32 16384 "(jazz|openssl)"
 
-./plot chacha20 xor_cycles 16 512 "(jazz|hacl_star_gcc)"
-./plot chacha20 xor_cycles 512 4096 "(jazz|hacl_star_gcc)"
-./plot chacha20 xor_cycles 4096 16384 "(jazz|hacl_star_gcc)"
+./plot chacha20 xor_cycles 32 16384 "(jazz|hacl_star_gcc)"
 
-./plot chacha20 xor_cycles 16 512 "(jazz|hacl_star_compcert)"
-./plot chacha20 xor_cycles 512 4096 "(jazz|hacl_star_compcert)"
-./plot chacha20 xor_cycles 4096 16384 "(jazz|hacl_star_compcert)"
+./plot chacha20 xor_cycles 32 16384 "(jazz|hacl_star_compcert)"
 
-./plot chacha20 xor_cycles 16 512 "(jazz|libsodium)"
-./plot chacha20 xor_cycles 512 4096 "(jazz|libsodium)"
-./plot chacha20 xor_cycles 4096 16384 "(jazz|libsodium)"
+./plot chacha20 xor_cycles 32 16384 "(jazz|libsodium)"
 
-./plot chacha20 xor_cycles 16 512 "(jazz|usuba)"
-./plot chacha20 xor_cycles 512 4096 "(jazz|usuba)"
-./plot chacha20 xor_cycles 4096 16384 "(jazz|usuba)"
+./plot chacha20 xor_cycles 32 16384 "(jazz|usuba)"
 
-./plot chacha20 xor_cycles 16 512
-./plot chacha20 xor_cycles 512 4096
-./plot chacha20 xor_cycles 4096 16384
+./plot chacha20 xor_cycles 32 16384 "(jazz|moon)"
+
+./plot chacha20 xor_cycles 32 16384 "(jazz|krovetz|goll)"
+
+./plot chacha20 xor_cycles 32 16384 "(jazz|dolbeau|amd64|e_ref)"
+
+./plot chacha20 xor_cycles 32 16384 "(libsodium|dolbeau)"
+
+./plot chacha20 xor_cycles 32 16384
 
 today=`date "+%Y%m%d"`
 mkdir -p data/chacha20-$today
