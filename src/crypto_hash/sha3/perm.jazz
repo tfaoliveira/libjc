@@ -54,7 +54,7 @@ u256 iotas[24] = {
 	, 0x8000000080008008800000008000800880000000800080088000000080008008
 } */
 
-export fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) -> 
+inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) -> 
       reg u256, reg u256, reg u256, reg u256, reg u256, reg u256, reg u256 {
    reg u64 i; 
    reg u256 C00, C14; 
@@ -73,8 +73,9 @@ export fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) ->
 	C00 = C00 ^4u64 A20;
 	T[0] = #x86_VPERMQ(C00, 0x4e /* 0b01001110 */);
 
-    //T[1] = #x86_VPSRLQ_256(C14, 63);
-    T[2] = C14 +4u64 C14;
+
+        T[1] = C14 <<4u64 63; // #x86_VPSRLQ_256(C14, 63);
+        T[2] = C14 +4u64 C14;
 	T[1] = T[1] |4u64 T[2];
 
 	D14 = #x86_VPERMQ(T[1], 0x39 /*0b00111001 */);
@@ -84,15 +85,15 @@ export fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) ->
 	C00 = C00 ^4u64 A00;
 	C00 = C00 ^4u64 T[0];
 
-    //T[0] = #x86_VPSRLQ_256(C00, 63);
-    T[1] = C00 +4u64 C00;
+        T[0] = C00 <<4u64 63; // #x86_VPSRLQ_256(C00, 63);
+        T[1] = C00 +4u64 C00;
 	T[1] = T[1] |4u64 T[0];
 
 	A20 = A20 ^4u64 D00;
 	A00 = A00 ^4u64 D00;
 
-    D14  = #x86_VPBLENDD_256(D14,T[1], 0xC0 /* 0b11000000 */);
-    T[4] = #x86_VPBLENDD_256(T[4],C00, 0x03 /* 0b00000011 */);
+        D14  = #x86_VPBLENDD_256(D14,T[1], (4u2)[3,0,0,0] /* 0xC0, 0b11000000 */);
+        T[4] = #x86_VPBLENDD_256(T[4],C00, (4u2)[0,0,0,3] /* 0x03, 0b00000011 */);
 	D14 = D14 ^4u64 T[4];
 
     i = i - 1;
