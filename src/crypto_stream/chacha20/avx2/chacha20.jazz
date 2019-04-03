@@ -915,17 +915,23 @@ fn diagonal_round_x8(reg u256[16] k, stack u256 k14 s_r16 s_r8) -> reg u256[16],
 fn rounds_x8(reg u256[16] k, stack u256 s_r16 s_r8) -> reg u256[16]
 {
   reg u64 c;
+  reg bool zf;
   stack u256 k15 k14;
 
   k15 = k[15];
 
-  c = 0;
-  while(c < 10)
-  {
+  //c = 0;
+  //while(c < 10)
+
+  c = 10;
+  while {
     k, k14 = column_round_x8(k, k15, s_r16, s_r8);
     k, k15 = diagonal_round_x8(k, k14, s_r16, s_r8);
-    c += 1;
-  }
+    (_,_,_,zf,c) = #x86_DEC(c);
+  } (!zf)
+
+  //c += 1;
+  //}
 
   k[15] = k15;
 
