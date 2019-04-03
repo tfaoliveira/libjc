@@ -60,8 +60,9 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) ->
    reg u256 C00, C14; 
    reg u256 D00, D14;
    reg u256[5] T;
+   reg bool zf;
    i = 24;
-   while (i != 0) {
+   while (true) {
 	/* ######################################### Theta */
 	C00  = #x86_VPSHUFD_256(A20, 0x4e /*0b01001110 */);
 	C14  = A41 ^4u64 A31 ;
@@ -74,8 +75,8 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) ->
 	T[0] = #x86_VPERMQ(C00, 0x4e /* 0b01001110 */);
 
 
-        T[1] = C14 <<4u64 63; // #x86_VPSRLQ_256(C14, 63);
-        T[2] = C14 +4u64 C14;
+    T[1] = C14 >>4u64 63; 
+    T[2] = C14 +4u64 C14;
 	T[1] = T[1] |4u64 T[2];
 
 	D14 = #x86_VPERMQ(T[1], 0x39 /*0b00111001 */);
@@ -85,25 +86,37 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) ->
 	C00 = C00 ^4u64 A00;
 	C00 = C00 ^4u64 T[0];
 
-        T[0] = C00 <<4u64 63; // #x86_VPSRLQ_256(C00, 63);
-        T[1] = C00 +4u64 C00;
+    T[0] = C00 >>4u64 63; 
+    T[1] = C00 +4u64 C00;
 	T[1] = T[1] |4u64 T[0];
 
 	A20 = A20 ^4u64 D00;
 	A00 = A00 ^4u64 D00;
 
-        D14  = #x86_VPBLENDD_256(D14,T[1], (4u2)[3,0,0,0] /* 0xC0, 0b11000000 */);
-        T[4] = #x86_VPBLENDD_256(T[4],C00, (4u2)[0,0,0,3] /* 0x03, 0b00000011 */);
+    D14  = #x86_VPBLENDD_256(D14,T[1], (4u2)[3,0,0,0] /* 0b11000000 */);
+    T[4] = #x86_VPBLENDD_256(T[4],C00, (4u2)[0,0,0,3] /* 0b00000011 */);
 	D14 = D14 ^4u64 T[4];
 
-    i = i - 1;
+    (zf,_,_,_,i) = #x86_DEC(i);
+    if (zf) { break; };
    }
    return A00, A01, A20, A31, A21, A41, A11;
 }
 
-
-
-
+export fn wrapper() -> reg u64 {
+	reg u256 A00, A01, A20, A31, A21, A41, A11;
+	reg u64 r;
+	//A00 = 0;
+	//A01 = 0;
+	//A20 = 0;
+	//A31 = 0;
+	//A21 = 0;
+	//A41 = 0;
+	//A11 = 0;
+	A00, A01, A20, A31, A21, A41, A11 = KeccakP1600_Permute_24rounds(A00, A01, A20, A31, A21, A41, A11);
+	r = #x86_VPEXTR_64(A00, 0);
+    return  r;
+}
 
 
 
