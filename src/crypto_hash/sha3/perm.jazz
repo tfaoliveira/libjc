@@ -62,7 +62,7 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) ->
    reg u256[5] T;
    reg bool zf;
    i = 24;
-   while (true) {
+   while {
 	/* ######################################### Theta */
 	C00  = #x86_VPSHUFD_256(A20, 0x4e /*0b01001110 */);
 	C14  = A41 ^4u64 A31 ;
@@ -98,8 +98,7 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) ->
 	D14 = D14 ^4u64 T[4];
 
     (zf,_,_,_,i) = #x86_DEC(i);
-    if (zf) { break; };
-   }
+   } (!zf) 
    return A00, A01, A20, A31, A21, A41, A11;
 }
 
