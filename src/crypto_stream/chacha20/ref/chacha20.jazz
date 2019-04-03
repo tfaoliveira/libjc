@@ -68,10 +68,16 @@ fn rounds(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
 {
   inline int i;
   stack u32 c, k14;
+  stack u32 k14;
+  reg bool zf;
 
-  c = 0;
-  while(c < 10)
-  {
+  //c = 0;
+  //while(c < 10)
+  //{
+
+  c = 10;
+  while {
+
     k = quarter_round(k, 0, 4, 8, 12);
     k = quarter_round(k, 2, 6, 10, 14);
 
@@ -90,8 +96,11 @@ fn rounds(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
     k = quarter_round(k, 2, 7, 8,  13);
     k = quarter_round(k, 3, 4, 9,  14); 
 
-    c += 1; 
-  }  
+    (_,_,_,zf,c) = #x86_DEC_32(c);
+  } (!zf)
+
+  //  c += 1; 
+  //}  
 
   return k, k15;
 }
