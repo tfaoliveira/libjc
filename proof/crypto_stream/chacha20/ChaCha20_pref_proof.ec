@@ -52,48 +52,13 @@ lemma take_loads_8 mem p (n1 n2:int) : n1 <= n2 =>
   take n1 (loads_8 mem p n2) = loads_8 mem p n1.
 proof. by move=> hn;rewrite /loads_8 -map_take take_iota /#. qed.
 
-(* move this *)
-lemma to_uint_eq (x y:W64.t) :  (x = y) <=> (to_uint x = to_uint y).
-proof. by rewrite Core.inj_eq // (Core.can_inj _ _  W64.to_uintK). qed.
-
 lemma size_bytes_of_block st : size (bytes_of_block st) = 64.
 proof. by rewrite /bytes_of_block WArray64.size_to_list. qed.
 
 (* -------------------------------------------------------------------------------- *)
 op inv_ptr (output plain: address) (len:int) = 
   !(plain < output /\ output < plain + len).
-(*
-(plain + len <= output || output <= plain).
- /\
-   to_uint output + len < W64.modulus /\
-   to_uint plain + len < W64.modulus.
-*)
 
-(*lemma inv_ptr_disj len output plain i1 i2:
-  inv_ptr output plain len =>
-  0 <= i1 <= len =>
-  0 <= i2 <= len =>
-  i1 < i2 => 
-  plain + i2 <> output + i1.
-proof. smt (). qed.
-*)
-(*
-lemma inv_ptr_add_out output plain len i: 
-   inv_ptr output plain len =>
-   0 <= i <= len =>
-   to_uint (output + W64.of_int i) =  to_uint output + i.
-proof.
-  move=> /> *; rewrite W64.to_uintD_small W64.to_uint_small; smt(W64.to_uint_cmp).
-qed.
-
-lemma inv_ptr_add_plain output plain len i: 
-   inv_ptr output plain len =>
-   0 <= i <= len =>
-   to_uint (plain + W64.of_int i) =  to_uint plain + i.
-proof.
-  move=> /> *; rewrite W64.to_uintD_small W64.to_uint_small; smt(W64.to_uint_cmp).
-qed.
-*)
 (* -------------------------------------------------------------------------------- *)
 
 lemma line_diff a b d s st i:
