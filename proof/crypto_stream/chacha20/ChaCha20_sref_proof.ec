@@ -91,6 +91,8 @@ module M = {
 
 end ChaCha20_srefi.
 
+(* FIXME 
+
 lemma zeroextu64_bit (w:W32.t) i: (zeroextu64 w).[i] = ((0 <= i < 32) /\ w.[i]).
 proof.
   rewrite /zeroextu64 W64.of_intwE /W64.int_bit (modz_small (to_uint w)).
@@ -101,21 +103,16 @@ proof.
   rewrite divz_small 2://.
   by have /= /(_ h):= pow_Mle 32 i; have /= /# := W32.to_uint_cmp w.
 qed.
+*)
 
 hoare merge_spec lo0 hi0 : ChaCha20_srefi.M.merge : 
    lo = lo0 /\ hi = hi0 ==> res = W2u32.pack2 [lo0; hi0].
 proof.
   proc => /=; wp; skip => /> &hr.
   apply W64.wordP=> i hi.
-  rewrite /(`<<`) /=  W2u32.pack2wE hi /=.
-  rewrite !zeroextu64_bit.
-  case: (0 <= i < 32) => hi1. 
-  + have [-> ->] /#: i %/ 32 = 0 /\ i %% 32 = i by smt(modz_small divz_small).    
-  have [-> ->] /# : i %/ 32 = 1 /\ i %% 32 = i - 32.
-  have -> : i = (i - 32) + 1 * 32 by ring.
-  by rewrite divzMDr 1:// modzMDr; smt(modz_small divz_small).  
+  rewrite /(`<<`) /=  W2u32.pack2wE hi /= !zeroextu64_bit W2u32.Pack.of_listE initiE 1:/# /= /#.
 qed.
-
+(*
 lemma get8_W2u32 (ws: W2u32.Pack.pack_t) i : 
   W2u32.pack2_t ws \bits8 i = 
    if 0 <= i < 8 then 
@@ -131,7 +128,7 @@ proof.
     by rewrite modzMDr divzMDr 1://;smt (modz_small divz_small).
   by rewrite /= get_out /#.
 qed.
-
+*)
 lemma get_storeW64E m p w j: 
     (storeW64 m p w).[j] = if p <= j < p + 8 then w \bits8 j - p else m.[j].
 proof. rewrite storeW64E /= get_storesE /= /#. qed.
@@ -157,12 +154,7 @@ proof.
   have -> /=: in_range output (8 * i) j by smt().
   have hj': 0 <= j - (output + 8 * (i - 1)) < 8 by smt().
   congr.
-  + rewrite /init32 initiE 1:/# /= get8_W2u32 hj' /=.
-    case: (j - (output + 8 * (i - 1)) < 4) => h4.
-    + have -> : (j - output) = (j -  (output + 8 * (i - 1))) + (2*(i-1)) * 4 by ring.    
-      by rewrite modzMDr divzMDr 1://; smt (modz_small divz_small).
-    have -> : (j - output) = (j -  (output + 8 * (i - 1)) - 4) + (2*(i-1) + 1) * 4 by ring. 
-    by rewrite modzMDr divzMDr 1://; smt (modz_small divz_small).
+  + by rewrite /init32 initiE 1:/# /= bits8_W2u32 W2u32.Pack.of_listE hj' /= initiE /#.
   rewrite /loadW64 /= pack8bE 1:/# initiE 1:/# /=;congr;ring.
 qed.
 
@@ -225,11 +217,12 @@ proof.
   proc; inline *;wp; while true (8-i); auto => /#.
 qed.
 
+(* FIXME
 lemma pack2u32_8u8 (w0 w1 w2 w3 w4 w5 w6 w7: W8.t) :
    pack2 [pack4 [w0;w1;w2;w3]; pack4 [w4;w5;w6;w7]] =
    pack8 [w0; w1; w2; w3; w4; w5; w6; w7].
 proof. by apply W64.all_eq_eq;cbv W64.all_eq (%/) (%%). qed.
-
+*)
 hoare store_last_srefi_spec output0 plain0 len0 k0 mem0 : ChaCha20_srefi.M.store_last : 
   output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
   0 <= len < 64 /\ inv_ptr output plain len 
@@ -265,27 +258,15 @@ proof.
       else mem0.[i]).
   + wp; skip => /> &hr h0j hj8 hl8 hinv hlen hmem hj;split; 1:smt().
     have -> : get64 (init32 (fun (i0 : int) => k{hr}.[i0])) j{hr} = pack2 [k{hr}.[2*j{hr}];k{hr}.[2*j{hr} + 1]].
-    + rewrite get64E /init32 /=.
-      rewrite -(W4u8.unpack8K k{hr}.[2 * j{hr}]) -(W4u8.unpack8K k{hr}.[2 * j{hr} + 1]).
-      rewrite /unpack8 !W4u8.Pack.init_of_list /= pack2u32_8u8; congr.
-      apply W8u8.Pack.all_eq_eq; rewrite /all_eq /= !initiE; 1..8:smt().
-      rewrite /=.
-      have heq : forall i, (8 * j{hr} + i) = i + (2*j{hr})*4 by move=> *;ring. 
-      by rewrite !heq (heq 0) !modzMDr !divzMDr //.
+    + rewrite get64E /init32 /=; apply W8u8.wordP => i hi.
+      by rewrite W8u8.pack8bE 1:// initiE 1:// /= initiE 1:/# /= bits8_W2u32 of_listE initiE 1:/# /= /#.
     have /= := storeW64_init32 mem0 Glob.mem{hr} k{hr} output{hr} plain{hr} (j{hr} + 1) _ _ _; 1..3:smt().
     move=> h i; rewrite W64.xorwC.
     have -> : loadW64 Glob.mem{hr} (plain{hr} + 8 * j{hr}) = loadW64 mem0 (plain{hr} + 8 * j{hr});last by apply h.
     rewrite /loadW64;congr; apply W8u8.Pack.packP => l hl /=.
     rewrite !initiE 1,2:// /= hmem.
     by have -> : !in_range output{hr} (8 * j{hr}) (plain{hr} + 8 * j{hr} + l) by smt().
-  wp; skip => /> &hr h1 h2 h3;split.
-  + rewrite lez_divRL 1:// /= h1 /= mulzC floor_le 1:// /=; split; 2:smt().
-    have /= := leq_div2r 8 len{hr} 64.
-    by have -> /# :  64 %/ 8 = 8.
-  move=> mem j0 h4 h5 h6 h7 h8.        
-  have ->> : j0 = len{hr} %/ 8 by smt().
-  move=> h9;split; 1: by rewrite mulzC /#.
-  by move=> mem1 j1 h10 h11 h12 h13; have ->> : j1 = len{hr} by smt().
+  wp; skip => /> /#.
 qed.
 
 phoare store_last_srefi_pspec output0 plain0 len0 k0 mem0 : [ChaCha20_srefi.M.store_last : 

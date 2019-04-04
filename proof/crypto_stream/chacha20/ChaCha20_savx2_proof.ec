@@ -28,62 +28,40 @@ op x_ (k1:W32.t Array16.t) =
     W8u32.pack8 [k1.[0]; k1.[1]; k1.[2]; k1.[3]; k1.[4]; k1.[5]; k1.[6]; k1.[7]];
     W8u32.pack8 [k1.[8]; k1.[9]; k1.[10]; k1.[11]; k1.[12]; k1.[13]; k1.[14]; k1.[15]] ].
 
-(* FIXME need more lemmas *)
 lemma g_sigma_pack : g_sigma = pack4 [g_sigma0; g_sigma1; g_sigma2; g_sigma3].
-proof.
-  rewrite -(W4u32.unpack32K g_sigma); congr.
-  apply W4u32.Pack.all_eq_eq; rewrite /all_eq /= !W4u32.bits32_div //; cbv delta.
-  by do !(rewrite -W32.of_int_mod; cbv delta).
-qed.
+proof. by apply W4u32.allP;cbv delta. qed.
 
 lemma g_p0_pack : g_p0 = W4u32.pack4 [W32.zero; W32.zero; W32.zero; W32.zero].
-proof.
-  rewrite -(W4u32.unpack32K g_p0); congr.
-  apply W4u32.Pack.all_eq_eq; rewrite /all_eq /= !W4u32.bits32_div //; cbv delta.
-qed.
+proof. by apply W4u32.allP; cbv delta. qed.
 
 lemma g_p1_pack : 
   g_p1 = W8u32.pack8 [W32.zero; W32.zero; W32.zero; W32.zero; W32.one; W32.zero; W32.zero; W32.zero].
-proof.
-  rewrite -(W8u32.unpack32K g_p1); congr.
-  apply W8u32.Pack.all_eq_eq; rewrite /all_eq /= !W8u32.bits32_div //; cbv delta.
-  by do !(rewrite -W32.of_int_mod; cbv delta).
-qed.
+proof. by apply W8u32.allP; cbv delta. qed.
+(* FIXME PY
+  apply W8u32.allP => /=. 
+  rewrite W8u32.bits32_div 1://.
+  rewrite W8u32.bits32_div 1://.
+  rewrite W8u32.bits32_div 1://.
+  rewrite W8u32.bits32_div 1://.
+  rewrite W8u32.bits32_div 1://.
+  pose s := W8u32.(\bits32) g_p1 5.
+  *)
 
 lemma g_p2_pack :
   g_p2 = pack8[W32.of_int 2; W32.zero; W32.zero; W32.zero; W32.of_int 2; W32.zero; W32.zero; W32.zero].
-proof.
-  rewrite -(W8u32.unpack32K g_p2); congr.
-  apply W8u32.Pack.all_eq_eq; rewrite /all_eq /= !W8u32.bits32_div //; cbv delta.
-  by do !(rewrite -W32.of_int_mod; cbv delta).
-qed.
+proof. by apply W8u32.allP; cbv delta. qed.
 
 lemma loadW64_bits32 m p i : 0 <= i < 2 =>
   loadW64 m p \bits32 i = loadW32 m (p + i * 4).
 proof. 
   move=> hi; rewrite /loadW64 /loadW32.
-  apply W32.wordP => j hj.
-  rewrite bits32iE // pack4wE // initiE; 1:by apply divz_cmp.
-  rewrite pack8wE; 1:by apply W2u32.in_bound. 
-  rewrite initiE /=; 1:by apply divz_cmp => //=;apply W2u32.in_bound.
-  have -> : i * 32 = (i * 4) * 8 by ring. 
-  by rewrite modzMDl divzMDl // -addzA. 
+  rewrite bits32_W8u8 hi /= !initiE 1..4:/# /=.
+  apply W4u8.allP; cbv delta => /#.
 qed.
 
 lemma load2u32 mem p : 
   pack2 [loadW32 mem p; loadW32 mem (p + 4)] = loadW64 mem p.
-proof.
-  have -> : W2u32.Pack.of_list [loadW32 mem p; loadW32 mem (p + 4)] =
-            W2u32.Pack.init (fun i => loadW32 mem (p + i * 4)).
-  + by apply W2u32.Pack.all_eqP; rewrite /all_eq.
-  apply (can_inj _ _ W2u32.unpack32K); apply W2u32.Pack.packP => i hi.
-  by rewrite pack2K initiE //= get_unpack32 // loadW64_bits32.
-qed.
-
-lemma pack2_2u32_4u32 (w0 w1 w2 w3 :W32.t) :
-   pack2 [pack2 [w0;w1]; pack2 [w2; w3]] =
-   pack4 [w0; w1; w2; w3].
-proof. by apply W128.all_eq_eq;cbv W128.all_eq (%/) (%%). qed.
+proof. by apply W2u32.allP; rewrite /= /loadW32 /loadW64 /=;split;apply W4u8.allP. qed.
 
 equiv eq_init_x2 :
   ChaCha20_pavx2.M.init_x2 ~ ChaCha20_savx2.M.init_x2 : 
@@ -96,13 +74,11 @@ proof.
   conseq (_: Array4.all_eq st{2} (x2 st_1 st_2){1}).
   + by move=> *; apply Array4.all_eq_eq.
   do 2! unroll for{1} ^while; wp; skip => /> *.
-  rewrite /x2 /= /x86_VPBROADCAST_2u128 /= -!load4u32 -!pack2_4u32_8u32 /=.
-  rewrite !W64.to_uintD_small /= 1,2:/# g_sigma_pack g_p0_pack/=.
-  rewrite pack2_4u32_8u32 /=.
-  rewrite /x86_VPINSR_4u32 /(%%) /= -pack2_2u32_4u32 -load2u32 /x86_VPINSR_2u64 /(%%) /=.
-  by rewrite pack2_2u32_4u32 pack2_4u32_8u32 g_p1_pack /x86_VPADD_8u32.
+  cbv delta; rewrite g_sigma_pack /= W64.to_uintD_small /= 1:/#.
+  by apply W32u8.allP; cbv delta; rewrite W64.to_uintD_small /= 1:/#.
 qed.
 
+(* FIXME 
 lemma get8_pack4u32 f j: 
   pack4_t (W4u32.Pack.init f) \bits8 j = 
     if 0 <= j < 16 then f (j %/ 4) \bits8 (j %% 4) else W8.zero.
@@ -118,12 +94,13 @@ proof.
   rewrite initE hi /= divz_cmp //=; congr.
   rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA modzMDl modz_small //; smt (modz_cmp).
 qed.
-
+*)
 lemma pack8_init_shift8 (k:W32.t Array16.t) : 
   pack8 [k.[8]; k.[9]; k.[10]; k.[11]; k.[12]; k.[13]; k.[14]; k.[15]] = 
   pack8_t (W8u32.Pack.init (fun i => k.[8 + i])).
-proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
+proof. by apply W8u32.allP. qed.
 
+(*FIXME
 lemma get8_pack8u32 f j: 
   pack8_t (W8u32.Pack.init f) \bits8 j = 
     if 0 <= j < 32 then f (j %/ 4) \bits8 (j %% 4) else W8.zero.
@@ -139,7 +116,8 @@ proof.
   rewrite initE hi /= divz_cmp //=; congr.
   rewrite {1}(divz_eq j 4) mulzDl mulzA /= -addzA modzMDl modz_small //; smt (modz_cmp).
 qed.
-
+*)
+(* FIXME: move *)
 lemma get_storeW128E m p w j: 
     (storeW128 m p w).[j] = if p <= j < p + 16 then w \bits8 j - p else m.[j].
 proof. rewrite storeW128E /= get_storesE /= /#. qed.
@@ -148,7 +126,7 @@ lemma get_storeW256E m p w j:
     (storeW256 m p w).[j] = if p <= j < p + 32 then w \bits8 j - p else m.[j].
 proof. rewrite storeW256E /= get_storesE /= /#. qed.
 
-lemma pack4_init (k:int ->  W32.t) : 
+(*lemma pack4_init (k:int ->  W32.t) : 
   pack4 [k 0; k 1; k 2; k 3] = 
   pack4_t (W4u32.Pack.init k).
 proof. by congr; apply W4u32.Pack.all_eq_eq; cbv delta. qed.
@@ -157,7 +135,7 @@ lemma pack8_init (k:int -> W32.t) :
   pack8 [k 0; k 1; k 2; k 3; k 4; k 5; k 6; k 7] = 
   pack8_t (W8u32.Pack.init k).
 proof. by congr; apply W8u32.Pack.all_eq_eq; cbv delta. qed.
-
+*)
 lemma store_256_xor_spec output (k1:W32.t Array16.t) mem plain j:
   (if output + 32 <= j < output + 64 then
      (pack8 [k1.[8]; k1.[9]; k1.[10]; k1.[11]; k1.[12]; k1.[13]; k1.[14]; k1.[15]] \bits8 j - (output + 32)) `^`
@@ -169,20 +147,16 @@ lemma store_256_xor_spec output (k1:W32.t Array16.t) mem plain j:
    if in_range output 64 j then (WArray64.init32 ("_.[_]" k1)).[j - output] `^` mem.[plain + (j - output)]
    else mem.[j].
 proof.
+  rewrite /init32 /loadW256 /=.
   case: (output + 32 <= j < output + 64) => hin2.
   + have -> /= : in_range output 64 j by smt().
-    rewrite /init32 /loadW256 /= initiE; 1: smt (W64.to_uint_cmp).
     have h1 : 0 <= j - (output + 32) < 32 by smt().
-    rewrite /= pack32bE 1:// initiE 1:// /=. 
-    have -> : plain + 32 + (j - (output + 32)) = plain + (j - output) by ring.
-    congr; rewrite pack8_init_shift8 get8_pack8u32 h1 /=.    
-    by rewrite Ring.IntID.opprD addzA divzDr 1:// dvdz_modzDr 1://;congr.
+    by rewrite pack32bE 1:// bits8_W8u32_red 1:// get_of_list 1:/# W32u8.Pack.initiE 1:// WArray64.initiE /#.
   case:(output <= j < output + 32) => hin3.  
   + have -> /= : in_range output 64 j by smt().
     rewrite /init32 /loadW256 /= initiE; 1: smt (W64.to_uint_cmp).
     have h1 : 0 <= j - output < 32 by smt().
-    rewrite /= (pack8_init (fun i => k1.[i])) get8_pack8u32 h1 /=. 
-    by rewrite pack32bE 1:// initiE.
+    by rewrite /= pack32bE 1:// initiE 1:// bits8_W8u32 h1 /= get_of_list /#.
   have -> // : !(in_range output 64 j) by smt().
 qed.
 
@@ -233,13 +207,11 @@ proof.
   inline{1} ChaCha20_pavx2_cf.M.store_x2; wp.
   ecall{1} (store_pref_spec output0{1} plain0{1} len0{1} k_2{1} Glob.mem{1}).
   ecall{1} (store_pref_spec output0{1} plain0{1} len0{1} k_1{1} Glob.mem{1}). 
-  wp; skip => |>.
+  wp; skip => |>. 
   move=> &1 &2 3! -> hgood hinv hlen ?; split; 1: smt().
-  move=> _ mem1.
-  have -> : min 64 (to_uint len{2}) = 64 by smt().
+  move=> _ mem1; have -> : min 64 (to_uint len{2}) = 64 by smt().
   move=> hinv1 hmem1; split; 1: smt().
-  move=> _ mem2.
-  have -> /= :  min 64 (to_uint len{2} - 64) = 64 by smt().
+  move=> _ mem2; have -> /= :  min 64 (to_uint len{2} - 64) = 64 by smt().
   rewrite hlen /= => hinv2 hmem2 r mem 3!-> hmem /=; split; 1: smt().
   apply mem_eq_ext => j; smt().
 qed.
@@ -326,14 +298,7 @@ proof.
            (forall j, 0 <= j < 32 => k8_0{1}.[j] = k8_0{2}.[j]) /\
            (forall j, 0 <= j < i{1} => k8{1}.[j] = k8{2}.[j])).
     + by auto; smt(WArray64.get_setE WArray32.get_setE).
-    auto => /> &m ????.    
-    have -> /= : len{m} <= 32 by smt().
-    split;last by smt().
-    split;last by smt().
-    split;last by smt().
-    rewrite /WArray64.init32 /WArray32.init32 => j h1 h2.
-    rewrite WArray64.initE WArray32.initE /= Array8.initE /=.
-    by rewrite divz_ge0 1:// h1 ltz_divLR // h2 /#.
+    by auto;smt (WArray64.initE WArray32.initE Array8.initE).
   inline ChaCha20_pref.M.update_ptr; wp.
   exlim Glob.mem{1} => mem0.
   seq 2 0 : (#{/~k8{1}}pre /\ (forall j, 0 <= j < len => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain + j)){1}).
@@ -362,28 +327,13 @@ proof.
   wp; skip => /> &1 &2 h1 h2 h3 h4 h5.
   split; 1: smt(). 
   move=> i_R k8_R;split; 1: smt().
-  move=> h6 h7 h8 h9.
-  have ->> : i_R = 32 by smt().
-  split. 
-  + split; 2: smt().
-    move=> j h10 h11; rewrite h5 1:/# h7 1:// /WArray64.init32 /WArray32.init32.
-    rewrite WArray64.initE WArray32.initE /= Array8.initE /=.
-    by rewrite divz_ge0 1:// h10 ltz_divLR // h11 /#.
+  move=> h6 h7 h8 h9; have ->> : i_R = 32 by smt().
+  split; 1:smt (WArray64.initE WArray32.initE Array8.initE).
   move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
   have ->> /= : i_R0 = 32 by smt().
-  do! split; 1..4: smt().
+  have : forall (j : int), 0 <= j => j < len{2} - 32 => mem_R.[plain{2} + 32 + j] = Glob.mem{2}.[plain{2} + 32 + j].
   + by move=> j *; rewrite -addzA /#.
-  move=> i0_R k80_R; split; 1: smt().
-  move=> h16 h17 h18 h19 h20 h21 h22; split; 2:smt().
-  move=> j h23 h24.
-  rewrite h17 1:/# h5 1:/#.
-  rewrite /WArray64.init32 /WArray32.init32.
-  rewrite WArray64.initE WArray32.initE /= Array8.initE /=.
-  rewrite divz_ge0 1:// h23 ltz_divLR //=.
-  have -> : (j + 32) %/ 4 = j%/4 + 8.
-  + by rewrite (_: 32 = 8 * 4) 1:// divzMDr //; ring.
-  have -> /#: (j + 32) %% 4 = j%%4.
-  by rewrite (_: 32 = 8 * 4) 1:// modzMDr.
+  smt (WArray64.initE WArray32.initE Array8.initE).
 qed.
 
 equiv eq_store32_1 : Store.store32 ~ Store.store32_1 : 
@@ -399,13 +349,7 @@ proof.
            (forall j, 0 <= j < 16 => k8_0{1}.[j] = k8_0{2}.[j]) /\
            (forall j, 0 <= j < i{1} => k8{1}.[j] = k8{2}.[j])).
     + by auto; smt(WArray32.get_setE WArray16.get_setE).
-    wp; skip => /> &2 ????.    
-    have -> /= : len{2} <= 16 by smt().
-    split;last by smt().
-    split;last by smt().
-    rewrite /WArray32.init32 /WArray16.init32 => j h1 h2.
-    rewrite WArray32.initE WArray16.initE /= Array4.initE /=.
-    by rewrite divz_ge0 1:// h1 ltz_divLR // h2 /#.
+    by wp; skip => />; smt (WArray32.initE WArray16.initE Array4.initE).
   inline ChaCha20_pref.M.update_ptr; wp.
   exlim Glob.mem{1} => mem0.
   seq 2 0 : (#{/~k8{1}}pre /\ (forall j, 0 <= j < len => k8.[j] = k8_0.[j] `^` loadW8 mem0 (plain + j)){1}).
@@ -431,31 +375,14 @@ proof.
   wp; while{2} ((forall j,  0 <= j < i{2} => k8{2}.[j] = k8_0{2}.[j] `^` loadW8 Glob.mem{2} (plain1{2} + j)) /\
                 (0 <= i <= len1){2} /\ len1{2} = 16) (len1 - i){2}.
   + by move=> _ z; wp; skip => />; smt (WArray16.get_setE).
-  wp; skip => /> &1 &2 h1 h2 h3 h4 h5.
-  split; 1: smt(). 
+  wp; skip => /> &1 &2 h1 h2 h3 h4 h5; split; 1: smt(). 
   move=> i_R k8_R;split; 1: smt().
-  move=> h6 h7 h8 h9.
-  have ->> : i_R = 16 by smt().
-  split. 
-  + split; 2: smt().
-    move=> j h10 h11; rewrite h5 1:/# h7 1:// /WArray32.init32 /WArray16.init32.
-    rewrite WArray32.initE WArray16.initE /= Array4.initE /=.
-    by rewrite divz_ge0 1:// h10 ltz_divLR // h11 /#.
-  move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
-  have ->> /= : i_R0 = 16 by smt().
-  split. 
-  + by do! split => *; rewrite -1?addzA /#.
-  move=> i0_R k80_R; split; 1: smt().
-  move=> h16 h17 h18 h19 h20 h21 h22; split; 2:smt().
-  move=> j h23 h24.
-  rewrite h17 1:/# h5 1:/#.
-  rewrite /WArray32.init32 /WArray16.init32.
-  rewrite WArray32.initE WArray16.initE /= Array4.initE /=.
-  rewrite divz_ge0 1:// h23 ltz_divLR //=.
-  have -> : (j + 16) %/ 4 = j%/4 + 4.
-  + by rewrite (_: 16 = 4 * 4) 1:// divzMDr //; ring.
-  have -> /#: (j + 16) %% 4 = j%%4.
-  by rewrite (_: 16 = 4 * 4) 1:// modzMDr.
+  move=> h6 h7 h8 h9; have ->> : i_R = 16 by smt().
+  split; 1: smt (WArray32.initE WArray16.initE Array4.initE).
+  move=> mem_R i_R0 h10 h11 h12 h13 h14 h15; have ->> /= : i_R0 = 16 by smt().
+  have : forall (j : int), 0 <= j => j < len{2} - 16 => mem_R.[plain{2} + 16 + j] = Glob.mem{2}.[plain{2} + 16 + j].
+  + by move=> *;rewrite -1?addzA /#.
+  smt (WArray32.initE WArray16.initE Array4.initE).
 qed.
 
 equiv eq_store64_2 : ChaCha20_pref.M.store ~ Store.store64_2 : 
@@ -540,6 +467,19 @@ proof.
   wp; skip => /> &hr /#.
 qed.
 
+(*lemma pack4_init (k:int ->  W32.t) : 
+  pack4 [k 0; k 1; k 2; k 3] = 
+  pack4_t (W4u32.Pack.init k).
+proof. by congr; apply W4u32.Pack.all_eq_eq; cbv delta. qed.
+
+lemma pack4_init_red (k0 k1 k2 k3:int ->  W32.t) :
+  k0 = k1 => k0 = k2 => k0 = k3 => 
+  pack4 [k0 0; k1 1; k2 2; k3 3] = 
+  pack4_t (W4u32.Pack.init k0).
+proof. by move=> />;rewrite pack4_init. qed.
+
+hint simplify pack4_init_red. *)
+
 equiv eq_store_last : ChaCha20_pref.M.store ~ M.store_last :
   output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ len{1} = to_uint len{2} /\ ={Glob.mem} /\
   (good_ptr output plain len){1} /\ (inv_ptr output plain len){1} /\ 0 <= len{1} <= 64 /\
@@ -569,9 +509,7 @@ proof.
       apply mem_eq_ext => j; rewrite h6 get_storeW256E /in_range.
       case: (to_uint output{2} <= j < to_uint output{2} + 32) => [h | //].
       have hh : 0 <= j - to_uint output{2} < 32 by smt().
-      rewrite /init32 /loadW256 /= initiE 1://.
-      rewrite /= (pack8_init (fun i => k{1}.[i])) get8_pack8u32 hh /=. 
-      by rewrite pack32bE 1:// !initiE // divz_ge0 1:// ltz_divLR.
+      by rewrite /init32 /loadW256 /= initiE 1:// /= bits8_W8u32 hh /= pack32bE 1:// initiE 1:// /= get_of_list 1:/# initiE /#.
     by skip => /> *; rewrite /x_ /= /#.
   inline Store.store32_1.
   sp 5 1.
@@ -583,14 +521,13 @@ proof.
     + wp; ecall (eq_update_ptr output0{1} plain0{1} len0{1} 16).
       ecall{1} (store16_spec output0{1} plain0{1} k10{1} Glob.mem{1}); wp; skip => 
         /> &1 &2 hinv h1 h2 h3 h4 h5 mem h6 res_L res_R *.
-      rewrite /x86_VEXTRACTI128 b2i_get 1:// /= /(%/) /(%%) -pack2_4u32_8u32 /=; split; 2:smt().
+      rewrite /x86_VEXTRACTI128 b2i_get 1:// /=; split; 2:smt().
       apply mem_eq_ext => j; rewrite h6 get_storeW128E /in_range.
       case: (to_uint output{2} <= j < to_uint output{2} + 16) => [h | //].
       have hh : 0 <= j - to_uint output{2} < 16 by smt().
       rewrite /init32 /loadW128 /= initiE 1:// /b2i /=.
-      rewrite (pack4_init (fun i=> k1{1}.[i])) get8_pack4u32 hh /=. 
-      by rewrite pack16bE 1:// !initiE // divz_ge0 1:// ltz_divLR.
-    by skip => /> *; rewrite /x86_VEXTRACTI128 b2i_get 1:// /= /(%/) /(%%) -pack2_4u32_8u32 /= /#.
+      rewrite pack16bE 1:// initiE 1:// /= initiE 1:/# bits8_W4u32_red 1:// get_of_list /#.
+    skip => /> *; rewrite /x86_VEXTRACTI128 /= /#.
   inline Store.store16; exlim Glob.mem{1} => mem0.
   while (i{1} = to_uint j{2} /\ 0 <= len1{1} <= 16 /\ 0 <= i{1} /\
         len1{1} = to_uint len{2} /\ output1{1} = to_uint output{2} /\ plain1{1} = to_uint plain{2} /\
@@ -613,9 +550,8 @@ proof.
   move=> h1 h2 h3 h4 ; rewrite ultE W2u32.to_uint_truncateu32 //.
   have ->> : i_L = to_uint len{2} by smt().
   move=> k3 *; rewrite h4 1://.
-  rewrite /init32 !initE.
   have h : 0 <= k3 < 16 by smt().
-  by rewrite h /= (pack4_init (fun i => k10{1}.[i])) get8_pack4u32 h.
+  by rewrite /init32 initE initE /= bits8_W4u32_red h /= get_of_list /#.
 qed.
 
 equiv eq_store len0 : ChaCha20_pref.M.store ~ M.store :
@@ -660,12 +596,14 @@ proof.
   by apply Array2.all_eq_eq.
 qed.
 
+(* FIXME *)
+hint simplify W8.of_intwE.
+
 phoare perm_x2_spec k1 k2 : [M.perm_x2 : k = x2 k1 k2 ==> res = x2_ k1 k2] = 1%r.
 proof.
   proc; conseq (_: Array4.all_eq pk (x2_ k1 k2)).
   + by move=>*; rewrite Array4.ext_eq_all.
-  wp; skip => />; rewrite /Array4.all_eq /(%%) /= /x86_VPERM2I128 /x2_ /x2 /=.
-  by rewrite !W8.of_intwE /int_bit /= /(%%) /(%/) /b2i /= -!pack2_4u32_8u32 /=. 
+  by wp; skip => />; cbv delta.
 qed.
 
 equiv eq_sum_states_x2 : ChaCha20_pavx2.M.sum_states_x2 ~ M.sum_states_x2 :
@@ -729,17 +667,6 @@ proof.
   by apply W8u32.Pack.all_eq_eq; apply (hall i); apply mema_iota.
 qed.
 
-(* Move this *)
-lemma x86_8u32_rol_xor r w : 0 < r < 32 => 
-  x86_VPSLL_8u32 w (W8.of_int r) `^` x86_VPSRL_8u32 w (W8.of_int (32 - r))  =
-  map (transpose W32.rol r) w.
-proof.
-  move=> hr;rewrite /x86_VPSRL_8u32 /x86_VPSLL_8u32 /(`>>`) /(`<<`).
-  rewrite !W8.to_uint_small /= 1,2:/# /=.
-  rewrite /map; congr; apply W8u32.Pack.ext_eq => j hj.
-  by rewrite map2iE 1:// 3!initE hj /= W32.rol_xor 1:/# 2?modz_small 1,2:/#.
-qed.
-
 phoare rotate_x8 k0 i0 r0 : 
   [M.rotate_x8 : 
     k = k0 /\ i = i0 /\ r = r0 /\ 0 <= i < 4 /\ 0 < r < 32 /\ r16 = g_r16 /\ r8 = g_r8 
@@ -760,8 +687,7 @@ equiv eq_line_x2 :  M'.line_x8 ~ M.line_x8 :
 proof.
   proc.
   ecall{2} (rotate_x8 k{2} (c %/ 4){2} r{2}).
-  inline *;wp;skip => /> &2 *.
-  by rewrite lez_divRL 1:// /= ltz_divLR.
+  by inline *;wp;skip => /> &2 * /#.
 qed.
 
 equiv eq_round_x2 :  M'.round_x2 ~ M.round_x2 : 
@@ -800,8 +726,7 @@ equiv eq_shuffle_state : ChaCha20_pavx2.M.shuffle_state ~ M.shuffle_state :
   res{2} = x2 res{1}.`1 res{1}.`2.
 proof.
   proc => /=.
-  inline *; wp; skip => /> &1.
-  rewrite /x2 /x86_VPSHUFD_256 /(%%) /(%/) /= -3!pack2_4u32_8u32 /=; cbv delta; rewrite !pack2_4u32_8u32.
+  inline *; wp; skip => /> &1; cbv delta. 
   by apply Array4.all_eq_eq; rewrite /Array4.all_eq.
 qed.
 
@@ -811,9 +736,8 @@ equiv eq_reverse_shuffle_state : ChaCha20_pavx2.M.reverse_shuffle_state ~ M.reve
   res{2} = x2 res{1}.`1 res{1}.`2.
 proof.
   proc => /=.
-  inline *; wp; skip => /> &1.
-  rewrite /x2 /x86_VPSHUFD_256 /(%%) /(%/) /= -3!pack2_4u32_8u32 /=; cbv delta; rewrite !pack2_4u32_8u32.
-  by apply Array4.all_eq_eq; rewrite /Array4.all_eq.
+  inline *; wp; skip => /> &1; cbv delta. 
+  by apply Array4.all_eq_eq; rewrite /Array4.all_eq /=.
 qed.
 
 equiv eq_diagonal_round_x2 : ChaCha20_pavx2.M.diagonal_round_x2 ~ M.diagonal_round_x2 : 
@@ -1112,11 +1036,8 @@ proof.
   + by rewrite W64.to_uintD_small //= /#.
   have -> /= : to_uint (nonce{2} + W64.of_int 4) = to_uint nonce{2} + 4.
   + by rewrite W64.to_uintD_small //= /#.
-  have -> /= : to_uint (nonce{2} + W64.of_int 8) = to_uint nonce{2} + 8.  
-  + by rewrite W64.to_uintD_small //= /#.
-  congr;apply W8u32.Pack.all_eq_eq => /=.
-  rewrite /W8u32.Pack.all_eq /= !W8u32.bits32_div //.
-  by rewrite /(%/) /=; do !rewrite -W32.of_int_mod /(%%) /=.
+  have -> // : to_uint (nonce{2} + W64.of_int 8) = to_uint nonce{2} + 8.  
+  by rewrite W64.to_uintD_small //= /#.
 qed.
   
 equiv eq_increment_counter_x8 : ChaCha20_pavx2.M.increment_counter_x8 ~ M.increment_counter_x8 : 
@@ -1126,10 +1047,8 @@ equiv eq_increment_counter_x8 : ChaCha20_pavx2.M.increment_counter_x8 ~ M.increm
 proof.
   proc => /=; wp; skip => /> &1.
   rewrite -set_x8 1:// get_x8 1://; congr.
-  rewrite /x86_VPADD_8u32 /= /unpack32 /map2 /=; congr; apply W8u32.Pack.all_eq_eq => /=.
-  rewrite /W8u32.Pack.all_eq /= !W8u32.bits32_div //.
-  rewrite 8!(W32.WRingA.addrC _ (W32.of_int 8)).
-  by rewrite /(%/) /=; do !rewrite -W32.of_int_mod /(%%) /=.
+  rewrite /x86_VPADD_8u32 /= /unpack32 /map2 /=; apply W8u32.allP => /=;cbv delta.
+  do !(split;1:ring); ring.
 qed.
 
 op upd_mem (fs:(int -> W8.t) list) (mem:global_mem_t) (output:address) (j:int) = 
@@ -1146,14 +1065,10 @@ proof.
   rewrite /upd_mem size_rcons.
   case: (in_range (output + 64 * size fs) 64 j) => hj. 
   + have -> /= : in_range output (64 * (size fs + 1)) j by smt(size_ge0).  
-    rewrite nth_rcons.
-    have -> : (j - output) %/ 64 = size fs.
-    have -> : j - output = (j-(output + 64 * size fs)) + size fs * 64 by ring.
-    + by rewrite divzMDr 1:// divz_small 2:// /#. 
-    by rewrite StdOrder.IntOrder.ltrr.
+    by rewrite nth_rcons /#.
   have -> : in_range output (64 * (size fs + 1)) j = in_range output (64 * size fs) j by smt(size_ge0). 
   case: (in_range output (64 * size fs) j) => // hj1.
-  by rewrite /= nth_rcons ltz_divLR 1:// /#.
+  by rewrite /= nth_rcons /#.
 qed.
 
 lemma upd_mem_one f mem output j :
@@ -1289,23 +1204,18 @@ proof.
     case (output{hr} + o{hr} + 64 * i{hr} <= j < output{hr} + o{hr} + 64 * i{hr} + 32) => hj.
     + have -> /= : in_range (output{hr} + 64 * i{hr}) 64 j by smt().
       rewrite /xor_mem_half. 
-      have -> : (j - output{hr}) %% 64 =  j - (output{hr} + 64 * i{hr}).
-      + have -> : j - output{hr} = j - (output{hr} + 64 * i{hr}) + i{hr} * 64 by ring.
-        by rewrite modzMDr modz_small /#.  
+      have -> : (j - output{hr}) %% 64 =  j - (output{hr} + 64 * i{hr}) by smt().
       have -> /= : o{hr} <= j - (output{hr} + 64 * i{hr}) < o{hr} + 32 by smt().
       rewrite H4 1:// W32u8.xorb8E; congr.
       + rewrite /init32 initiE 1:/#. beta.
         have -> : (half_x8_ k1 k2 k3 k4 k5 k6 k7 k8).[i{hr}] = W8u32.pack8 (Array8.to_list k').
         + rewrite /k'; have : i{hr} \in (iota_ 0 8) by rewrite mem_iota.
           by move: (i{hr}); apply List.allP; rewrite /= /half_x8_ /=.
-        rewrite /to_list /mkseq /= (pack8_init (fun j => k'.[j])) get8_pack8u32.
-        by have -> /# : 0 <= j - (output{hr} + o{hr} + 64 * i{hr}) < 32 by smt().
+        rewrite /to_list /mkseq /= bits8_W8u32_red 1:/# get_of_list /#.
       by rewrite /loadW256 pack32bE 1:/#  initiE 1:/# /= /#.
     case (in_range (output{hr} + 64 * i{hr}) 64 j) => [hj1 | //].
     rewrite {2}/xor_mem_half.
-    have -> : (j - output{hr}) %% 64 =  j - (output{hr} + 64 * i{hr}).
-    + have -> : j - output{hr} = j - (output{hr} + 64 * i{hr}) + i{hr} * 64 by ring.
-      by rewrite modzMDr modz_small /#.  
+    have -> : (j - output{hr}) %% 64 =  j - (output{hr} + 64 * i{hr}). smt().
     have -> : !(o{hr} <= j - (output{hr} + 64 * i{hr}) < o{hr} + 32) by smt().
     rewrite /= /upd_mem size_mapi {1}/T size_take // /= H6 /= /#.
   by skip => /> @/T; smt().
@@ -1374,6 +1284,7 @@ proof.
   by hoare; conseq (pavx2_half_store_x8_spec mem0 k1 k2 k3 k4 k5 k6 k7 k8 output0 plain0 len0 o0).
 qed.
 
+(*
 lemma W8u32_bits128_0 (w:W8u32.Pack.pack_t) :
   pack8_t w \bits128 0 = pack4 [w.[0]; w.[1]; w.[2]; w.[3]].
 proof. by rewrite -{1}(W8u32.Pack.to_listK w) /= -pack2_4u32_8u32. qed.
@@ -1389,7 +1300,7 @@ proof. by rewrite -{1}(W4u32.Pack.to_listK w) /= -pack2_2u32_4u32. qed.
 lemma W4u32_bits64_1 (w:W4u32.Pack.pack_t) :
   pack4_t w \bits64 1 = pack2 [w.[2]; w.[3]].
 proof. by rewrite -{1}(W4u32.Pack.to_listK w) /= -pack2_2u32_4u32. qed.
-
+*)
 (*lemma W2u128_W8u32 (w:W2u128.Pack.pack_t) : 
    pack2_t w = pack8 [w.[0] \bits32 0 ; w.[0] \bits32 1; w.[0] \bits32 2 ; w.[0] \bits32 3;
                       w.[1] \bits32 0 ; w.[1] \bits32 1; w.[1] \bits32 2 ; w.[1] \bits32 3].
@@ -1400,15 +1311,16 @@ proof.
   by rewrite /unpack32;split;congr;rewrite W4u32.Pack.init_of_list.
 qed.*)
 
+(*
 hint simplify (W8u32_bits128_0, W8u32_bits128_1, W4u32_bits64_0, W4u32_bits64_1).
-
+*)
+(*
 lemma x86_VPUNPCKH_8u32_spec (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) 
                              (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t): 
   x86_VPUNPCKH_8u32 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7])
                     (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
   W8u32.pack8 [v2; w2; v3; w3; v6; w6; v7; w7].
-proof.
-  by cbv delta; rewrite -(pack2_4u32_8u32 v2); congr; apply W2u128.Pack.all_eq_eq; rewrite /all_eq.
+proof. by cbv delta. qed.
 qed.
 
 lemma x86_VPUNPCKL_8u32_spec (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) 
@@ -1450,7 +1362,7 @@ qed.
 
 hint simplify (x86_VPUNPCKH_8u32_spec, x86_VPUNPCKL_8u32_spec, x86_VPERM2I128_8u32_spec_32, x86_VPERM2I128_8u32_spec_49,
                x86_VPUNPCKL_4u64_8u32, x86_VPUNPCKH_4u64_8u32).
-
+*)
 hoare rotate_spec k1 k2 k3 k4 k5 k6 k7 k8 : ChaCha20_savx2.M.rotate :
    x = half_x8 k1 k2 k3 k4 k5 k6 k7 k8 ==>
    res = half_x8_ k1 k2 k3 k4 k5 k6 k7 k8.
@@ -1461,10 +1373,7 @@ proof.
   inline M.sub_rotate.
   unroll for ^while.   
   unroll for ^while.
-  wp; skip => &hr /= ->.
-  have -> : W8.of_int (1 %% 16 + 48) = W8.of_int 49 by cbv delta.
-  have -> : W8.of_int (0 %% 16 + 32) = W8.of_int 32 by cbv delta.
-  by rewrite /all_eq /half_x8 /half_x8_ /= .
+  by wp; skip => &hr /= ->; cbv delta.
 qed.
 
 hoare rotate_stack_spec k1 k2 k3 k4 k5 k6 k7 k8 : ChaCha20_savx2.M.rotate_stack :
@@ -1476,10 +1385,7 @@ proof.
   proc.
   inline M.sub_rotate.
   do 3!(unroll for ^while).   
-  wp; skip => &hr /= ->.
-  have -> : W8.of_int (1 %% 16 + 48) = W8.of_int 49 by cbv delta.
-  have -> : W8.of_int (0 %% 16 + 32) = W8.of_int 32 by cbv delta.
-  by rewrite /all_eq /half_x8 /half_x8_ /= .
+  by wp; skip => &hr /= ->;cbv delta.
 qed.
 
 phoare store_half_x8_ll : [ M.store_half_x8 : true ==> true] = 1%r.
@@ -1544,26 +1450,16 @@ lemma sub8_second_half k j:
   32 <= j < 64 =>
   (WArray32.init32 ("_.[_]" (sub8 8 k))).[j - 32] = (WArray64.init32 ("_.[_]" k)).[j].
 proof.
-  move=> h;rewrite /WArray32.init32 /WArray64.init32 !initiE /=.
-  + smt (). + smt().
-  rewrite /sub8 /= /Array16.sub /mkseq /=.
-  have -> : -32 = (-8) * 4 by done.
-  rewrite modzMDr divzMDr 1://;congr.
-  have hj1 : 8 <= j %/ 4 < 16.
-  + rewrite lez_divRL //= ltz_divLR //.
-  by rewrite  Array8.get_of_list /#.
+  move=> h;rewrite /WArray32.init32 /WArray64.init32 !initiE /= 1,2:/#.
+  by rewrite /sub8 /= /Array16.sub /mkseq /=; smt (Array8.get_of_list).
 qed.
 
 lemma sub8_first_half k j: 
   0 <= j < 32 =>
   (WArray32.init32 ("_.[_]" (sub8 0 k))).[j] = (WArray64.init32 ("_.[_]" k)).[j].
 proof.
-  move=> h;rewrite /WArray32.init32 /WArray64.init32 !initiE /=.
-  + smt (). + smt().
-  rewrite /sub8 /= /Array16.sub /mkseq /=.
-  have hj1 : 0 <= j %/ 4 < 8.
-  + rewrite lez_divRL //= ltz_divLR //.
-  by rewrite  Array8.get_of_list /#.
+  move=> h;rewrite /WArray32.init32 /WArray64.init32 !initiE /= 1,2:/#.
+  by rewrite /sub8 /= /Array16.sub /mkseq /=; smt (Array8.get_of_list).
 qed.
 
 lemma nth_mapi k (f: int -> 'a -> 'b) al dfl j : 
