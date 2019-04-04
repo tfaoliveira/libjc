@@ -150,7 +150,8 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11) ->
 
 
 	/* ######################################### Chi */
-	T[7] = #x86_VPSRLDQ(T[1],8); /* vpsrldq		\$8,@T[1],@T[7] */
+//	T[7] = #x86_VPSRLDQ(T[1],8); /* vpsrldq		\$8,@T[1],@T[7] */
+        T[7] = T[1] <<4u64 8;
 	T[0] = T[1] &4u64 T[7];
 
     A31  = #x86_VPBLENDD_256(T[2],T[6], (4u2)[0,0,3,0] );
