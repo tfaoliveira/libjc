@@ -63,22 +63,22 @@
     } 
 */
 
-inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11,
+inline fn __KeccakF1600(reg u256 A00 A01 A20 A31 A21 A41 A11,
 	  reg u64 _rhotates_left _rhotates_right _iotas) -> 
       reg u256, reg u256, reg u256, reg u256, reg u256, reg u256, reg u256 {
 
-   reg u64 i; // why eax? 
+   reg u32 i; // why 32-bit? 
    reg u256 C00, C14; 
    reg u256 D00, D14;
    reg u256[9] T;
    reg bool zf;
-   reg u64 rhotates_left rhotates_right iotas;
+   reg u64 rhotates_left rhotates_right iotas; // these should all be 32-bit
 
    rhotates_left = _rhotates_left + 96;
    rhotates_right = _rhotates_right + 96;
    iotas = _iotas;
 
-   i = 24;
+   i = 2;
    while {
 	/* ######################################### Theta */
 	C00  = #x86_VPSHUFD_256(A20, 0x4e /*0b01001110 */);
@@ -152,8 +152,8 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11,
 
 
 	/* ######################################### Chi */
-    T[7] = T[1] >>4u64 8;
-	T[0] = T[1] &4u64 T[7];
+    T[7] = T[1] >>2u128 8; // vpsrldq
+	T[0] = #x86_VPANDN_256(T[1],T[7]);
 
     A31  = #x86_VPBLENDD_256(T[2],T[6], (4u2)[0,0,3,0] );
     T[8] = #x86_VPBLENDD_256(T[4],T[2], (4u2)[0,0,3,0] );
@@ -170,27 +170,27 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11,
     A41  = #x86_VPBLENDD_256(A41, T[6], (4u2)[3,0,0,0] );
     T[7] = #x86_VPBLENDD_256(T[7],T[4], (4u2)[3,0,0,0] );
 
-	A31 = A31 &4u64 T[8];
-	A41 = A41 &4u64 T[7];
+	A31 = #x86_VPANDN_256(A31,T[8]);
+	A41 = #x86_VPANDN_256(A41,T[7]);
 
     A11  = #x86_VPBLENDD_256(T[5],T[2], (4u2)[0,0,3,0] );
     T[8] = #x86_VPBLENDD_256(T[3],T[5], (4u2)[0,0,3,0] ); 
 	A31 = A31 ^4u64 T[3];
 
-    A11  = #x86_VPBLENDD_256(A11,T[2], (4u2)[0,3,0,0] );
+    A11  = #x86_VPBLENDD_256(A11,T[3],  (4u2)[0,3,0,0] );
     T[8] = #x86_VPBLENDD_256(T[8],T[4], (4u2)[0,3,0,0] );
 	A41 = A41 ^4u64 T[5];
 
-    A11  = #x86_VPBLENDD_256(A11,T[4], (4u2)[3,0,0,0] );
+    A11  = #x86_VPBLENDD_256(A11,T[4],  (4u2)[3,0,0,0] );
     T[8] = #x86_VPBLENDD_256(T[8],T[2], (4u2)[3,0,0,0] );
-	A11 = A11 &4u64 T[8];
+	A11 = #x86_VPANDN_256(A11,T[8]);
 	A11 = A11 ^4u64 T[6];
 
 	A21 = #x86_VPERMQ(T[1], 0x1e /*0b00011110 */);
     T[8] = #x86_VPBLENDD_256(A21,A00, (4u2)[0,3,0,0] );
 	A01 = #x86_VPERMQ(T[1], 0x39 /*0b00111001 */);
     A01 = #x86_VPBLENDD_256(A01,A00, (4u2)[3,0,0,0] );
-	A01 = A01 &4u64 T[8];
+	A01 = #x86_VPANDN_256(A01,T[8]);
 
     A20  = #x86_VPBLENDD_256(T[4],T[5], (4u2)[0,0,3,0] );
     T[7] = #x86_VPBLENDD_256(T[6],T[4], (4u2)[0,0,3,0] );
@@ -199,7 +199,7 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11,
     A20  = #x86_VPBLENDD_256(A20, T[3], (4u2)[3,0,0,0] );
     T[7] = #x86_VPBLENDD_256(T[7],T[5], (4u2)[3,0,0,0] );
 
-	A20 = A20 &4u64 T[7];
+	A20 = #x86_VPANDN_256(A20,T[7]);
 	A20 = A20 ^4u64 T[2];
 
 	T[0] = #x86_VPERMQ(T[0], 0x00/*0b00000000 */);
@@ -214,35 +214,42 @@ inline fn KeccakP1600_Permute_24rounds(reg u256 A00 A01 A20 A31 A21 A41 A11,
     A21  = #x86_VPBLENDD_256(A21, T[2], (4u2)[3,0,0,0] );
     T[7] = #x86_VPBLENDD_256(T[7],T[3], (4u2)[3,0,0,0] );
 
-	A21 = A21 &4u64 T[7];
+	A21 = #x86_VPANDN_256(A21,T[7]);
 
 	A00 = A00 ^4u64 T[0];
 	A01 = A01 ^4u64 T[1];
 	A21 = A21 ^4u64 T[4];
 
     /*	######################################### Iota */
-	A00 = A00 ^4u64 (u256)[iotas + 0]; /* should be pointer arithmetic over iotas */
+	A00 = A00 ^4u64 (u256)[iotas + 0];
 	iotas = iotas + 32;
 
-    (_,_,_,zf,i) = #x86_DEC(i);
+    (_,_,_,zf,i) = #x86_DEC_32(i); // dec = decl?
    } (!zf) 
    return A00, A01, A20, A31, A21, A41, A11;
 }
 
-export fn wrapper() -> reg u64 {
+export fn __KeccakF1600_wrapper(reg u64 r _rhotates_left _rhotates_right _iotas) {
 	reg u256 A00, A01, A20, A31, A21, A41, A11;
-	reg u64 r, _rhotates_right, _rhotates_left, _iotas;
-	//A00 = 0;
-	//A01 = 0;
-	//A20 = 0;
-	//A31 = 0;
-	//A21 = 0;
-	//A41 = 0;
-	//A11 = 0;
-	A00, A01, A20, A31, A21, A41, A11 = KeccakP1600_Permute_24rounds(A00, A01, A20, A31, A21, A41, A11,
-		                                    _rhotates_right, _rhotates_left, _iotas);
-	r = #x86_VPEXTR_64(A00, 0);
-    return  r;
+
+    A00 = (u256)[r +   0];
+    A01 = (u256)[r +  32];
+    A20 = (u256)[r +  64];
+    A31 = (u256)[r +  96];
+    A21 = (u256)[r + 128];
+    A41 = (u256)[r + 160];
+    A11 = (u256)[r + 192];
+
+	A00, A01, A20, A31, A21, A41, A11 = __KeccakF1600(A00, A01, A20, A31, A21, A41, A11,
+		                                    _rhotates_left, _rhotates_right, _iotas);
+
+    (u256)[r +   0] = A00;
+    (u256)[r +  32] = A01;
+    (u256)[r +  64] = A20;
+    (u256)[r +  96] = A31;
+    (u256)[r + 128] = A21;
+    (u256)[r + 160] = A41;
+    (u256)[r + 192] = A11;
 }
 
 
