@@ -1,0 +1,341 @@
+// Keccak[r=1088, c=512] : SHAKE256, SHA3-256 [FIPS 202]
+param int capacity = 512;
+param int rate = 1600 - capacity; // = 1088
+param int rateInBytes = 1088 / 8;
+
+
+/* New pseudo instuctions */
+fn ANDN(reg u64 x, reg u64 y) -> reg u64 {
+  reg u64 r;
+  _, _, _, _, _, r = #x86_ANDN(x, y);
+  return r;
+}
+
+fn ROL64(reg u64 x, inline int c) -> reg u64 {
+  reg u64 y;
+  _, _, y = #x86_ROL_64(x, c);
+  if c==0 { y = x; }
+  return y;
+}
+
+/* Two-dimensional matrix access */
+fn index(inline int x, inline int y) -> inline int {
+  inline int r;
+  r = 5*(x % 5) + (y % 5);
+  return r;
+}
+
+
+
+
+fn init_iotas() -> stack u64[24] {
+  stack u64[24] iotas;
+  reg u64 t;
+
+  t = 0x0000000000000001;
+  iotas[0] = t;
+  t = 0x0000000000008082;
+  iotas[1] = t;
+  t = 0x800000000000808a;
+  iotas[2] = t;
+  t = 0x8000000080008000;
+  iotas[3] = t;
+  t = 0x000000000000808b;
+  iotas[4] = t;
+  t = 0x0000000080000001;
+  iotas[5] = t;
+  t = 0x8000000080008081;
+  iotas[6] = t;
+  t = 0x8000000000008009;
+  iotas[7] = t;
+  t = 0x000000000000008a;
+  iotas[8] = t;
+  t = 0x0000000000000088;
+  iotas[9] = t;
+  t = 0x0000000080008009;
+  iotas[10] = t;
+  t = 0x000000008000000a;
+  iotas[11] = t;
+  t = 0x000000008000808b;
+  iotas[12] = t;
+  t = 0x800000000000008b;
+  iotas[13] = t;
+  t = 0x8000000000008089;
+  iotas[14] = t;
+  t = 0x8000000000008003;
+  iotas[15] = t;
+  t = 0x8000000000008002;
+  iotas[16] = t;
+  t = 0x8000000000000080;
+  iotas[17] = t;
+  t = 0x000000000000800a;
+  iotas[18] = t;
+  t = 0x800000008000000a;
+  iotas[19] = t;
+  t = 0x8000000080008081;
+  iotas[20] = t;
+  t = 0x8000000000008080;
+  iotas[21] = t;
+  t = 0x0000000080000001;
+  iotas[22] = t;
+  t = 0x8000000080008008;
+  iotas[23] = t;
+
+  return iotas;
+}
+
+fn keccak_init() -> stack u64[25], stack u64[24] {
+  stack u64[25] state;
+  stack u64[24] iotas;
+  reg u64 t;
+  inline int i;
+
+  _, _, _, _, _, t = #set0();
+  for i = 0 to 25 { state[i] = t; }
+
+  iotas = init_iotas();
+
+  return state, iotas;
+}
+
+
+
+
+
+fn keccakRhoOffsets(inline int i) -> inline int {
+inline int r, x, y, z, t;
+
+  r = 0;
+  x = 1;
+  y = 0;
+  for t = 0 to 24 {
+    if i == x + 5 * y {
+      r = ((t + 1) * (t + 2) / 2) % 64;
+    }
+    z = (2 * x + 3 * y) % 5;
+    x = y;
+    y = z;
+  }
+
+  return r;
+}
+
+fn rhotates(inline int x y) -> inline int {
+  inline int i r;
+  i = index(x, y);
+  r = keccakRhoOffsets(i);
+  return r;
+}
+
+/*
+    Round functions
+*/
+
+fn theta_sum(stack u64[25] A) -> reg u64[5] {
+  reg u64[5] C;
+  inline int i j;
+  reg u64 t;
+  for i = 0 to 5 {
+    C[i] = A[i];
+    for j = 1 to 5 {
+      C[i] ^= A[5*j+i];
+    }
+  }
+  return C;
+}
+
+fn theta_rol(reg u64[5] C) -> reg u64[5] {
+  reg u64[5] D;
+  inline int i k;
+  reg u64 t r;
+  k = 1;
+  for i = 0 to 5 {
+    //t = C[(i+1)%5]; // annoying!!, but seems the only way to avoid warning...
+    r = ROL64(C[(i+1)%5], k);
+    D[i] = r;
+    //t = C[(i+4)%5];
+    D[i] ^= C[(i+4)%5];
+  }
+  return D;
+}
+
+fn rol_sum(reg u64[5] D, stack u64[25] A, inline int off) -> reg u64[5] {
+  reg u64[5] C;
+  inline int j j2 k i;
+  reg u64 t t2;
+  for j = 0 to 5 {
+    j2 = (j+off)%5;
+    k = rhotates(j, j2);
+    i = index(j, j2);
+    t = A[i];
+    t ^= D[j2];
+    t2 = ROL64(t, k);
+    C[j] = t2;
+  }
+  return C;
+}
+
+fn set_row(stack u64[25] R, inline int row, reg u64[5] C, reg u64 iota) -> stack u64[25]
+{
+    reg u64 t; // t1 t2;
+    inline int j j1 j2 i;
+
+    for j= 0 to 5 {
+        j1 = (j+1) % 5;
+	j2 = (j+2) % 5;
+	//t1 = C[j1];
+	//t2 = C[j2];
+        t = ANDN( C[j1], C[j2] );
+        if row==0 && j==0 { t ^= iota; }
+        t ^= C[j];
+        i = index(row, j);
+        R[i] = t;
+    }
+    
+    return R;
+}
+
+// https://github.com/openssl/openssl/blob/master/crypto/sha/keccak1600.c
+fn round2x(stack u64[25] A, reg u64 iotaRC) -> stack u64[25]
+{
+    stack u64[25] R;
+    reg u64[5] C D;
+
+    C = theta_sum(A);
+    D = theta_rol(C);
+    C = rol_sum(D, A, 0);
+    R = set_row(R, 0, C, iotaRC);
+    C = rol_sum(D, A, 3);
+    R = set_row(R, 1, C, iotaRC);
+    C = rol_sum(D, A, 1);
+    R = set_row(R, 2, C, iotaRC);
+    C = rol_sum(D, A, 4);
+    R = set_row(R, 3, C, iotaRC);
+    C = rol_sum(D, A, 2);
+    R = set_row(R, 4, C, iotaRC);
+
+    return R;
+}
+
+fn keccakF(stack u64[25] A , stack u64[24] constants) -> stack u64[25] {
+  reg u64 round iotaRC;
+  stack u64[25] R;
+  reg u64[5] C D;
+  round = 0;
+  while (round < 24) {
+    iotaRC = constants[(int) round];
+    R = round2x(A, iotaRC);
+    round += 1;
+    iotaRC = constants[(int) round];
+    A = round2x(R, iotaRC);
+    round += 1;
+  }
+  return A;
+}
+
+
+
+
+fn keccak_addFullBlock(stack u64[25] state, reg u64 data) -> stack u64[25] {
+  reg u64 t;
+  inline int i;
+  for i = 0 to rateInBytes / 8 {
+    t = [data + 8 * i];
+    state[i] ^= t;
+  }
+  return state;
+}
+
+// obs: @pre: dataLen < bitrateInBytes
+fn keccak_addFinalBlock(stack u64[25] state, reg u64 data dataLen) -> stack u64[25], reg u64 {
+  reg u64 t i i8 j;
+  reg u8 c;
+  i = 0;
+  while ( dataLen >= 8 ) {
+    t = [data + 8*i];
+    state[(int) i] ^= t;
+    i += 1;
+    dataLen -= 8;
+  }
+  j = i;
+  j <<= 3;
+  //t = 0;
+  while( j < dataLen ) {
+    //t <<= 1;
+    c = (u8)[data + j];
+    state[u8 (int) j] ^= c;
+    //t += c;  // this is what I would like to do!!! :-(
+    j += 1;
+  }
+  // state[(int) i] ^= t; // this is what I would like to do!!! :-(
+
+  return state, j ;
+}
+
+
+fn shake_absorb(stack u64[25] state, stack u64[24] round_constants,
+                 reg u64 datain datainLen) -> stack u64[25] {
+  reg u64 last_pos;
+  stack u64 datain_spill datainLen_spill;
+
+  // intermediate blocks
+  while ( datainLen >= rateInBytes ) {    
+    state = keccak_addFullBlock(state, datain);
+    datainLen -= rateInBytes;
+    datain += rateInBytes;
+    datainLen_spill = datainLen;
+    datain_spill = datain;
+    state = keccakF(state, round_constants);
+    datainLen = datainLen_spill;
+    datain = datain_spill;
+  }
+  // final block
+  state, last_pos = keccak_addFinalBlock(state, datain, datainLen);
+  state[u8 (int) last_pos] ^= 0x1F;
+  state[u8 rateInBytes - 1] ^= 0x80;
+  state = keccakF(state, round_constants);
+  return state;
+}
+
+// obs: @pre: dataLen <= bitrateInBytes
+fn keccak_xtrBlock(stack u64[25] state, reg u64 data dataLen) {
+  reg u64 t i i8;
+  reg u8 c;
+  i = 0;
+  i8 = 8;
+  while ( i8 <= dataLen ) {
+    t = state[(int) i];
+    [data + 8*i] = t;
+    i += 1;
+    i8 += 8;
+  }
+  //t = state[(int) i]; // this is what I would like to do... :-(
+  i >>= 3;
+  while( i < dataLen ) {
+    c = state[u8 (int) i];
+    (u8)[data + i] = c;
+    i += 1;
+  }
+}
+
+
+fn keccak_squeeze(stack u64[25] state, stack u64[24] round_constants,
+                 reg u64 dataout dataoutLen) {
+  stack u64 dataout_spill dataoutLen_spill;
+
+  // intermediate blocks
+  while ( dataoutLen >= rateInBytes ) {    
+    keccak_xtrBlock(state, dataout, rateInBytes);
+    dataoutLen -= rateInBytes;
+    dataout += rateInBytes;
+    dataoutLen_spill = dataoutLen;
+    dataout_spill = dataout;
+    state = keccakF(state, round_constants);
+    dataoutLen = dataoutLen_spill;
+    dataout = dataout_spill;
+  }
+  // final block
+  keccak_xtrBlock(state, dataout, dataoutLen);
+}
+
+
