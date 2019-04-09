@@ -1,0 +1,45 @@
+// Keccak[r=1088, c=512] : SHAKE256, SHA3-256 [FIPS 202]
+param int capacity = 512;
+param int rate = 1600 - capacity; // = 1088
+param int rateInBytes = 1088 / 8;
+
+#include "../../keccak/ref2x/keccak.jazz"
+
+
+// TODO: the following function could be defined as
+#if 0
+//
+export fn shake256_ref2x(reg u64 out in inlen)
+{
+  keccak1600(out, in, inlen, 1088, 512, 0x1F, 136);
+}
+
+with keccak1600 being provided by crypto_hash/keccak/ref2x/keccak.jazz with the type:
+  keccak1600(reg u64 out in inlen, inline int rate capacity pad hash_bytes);
+
+if we want to inline or with every parameter in registers if we want to provide a
+generic implementation:
+  keccak1600(reg u64 out in inlen rate capacity pad hash_bytes);
+#endif
+
+export
+fn shake256_ref2x(reg u64 datain datainLen dataout dataoutLen) {
+  stack u64[25] state;
+  stack u64[24] round_constants;
+  stack u64 dataout_spill dataoutLen_spill;
+
+  dataout_spill = dataout;
+  dataoutLen_spill = dataoutLen;
+  state, round_constants = keccak_init();
+
+  // ABSORB PHASE
+  datainLen >>= 3; // input data length in bytes
+  state = shake_absorb(state, round_constants, datain, datainLen);
+
+  // SQUEEZE PHASE
+  dataout = dataout_spill;
+  dataoutLen = dataoutLen_spill;
+  dataoutLen >>= 3; // output buffer size in bytes
+  keccak_squeeze(state, round_constants, dataout, dataoutLen);
+}
+

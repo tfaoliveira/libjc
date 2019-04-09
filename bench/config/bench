@@ -1,19 +1,2 @@
-crypto_onetimeauth poly1305 jazz/avx2
-
-#crypto_stream chacha20 jazz/avx2
-
-#crypto_onetimeauth poly1305 vale
-#crypto_onetimeauth poly1305 jazz/ref3
-
-#crypto_scalarmult curve25519 fiat-crypto/C64
-#crypto_scalarmult curve25519 fiat/amd64
-#crypto_scalarmult curve25519 fiat/donna32
-#crypto_scalarmult curve25519 fiat/donna64
-#crypto_scalarmult curve25519 fiat/fiat32
-#crypto_scalarmult curve25519 fiat/fiat64
-#crypto_scalarmult curve25519 fiat/fiat64d
-#crypto_scalarmult curve25519 fiat/hacl64
-#crypto_scalarmult curve25519 fiat/jazz
-#crypto_scalarmult curve25519 fiat/precomp_bmi2
-#crypto_scalarmult curve25519 fiat/precomp_adcx
-#crypto_scalarmult curve25519 fiat/sandy2x
+crypto_hash shake256 jazz/ref2x
+crypto_hash shake256 gil/singlefile/
