@@ -70,6 +70,8 @@ uint64_t const iotas[32]  __attribute__((aligned(256))) =  { 0, 0, 0, 0, 0, 0, 0
                                                            };
 
 
+extern void keccakFshort(uint64_t st[25]);
+
 static inline void KeccakF_short_test(uint64_t st[25], uint64_t count) {
   uint64_t st_alt[25], *iotas_ptr = iotas+8;;
   while (count--) keccakF_short(st, st_alt, iotas_ptr);
