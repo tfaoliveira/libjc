@@ -329,7 +329,7 @@ fn store(reg u64 output plain, reg u32 len, reg u128[2] k) -> reg u64, reg u64, 
 
 
 
-// stores <= 32 bytes
+// stores at most 32 bytes
 fn store_last(reg u64 output plain, reg u32 len, reg u128[2] k)
 {
   reg u128 r1;
@@ -386,7 +386,7 @@ fn store_x1(reg u64 output plain, reg u32 len, reg u128[4] k) -> reg u64, reg u6
 }
 
 
-// stores <= 32 bytes
+// stores at most 64 bytes
 fn store_x1_last(reg u64 output plain, reg u32 len, reg u128[4] k)
 {
   reg u128[2] r;
@@ -654,72 +654,86 @@ fn rounds_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
 
 
 
-fn round_256(reg u128[16] k, stack u128 s_r16 s_r8, inline int a0 b0 c0 d0 a1 b1 c1 d1) -> reg u128[16]
+fn rotate_x4_s(reg u128[16] k, inline int i r, stack u128 r16 r8) -> reg u128[16]
 {
   reg u128 t;
 
-  k[a0] +4u32= k[b0];
-  k[a1] +4u32= k[b1];
+  if(r==16){ 
+    k[i] = #x86_VPSHUFB_128(k[i], r16);
 
-  k[d0] ^= k[a0];
-  k[d1] ^= k[a1];
+  } else { if (r==8) {
+    k[i] = #x86_VPSHUFB_128(k[i], r8);
 
-  k[d0] = #x86_VPSHUFB_128(k[d0], s_r16);
-  k[d1] = #x86_VPSHUFB_128(k[d1], s_r16);
+  } else {
+    t = k[i] <<4u32 r;
+    k[i] = k[i] >>4u32 (32-r);
+    k[i] ^= t;
 
-  k[c0] +4u32= k[d0];
-  k[c1] +4u32= k[d1];
-
-  k[b0] ^= k[c0];
-  k[b1] ^= k[c1];
-
-      t = k[b0] <<4u32 12;
-  k[b0] = k[b0] >>4u32 20;
-  k[b0] ^= t;
-
-      t = k[b1] <<4u32 12;
-  k[b1] = k[b1] >>4u32 20;
-  k[b1] ^= t;
-
-  k[a0] +4u32= k[b0];
-  k[a1] +4u32= k[b1];
-
-  k[d0] ^= k[a0];
-  k[d1] ^= k[a1];
-
-  k[d0] = #x86_VPSHUFB_128(k[d0], s_r8);
-  k[d1] = #x86_VPSHUFB_128(k[d1], s_r8);
-
-  k[c0] +4u32= k[d0];
-  k[c1] +4u32= k[d1];
-
-  k[b0] ^= k[c0];
-  k[b1] ^= k[c1];
-
-      t = k[b0] <<4u32 7;
-  k[b0] = k[b0] >>4u32 25;
-  k[b0] ^= t;
-
-      t = k[b1] <<4u32 7;
-  k[b1] = k[b1] >>4u32 25;
-  k[b1] ^= t;
+  }}
 
   return k;
 }
 
-fn double_round_256(reg u128[16] k,
-                    stack u128 k_d3 s_r16 s_r8,
-                    inline int a0 b0 c0 d0
-                               a1 b1 c1 d1
-                               a2 b2 c2 d2
-                               a3 b3 c3 d3
-) -> reg u128[16], stack u128
+
+
+fn line_x4_v(reg u128[16] k, inline int a0 b0 c0 r0
+                                        a1 b1 c1 r1, stack u128 r16 r8) -> reg u128[16]
 {
-  k = round_256(k, s_r16, s_r8, a0, b0, c0, d0, a1, b1, c1, d1);
-  k[d3] = k_d3;
-  k_d3 = k[d1];
-  k = round_256(k, s_r16, s_r8, a2, b2, c2, d2, a3, b3, c3, d3);
-  return k, k_d3;
+  k[a0] +4u32= k[b0];
+  k[a1] +4u32= k[b1];
+
+  k[c0] ^= k[a0];
+  k[c1] ^= k[a1];
+
+  k = rotate_x4_s(k, c0, r0, r16, r8);
+  k = rotate_x4_s(k, c1, r1, r16, r8);
+
+  return k;
+}
+
+
+
+fn double_quarter_round_x4(reg u128[16] k, inline int a0 b0 c0 d0
+                                                      a1 b1 c1 d1, stack u128 r16 r8) -> reg u128[16]
+{
+  k = line_x4_v(k, a0, b0, d0, 16, a1, b1, d1, 16, r16, r8);
+  k = line_x4_v(k, c0, d0, b0, 12, c1, d1, b1, 12, r16, r8);
+  k = line_x4_v(k, a0, b0, d0, 8,  a1, b1, d1, 8,  r16, r8);
+  k = line_x4_v(k, c0, d0, b0, 7,  c1, d1, b1, 7,  r16, r8);
+
+  return k;
+}
+
+
+
+fn column_round_x4(reg u128[16] k, stack u128 k15 s_r16 s_r8) -> reg u128[16], stack u128
+{
+  stack u128 k_;
+
+  k = double_quarter_round_x4(k, 0, 4, 8,  12,
+                                 2, 6, 10, 14, s_r16, s_r8);
+  k[15] = k15;
+  k_ = k[14];
+
+  k = double_quarter_round_x4(k, 1, 5, 9,  13,
+                                 3, 7, 11, 15, s_r16, s_r8);
+  return k, k_;
+}
+
+
+
+fn diagonal_round_x4(reg u128[16] k, stack u128 k14 s_r16 s_r8) -> reg u128[16], stack u128
+{
+  stack u128 k_;
+
+  k = double_quarter_round_x4(k, 1, 6, 11, 12,
+                                 0, 5, 10, 15, s_r16, s_r8);
+  k[14] = k14;
+  k_ = k[15];
+
+  k = double_quarter_round_x4(k, 2, 7, 8, 13,
+                                 3, 4, 9, 14, s_r16, s_r8);
+  return k, k_;
 }
 
 
@@ -727,26 +741,23 @@ fn double_round_256(reg u128[16] k,
 fn rounds_x4(reg u128[16] k, stack u128 s_r16 s_r8) -> reg u128[16]
 {
   reg u64 c;
+  reg bool zf;
   stack u128 k14, k15;
 
   k15 = k[15];
 
-  c = 0;
-  while(c < 10)
-  {
-    k, k14 = double_round_256(k, k15, s_r16, s_r8,
-                                      i_0, i_4, i_8,  i_12,
-                                      i_2, i_6, i_10, i_14,
-                                      i_1, i_5, i_9,  i_13,
-                                      i_3, i_7, i_11, i_15);
+  //c = 0;
+  //while(c < 10)
 
-    k, k15 = double_round_256(k, k14, s_r16, s_r8,
-                                      i_1, i_6, i_11, i_12,
-                                      i_0, i_5, i_10, i_15,
-                                      i_2, i_7, i_8,  i_13,
-                                      i_3, i_4, i_9,  i_14);
-    c += 1;
-  }
+  c = 10;
+  align while {
+    k, k14 = column_round_x4(k, k15, s_r16, s_r8);
+    k, k15 = diagonal_round_x4(k, k14, s_r16, s_r8);
+    (_,_,_,zf,c) = #x86_DEC(c);
+  } (!zf)
+
+  //c += 1;
+  //}
 
   k[15] = k15;
 
