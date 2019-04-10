@@ -75,6 +75,13 @@ extern void keccakFshort(uint64_t st[25]);
 static inline void KeccakF_short_test(uint64_t st[25], uint64_t count) {
   uint64_t st_alt[25], *iotas_ptr = iotas+8;;
   while (count--) keccakF_short(st, st_alt, iotas_ptr);
+  /*
+  printf("\nCheck IOTAS:\n");
+  while (((long long)iotas_ptr) & 0xFF) {
+    printf("%llx ", *iotas_ptr);
+    iotas_ptr++;
+  }
+  */
 };
 
 //
