@@ -924,7 +924,7 @@ fn rounds_x8(reg u256[16] k, stack u256 s_r16 s_r8) -> reg u256[16]
   //while(c < 10)
 
   c = 10;
-  while {
+  align while {
     k, k14 = column_round_x8(k, k15, s_r16, s_r8);
     k, k15 = diagonal_round_x8(k, k14, s_r16, s_r8);
     (_,_,_,zf,c) = #x86_DEC(c);
