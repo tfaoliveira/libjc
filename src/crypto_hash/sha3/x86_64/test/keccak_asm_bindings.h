@@ -9,7 +9,6 @@
 //
 
 // state context
-// state context
 typedef struct sha3_ctxt {
     union {                                 // state:
         uint8_t b[200];                     // 8-bit bytes
@@ -41,9 +40,40 @@ void shake_out(sha3_ctx_ptr c, void *out, size_t len);
 //
 
 extern void keccakF2x_test_jazz(uint64_t st[25], uint64_t count);
-
 extern void keccak_shake256_jazz(void *datain, size_t inbitlen, void *dataout, size_t outbitlen);
 
+uint64_t const iotas[32]  __attribute__((aligned(256))) =  { 0, 0, 0, 0, 0, 0, 0, 0
+							   , 0x0000000000000001
+							   , 0x0000000000008082
+							   , 0x800000000000808a
+							   , 0x8000000080008000
+							   , 0x000000000000808b
+							   , 0x0000000080000001
+							   , 0x8000000080008081
+							   , 0x8000000000008009
+							   , 0x000000000000008a
+							   , 0x0000000000000088
+							   , 0x0000000080008009
+							   , 0x000000008000000a
+							   , 0x000000008000808b
+							   , 0x800000000000008b
+							   , 0x8000000000008089
+							   , 0x8000000000008003
+							   , 0x8000000000008002
+							   , 0x8000000000000080
+							   , 0x000000000000800a
+							   , 0x800000008000000a
+							   , 0x8000000080008081
+							   , 0x8000000000008080
+							   , 0x0000000080000001
+							   , 0x8000000080008008
+                                                           };
+
+
+static inline void KeccakF_short_test(uint64_t st[25], uint64_t count) {
+  uint64_t st_alt[25], *iotas_ptr = iotas+8;;
+  while (count--) keccakF_short(st, st_alt, iotas_ptr);
+};
 
 //
 // OpenSSL
