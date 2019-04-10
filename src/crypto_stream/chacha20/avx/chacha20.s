@@ -5,16 +5,20 @@
 _chacha20_avx:
 chacha20_avx:
 	pushq	%rbp
+#
 	pushq	%r15
-	subq	$564, %rsp
-	movq %rsp, %r15
-	andq $-32, %rsp
+#
+	subq	$564,	%rsp
+#
+	movq	%rsp,	%r15
+	andq	$-32,	%rsp
+#
 	cmpl	$129, %edx
 	jb  	Lchacha20_avx$1
 	vmovdqu	g_r16(%rip), %xmm0
 	vmovdqu	g_r8(%rip), %xmm1
-	vmovdqu	%xmm0, 400(%rsp)
-	vmovdqu	%xmm1, 384(%rsp)
+	vmovdqu	%xmm0, 256(%rsp)
+	vmovdqu	%xmm1, 272(%rsp)
 	movl	%r9d, 560(%rsp)
 	vmovdqu	g_sigma0(%rip), %xmm0
 	vmovdqu	g_sigma1(%rip), %xmm1
@@ -33,51 +37,50 @@ chacha20_avx:
 	vpbroadcastd	(%r8), %xmm13
 	vpbroadcastd	4(%r8), %xmm14
 	vpbroadcastd	8(%r8), %xmm15
-	vmovdqu	%xmm0, 128(%rsp)
-	vmovdqu	%xmm1, 144(%rsp)
-	vmovdqu	%xmm2, 160(%rsp)
-	vmovdqu	%xmm3, 176(%rsp)
-	vmovdqu	%xmm4, 192(%rsp)
-	vmovdqu	%xmm5, 208(%rsp)
-	vmovdqu	%xmm6, 224(%rsp)
-	vmovdqu	%xmm7, 240(%rsp)
-	vmovdqu	%xmm8, 256(%rsp)
-	vmovdqu	%xmm9, 272(%rsp)
-	vmovdqu	%xmm10, 288(%rsp)
-	vmovdqu	%xmm11, 304(%rsp)
-	vmovdqu	%xmm12, 320(%rsp)
-	vmovdqu	%xmm13, 336(%rsp)
-	vmovdqu	%xmm14, 352(%rsp)
-	vmovdqu	%xmm15, 368(%rsp)
-	jmp 	Lchacha20_avx$29
-Lchacha20_avx$30:
-	vmovdqu	128(%rsp), %xmm0
-	vmovdqu	144(%rsp), %xmm1
-	vmovdqu	160(%rsp), %xmm2
-	vmovdqu	176(%rsp), %xmm3
-	vmovdqu	192(%rsp), %xmm4
-	vmovdqu	208(%rsp), %xmm5
-	vmovdqu	224(%rsp), %xmm6
-	vmovdqu	240(%rsp), %xmm7
-	vmovdqu	256(%rsp), %xmm8
-	vmovdqu	272(%rsp), %xmm9
-	vmovdqu	288(%rsp), %xmm10
-	vmovdqu	304(%rsp), %xmm11
-	vmovdqu	320(%rsp), %xmm12
-	vmovdqu	336(%rsp), %xmm13
-	vmovdqu	352(%rsp), %xmm14
-	vmovdqu	368(%rsp), %xmm15
+	vmovdqu	%xmm0, 304(%rsp)
+	vmovdqu	%xmm1, 320(%rsp)
+	vmovdqu	%xmm2, 336(%rsp)
+	vmovdqu	%xmm3, 352(%rsp)
+	vmovdqu	%xmm4, 368(%rsp)
+	vmovdqu	%xmm5, 384(%rsp)
+	vmovdqu	%xmm6, 400(%rsp)
+	vmovdqu	%xmm7, 416(%rsp)
+	vmovdqu	%xmm8, 432(%rsp)
+	vmovdqu	%xmm9, 448(%rsp)
+	vmovdqu	%xmm10, 464(%rsp)
+	vmovdqu	%xmm11, 480(%rsp)
+	vmovdqu	%xmm12, 496(%rsp)
+	vmovdqu	%xmm13, 512(%rsp)
+	vmovdqu	%xmm14, 528(%rsp)
 	vmovdqu	%xmm15, 544(%rsp)
-	movq	$0, %rax
-	jmp 	Lchacha20_avx$31
-.p2align 5,,
-Lchacha20_avx$32:
+	jmp 	Lchacha20_avx$28
+Lchacha20_avx$29:
+	vmovdqu	304(%rsp), %xmm0
+	vmovdqu	320(%rsp), %xmm1
+	vmovdqu	336(%rsp), %xmm2
+	vmovdqu	352(%rsp), %xmm3
+	vmovdqu	368(%rsp), %xmm4
+	vmovdqu	384(%rsp), %xmm5
+	vmovdqu	400(%rsp), %xmm6
+	vmovdqu	416(%rsp), %xmm7
+	vmovdqu	432(%rsp), %xmm8
+	vmovdqu	448(%rsp), %xmm9
+	vmovdqu	464(%rsp), %xmm10
+	vmovdqu	480(%rsp), %xmm11
+	vmovdqu	496(%rsp), %xmm12
+	vmovdqu	512(%rsp), %xmm13
+	vmovdqu	528(%rsp), %xmm14
+	vmovdqu	544(%rsp), %xmm15
+	vmovdqu	%xmm15, 288(%rsp)
+	movq	$10, %rax
+	.p2align	5
+Lchacha20_avx$30:
 	vpaddd	%xmm4, %xmm0, %xmm0
 	vpaddd	%xmm6, %xmm2, %xmm2
 	vpxor	%xmm0, %xmm12, %xmm12
 	vpxor	%xmm2, %xmm14, %xmm14
-	vpshufb	400(%rsp), %xmm12, %xmm12
-	vpshufb	400(%rsp), %xmm14, %xmm14
+	vpshufb	256(%rsp), %xmm12, %xmm12
+	vpshufb	256(%rsp), %xmm14, %xmm14
 	vpaddd	%xmm12, %xmm8, %xmm8
 	vpaddd	%xmm14, %xmm10, %xmm10
 	vpxor	%xmm8, %xmm4, %xmm4
@@ -92,8 +95,8 @@ Lchacha20_avx$32:
 	vpaddd	%xmm6, %xmm2, %xmm2
 	vpxor	%xmm0, %xmm12, %xmm12
 	vpxor	%xmm2, %xmm14, %xmm14
-	vpshufb	384(%rsp), %xmm12, %xmm12
-	vpshufb	384(%rsp), %xmm14, %xmm14
+	vpshufb	272(%rsp), %xmm12, %xmm12
+	vpshufb	272(%rsp), %xmm14, %xmm14
 	vpaddd	%xmm12, %xmm8, %xmm8
 	vpaddd	%xmm14, %xmm10, %xmm10
 	vpxor	%xmm8, %xmm4, %xmm4
@@ -104,14 +107,14 @@ Lchacha20_avx$32:
 	vpslld	$7, %xmm6, %xmm15
 	vpsrld	$25, %xmm6, %xmm6
 	vpxor	%xmm15, %xmm6, %xmm6
-	vmovdqu	544(%rsp), %xmm15
-	vmovdqu	%xmm14, 544(%rsp)
+	vmovdqu	288(%rsp), %xmm15
+	vmovdqu	%xmm14, 288(%rsp)
 	vpaddd	%xmm5, %xmm1, %xmm1
 	vpaddd	%xmm7, %xmm3, %xmm3
 	vpxor	%xmm1, %xmm13, %xmm13
 	vpxor	%xmm3, %xmm15, %xmm14
-	vpshufb	400(%rsp), %xmm13, %xmm13
-	vpshufb	400(%rsp), %xmm14, %xmm14
+	vpshufb	256(%rsp), %xmm13, %xmm13
+	vpshufb	256(%rsp), %xmm14, %xmm14
 	vpaddd	%xmm13, %xmm9, %xmm9
 	vpaddd	%xmm14, %xmm11, %xmm11
 	vpxor	%xmm9, %xmm5, %xmm5
@@ -126,8 +129,8 @@ Lchacha20_avx$32:
 	vpaddd	%xmm7, %xmm3, %xmm3
 	vpxor	%xmm1, %xmm13, %xmm13
 	vpxor	%xmm3, %xmm14, %xmm14
-	vpshufb	384(%rsp), %xmm13, %xmm13
-	vpshufb	384(%rsp), %xmm14, %xmm14
+	vpshufb	272(%rsp), %xmm13, %xmm13
+	vpshufb	272(%rsp), %xmm14, %xmm14
 	vpaddd	%xmm13, %xmm9, %xmm9
 	vpaddd	%xmm14, %xmm11, %xmm11
 	vpxor	%xmm9, %xmm5, %xmm5
@@ -142,8 +145,8 @@ Lchacha20_avx$32:
 	vpaddd	%xmm5, %xmm0, %xmm0
 	vpxor	%xmm1, %xmm12, %xmm12
 	vpxor	%xmm0, %xmm14, %xmm14
-	vpshufb	400(%rsp), %xmm12, %xmm12
-	vpshufb	400(%rsp), %xmm14, %xmm14
+	vpshufb	256(%rsp), %xmm12, %xmm12
+	vpshufb	256(%rsp), %xmm14, %xmm14
 	vpaddd	%xmm12, %xmm11, %xmm11
 	vpaddd	%xmm14, %xmm10, %xmm10
 	vpxor	%xmm11, %xmm6, %xmm6
@@ -158,8 +161,8 @@ Lchacha20_avx$32:
 	vpaddd	%xmm5, %xmm0, %xmm0
 	vpxor	%xmm1, %xmm12, %xmm12
 	vpxor	%xmm0, %xmm14, %xmm14
-	vpshufb	384(%rsp), %xmm12, %xmm12
-	vpshufb	384(%rsp), %xmm14, %xmm14
+	vpshufb	272(%rsp), %xmm12, %xmm12
+	vpshufb	272(%rsp), %xmm14, %xmm14
 	vpaddd	%xmm12, %xmm11, %xmm11
 	vpaddd	%xmm14, %xmm10, %xmm10
 	vpxor	%xmm11, %xmm6, %xmm6
@@ -170,14 +173,14 @@ Lchacha20_avx$32:
 	vpslld	$7, %xmm5, %xmm15
 	vpsrld	$25, %xmm5, %xmm5
 	vpxor	%xmm15, %xmm5, %xmm5
-	vmovdqu	544(%rsp), %xmm15
-	vmovdqu	%xmm14, 544(%rsp)
+	vmovdqu	288(%rsp), %xmm15
+	vmovdqu	%xmm14, 288(%rsp)
 	vpaddd	%xmm7, %xmm2, %xmm2
 	vpaddd	%xmm4, %xmm3, %xmm3
 	vpxor	%xmm2, %xmm13, %xmm13
 	vpxor	%xmm3, %xmm15, %xmm14
-	vpshufb	400(%rsp), %xmm13, %xmm13
-	vpshufb	400(%rsp), %xmm14, %xmm14
+	vpshufb	256(%rsp), %xmm13, %xmm13
+	vpshufb	256(%rsp), %xmm14, %xmm14
 	vpaddd	%xmm13, %xmm8, %xmm8
 	vpaddd	%xmm14, %xmm9, %xmm9
 	vpxor	%xmm8, %xmm7, %xmm7
@@ -192,8 +195,8 @@ Lchacha20_avx$32:
 	vpaddd	%xmm4, %xmm3, %xmm3
 	vpxor	%xmm2, %xmm13, %xmm13
 	vpxor	%xmm3, %xmm14, %xmm14
-	vpshufb	384(%rsp), %xmm13, %xmm13
-	vpshufb	384(%rsp), %xmm14, %xmm14
+	vpshufb	272(%rsp), %xmm13, %xmm13
+	vpshufb	272(%rsp), %xmm14, %xmm14
 	vpaddd	%xmm13, %xmm8, %xmm8
 	vpaddd	%xmm14, %xmm9, %xmm9
 	vpxor	%xmm8, %xmm7, %xmm7
@@ -204,35 +207,33 @@ Lchacha20_avx$32:
 	vpslld	$7, %xmm4, %xmm15
 	vpsrld	$25, %xmm4, %xmm4
 	vpxor	%xmm15, %xmm4, %xmm4
-	incq	%rax
-Lchacha20_avx$31:
-	cmpq	$10, %rax
-	jb  	Lchacha20_avx$32
-	vmovdqu	544(%rsp), %xmm15
-	vpaddd	128(%rsp), %xmm0, %xmm0
-	vpaddd	144(%rsp), %xmm1, %xmm1
-	vpaddd	160(%rsp), %xmm2, %xmm2
-	vpaddd	176(%rsp), %xmm3, %xmm3
-	vpaddd	192(%rsp), %xmm4, %xmm4
-	vpaddd	208(%rsp), %xmm5, %xmm5
-	vpaddd	224(%rsp), %xmm6, %xmm6
-	vpaddd	240(%rsp), %xmm7, %xmm7
-	vpaddd	256(%rsp), %xmm8, %xmm8
-	vpaddd	272(%rsp), %xmm9, %xmm9
-	vpaddd	288(%rsp), %xmm10, %xmm10
-	vpaddd	304(%rsp), %xmm11, %xmm11
-	vpaddd	320(%rsp), %xmm12, %xmm12
-	vpaddd	336(%rsp), %xmm13, %xmm13
-	vpaddd	352(%rsp), %xmm14, %xmm14
-	vpaddd	368(%rsp), %xmm15, %xmm15
-	vmovdqu	%xmm8, 416(%rsp)
-	vmovdqu	%xmm9, 432(%rsp)
-	vmovdqu	%xmm10, 448(%rsp)
-	vmovdqu	%xmm11, 464(%rsp)
-	vmovdqu	%xmm12, 480(%rsp)
-	vmovdqu	%xmm13, 496(%rsp)
-	vmovdqu	%xmm14, 512(%rsp)
-	vmovdqu	%xmm15, 528(%rsp)
+	decq	%rax
+	jne 	Lchacha20_avx$30
+	vmovdqu	288(%rsp), %xmm15
+	vpaddd	304(%rsp), %xmm0, %xmm0
+	vpaddd	320(%rsp), %xmm1, %xmm1
+	vpaddd	336(%rsp), %xmm2, %xmm2
+	vpaddd	352(%rsp), %xmm3, %xmm3
+	vpaddd	368(%rsp), %xmm4, %xmm4
+	vpaddd	384(%rsp), %xmm5, %xmm5
+	vpaddd	400(%rsp), %xmm6, %xmm6
+	vpaddd	416(%rsp), %xmm7, %xmm7
+	vpaddd	432(%rsp), %xmm8, %xmm8
+	vpaddd	448(%rsp), %xmm9, %xmm9
+	vpaddd	464(%rsp), %xmm10, %xmm10
+	vpaddd	480(%rsp), %xmm11, %xmm11
+	vpaddd	496(%rsp), %xmm12, %xmm12
+	vpaddd	512(%rsp), %xmm13, %xmm13
+	vpaddd	528(%rsp), %xmm14, %xmm14
+	vpaddd	544(%rsp), %xmm15, %xmm15
+	vmovdqu	%xmm8, 128(%rsp)
+	vmovdqu	%xmm9, 144(%rsp)
+	vmovdqu	%xmm10, 160(%rsp)
+	vmovdqu	%xmm11, 176(%rsp)
+	vmovdqu	%xmm12, 192(%rsp)
+	vmovdqu	%xmm13, 208(%rsp)
+	vmovdqu	%xmm14, 224(%rsp)
+	vmovdqu	%xmm15, 240(%rsp)
 	vmovdqu	%xmm0, %xmm0
 	vmovdqu	%xmm1, %xmm1
 	vmovdqu	%xmm2, %xmm2
@@ -273,18 +274,18 @@ Lchacha20_avx$31:
 	vmovdqu	%xmm7, 144(%rdi)
 	vmovdqu	%xmm0, 192(%rdi)
 	vmovdqu	%xmm2, 208(%rdi)
-	vmovdqu	416(%rsp), %xmm0
-	vmovdqu	448(%rsp), %xmm1
-	vmovdqu	480(%rsp), %xmm2
-	vmovdqu	512(%rsp), %xmm3
-	vpunpckldq	432(%rsp), %xmm0, %xmm4
-	vpunpckhdq	432(%rsp), %xmm0, %xmm0
-	vpunpckldq	464(%rsp), %xmm1, %xmm5
-	vpunpckhdq	464(%rsp), %xmm1, %xmm1
-	vpunpckldq	496(%rsp), %xmm2, %xmm6
-	vpunpckhdq	496(%rsp), %xmm2, %xmm2
-	vpunpckldq	528(%rsp), %xmm3, %xmm7
-	vpunpckhdq	528(%rsp), %xmm3, %xmm3
+	vmovdqu	128(%rsp), %xmm0
+	vmovdqu	160(%rsp), %xmm1
+	vmovdqu	192(%rsp), %xmm2
+	vmovdqu	224(%rsp), %xmm3
+	vpunpckldq	144(%rsp), %xmm0, %xmm4
+	vpunpckhdq	144(%rsp), %xmm0, %xmm0
+	vpunpckldq	176(%rsp), %xmm1, %xmm5
+	vpunpckhdq	176(%rsp), %xmm1, %xmm1
+	vpunpckldq	208(%rsp), %xmm2, %xmm6
+	vpunpckhdq	208(%rsp), %xmm2, %xmm2
+	vpunpckldq	240(%rsp), %xmm3, %xmm7
+	vpunpckhdq	240(%rsp), %xmm3, %xmm3
 	vpunpcklqdq	%xmm5, %xmm4, %xmm8
 	vpunpcklqdq	%xmm7, %xmm6, %xmm9
 	vpunpckhqdq	%xmm5, %xmm4, %xmm4
@@ -313,194 +314,192 @@ Lchacha20_avx$31:
 	addq	$256, %rsi
 	subl	$256, %edx
 	vmovdqu	g_cnt_inc(%rip), %xmm0
-	vpaddd	320(%rsp), %xmm0, %xmm0
-	vmovdqu	%xmm0, 320(%rsp)
-Lchacha20_avx$29:
+	vpaddd	496(%rsp), %xmm0, %xmm0
+	vmovdqu	%xmm0, 496(%rsp)
+Lchacha20_avx$28:
 	cmpl	$256, %edx
-	jnb 	Lchacha20_avx$30
+	jnb 	Lchacha20_avx$29
 	cmpl	$0, %edx
 	jbe 	Lchacha20_avx$19
-	vmovdqu	128(%rsp), %xmm0
-	vmovdqu	144(%rsp), %xmm1
-	vmovdqu	160(%rsp), %xmm2
-	vmovdqu	176(%rsp), %xmm3
-	vmovdqu	192(%rsp), %xmm4
-	vmovdqu	208(%rsp), %xmm5
-	vmovdqu	224(%rsp), %xmm6
-	vmovdqu	240(%rsp), %xmm7
-	vmovdqu	256(%rsp), %xmm8
-	vmovdqu	272(%rsp), %xmm9
-	vmovdqu	288(%rsp), %xmm10
-	vmovdqu	304(%rsp), %xmm11
-	vmovdqu	320(%rsp), %xmm12
-	vmovdqu	336(%rsp), %xmm13
-	vmovdqu	352(%rsp), %xmm14
-	vmovdqu	368(%rsp), %xmm15
-	vmovdqu	%xmm15, 544(%rsp)
-	movq	$0, %rax
-	jmp 	Lchacha20_avx$27
-Lchacha20_avx$28:
-	vpaddd	%xmm4, %xmm0, %xmm0
-	vpaddd	%xmm6, %xmm2, %xmm2
-	vpxor	%xmm0, %xmm12, %xmm12
-	vpxor	%xmm2, %xmm14, %xmm14
-	vpshufb	400(%rsp), %xmm12, %xmm12
-	vpshufb	400(%rsp), %xmm14, %xmm14
-	vpaddd	%xmm12, %xmm8, %xmm8
-	vpaddd	%xmm14, %xmm10, %xmm10
-	vpxor	%xmm8, %xmm4, %xmm4
-	vpxor	%xmm10, %xmm6, %xmm6
-	vpslld	$12, %xmm4, %xmm15
-	vpsrld	$20, %xmm4, %xmm4
-	vpxor	%xmm15, %xmm4, %xmm4
-	vpslld	$12, %xmm6, %xmm15
-	vpsrld	$20, %xmm6, %xmm6
-	vpxor	%xmm15, %xmm6, %xmm6
-	vpaddd	%xmm4, %xmm0, %xmm0
-	vpaddd	%xmm6, %xmm2, %xmm2
-	vpxor	%xmm0, %xmm12, %xmm12
-	vpxor	%xmm2, %xmm14, %xmm14
-	vpshufb	384(%rsp), %xmm12, %xmm12
-	vpshufb	384(%rsp), %xmm14, %xmm14
-	vpaddd	%xmm12, %xmm8, %xmm8
-	vpaddd	%xmm14, %xmm10, %xmm10
-	vpxor	%xmm8, %xmm4, %xmm4
-	vpxor	%xmm10, %xmm6, %xmm6
-	vpslld	$7, %xmm4, %xmm15
-	vpsrld	$25, %xmm4, %xmm4
-	vpxor	%xmm15, %xmm4, %xmm4
-	vpslld	$7, %xmm6, %xmm15
-	vpsrld	$25, %xmm6, %xmm6
-	vpxor	%xmm15, %xmm6, %xmm6
+	vmovdqu	304(%rsp), %xmm0
+	vmovdqu	320(%rsp), %xmm1
+	vmovdqu	336(%rsp), %xmm2
+	vmovdqu	352(%rsp), %xmm3
+	vmovdqu	368(%rsp), %xmm4
+	vmovdqu	384(%rsp), %xmm5
+	vmovdqu	400(%rsp), %xmm6
+	vmovdqu	416(%rsp), %xmm7
+	vmovdqu	432(%rsp), %xmm8
+	vmovdqu	448(%rsp), %xmm9
+	vmovdqu	464(%rsp), %xmm10
+	vmovdqu	480(%rsp), %xmm11
+	vmovdqu	496(%rsp), %xmm12
+	vmovdqu	512(%rsp), %xmm13
+	vmovdqu	528(%rsp), %xmm14
 	vmovdqu	544(%rsp), %xmm15
-	vmovdqu	%xmm14, 544(%rsp)
-	vpaddd	%xmm5, %xmm1, %xmm1
-	vpaddd	%xmm7, %xmm3, %xmm3
-	vpxor	%xmm1, %xmm13, %xmm13
-	vpxor	%xmm3, %xmm15, %xmm14
-	vpshufb	400(%rsp), %xmm13, %xmm13
-	vpshufb	400(%rsp), %xmm14, %xmm14
-	vpaddd	%xmm13, %xmm9, %xmm9
-	vpaddd	%xmm14, %xmm11, %xmm11
-	vpxor	%xmm9, %xmm5, %xmm5
-	vpxor	%xmm11, %xmm7, %xmm7
-	vpslld	$12, %xmm5, %xmm15
-	vpsrld	$20, %xmm5, %xmm5
-	vpxor	%xmm15, %xmm5, %xmm5
-	vpslld	$12, %xmm7, %xmm15
-	vpsrld	$20, %xmm7, %xmm7
-	vpxor	%xmm15, %xmm7, %xmm7
-	vpaddd	%xmm5, %xmm1, %xmm1
-	vpaddd	%xmm7, %xmm3, %xmm3
-	vpxor	%xmm1, %xmm13, %xmm13
-	vpxor	%xmm3, %xmm14, %xmm14
-	vpshufb	384(%rsp), %xmm13, %xmm13
-	vpshufb	384(%rsp), %xmm14, %xmm14
-	vpaddd	%xmm13, %xmm9, %xmm9
-	vpaddd	%xmm14, %xmm11, %xmm11
-	vpxor	%xmm9, %xmm5, %xmm5
-	vpxor	%xmm11, %xmm7, %xmm7
-	vpslld	$7, %xmm5, %xmm15
-	vpsrld	$25, %xmm5, %xmm5
-	vpxor	%xmm15, %xmm5, %xmm5
-	vpslld	$7, %xmm7, %xmm15
-	vpsrld	$25, %xmm7, %xmm7
-	vpxor	%xmm15, %xmm7, %xmm7
-	vpaddd	%xmm6, %xmm1, %xmm1
-	vpaddd	%xmm5, %xmm0, %xmm0
-	vpxor	%xmm1, %xmm12, %xmm12
-	vpxor	%xmm0, %xmm14, %xmm14
-	vpshufb	400(%rsp), %xmm12, %xmm12
-	vpshufb	400(%rsp), %xmm14, %xmm14
-	vpaddd	%xmm12, %xmm11, %xmm11
-	vpaddd	%xmm14, %xmm10, %xmm10
-	vpxor	%xmm11, %xmm6, %xmm6
-	vpxor	%xmm10, %xmm5, %xmm5
-	vpslld	$12, %xmm6, %xmm15
-	vpsrld	$20, %xmm6, %xmm6
-	vpxor	%xmm15, %xmm6, %xmm6
-	vpslld	$12, %xmm5, %xmm15
-	vpsrld	$20, %xmm5, %xmm5
-	vpxor	%xmm15, %xmm5, %xmm5
-	vpaddd	%xmm6, %xmm1, %xmm1
-	vpaddd	%xmm5, %xmm0, %xmm0
-	vpxor	%xmm1, %xmm12, %xmm12
-	vpxor	%xmm0, %xmm14, %xmm14
-	vpshufb	384(%rsp), %xmm12, %xmm12
-	vpshufb	384(%rsp), %xmm14, %xmm14
-	vpaddd	%xmm12, %xmm11, %xmm11
-	vpaddd	%xmm14, %xmm10, %xmm10
-	vpxor	%xmm11, %xmm6, %xmm6
-	vpxor	%xmm10, %xmm5, %xmm5
-	vpslld	$7, %xmm6, %xmm15
-	vpsrld	$25, %xmm6, %xmm6
-	vpxor	%xmm15, %xmm6, %xmm6
-	vpslld	$7, %xmm5, %xmm15
-	vpsrld	$25, %xmm5, %xmm5
-	vpxor	%xmm15, %xmm5, %xmm5
-	vmovdqu	544(%rsp), %xmm15
-	vmovdqu	%xmm14, 544(%rsp)
-	vpaddd	%xmm7, %xmm2, %xmm2
-	vpaddd	%xmm4, %xmm3, %xmm3
-	vpxor	%xmm2, %xmm13, %xmm13
-	vpxor	%xmm3, %xmm15, %xmm14
-	vpshufb	400(%rsp), %xmm13, %xmm13
-	vpshufb	400(%rsp), %xmm14, %xmm14
-	vpaddd	%xmm13, %xmm8, %xmm8
-	vpaddd	%xmm14, %xmm9, %xmm9
-	vpxor	%xmm8, %xmm7, %xmm7
-	vpxor	%xmm9, %xmm4, %xmm4
-	vpslld	$12, %xmm7, %xmm15
-	vpsrld	$20, %xmm7, %xmm7
-	vpxor	%xmm15, %xmm7, %xmm7
-	vpslld	$12, %xmm4, %xmm15
-	vpsrld	$20, %xmm4, %xmm4
-	vpxor	%xmm15, %xmm4, %xmm4
-	vpaddd	%xmm7, %xmm2, %xmm2
-	vpaddd	%xmm4, %xmm3, %xmm3
-	vpxor	%xmm2, %xmm13, %xmm13
-	vpxor	%xmm3, %xmm14, %xmm14
-	vpshufb	384(%rsp), %xmm13, %xmm13
-	vpshufb	384(%rsp), %xmm14, %xmm14
-	vpaddd	%xmm13, %xmm8, %xmm8
-	vpaddd	%xmm14, %xmm9, %xmm9
-	vpxor	%xmm8, %xmm7, %xmm7
-	vpxor	%xmm9, %xmm4, %xmm4
-	vpslld	$7, %xmm7, %xmm15
-	vpsrld	$25, %xmm7, %xmm7
-	vpxor	%xmm15, %xmm7, %xmm7
-	vpslld	$7, %xmm4, %xmm15
-	vpsrld	$25, %xmm4, %xmm4
-	vpxor	%xmm15, %xmm4, %xmm4
-	incq	%rax
+	vmovdqu	%xmm15, 288(%rsp)
+	movq	$10, %rax
+	.p2align	5
 Lchacha20_avx$27:
-	cmpq	$10, %rax
-	jb  	Lchacha20_avx$28
-	vmovdqu	544(%rsp), %xmm15
-	vpaddd	128(%rsp), %xmm0, %xmm0
-	vpaddd	144(%rsp), %xmm1, %xmm1
-	vpaddd	160(%rsp), %xmm2, %xmm2
-	vpaddd	176(%rsp), %xmm3, %xmm3
-	vpaddd	192(%rsp), %xmm4, %xmm4
-	vpaddd	208(%rsp), %xmm5, %xmm5
-	vpaddd	224(%rsp), %xmm6, %xmm6
-	vpaddd	240(%rsp), %xmm7, %xmm7
-	vpaddd	256(%rsp), %xmm8, %xmm8
-	vpaddd	272(%rsp), %xmm9, %xmm9
-	vpaddd	288(%rsp), %xmm10, %xmm10
-	vpaddd	304(%rsp), %xmm11, %xmm11
-	vpaddd	320(%rsp), %xmm12, %xmm12
-	vpaddd	336(%rsp), %xmm13, %xmm13
-	vpaddd	352(%rsp), %xmm14, %xmm14
-	vpaddd	368(%rsp), %xmm15, %xmm15
-	vmovdqu	%xmm8, 416(%rsp)
-	vmovdqu	%xmm9, 432(%rsp)
-	vmovdqu	%xmm10, 448(%rsp)
-	vmovdqu	%xmm11, 464(%rsp)
-	vmovdqu	%xmm12, 480(%rsp)
-	vmovdqu	%xmm13, 496(%rsp)
-	vmovdqu	%xmm14, 512(%rsp)
-	vmovdqu	%xmm15, 528(%rsp)
+	vpaddd	%xmm4, %xmm0, %xmm0
+	vpaddd	%xmm6, %xmm2, %xmm2
+	vpxor	%xmm0, %xmm12, %xmm12
+	vpxor	%xmm2, %xmm14, %xmm14
+	vpshufb	256(%rsp), %xmm12, %xmm12
+	vpshufb	256(%rsp), %xmm14, %xmm14
+	vpaddd	%xmm12, %xmm8, %xmm8
+	vpaddd	%xmm14, %xmm10, %xmm10
+	vpxor	%xmm8, %xmm4, %xmm4
+	vpxor	%xmm10, %xmm6, %xmm6
+	vpslld	$12, %xmm4, %xmm15
+	vpsrld	$20, %xmm4, %xmm4
+	vpxor	%xmm15, %xmm4, %xmm4
+	vpslld	$12, %xmm6, %xmm15
+	vpsrld	$20, %xmm6, %xmm6
+	vpxor	%xmm15, %xmm6, %xmm6
+	vpaddd	%xmm4, %xmm0, %xmm0
+	vpaddd	%xmm6, %xmm2, %xmm2
+	vpxor	%xmm0, %xmm12, %xmm12
+	vpxor	%xmm2, %xmm14, %xmm14
+	vpshufb	272(%rsp), %xmm12, %xmm12
+	vpshufb	272(%rsp), %xmm14, %xmm14
+	vpaddd	%xmm12, %xmm8, %xmm8
+	vpaddd	%xmm14, %xmm10, %xmm10
+	vpxor	%xmm8, %xmm4, %xmm4
+	vpxor	%xmm10, %xmm6, %xmm6
+	vpslld	$7, %xmm4, %xmm15
+	vpsrld	$25, %xmm4, %xmm4
+	vpxor	%xmm15, %xmm4, %xmm4
+	vpslld	$7, %xmm6, %xmm15
+	vpsrld	$25, %xmm6, %xmm6
+	vpxor	%xmm15, %xmm6, %xmm6
+	vmovdqu	288(%rsp), %xmm15
+	vmovdqu	%xmm14, 288(%rsp)
+	vpaddd	%xmm5, %xmm1, %xmm1
+	vpaddd	%xmm7, %xmm3, %xmm3
+	vpxor	%xmm1, %xmm13, %xmm13
+	vpxor	%xmm3, %xmm15, %xmm14
+	vpshufb	256(%rsp), %xmm13, %xmm13
+	vpshufb	256(%rsp), %xmm14, %xmm14
+	vpaddd	%xmm13, %xmm9, %xmm9
+	vpaddd	%xmm14, %xmm11, %xmm11
+	vpxor	%xmm9, %xmm5, %xmm5
+	vpxor	%xmm11, %xmm7, %xmm7
+	vpslld	$12, %xmm5, %xmm15
+	vpsrld	$20, %xmm5, %xmm5
+	vpxor	%xmm15, %xmm5, %xmm5
+	vpslld	$12, %xmm7, %xmm15
+	vpsrld	$20, %xmm7, %xmm7
+	vpxor	%xmm15, %xmm7, %xmm7
+	vpaddd	%xmm5, %xmm1, %xmm1
+	vpaddd	%xmm7, %xmm3, %xmm3
+	vpxor	%xmm1, %xmm13, %xmm13
+	vpxor	%xmm3, %xmm14, %xmm14
+	vpshufb	272(%rsp), %xmm13, %xmm13
+	vpshufb	272(%rsp), %xmm14, %xmm14
+	vpaddd	%xmm13, %xmm9, %xmm9
+	vpaddd	%xmm14, %xmm11, %xmm11
+	vpxor	%xmm9, %xmm5, %xmm5
+	vpxor	%xmm11, %xmm7, %xmm7
+	vpslld	$7, %xmm5, %xmm15
+	vpsrld	$25, %xmm5, %xmm5
+	vpxor	%xmm15, %xmm5, %xmm5
+	vpslld	$7, %xmm7, %xmm15
+	vpsrld	$25, %xmm7, %xmm7
+	vpxor	%xmm15, %xmm7, %xmm7
+	vpaddd	%xmm6, %xmm1, %xmm1
+	vpaddd	%xmm5, %xmm0, %xmm0
+	vpxor	%xmm1, %xmm12, %xmm12
+	vpxor	%xmm0, %xmm14, %xmm14
+	vpshufb	256(%rsp), %xmm12, %xmm12
+	vpshufb	256(%rsp), %xmm14, %xmm14
+	vpaddd	%xmm12, %xmm11, %xmm11
+	vpaddd	%xmm14, %xmm10, %xmm10
+	vpxor	%xmm11, %xmm6, %xmm6
+	vpxor	%xmm10, %xmm5, %xmm5
+	vpslld	$12, %xmm6, %xmm15
+	vpsrld	$20, %xmm6, %xmm6
+	vpxor	%xmm15, %xmm6, %xmm6
+	vpslld	$12, %xmm5, %xmm15
+	vpsrld	$20, %xmm5, %xmm5
+	vpxor	%xmm15, %xmm5, %xmm5
+	vpaddd	%xmm6, %xmm1, %xmm1
+	vpaddd	%xmm5, %xmm0, %xmm0
+	vpxor	%xmm1, %xmm12, %xmm12
+	vpxor	%xmm0, %xmm14, %xmm14
+	vpshufb	272(%rsp), %xmm12, %xmm12
+	vpshufb	272(%rsp), %xmm14, %xmm14
+	vpaddd	%xmm12, %xmm11, %xmm11
+	vpaddd	%xmm14, %xmm10, %xmm10
+	vpxor	%xmm11, %xmm6, %xmm6
+	vpxor	%xmm10, %xmm5, %xmm5
+	vpslld	$7, %xmm6, %xmm15
+	vpsrld	$25, %xmm6, %xmm6
+	vpxor	%xmm15, %xmm6, %xmm6
+	vpslld	$7, %xmm5, %xmm15
+	vpsrld	$25, %xmm5, %xmm5
+	vpxor	%xmm15, %xmm5, %xmm5
+	vmovdqu	288(%rsp), %xmm15
+	vmovdqu	%xmm14, 288(%rsp)
+	vpaddd	%xmm7, %xmm2, %xmm2
+	vpaddd	%xmm4, %xmm3, %xmm3
+	vpxor	%xmm2, %xmm13, %xmm13
+	vpxor	%xmm3, %xmm15, %xmm14
+	vpshufb	256(%rsp), %xmm13, %xmm13
+	vpshufb	256(%rsp), %xmm14, %xmm14
+	vpaddd	%xmm13, %xmm8, %xmm8
+	vpaddd	%xmm14, %xmm9, %xmm9
+	vpxor	%xmm8, %xmm7, %xmm7
+	vpxor	%xmm9, %xmm4, %xmm4
+	vpslld	$12, %xmm7, %xmm15
+	vpsrld	$20, %xmm7, %xmm7
+	vpxor	%xmm15, %xmm7, %xmm7
+	vpslld	$12, %xmm4, %xmm15
+	vpsrld	$20, %xmm4, %xmm4
+	vpxor	%xmm15, %xmm4, %xmm4
+	vpaddd	%xmm7, %xmm2, %xmm2
+	vpaddd	%xmm4, %xmm3, %xmm3
+	vpxor	%xmm2, %xmm13, %xmm13
+	vpxor	%xmm3, %xmm14, %xmm14
+	vpshufb	272(%rsp), %xmm13, %xmm13
+	vpshufb	272(%rsp), %xmm14, %xmm14
+	vpaddd	%xmm13, %xmm8, %xmm8
+	vpaddd	%xmm14, %xmm9, %xmm9
+	vpxor	%xmm8, %xmm7, %xmm7
+	vpxor	%xmm9, %xmm4, %xmm4
+	vpslld	$7, %xmm7, %xmm15
+	vpsrld	$25, %xmm7, %xmm7
+	vpxor	%xmm15, %xmm7, %xmm7
+	vpslld	$7, %xmm4, %xmm15
+	vpsrld	$25, %xmm4, %xmm4
+	vpxor	%xmm15, %xmm4, %xmm4
+	decq	%rax
+	jne 	Lchacha20_avx$27
+	vmovdqu	288(%rsp), %xmm15
+	vpaddd	304(%rsp), %xmm0, %xmm0
+	vpaddd	320(%rsp), %xmm1, %xmm1
+	vpaddd	336(%rsp), %xmm2, %xmm2
+	vpaddd	352(%rsp), %xmm3, %xmm3
+	vpaddd	368(%rsp), %xmm4, %xmm4
+	vpaddd	384(%rsp), %xmm5, %xmm5
+	vpaddd	400(%rsp), %xmm6, %xmm6
+	vpaddd	416(%rsp), %xmm7, %xmm7
+	vpaddd	432(%rsp), %xmm8, %xmm8
+	vpaddd	448(%rsp), %xmm9, %xmm9
+	vpaddd	464(%rsp), %xmm10, %xmm10
+	vpaddd	480(%rsp), %xmm11, %xmm11
+	vpaddd	496(%rsp), %xmm12, %xmm12
+	vpaddd	512(%rsp), %xmm13, %xmm13
+	vpaddd	528(%rsp), %xmm14, %xmm14
+	vpaddd	544(%rsp), %xmm15, %xmm15
+	vmovdqu	%xmm8, 128(%rsp)
+	vmovdqu	%xmm9, 144(%rsp)
+	vmovdqu	%xmm10, 160(%rsp)
+	vmovdqu	%xmm11, 176(%rsp)
+	vmovdqu	%xmm12, 192(%rsp)
+	vmovdqu	%xmm13, 208(%rsp)
+	vmovdqu	%xmm14, 224(%rsp)
+	vmovdqu	%xmm15, 240(%rsp)
 	vmovdqu	%xmm0, %xmm0
 	vmovdqu	%xmm1, %xmm1
 	vmovdqu	%xmm2, %xmm2
@@ -533,18 +532,18 @@ Lchacha20_avx$27:
 	vmovdqu	%xmm8, 80(%rsp)
 	vmovdqu	%xmm0, 96(%rsp)
 	vmovdqu	%xmm2, 112(%rsp)
-	vmovdqu	416(%rsp), %xmm0
-	vmovdqu	448(%rsp), %xmm1
-	vmovdqu	480(%rsp), %xmm2
-	vmovdqu	512(%rsp), %xmm3
-	vpunpckldq	432(%rsp), %xmm0, %xmm4
-	vpunpckhdq	432(%rsp), %xmm0, %xmm0
-	vpunpckldq	464(%rsp), %xmm1, %xmm5
-	vpunpckhdq	464(%rsp), %xmm1, %xmm1
-	vpunpckldq	496(%rsp), %xmm2, %xmm6
-	vpunpckhdq	496(%rsp), %xmm2, %xmm2
-	vpunpckldq	528(%rsp), %xmm3, %xmm7
-	vpunpckhdq	528(%rsp), %xmm3, %xmm3
+	vmovdqu	128(%rsp), %xmm0
+	vmovdqu	160(%rsp), %xmm1
+	vmovdqu	192(%rsp), %xmm2
+	vmovdqu	224(%rsp), %xmm3
+	vpunpckldq	144(%rsp), %xmm0, %xmm4
+	vpunpckhdq	144(%rsp), %xmm0, %xmm0
+	vpunpckldq	176(%rsp), %xmm1, %xmm5
+	vpunpckhdq	176(%rsp), %xmm1, %xmm1
+	vpunpckldq	208(%rsp), %xmm2, %xmm6
+	vpunpckhdq	208(%rsp), %xmm2, %xmm2
+	vpunpckldq	240(%rsp), %xmm3, %xmm7
+	vpunpckhdq	240(%rsp), %xmm3, %xmm3
 	vpunpcklqdq	%xmm5, %xmm4, %xmm8
 	vpunpcklqdq	%xmm7, %xmm6, %xmm9
 	vpunpckhqdq	%xmm5, %xmm4, %xmm4
@@ -936,9 +935,13 @@ Lchacha20_avx$5:
 	jnbe	Lchacha20_avx$6
 Lchacha20_avx$4:
 Lchacha20_avx$2:
-	movq  %r15, %rsp
+#
+	movq	%r15,	%rsp
+#
 	addq	$564, %rsp
-  popq  %r15
+#
+	popq	%r15
+#
 	popq	%rbp
 	ret 
 	.data

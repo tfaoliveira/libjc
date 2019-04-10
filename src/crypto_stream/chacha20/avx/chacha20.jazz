@@ -506,91 +506,51 @@ fn increment_counter_x4(stack u128[16] s) -> stack u128[16]
 
 
 
-fn round_64(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
+fn rotate_x4(reg u128[4] k, inline int i r, reg u128 r16 r8) -> reg u128[4]
 {
+  // 4 of x4 is the number of lanes, not stream blocks
   reg u128 t;
 
-  k[0] +4u32= k[1];
-  k[3]     ^= k[0];
-  k[3] = #x86_VPSHUFB_128(k[3], r16);
+  if(r==16){ 
+    k[i] = #x86_VPSHUFB_128(k[i], r16);
 
-  k[2] +4u32= k[3];
-  k[1]     ^= k[2];
+  } else { if (r==8) {
+    k[i] = #x86_VPSHUFB_128(k[i], r8);
 
-     t = k[1] <<4u32 12;
-  k[1] = k[1] >>4u32 20;
-  k[1] ^= t;
+  } else {
+    t = k[i] <<4u32 r;
+    k[i] = k[i] >>4u32 (32-r);
+    k[i] ^= t;
 
-  k[0] +4u32= k[1];
-  k[3]     ^= k[0];
-  k[3] = #x86_VPSHUFB_128(k[3], r8);
-
-  k[2] +4u32= k[3];
-  k[1] ^= k[2];
-
-     t = k[1] <<4u32 7;
-  k[1] = k[1] >>4u32 25;
-  k[1] ^= t;
+  }}
 
   return k;
 }
 
 
 
-fn round_128(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
+fn line_x4(reg u128[4] k, inline int a b c r, reg u128 r16 r8) -> reg u128[4]
 {
-  reg u128 t1 t2;
-
-  k1[0] +4u32= k1[1];
-  k2[0] +4u32= k2[1];
-
-  k1[3] ^= k1[0];
-  k2[3] ^= k2[0];
-
-  k1[3] = #x86_VPSHUFB_128(k1[3], r16);
-  k2[3] = #x86_VPSHUFB_128(k2[3], r16);
-
-  k1[2] +4u32= k1[3];
-  k2[2] +4u32= k2[3];
-
-                          k1[1] ^= k1[2];
-  t1 = k1[1] <<4u32 12;
-  k1[1] = k1[1] >>4u32 20;
-                          k2[1] ^= k2[2];
-  k1[1] ^= t1;
-
-  t2 = k2[1] <<4u32 12;
-  k2[1] = k2[1] >>4u32 20;
-  k2[1] ^= t2;
-
-  k1[0] +4u32= k1[1];
-  k2[0] +4u32= k2[1];
-
-  k1[3] ^= k1[0];
-  k2[3] ^= k2[0];
-
-  k1[3] = #x86_VPSHUFB_128(k1[3], r8);
-  k2[3] = #x86_VPSHUFB_128(k2[3], r8);
-
-  k1[2] +4u32= k1[3];
-  k2[2] +4u32= k2[3];
-
-                          k1[1] ^= k1[2];
-  t1 = k1[1] <<4u32 7;
-  k1[1] = k1[1] >>4u32 25;
-                          k2[1] ^= k2[2];
-  k1[1] ^= t1;
-
-  t2 = k2[1] <<4u32 7;
-  k2[1] = k2[1] >>4u32 25;
-  k2[1] ^= t2;
-
-  return k1, k2;
+  k[a/4] +4u32= k[b/4];
+  k[c/4] ^= k[a/4];
+  k = rotate_x4(k, (c/4), r, r16, r8);
+  return k;
 }
 
 
 
-fn shuffle_state(reg u128[4] k) -> reg u128[4]
+fn round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
+{
+  k = line_x4(k, 0, 4, 12, 16, r16, r8);
+  k = line_x4(k, 8, 12, 4, 12, r16, r8);
+  k = line_x4(k, 0, 4, 12,  8, r16, r8);
+  k = line_x4(k, 8, 12, 4,  7, r16, r8);
+  return k;
+}
+
+
+
+fn shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 {
   k[1] = #x86_VPSHUFD_128(k[1], (4u2)[0,3,2,1]);
   k[2] = #x86_VPSHUFD_128(k[2], (4u2)[1,0,3,2]);
@@ -600,11 +560,29 @@ fn shuffle_state(reg u128[4] k) -> reg u128[4]
 
 
 
-fn reverse_shuffle_state(reg u128[4] k) -> reg u128[4]
+fn reverse_shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 {
   k[1] = #x86_VPSHUFD_128(k[1], (4u2)[2,1,0,3]);
   k[2] = #x86_VPSHUFD_128(k[2], (4u2)[1,0,3,2]);
   k[3] = #x86_VPSHUFD_128(k[3], (4u2)[0,3,2,1]);
+  return k;
+}
+
+
+
+fn column_round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
+{
+  k = round_x1(k, r16, r8);
+  return k;
+}
+
+
+
+fn diagonal_round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
+{
+  k = shuffle_state_x1(k);
+  k = round_x1(k, r16, r8);
+  k = reverse_shuffle_state_x1(k);
   return k;
 }
 
@@ -617,16 +595,104 @@ fn rounds_x1(reg u128[4] k) -> reg u128[4]
 
   r16 = g_r16;
   r8 = g_r8;
+
   c = 0;
   while(c < 10)
   {
-    k = round_64(k, r16, r8);
-    k = shuffle_state(k);
-    k = round_64(k, r16, r8);
-    k = reverse_shuffle_state(k);
+    k = column_round_x1(k, r16, r8);
+    k = diagonal_round_x1(k, r16, r8);
     c += 1;
   }
+
   return k;
+}
+
+
+
+fn inlined_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
+{
+  reg u128 t1;
+
+  k1[0] +4u32= k1[1];
+  k2[0] +4u32= k2[1];
+
+  k1[3] ^= k1[0];
+  k2[3] ^= k2[0];
+
+  k1 = rotate_x4(k1, 3, 16, r16, r8);
+  k2 = rotate_x4(k2, 3, 16, r16, r8);
+
+
+  k1[2] +4u32= k1[3];
+  k2[2] +4u32= k2[3];
+
+                          k1[1] ^= k1[2];
+  // inlined rotate
+  t1 = k1[1] <<4u32 12;
+  k1[1] = k1[1] >>4u32 20;
+                          k2[1] ^= k2[2];
+  k1[1] ^= t1;
+
+  k2 = rotate_x4(k2, 1, 12, r16, r8);
+
+  k1[0] +4u32= k1[1];
+  k2[0] +4u32= k2[1];
+
+  k1[3] ^= k1[0];
+  k2[3] ^= k2[0];
+
+  k1 = rotate_x4(k1, 3, 8, r16, r8);
+  k2 = rotate_x4(k2, 3, 8, r16, r8);
+
+  k1[2] +4u32= k1[3];
+  k2[2] +4u32= k2[3];
+
+                          k1[1] ^= k1[2];
+  // inlined rotate
+  t1 = k1[1] <<4u32 7;
+  k1[1] = k1[1] >>4u32 25;
+                          k2[1] ^= k2[2];
+  k1[1] ^= t1;
+
+  k2 = rotate_x4(k2, 1, 7, r16, r8);
+
+  return k1, k2;
+}
+
+
+
+fn column_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
+{
+  k1, k2 = inlined_round_x2(k1, k2, r16, r8);
+  return k1, k2;
+}
+
+
+
+fn shuffle_state_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
+{
+  k1 = shuffle_state_x1(k1);
+  k2 = shuffle_state_x1(k2);
+  return k1, k2;
+}
+
+
+
+fn reverse_shuffle_state_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
+{
+  k1 = reverse_shuffle_state_x1(k1);
+  k2 = reverse_shuffle_state_x1(k2);
+  return k1, k2;
+}
+
+
+
+fn diagonal_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
+{
+  k1, k2 = shuffle_state_x2(k1, k2);
+  k1, k2 = inlined_round_x2(k1, k2, r16, r8);
+  k1, k2 = reverse_shuffle_state_x2(k1, k2);
+  return k1, k2;
 }
 
 
@@ -638,17 +704,17 @@ fn rounds_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
 
   r16 = g_r16;
   r8 = g_r8;
+
+  // do not use align in while;
+  // do not use zf;
+  // it decreases the performance here.
   c = 0;
-  while(c < 10)
-  {
-    k1, k2 = round_128(k1, k2, r16, r8);
-        k1 = shuffle_state(k1);
-        k2 = shuffle_state(k2);
-    k1, k2 = round_128(k1, k2, r16, r8);
-        k1 = reverse_shuffle_state(k1);
-        k2 = reverse_shuffle_state(k2);
+  while(c < 10) {
+    k1, k2 = column_round_x2(k1, k2, r16, r8);
+    k1, k2 = diagonal_round_x2(k1, k2, r16, r8);
     c += 1;
   }
+
   return k1, k2;
 }
 
@@ -747,7 +813,7 @@ fn rounds_x4(reg u128[16] k, stack u128 s_r16 s_r8) -> reg u128[16]
   k15 = k[15];
 
   //c = 0;
-  //while(c < 10)
+  //while(c < 10) {
 
   c = 10;
   align while {
