@@ -1,3 +1,6 @@
+// note: explicitly aligning the stack pointer causes some spikes in the plots
+// for inputs between 64 and 128 bytes
+
 u128 g_r16 = (16u8)[13,12,15,14, 9,8,11,10, 5,4,7,6, 1,0,3,2];
 u128 g_r8  = (16u8)[14,13,12,15, 10,9,8,11, 6,5,4,7, 2,1,0,3];
 
