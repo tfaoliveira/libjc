@@ -1,6 +1,6 @@
 JASMINC?=jasminc -pasm
 
-FILES:= shake256_jazz keccakFtest_jazz
+FILES:= shake256_jazz keccakFtest_jazz keccak2x-short
 
 .SUFFIXES: .japp .jazz .s
 

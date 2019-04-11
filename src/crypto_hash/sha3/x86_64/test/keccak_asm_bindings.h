@@ -42,7 +42,7 @@ void shake_out(sha3_ctx_ptr c, void *out, size_t len);
 extern void keccakF2x_test_jazz(uint64_t st[25], uint64_t count);
 extern void keccak_shake256_jazz(void *datain, size_t inbitlen, void *dataout, size_t outbitlen);
 
-uint64_t const iotas[32]  __attribute__((aligned(256))) =  { 0, 0, 0, 0, 0, 0, 0, 0
+uint64_t iotas[32]  __attribute__((aligned(256))) =  { 0, 0, 0, 0, 0, 0, 0, 0
 							   , 0x0000000000000001
 							   , 0x0000000000008082
 							   , 0x800000000000808a
@@ -73,12 +73,13 @@ uint64_t const iotas[32]  __attribute__((aligned(256))) =  { 0, 0, 0, 0, 0, 0, 0
 extern void keccakFshort(uint64_t st[25]);
 
 static inline void KeccakF_short_test(uint64_t st[25], uint64_t count) {
-  uint64_t st_alt[25], *iotas_ptr = iotas+8;;
-  while (count--) keccakF_short(st, st_alt, iotas_ptr);
+  uint64_t st_alt[25];
+  while (count--) keccakF_short(st, st_alt, iotas+8);
   /*
   printf("\nCheck IOTAS:\n");
+  uint64_t *iotas_ptr = iotas+8;
   while (((long long)iotas_ptr) & 0xFF) {
-    printf("%llx ", *iotas_ptr);
+    printf("%016llx ", *iotas_ptr);
     iotas_ptr++;
   }
   */

@@ -8,7 +8,8 @@
 
 #include "keccak_asm_bindings.h"
 
-#define TESTREP 10000000
+#define TESTREP 100000
+//#define TESTREP 1
 
 // read a hex string, return byte length or -1 on error.
 
