@@ -63,6 +63,50 @@
     } 
 */
 
+/*
+my @A_jagged = ([0,0], [1,0], [1,1], [1,2], [1,3],	# [0][0..4]
+		[2,2], [6,0], [3,1], [4,2], [5,3],	# [1][0..4]
+		[2,0], [4,0], [6,1], [5,2], [3,3],	# [2][0..4]
+		[2,3], [3,0], [5,1], [6,2], [4,3],	# [3][0..4]
+		[2,1], [5,0], [4,1], [3,2], [6,3]);	# [4][0..4]
+   @A_jagged = map(8*($$_[0]*4+$$_[1]), @A_jagged);	# ... and now linear
+
+*/
+
+/*
+JASMIN SHOULD SUPPORT THIS OR SOMETHING SIMILAR
+param int[64] A_jagged = [0, 32, 40, 48, 56, 
+	                      80, 192, 104, 144, 184, 
+	                      64, 128, 200, 176, 120, 
+	                      88, 96, 168, 208, 152, 72, 
+	                      160, 136, 112, 216]; */
+
+param int A_jagged_0 =    0/8;
+param int A_jagged_1 =   32/8;
+param int A_jagged_2 =   40/8;
+param int A_jagged_3 =   48/8;
+param int A_jagged_4 =   56/8;
+param int A_jagged_5 =   80/8;
+param int A_jagged_6 =  192/8;
+param int A_jagged_7 =  104/8;
+param int A_jagged_8 =  144/8;
+param int A_jagged_9 =  184/8;
+param int A_jagged_10 =  64/8;
+param int A_jagged_11 = 128/8;
+param int A_jagged_12 = 200/8;
+param int A_jagged_13 = 176/8;
+param int A_jagged_14 = 120/8;
+param int A_jagged_15 =  88/8;
+param int A_jagged_16 =  96/8;
+param int A_jagged_17 = 168/8;
+param int A_jagged_18 = 208/8;
+param int A_jagged_19 = 152/8;
+param int A_jagged_20 =  72/8;
+param int A_jagged_21 = 160/8;
+param int A_jagged_22 = 136/8;
+param int A_jagged_23 = 112/8;
+param int A_jagged_24 = 216/8;
+
 inline fn __KeccakF1600(reg u256 A00 A01 A20 A31 A21 A41 A11,
 	  reg u64 _rhotates_left _rhotates_right _iotas) -> 
       reg u256, reg u256, reg u256, reg u256, reg u256, reg u256, reg u256 {
@@ -78,7 +122,7 @@ inline fn __KeccakF1600(reg u256 A00 A01 A20 A31 A21 A41 A11,
    rhotates_right = _rhotates_right + 96;
    iotas = _iotas;
 
-   i = 2;
+   i = 24;
    while {
 	/* ######################################### Theta */
 	C00  = #x86_VPSHUFD_256(A20, 0x4e /*0b01001110 */);
@@ -251,16 +295,3 @@ export fn __KeccakF1600_wrapper(reg u64 r _rhotates_left _rhotates_right _iotas)
     (u256)[r + 160] = A41;
     (u256)[r + 192] = A11;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
