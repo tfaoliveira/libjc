@@ -7,7 +7,7 @@ DIST            = tiny_sha3
 
 CC              = gcc
 CFLAGS		= -Wall -O3
-LIBS            = keccakFtest_jazz.s shake256_jazz.s openssl_x86_64.s
+LIBS            = keccakFtest_jazz.s shake256_jazz.s openssl_x86_64.s keccak2x-short.s
 LDFLAGS         =
 INCLUDES	=
 

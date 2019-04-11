@@ -8,7 +8,8 @@
 
 #include "keccak_asm_bindings.h"
 
-#define TESTREP 10000000
+#define TESTREP 100000
+//#define TESTREP 1
 
 // read a hex string, return byte length or -1 on error.
 
@@ -182,6 +183,26 @@ void test_keccakf_speed()
         x += st[i];
 
     printf("OpenSSL x86_64 (%016lX): %.3f/ Second.\n",
+	   (unsigned long) x,
+	   (CLOCKS_PER_SEC * ((double) n)) / ((double) us));
+
+
+    // Jasmin Keccak2x_short implementation:
+    for (i = 0; i < 25; i++) st[i] = i;
+    
+    bg = clock();
+    n = 0;
+    do {
+      KeccakF_short_test(st, TESTREP);
+      n += TESTREP;
+      us = clock() - bg;
+    } while (0); //(us < 3 * CLOCKS_PER_SEC);
+
+    x = 0;
+    for (i = 0; i < 25; i++)
+        x += st[i];
+
+    printf("Jasmin Keccak2x_short (%016lX): %.3f/ Second.\n",
 	   (unsigned long) x,
 	   (CLOCKS_PER_SEC * ((double) n)) / ((double) us));
 
