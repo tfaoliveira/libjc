@@ -1,0 +1,292 @@
+#define _state_t reg u64
+#define OFFSET 0
+#define S(base,x,y) [base + 8*(5*((x) % 5) + ((y) % 5)) - OFFSET]
+#define B(base,x) [base + 8*(x)]
+#define B8(base,x) (u8)[base + (x)]
+
+
+fn spill_2(reg u64 a b) -> stack u64, stack u64
+{
+  stack u64 sa sb;
+  sa = a;
+  sb = b;
+  return sa, sb;
+}
+
+
+
+fn load_2(stack u64 sa sb) -> reg u64, reg u64
+{
+  reg u64 a b;
+  a = sa;
+  b = sb;
+  return a, b;
+}
+
+
+
+fn ANDN(reg u64 x, reg u64 y) -> reg u64
+{
+  reg u64 r;
+  _, _, _, _, _, r = #x86_ANDN(x, y);
+  return r;
+}
+
+
+
+fn ROL64(reg u64 x, inline int c) -> reg u64
+{
+  reg u64 y;
+  if (c == 0)
+  { y = x; }
+  else
+  { _, _, y = #x86_ROL_64(x, c); }
+  return y;
+}
+
+
+
+fn index(inline int x, inline int y) -> inline int {
+  inline int r;
+  r = 5*(x % 5) + (y % 5);
+  return r;
+}
+
+
+
+fn keccak_rho_offsets(inline int i) -> inline int
+{
+  inline int r, x, y, z, t;
+  r = 0;
+  x = 1;
+  y = 0;
+  for t = 0 to 24
+  { if i == x + 5 * y
+    { r = ((t + 1) * (t + 2) / 2) % 64;
+    }
+    z = (2 * x + 3 * y) % 5;
+    x = y;
+    y = z;
+  }
+
+  return r;
+}
+
+
+
+fn rhotates(inline int x y) -> inline int
+{
+  inline int i r;
+  i = index(x, y);
+  r = keccak_rho_offsets(i);
+  return r;
+}
+
+
+
+#if KECCAK_F_IMPL==0
+#include "keccak_f.jazz"
+#elif KECCAK_F_IMPL==1
+#include "keccak_f-short.jazz"
+#elif KECCAK_F_IMPL==2
+#include "keccak_f-short2.jazz"
+#else
+#include "keccak_f-openssl.jazz"
+#endif
+
+
+
+fn keccak_1600_add_full_block(
+  _state_t state,
+  reg u64 in,
+  reg u64 inlen,
+  inline int rate_in_bytes
+) -> _state_t, reg u64, reg u64
+{
+  inline int idx i;
+  reg u64 t;
+
+  for i = 0 to (rate_in_bytes / 8) 
+  {
+    t = [in + 8*i];
+    B(state,i) ^= t;
+  }
+
+  in += rate_in_bytes;
+  inlen -= rate_in_bytes;
+
+  return state, in, inlen;
+}
+
+
+
+// obs: @pre: inlen < rate_in_bytes
+fn keccak_1600_add_final_block(
+  _state_t state,
+  reg u64 in,
+  reg u64 inlen,
+  inline int suffix,
+  inline int rate_in_bytes
+) -> _state_t
+{
+  reg u64 i t inlen8;
+  reg u8 c;
+
+  inlen8 = inlen;
+  inlen8 >>= 3;
+  i = 0;
+  while ( i < inlen8 )
+  {
+    t = [in + 8*i];
+    B(state,i) ^= t;
+    i += 1;
+  }
+  i <<= 3;
+
+  // inlen4 ?
+
+  while ( i < inlen )
+  {
+    c = (u8)[in + i];
+    B8(state,i) ^= c;
+    i += 1;
+  }
+
+  B8(state,i) ^= suffix;
+  B8(state,rate_in_bytes-1) ^= 0x80;
+
+  return state;
+}
+
+
+
+fn keccak_1600_absorb(
+  _state_t state,
+  reg u64 rhotates_left,
+  reg u64 rhotates_right,
+  reg u64 iotas,
+  reg u64 in inlen,
+  inline int suffix,
+  inline int rate_in_bytes
+) -> _state_t
+{
+  stack u64 s_in s_inlen;
+
+  // intermediate blocks
+  while ( inlen >= rate_in_bytes )
+  {
+    state, in, inlen = keccak_1600_add_full_block(state, in, inlen, rate_in_bytes);
+    s_in, s_inlen = spill_2(in, inlen);
+
+    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+    in, inlen = load_2(s_in, s_inlen);
+  }
+
+  // final block
+  state = keccak_1600_add_final_block(state, in, inlen, suffix, rate_in_bytes);
+  state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+
+  return state;
+}
+
+
+
+// obs: @pre: len <= rate_in_bytes
+fn keccak_1600_xtr_block(
+  _state_t state,
+  reg u64 out,
+  reg u64 len
+) -> reg u64
+{
+  reg u64 i t len8;
+  reg u8 c;
+
+  len8 = len;
+  len8 >>= 3;
+  i = 0;
+  while ( i < len8 )
+  {
+    t = B(state,i);
+    [out + 8*i] = t;
+    i += 1;
+  }
+  i <<= 3;
+
+  // inlen4 ?
+
+  while ( i < len )
+  {
+    c = B8(state,i);
+    (u8)[out + i] = c;
+    i += 1;
+  }
+
+  out += len;
+  return out;
+}
+
+
+
+fn keccak_1600_squeeze(
+  _state_t state,
+  reg u64 rhotates_left,
+  reg u64 rhotates_right,
+  reg u64 iotas,
+  reg u64 out,
+  inline int rate_in_bytes,
+  inline int i_hash_bytes
+)
+{
+  stack u64 s_out s_hash_bytes;
+  reg u64 hash_bytes;
+
+  s_hash_bytes = i_hash_bytes;
+
+  // intermediate blocks
+  while ( s_hash_bytes >= rate_in_bytes )
+  {    
+    out = keccak_1600_xtr_block(state, out, rate_in_bytes);
+    s_out = out;
+
+    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+
+    s_hash_bytes -= rate_in_bytes;
+    out = s_out;
+  }
+
+  // final block
+  hash_bytes = s_hash_bytes;
+  out = keccak_1600_xtr_block(state, out, hash_bytes);
+}
+
+
+
+fn keccak_1600(
+  reg u64 out, // output pointer with at least hash_bytes available
+  reg u64 in, // input pointer with inlen bytes
+  reg u64 inlen, // input length in bytes
+  reg u64 m, // external memory: it contains 4 pointers: (state, rhotates_left, rhotates_right, iotas)
+  inline int suffix,
+  inline int rate,
+  inline int capacity,
+  inline int hash_bytes
+)
+{
+  reg u64 rhotates_left rhotates_right iotas;
+  stack u64 out_s;
+  _state_t state;
+
+  out_s = out;
+
+  state          = [m + 8*0];
+  rhotates_left  = [m + 8*1];
+  rhotates_right = [m + 8*2];
+  iotas          = [m + 8*3];
+
+  // absorb
+  state = keccak_1600_absorb(state, rhotates_left, rhotates_right, iotas, in, inlen, suffix, (rate/8));
+
+  // squeeze
+  out = out_s;
+  keccak_1600_squeeze(state, rhotates_left, rhotates_right, iotas, out, (rate/8), hash_bytes);
+}

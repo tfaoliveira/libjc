@@ -1,6 +1,7 @@
 #include "crypto_hash.h"
 #include "impl.h"
 #include "api.h"
+#include <string.h>
 
 extern void shake256_impl(
   unsigned char *out,
