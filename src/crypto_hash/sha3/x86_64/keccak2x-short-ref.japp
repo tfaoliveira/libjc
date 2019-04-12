@@ -1,0 +1,138 @@
+
+/* New pseudo instuctions */
+fn ANDN(reg u64 x, reg u64 y) -> reg u64 {
+  reg u64 r;
+  _, _, _, _, _, r = #x86_ANDN(x, y);
+  return r;
+}
+
+fn ROL64(reg u64 x, inline int c) -> reg u64 {
+  reg u64 y;
+  _, _, y = #x86_ROL_64(x, c);
+  if c==0 { y = x; }
+  return y;
+}
+
+/* State access function
+   remark: base address has an offset of 100 bytes. */
+#define S(base,x,y) [base + 8*(5*((x) % 5) + ((y) % 5)) - 100]
+
+fn keccakRhoOffsets(inline int i) -> inline int {
+inline int r, x, y, z, t;
+
+  r = 0;
+  x = 1;
+  y = 0;
+  for t = 0 to 24 {
+    if i == x + 5 * y {
+      r = ((t + 1) * (t + 2) / 2) % 64;
+    }
+    z = (2 * x + 3 * y) % 5;
+    x = y;
+    y = z;
+  }
+
+  return r;
+}
+
+fn rhotates(inline int x y) -> inline int {
+  inline int i r;
+  i = 5*(x%5) + (y%5);
+  r = keccakRhoOffsets(i);
+  return r;
+}
+
+/*
+    Round functions
+*/
+
+fn wrap1(reg u64 x0 x1 x2 x3 x4 y0 y1 y2 y3 y4)
+   -> reg u64[5], reg u64[5] {
+  reg u64[5] X Y;
+  X[0] = x0;
+  X[1] = x1;
+  X[2] = x2;
+  X[3] = x3;
+  X[4] = x4;
+  Y[0] = y0;
+  Y[1] = y1;
+  Y[2] = y2;
+  Y[3] = y3;
+  Y[4] = y4;
+  return X,Y;
+}
+
+// https://github.com/openssl/openssl/blob/master/crypto/sha/keccak1600.c
+fn round2x_short(reg u64 A R iotas) /* -> reg u64 */ {
+  inline int r j i;
+  reg u64[5] C D;
+  reg u64 T0;
+  reg bool zf;
+
+  C[0] = S(A,4,0);
+  C[1] = S(A,4,1);
+  C[2] = S(A,4,2);
+  C[3] = S(A,4,3);
+  C[4] = S(A,4,4);
+
+  // ROUND LOOP
+  while {
+    // obs: C[j] == S(A,4,j)
+
+    for j = 0 to 5 {
+      for r = 0 to 4 {
+        C[j] ^= S(A,r,j);
+      }
+    }
+
+    for j = 0 to 5 {
+      i = 1;
+      D[j] = ROL64(C[(j+1)%5], i);
+      D[j] ^= C[(j+4)%5];
+    }
+
+    for j = 0 to 5 {
+      C[j] = S(A,j,j);
+    }
+
+    for r = 0 to 5 {
+      // obs: C[j] == S(A,j,3*r+j)
+      for j = 0 to 5 {
+        C[j] ^= D[(3*r+j)%5];
+	i = rhotates(j,3*r+j);
+	C[j] = ROL64(C[j], i);
+      }
+      for j = 0 to 5 {
+        T0 = ANDN(C[(j+1)%5], C[(j+2)%5]);
+	T0 ^= C[j];
+	if (r==0 && j==0) {
+          T0 ^= [iotas+0];
+          iotas += 8;
+        }
+	S(R,r,j) = T0;	//C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
+      }
+      if (r<4) {
+        for j = 0 to 5 {
+          C[j] = S(A,j,3*(r+1)+j);
+        }
+      } else {
+        for j = 0 to 5 {
+          C[j] = S(R,4,j);
+        }
+      }
+    }
+    // prepare next round
+    // swap A and R
+    T0 = A;
+    A = R;
+    R = T0;
+    _, _, _, _, zf = #x86_TEST_8(iotas,255);
+  } (!zf)
+}
+
+
+export fn keccakF_short(reg u64 A R iotas) {
+  A += 100;
+  R += 100;
+  round2x_short(A, R, iotas);
+}
