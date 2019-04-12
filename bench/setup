@@ -15,6 +15,7 @@ cp ./patch/$version/do-part supercop-$version/do-part
 cp ./patch/$version/measure-anything.c supercop-$version/measure-anything.c
 cp ./patch/$version/crypto_stream/measure.c supercop-$version/crypto_stream/measure.c
 cp ./patch/$version/crypto_onetimeauth/measure.c supercop-$version/crypto_onetimeauth/measure.c
+cp ./patch/$version/crypto_hash/measure.c supercop-$version/crypto_hash/measure.c
 
 echo "bench" > config/work
 mkdir -p data/
