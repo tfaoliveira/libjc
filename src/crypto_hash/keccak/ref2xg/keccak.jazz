@@ -3,8 +3,9 @@
 #ifndef KECCAK_F_IMPL
   // 0 includes "keccak_f.jazz"
   // 1 includes "keccak_f-short.jazz"
-  // 2 includes "keccak_f-openssl.jazz"
-  #define KECCAK_F_IMPL 2
+  // 2 includes "keccak_f-short2.jazz"
+  // 3 includes "keccak_f-openssl.jazz"
+  #define KECCAK_F_IMPL 3
 #endif
 
 #ifndef STATE_IN_STACK
@@ -156,6 +157,8 @@ fn rhotates(inline int x y) -> inline int
 #include "keccak_f.jazz"
 #elif KECCAK_F_IMPL==1
 #include "keccak_f-short.jazz"
+#elif KECCAK_F_IMPL==2
+#include "keccak_f-short2.jazz"
 #else
 #include "keccak_f-openssl.jazz"
 #endif
