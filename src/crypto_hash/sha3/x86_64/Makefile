@@ -9,7 +9,7 @@ all: test
 test: $(foreach f,$(FILES),test/$(f).s)
 	(cd test; make)
 
-%.jazz: %.japp keccak2x.jazz
+%.jazz: %.japp
 	gpp -o $@ $<
 
 test/%.s %.s: %.jazz
@@ -20,3 +20,7 @@ test/%.s %.o: %.s
 
 clean: 
 	$(RM) -f *.o *.s $(foreach f,$(FILES),$(f).jazz) $(foreach f,$(FILES),test/$(f).s)
+
+shake256_jazz.jazz: keccak2x.jazz
+
+keccakFtest_jazz: keccak2x.jazz

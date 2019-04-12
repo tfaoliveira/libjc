@@ -5,11 +5,14 @@ param int rateInBytes = 1088 / 8;
 
 
 /* New pseudo instuctions */
+#define ANDN(x,y) !(x) & (y)
+/*
 fn ANDN(reg u64 x, reg u64 y) -> reg u64 {
   reg u64 r;
   _, _, _, _, _, r = #x86_ANDN(x, y);
   return r;
 }
+*/
 
 fn ROL64(reg u64 x, inline int c) -> reg u64 {
   reg u64 y;

@@ -70,7 +70,7 @@ uint64_t iotas[32]  __attribute__((aligned(256))) =  { 0, 0, 0, 0, 0, 0, 0, 0
                                                            };
 
 
-extern void keccakF_short(uint64_t st[25]);
+extern void keccakF_short(uint64_t st[25], uint64_t st2[25], uint64_t *iotas);
 
 static inline void KeccakF_short_test(uint64_t st[25], uint64_t count) {
   uint64_t st_alt[25];
