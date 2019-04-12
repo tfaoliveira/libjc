@@ -2,11 +2,17 @@
 
 
 
-          
-  fn swap(reg u64 a b) -> reg u64, reg u64
-  { reg u64 t;
-    t = a; a = b; b = t; // XCHG
-    return a, b; }
+        
+  // TODO: README
+  // atm I think this is the best way of simulating this particular stack swap
+  // we only need the contents of b to be put in a
+  // if we could swap directly the stack pointers would be cool :-)
+  // in the case that is unfeasible we could try to unroll the main loop 2x
+  fn swap(stack u64[25] a b) -> stack u64[25], stack u64[25]
+  { inline int i; reg u64 t;
+    for i=0 to 25
+    { t=b[i]; a[i]=t; }    
+    return a, b;}
 
     
 
@@ -46,18 +52,17 @@ fn ROL64(reg u64 x, inline int c) -> reg u64
 
 
 
-fn keccak_init(reg u64 m) -> reg u64
+fn keccak_init(reg u64 m) -> stack u64[25]
 {
-  reg u64 state;
+  stack u64[25] state;
   reg u64 i t;
 
   _, _, _, _, _, t = #set0();
 
-    state = m; //if state is in stack this is just ignored
   
   i = 0;
   while (i < 50)
-  { [state + 8*(i)] = t;
+  { state[(int)i] = t;
     i += 1;
   }
 
@@ -104,354 +109,142 @@ fn rhotates(inline int x y) -> inline int
 
 
 
-fn rename1(reg u64 x0 x1 x2 x3 x4
-                   y0 y1 y2 y3 y4
-) -> reg u64[5], reg u64[5]
+fn theta_sum(stack u64[25] A) -> reg u64[5]
 {
-  reg u64[5] X Y;
- 
-  X[0] = x0;
-  X[1] = x1;
-  X[2] = x2;
-  X[3] = x3;
-  X[4] = x4;
-  Y[0] = y0;
-  Y[1] = y1;
-  Y[2] = y2;
-  Y[3] = y3;
-  Y[4] = y4;
+  inline int idx i j;
+  reg u64[5] C;
+  reg u64 t;
 
-  return X, Y;
+  for i = 0 to 5
+  { C[i] = A[(5*(( 0) % 5) + (( i) % 5))];
+    for j = 1 to 5
+    { C[i] ^= A[(5*(( j) % 5) + (( i) % 5))];
+    }
+  }
+
+  return C;
+}
+
+
+
+fn theta_rol(reg u64[5] C) -> reg u64[5]
+{
+  inline int i;
+  reg u64[5] D;
+  reg u64 t r;
+
+  for i = 0 to 5
+  {
+    r = ROL64(C[(i+1)%5], 1);
+    D[i] = r;
+    D[i] ^= C[(i+4)%5];
+  }
+
+  return D;
+}
+
+
+
+fn rol_sum(
+  reg u64[5] D,
+  stack u64[25] A,
+  inline int offset
+) -> reg u64[5]
+{
+  inline int idx j j1 k;
+  reg u64[5] C;
+  reg u64 t;
+
+  for j = 0 to 5
+  {
+    j1 = (j+offset) % 5;
+    k = rhotates(j, j1);
+    t = A[(5*((j) % 5) + ((j1) % 5))];
+    t ^= D[j1];
+    t = ROL64(t, k);
+    C[j] = t;
+  }
+
+  return C;
+}
+
+
+
+fn set_row(
+  stack u64[25] R,
+  inline int row,
+  reg u64[5] C,
+  stack u64 iota
+) -> stack u64[25]
+{
+  inline int idx j j1 j2;
+  reg u64 t;
+
+  for j= 0 to 5
+  {
+    j1 = (j+1) % 5;
+    j2 = (j+2) % 5;
+    t = !( C[j1]) & ( C[j2] );
+    if row==0 && j==0 { t ^= iota; }
+    t ^= C[j];
+    R[(5*(( row) % 5) + (( j) % 5))] = t;
+  }
+
+  return R;
+}
+
+
+
+fn round2x(
+  stack u64[25] A,
+  stack u64[25] R,
+  reg u64 iotas,
+  inline int o
+) -> stack u64[25], stack u64[25]
+{
+  reg u64[5] C D;
+  stack u64 iota;
+
+  iota = [iotas + o];
+  C = theta_sum(A);
+  D = theta_rol(C);
+  C = rol_sum(D, A, 0);
+  R = set_row(R, 0, C, iota);
+  C = rol_sum(D, A, 3);
+  R = set_row(R, 1, C, iota);
+  C = rol_sum(D, A, 1);
+  R = set_row(R, 2, C, iota);
+  C = rol_sum(D, A, 4);
+  R = set_row(R, 3, C, iota);
+  C = rol_sum(D, A, 2);
+  R = set_row(R, 4, C, iota);
+
+  return A, R;
 }
 
 
 
 fn keccak_f(
-  reg u64 A,
+  stack u64[25] A,
   reg u64 iotas
-) -> reg u64, reg u64
+) -> stack u64[25], reg u64
 {
-  // https://github.com/openssl/openssl/blob/master/crypto/sha/keccak1600.c
-  inline int i;
   reg bool zf;
-  reg u64[5] C D;
-  reg u64 T0 T1;
-  reg u64 R;
-
-  A += 100;R = A + 200;
-
-  C[0] = [A + 8*(5*((4) % 5) + ((0) % 5)) - 100];
-  C[1] = [A + 8*(5*((4) % 5) + ((1) % 5)) - 100];
-  C[2] = [A + 8*(5*((4) % 5) + ((2) % 5)) - 100];
-  C[3] = [A + 8*(5*((4) % 5) + ((3) % 5)) - 100];
-  C[4] = [A + 8*(5*((4) % 5) + ((4) % 5)) - 100];
-
-  // round loop
-  align while {
-    // obs: C[j] == [A + 8*(5*((4) % 5) + ((j) % 5)) - 100]
-    D[0] = [A + 8*(5*((0) % 5) + ((0) % 5)) - 100];
-    D[1] = [A + 8*(5*((1) % 5) + ((1) % 5)) - 100];
-    D[2] = [A + 8*(5*((2) % 5) + ((2) % 5)) - 100];
-    D[3] = [A + 8*(5*((3) % 5) + ((3) % 5)) - 100];
-
-    C[2] ^= [A + 8*(5*((0) % 5) + ((2) % 5)) - 100];    // C[2] = A[0,4][2]
-    C[3] ^= [A + 8*(5*((0) % 5) + ((3) % 5)) - 100];    // C[3] = A[0,4][3]
-    C[0] ^= D[0];        // C[0] = A[0,4][0]
-    C[1] ^= [A + 8*(5*((0) % 5) + ((1) % 5)) - 100];    // C[1] = A[0,4][1]
-    C[2] ^= [A + 8*(5*((1) % 5) + ((2) % 5)) - 100];    // C[2] = A[0..1,4][2]
-    C[0] ^= [A + 8*(5*((1) % 5) + ((0) % 5)) - 100];    // C[0] = A[0..1,4][0]
-
-    D[4] = C[4];
-
-    C[4] ^= [A + 8*(5*((0) % 5) + ((4) % 5)) - 100];    // C[4] = A[0,4][4]
-    C[2] ^= D[2];        // C[2] = A[0..2,4][2]
-    C[0] ^= [A + 8*(5*((2) % 5) + ((0) % 5)) - 100];    // C[0] = A[0..2,4][0]
-    C[3] ^= [A + 8*(5*((1) % 5) + ((3) % 5)) - 100];    // C[3] = A[0,3..4][3]
-    C[1] ^= D[1];        // C[1] = A[0..1,4][1]
-    C[4] ^= [A + 8*(5*((1) % 5) + ((4) % 5)) - 100];    // C[4] = A[0..1,4][4]
-    C[2] ^= [A + 8*(5*((3) % 5) + ((2) % 5)) - 100];    // C[2] = A[0..4][2] *
-    C[0] ^= [A + 8*(5*((3) % 5) + ((0) % 5)) - 100];    // C[0] = A[0..4][0] *
-    C[3] ^= [A + 8*(5*((2) % 5) + ((3) % 5)) - 100];    // C[3] = A[0,2..4][3]
-    C[1] ^= [A + 8*(5*((2) % 5) + ((1) % 5)) - 100];    // C[1] = A[0..2,4][1]
-    C[4] ^= [A + 8*(5*((2) % 5) + ((4) % 5)) - 100];    // C[4] = A[0..2,4][4]
-
-    T0 = C[2];
-    C[2] = ROL64(C[2], 1);
-    C[2] ^= C[0];        // C[2] = ROL64(C[2], 1) ^ C[0]  // (D[1])
-    C[3] ^= D[3];       // C[3] = A[0..4][3] *
-    C[0] = ROL64(C[0], 1);
-    C[0] ^= C[3];        // C[0] = ROL64(C[0], 1) ^ C[3]  // (D[4])
-    C[1] ^= [A + 8*(5*((3) % 5) + ((1) % 5)) - 100];    // C[1] = A[0..4][4] *
-    C[3] = ROL64(C[3], 1);
-    C[3] ^= C[1];        // C[3] = ROL64(C[3], 1) ^ C[1]  // (D[2])
-    C[4] ^= [A + 8*(5*((3) % 5) + ((4) % 5)) - 100];    // C[4] = A[0..4][4] *
-    C[1] = ROL64(C[1], 1);
-    C[1] ^= C[4];        // C[1] = ROL64(C[1], 1) ^ C[4]  // (D[0])
-    C[4] = ROL64(C[4], 1);
-    C[4] ^= T0;       // C[4] = ROL64(C[4], 1) ^ (C[2])  // (D[3])
-
-    C, D = rename1(D[0],D[1],D[2],D[3],D[4],C[1],C[2],C[3],C[4],C[0]);
-
-    // Row 0
-    //r = 0;
-        C[0] ^= D[(3*0+0)%5];
-    i = rhotates(0,3*0+0);
-    C[0] = ROL64(C[0], i);
-
-        C[1] ^= D[(3*0+1)%5];
-    i = rhotates(1,3*0+1);
-    C[1] = ROL64(C[1], i);
-
-        C[2] ^= D[(3*0+2)%5];
-    i = rhotates(2,3*0+2);
-    C[2] = ROL64(C[2], i);
-
-        C[3] ^= D[(3*0+3)%5];
-    i = rhotates(3,3*0+3);
-    C[3] = ROL64(C[3], i);
-
-        C[4] ^= D[(3*0+4)%5];
-    i = rhotates(4,3*0+4);
-    C[4] = ROL64(C[4], i);
-
-        T0 = !(C[(0+1)%5]) & ( C[(0+2)%5]);
-        T1 = !(C[(1+1)%5]) & ( C[(1+2)%5]); //%%//
-    T0 ^= C[0];
-    T1 ^= C[1]; //%%//
-        T0 ^= [iotas+0];
-    iotas += 8;
-    [R + 8*(5*((0) % 5) + ((0) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-    [R + 8*(5*((0) % 5) + ((1) % 5)) - 100] = T1; //%%//
-
-        T0 = !(C[(2+1)%5]) & ( C[(2+2)%5]);
-    T0 ^= C[2];
-    [R + 8*(5*((0) % 5) + ((2) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(3+1)%5]) & ( C[(3+2)%5]);
-    T0 ^= C[3];
-    [R + 8*(5*((0) % 5) + ((3) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(4+1)%5]) & ( C[(4+2)%5]);
-    T0 ^= C[4];
-    [R + 8*(5*((0) % 5) + ((4) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        C[0] = [A + 8*(5*((0) % 5) + ((3*(0+1)+0) % 5)) - 100];
-        C[1] = [A + 8*(5*((1) % 5) + ((3*(0+1)+1) % 5)) - 100];
-        C[2] = [A + 8*(5*((2) % 5) + ((3*(0+1)+2) % 5)) - 100];
-        C[3] = [A + 8*(5*((3) % 5) + ((3*(0+1)+3) % 5)) - 100];
-        C[4] = [A + 8*(5*((4) % 5) + ((3*(0+1)+4) % 5)) - 100];
-
-    // Row 1
-    //r = 1;
-
-        C[0] ^= D[(3*1+0)%5];
-    i = rhotates(0,3*1+0);
-    C[0] = ROL64(C[0], i);
-
-        C[1] ^= D[(3*1+1)%5];
-    i = rhotates(1,3*1+1);
-    C[1] = ROL64(C[1], i);
-
-        C[2] ^= D[(3*1+2)%5];
-    i = rhotates(2,3*1+2);
-    C[2] = ROL64(C[2], i);
-
-        C[3] ^= D[(3*1+3)%5];
-    i = rhotates(3,3*1+3);
-    C[3] = ROL64(C[3], i);
-
-        C[4] ^= D[(3*1+4)%5];
-    i = rhotates(4,3*1+4);
-    C[4] = ROL64(C[4], i);
-
-
-        T0 = !(C[(0+1)%5]) & ( C[(0+2)%5]);
-    T0 ^= C[0];
-    [R + 8*(5*((1) % 5) + ((0) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(1+1)%5]) & ( C[(1+2)%5]);
-    T0 ^= C[1];
-    [R + 8*(5*((1) % 5) + ((1) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(2+1)%5]) & ( C[(2+2)%5]);
-    T0 ^= C[2];
-    [R + 8*(5*((1) % 5) + ((2) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(3+1)%5]) & ( C[(3+2)%5]);
-    T0 ^= C[3];
-    [R + 8*(5*((1) % 5) + ((3) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(4+1)%5]) & ( C[(4+2)%5]);
-    T0 ^= C[4];
-    [R + 8*(5*((1) % 5) + ((4) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-
-        C[0] = [A + 8*(5*((0) % 5) + ((3*(1+1)+0) % 5)) - 100];
-        C[1] = [A + 8*(5*((1) % 5) + ((3*(1+1)+1) % 5)) - 100];
-        C[2] = [A + 8*(5*((2) % 5) + ((3*(1+1)+2) % 5)) - 100];
-        C[3] = [A + 8*(5*((3) % 5) + ((3*(1+1)+3) % 5)) - 100];
-        C[4] = [A + 8*(5*((4) % 5) + ((3*(1+1)+4) % 5)) - 100];
-
-
-    // Row 2
-    //r = 2;
-
-        C[0] ^= D[(3*2+0)%5];
-    i = rhotates(0,3*2+0);
-    C[0] = ROL64(C[0], i);
-
-        C[1] ^= D[(3*2+1)%5];
-    i = rhotates(1,3*2+1);
-    C[1] = ROL64(C[1], i);
-
-        C[2] ^= D[(3*2+2)%5];
-    i = rhotates(2,3*2+2);
-    C[2] = ROL64(C[2], i);
-
-        C[3] ^= D[(3*2+3)%5];
-    i = rhotates(3,3*2+3);
-    C[3] = ROL64(C[3], i);
-
-        C[4] ^= D[(3*2+4)%5];
-    i = rhotates(4,3*2+4);
-    C[4] = ROL64(C[4], i);
-
-
-        T0 = !(C[(0+1)%5]) & ( C[(0+2)%5]);
-    T0 ^= C[0];
-    [R + 8*(5*((2) % 5) + ((0) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(1+1)%5]) & ( C[(1+2)%5]);
-    T0 ^= C[1];
-    [R + 8*(5*((2) % 5) + ((1) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(2+1)%5]) & ( C[(2+2)%5]);
-    T0 ^= C[2];
-    [R + 8*(5*((2) % 5) + ((2) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(3+1)%5]) & ( C[(3+2)%5]);
-    T0 ^= C[3];
-    [R + 8*(5*((2) % 5) + ((3) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(4+1)%5]) & ( C[(4+2)%5]);
-    T0 ^= C[4];
-    [R + 8*(5*((2) % 5) + ((4) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-
-        C[0] = [A + 8*(5*((0) % 5) + ((3*(2+1)+0) % 5)) - 100];
-        C[1] = [A + 8*(5*((1) % 5) + ((3*(2+1)+1) % 5)) - 100];
-        C[2] = [A + 8*(5*((2) % 5) + ((3*(2+1)+2) % 5)) - 100];
-        C[3] = [A + 8*(5*((3) % 5) + ((3*(2+1)+3) % 5)) - 100];
-        C[4] = [A + 8*(5*((4) % 5) + ((3*(2+1)+4) % 5)) - 100];
-
-    // Row 3
-    //r = 3;
-
-        C[0] ^= D[(3*3+0)%5];
-    i = rhotates(0,3*3+0);
-    C[0] = ROL64(C[0], i);
-
-        C[1] ^= D[(3*3+1)%5];
-    i = rhotates(1,3*3+1);
-    C[1] = ROL64(C[1], i);
-
-        C[2] ^= D[(3*3+2)%5];
-    i = rhotates(2,3*3+2);
-    C[2] = ROL64(C[2], i);
-
-        C[3] ^= D[(3*3+3)%5];
-    i = rhotates(3,3*3+3);
-    C[3] = ROL64(C[3], i);
-
-        C[4] ^= D[(3*3+4)%5];
-    i = rhotates(4,3*3+4);
-    C[4] = ROL64(C[4], i);
-
-
-        T0 = !(C[(0+1)%5]) & ( C[(0+2)%5]);
-    T0 ^= C[0];
-    [R + 8*(5*((3) % 5) + ((0) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(1+1)%5]) & ( C[(1+2)%5]);
-    T0 ^= C[1];
-    [R + 8*(5*((3) % 5) + ((1) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(2+1)%5]) & ( C[(2+2)%5]);
-    T0 ^= C[2];
-    [R + 8*(5*((3) % 5) + ((2) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(3+1)%5]) & ( C[(3+2)%5]);
-    T0 ^= C[3];
-    [R + 8*(5*((3) % 5) + ((3) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(4+1)%5]) & ( C[(4+2)%5]);
-    T0 ^= C[4];
-    [R + 8*(5*((3) % 5) + ((4) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-
-        C[0] = [A + 8*(5*((0) % 5) + ((3*(3+1)+0) % 5)) - 100];
-        C[1] = [A + 8*(5*((1) % 5) + ((3*(3+1)+1) % 5)) - 100];
-        C[2] = [A + 8*(5*((2) % 5) + ((3*(3+1)+2) % 5)) - 100];
-        C[3] = [A + 8*(5*((3) % 5) + ((3*(3+1)+3) % 5)) - 100];
-        C[4] = [A + 8*(5*((4) % 5) + ((3*(3+1)+4) % 5)) - 100];
-
-    // Row 4
-    //r = 4;
-
-        C[0] ^= D[(3*4+0)%5];
-    i = rhotates(0,3*4+0);
-    C[0] = ROL64(C[0], i);
-
-        C[1] ^= D[(3*4+1)%5];
-    i = rhotates(1,3*4+1);
-    C[1] = ROL64(C[1], i);
-
-        C[2] ^= D[(3*4+2)%5];
-    i = rhotates(2,3*4+2);
-    C[2] = ROL64(C[2], i);
-
-        C[3] ^= D[(3*4+3)%5];
-    i = rhotates(3,3*4+3);
-    C[3] = ROL64(C[3], i);
-
-        C[4] ^= D[(3*4+4)%5];
-    i = rhotates(4,3*4+4);
-    C[4] = ROL64(C[4], i);
-
-
-        T0 = !(C[(0+1)%5]) & ( C[(0+2)%5]);
-    T0 ^= C[0];
-    [R + 8*(5*((4) % 5) + ((0) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(1+1)%5]) & ( C[(1+2)%5]);
-    T0 ^= C[1];
-    [R + 8*(5*((4) % 5) + ((1) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(2+1)%5]) & ( C[(2+2)%5]);
-    T0 ^= C[2];
-    [R + 8*(5*((4) % 5) + ((2) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(3+1)%5]) & ( C[(3+2)%5]);
-    T0 ^= C[3];
-    [R + 8*(5*((4) % 5) + ((3) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-        T0 = !(C[(4+1)%5]) & ( C[(4+2)%5]);
-    T0 ^= C[4];
-    [R + 8*(5*((4) % 5) + ((4) % 5)) - 100] = T0;    //C[j] ^ (~C[(j+1)%5] & C[(j+2)%5]) [^[iotas]]
-
-    A, R = swap(A, R);
-
-    C[0] = [A + 8*(5*((4) % 5) + ((0) % 5)) - 100];
-    C[1] = [A + 8*(5*((4) % 5) + ((1) % 5)) - 100];
-    C[2] = [A + 8*(5*((4) % 5) + ((2) % 5)) - 100];
-    C[3] = [A + 8*(5*((4) % 5) + ((3) % 5)) - 100];
-    C[4] = [A + 8*(5*((4) % 5) + ((4) % 5)) - 100];
-
+  stack u64[25] R;
+
+  
+
+  align while
+  {
+    A, R = round2x(A, R, iotas, 0);
+    R, A = round2x(R, A, iotas, 8);
+    iotas += 16;
     _, _, _, _, zf = #x86_TEST_8(iotas,255);
   } (!zf)
 
   iotas -= 192;
-  A-=100;
+
+  
 
   return A, iotas;
 }
@@ -459,11 +252,11 @@ fn keccak_f(
 
 
 fn keccak_1600_add_full_block(
-  reg u64 state,
+  stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
   inline int rate_in_bytes
-) -> reg u64, reg u64, reg u64
+) -> stack u64[25], reg u64, reg u64
 {
   inline int idx i;
   reg u64 t;
@@ -471,7 +264,7 @@ fn keccak_1600_add_full_block(
   for i = 0 to (rate_in_bytes / 8) 
   {
     t = [in + 8*i];
-    [state + 8*(i)] ^= t;
+    state[(int)i] ^= t;
   }
 
   in += rate_in_bytes;
@@ -484,12 +277,12 @@ fn keccak_1600_add_full_block(
 
 // obs: @pre: inlen < rate_in_bytes
 fn keccak_1600_add_final_block(
-  reg u64 state,
+  stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
   inline int suffix,
   inline int rate_in_bytes
-) -> reg u64
+) -> stack u64[25]
 {
   reg u64 i t inlen8;
   reg u8 c;
@@ -500,7 +293,7 @@ fn keccak_1600_add_final_block(
   while ( i < inlen8 )
   {
     t = [in + 8*i];
-    [state + 8*(i)] ^= t;
+    state[(int)i] ^= t;
     i += 1;
   }
   i <<= 3;
@@ -510,12 +303,12 @@ fn keccak_1600_add_final_block(
   while ( i < inlen )
   {
     c = (u8)[in + i];
-    (u8)[state + (i)] ^= c;
+    state[u8 (int)(i)] ^= c;
     i += 1;
   }
 
-  (u8)[state + (i)] ^= suffix;
-  (u8)[state + (rate_in_bytes-1)] ^= 0x80;
+  state[u8 (int)(i)] ^= suffix;
+  state[u8 (int)(rate_in_bytes-1)] ^= 0x80;
 
   return state;
 }
@@ -523,12 +316,12 @@ fn keccak_1600_add_final_block(
 
 
 fn keccak_1600_absorb(
-  reg u64 state,
+  stack u64[25] state,
   reg u64 iotas,
   reg u64 in inlen,
   inline int suffix,
   inline int rate_in_bytes
-) -> reg u64, reg u64
+) -> stack u64[25], reg u64
 {
   stack u64 s_in s_inlen;
 
@@ -553,7 +346,7 @@ fn keccak_1600_absorb(
 
 // obs: @pre: len <= rate_in_bytes
 fn keccak_1600_xtr_block(
-  reg u64 state,
+  stack u64[25] state,
   reg u64 out,
   reg u64 len
 ) -> reg u64
@@ -566,7 +359,7 @@ fn keccak_1600_xtr_block(
   i = 0;
   while ( i < len8 )
   {
-    t = [state + 8*(i)];
+    t = state[(int)i];
     [out + 8*i] = t;
     i += 1;
   }
@@ -576,7 +369,7 @@ fn keccak_1600_xtr_block(
 
   while ( i < len )
   {
-    c = (u8)[state + (i)];
+    c = state[u8 (int)(i)];
     (u8)[out + i] = c;
     i += 1;
   }
@@ -588,7 +381,7 @@ fn keccak_1600_xtr_block(
 
 
 fn keccak_1600_squeeze(
-  reg u64 state,
+  stack u64[25] state,
   reg u64 iotas,
   reg u64 out,
   inline int rate_in_bytes,
@@ -632,7 +425,7 @@ fn keccak_1600(
 )
 {
   stack u64 out_s;
-  reg u64 state;
+  stack u64[25] state;
 
   out_s = out;
   state = keccak_init(m);
