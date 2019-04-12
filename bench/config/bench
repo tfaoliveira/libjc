@@ -1,2 +1,4 @@
-crypto_hash shake256 jazz/ref2x
-crypto_hash shake256 gil/singlefile/
+crypto_hash sha3512 jazz/ref2x
+#crypto_hash shake128 jazz/ref2x
+#crypto_hash shake256 jazz/ref2x
+#crypto_hash shake256 gil/singlefile/

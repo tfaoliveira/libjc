@@ -2,11 +2,11 @@
 
 .PHONY: default clean
 
-default: shake256.japp shake256.s
+default: shake128.japp shake128.s
 	@true
 
 clean:
-	rm -f shake256.japp shake256.s
+	rm -f shake128.japp shake128.s
 
 %.s: %.japp
 	jasminc -lea -pasm $< > $@ || rm -f $@

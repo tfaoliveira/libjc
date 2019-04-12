@@ -1,0 +1,8 @@
+#define KECCAK_F_IMPL 2
+#define STATE_IN_STACK 0
+#include "../../keccak/ref2xg/keccak.jazz"
+
+export fn shake128_ref2x_jazz(reg u64 out in inlen iotas m)
+{
+  keccak_1600(out, in, inlen, iotas, m, 0x1F, 1344, 256, 168);
+}

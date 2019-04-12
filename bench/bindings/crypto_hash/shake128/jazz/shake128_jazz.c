@@ -2,7 +2,7 @@
 #include "impl.h"
 #include "api.h"
 
-extern void shake256_impl(
+extern void shake128_impl(
   unsigned char *out,
   const unsigned char *in,
   unsigned long long inlen
@@ -11,7 +11,7 @@ extern void shake256_impl(
 int crypto_hash(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
   unsigned char out__[CRYPTO_BYTES];
-  shake256_impl(out__, in, inlen);
+  shake128_impl(out__, in, inlen);
   memcpy(out, out__, CRYPTO_BYTES);
   return 0;
 }

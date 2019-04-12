@@ -1,0 +1,545 @@
+// TODO refactor iotas when global arrays are supported
+
+
+
+          
+  fn swap(reg u64 a b) -> reg u64, reg u64
+  { reg u64 t;
+    t = a; a = b; b = t; // XCHG
+    return a, b; }
+
+    
+
+
+fn spill_2(reg u64 a b) -> stack u64, stack u64
+{
+  stack u64 sa sb;
+  sa = a;
+  sb = b;
+  return sa, sb;
+}
+
+
+
+fn load_2(stack u64 sa sb) -> reg u64, reg u64
+{
+  reg u64 a b;
+  a = sa;
+  b = sb;
+  return a, b;
+}
+
+
+
+fn ANDN(reg u64 x, reg u64 y) -> reg u64
+{
+  reg u64 r;
+  _, _, _, _, _, r = #x86_ANDN(x, y);
+  return r;
+}
+
+
+
+fn ROL64(reg u64 x, inline int c) -> reg u64
+{
+  reg u64 y;
+  if (c == 0)
+  { y = x; }
+  else
+  { _, _, y = #x86_ROL_64(x, c); }
+  return y;
+}
+
+
+
+fn keccak_init(reg u64 m) -> reg u64
+{
+  reg u64 state;
+  reg u64 i t;
+
+  _, _, _, _, _, t = #set0();
+
+    state = m; //if state is in stack this is just ignored
+  
+  i = 0;
+  while (i < 50)
+  { [state + 8*(i)] = t;
+    i += 1;
+  }
+
+  return state;
+}
+
+
+
+fn index(inline int x, inline int y) -> inline int {
+  inline int r;
+  r = 5*(x % 5) + (y % 5);
+  return r;
+}
+
+
+
+fn keccak_rho_offsets(inline int i) -> inline int
+{
+  inline int r, x, y, z, t;
+  r = 0;
+  x = 1;
+  y = 0;
+  for t = 0 to 24
+  { if i == x + 5 * y
+    { r = ((t + 1) * (t + 2) / 2) % 64;
+    }
+    z = (2 * x + 3 * y) % 5;
+    x = y;
+    y = z;
+  }
+
+  return r;
+}
+
+
+
+fn rhotates(inline int x y) -> inline int
+{
+  inline int i r;
+  i = index(x, y);
+  r = keccak_rho_offsets(i);
+  return r;
+}
+
+
+
+fn keccak_f(
+  reg u64 A,
+  reg u64 iotas
+) -> reg u64, reg u64
+{
+  reg bool zf;
+  reg u64[5] C D;
+  reg u64[2] T;
+  reg u64 R;
+
+  A += 100;R = A + 200;
+
+  [A + 8*(5*((0) % 5) + ((1) % 5)) - 100] = #x86_NOT([A + 8*(5*((0) % 5) + ((1) % 5)) - 100]);
+  [A + 8*(5*((0) % 5) + ((2) % 5)) - 100] = #x86_NOT([A + 8*(5*((0) % 5) + ((2) % 5)) - 100]);
+  [A + 8*(5*((1) % 5) + ((3) % 5)) - 100] = #x86_NOT([A + 8*(5*((1) % 5) + ((3) % 5)) - 100]);
+  [A + 8*(5*((2) % 5) + ((2) % 5)) - 100] = #x86_NOT([A + 8*(5*((2) % 5) + ((2) % 5)) - 100]);
+  [A + 8*(5*((3) % 5) + ((2) % 5)) - 100] = #x86_NOT([A + 8*(5*((3) % 5) + ((2) % 5)) - 100]);
+  [A + 8*(5*((4) % 5) + ((0) % 5)) - 100] = #x86_NOT([A + 8*(5*((4) % 5) + ((0) % 5)) - 100]);
+
+	C[0] = [A + 8*(5*((4) % 5) + ((0) % 5)) - 100];
+	C[1] = [A + 8*(5*((4) % 5) + ((1) % 5)) - 100];
+	C[2] = [A + 8*(5*((4) % 5) + ((2) % 5)) - 100];
+	C[3] = [A + 8*(5*((4) % 5) + ((3) % 5)) - 100];
+	C[4] = [A + 8*(5*((4) % 5) + ((4) % 5)) - 100];
+
+  while
+  {
+	  D[0] = [A + 8*(5*((0) % 5) + ((0) % 5)) - 100];
+	  D[1] = [A + 8*(5*((1) % 5) + ((1) % 5)) - 100];
+	  D[2] = [A + 8*(5*((2) % 5) + ((2) % 5)) - 100];
+	  D[3] = [A + 8*(5*((3) % 5) + ((3) % 5)) - 100];
+	  C[2] ^= [A + 8*(5*((0) % 5) + ((2) % 5)) - 100];
+	  C[3] ^= [A + 8*(5*((0) % 5) + ((3) % 5)) - 100];
+	  C[0] ^= D[0];
+	  C[1] ^= [A + 8*(5*((0) % 5) + ((1) % 5)) - 100];
+	  C[2] ^= [A + 8*(5*((1) % 5) + ((2) % 5)) - 100];
+	  C[0] ^= [A + 8*(5*((1) % 5) + ((0) % 5)) - 100];
+	  D[4] = C[4];
+	  C[4] ^= [A + 8*(5*((0) % 5) + ((4) % 5)) - 100];
+	  C[2] ^= D[2];
+	  C[0] ^= [A + 8*(5*((2) % 5) + ((0) % 5)) - 100];
+	  C[3] ^= [A + 8*(5*((1) % 5) + ((3) % 5)) - 100];
+	  C[1] ^= D[1];
+	  C[4] ^= [A + 8*(5*((1) % 5) + ((4) % 5)) - 100];
+	  C[2] ^= [A + 8*(5*((3) % 5) + ((2) % 5)) - 100];
+	  C[0] ^= [A + 8*(5*((3) % 5) + ((0) % 5)) - 100];
+	  C[3] ^= [A + 8*(5*((2) % 5) + ((3) % 5)) - 100];
+	  C[1] ^= [A + 8*(5*((2) % 5) + ((1) % 5)) - 100];
+	  C[4] ^= [A + 8*(5*((2) % 5) + ((4) % 5)) - 100];
+	  T[0] = C[2];
+	  C[2] = ROL64(C[2], 1);
+	  C[2] ^= C[0];
+	  C[3] ^= D[3];
+	  C[0] = ROL64(C[0], 1);
+	  C[0] ^= C[3];
+	  C[1] ^= [A + 8*(5*((3) % 5) + ((1) % 5)) - 100];
+	  C[3] = ROL64(C[3], 1);
+	  C[3] ^= C[1];
+	  C[4] ^= [A + 8*(5*((3) % 5) + ((4) % 5)) - 100];
+	  C[1] = ROL64(C[1], 1);
+	  C[1] ^= C[4];
+	  C[4] = ROL64(C[4], 1);
+	  C[4] ^= T[0];
+	  D[1] ^= C[2];
+	  D[2] ^= C[3];
+	  D[1] = ROL64(D[1], 44);
+	  D[3] ^= C[4];
+	  D[4] ^= C[0];
+	  D[2] = ROL64(D[2], 43);
+	  D[0] ^= C[1];
+	  T[0] = D[1];
+	  D[3] = ROL64(D[3], 21);
+	  D[1] |= D[2];
+	  D[1] ^= D[0];
+	  D[4] = ROL64(D[4], 14);
+	  D[1] ^= [iotas + 0];
+	  iotas += 8;
+	  T[1] = D[4];
+	  D[4] &= D[3];
+	  [R + 8*(5*((0) % 5) + ((0) % 5)) - 100] = D[1];
+	  D[4] ^= D[2];
+	  D[2] = !D[2];
+	  [R + 8*(5*((0) % 5) + ((2) % 5)) - 100] = D[4];
+	  D[2] |= D[3];
+	  D[4] = [A + 8*(5*((4) % 5) + ((2) % 5)) - 100];
+	  D[2] ^= T[0];
+	  [R + 8*(5*((0) % 5) + ((1) % 5)) - 100] = D[2];
+	  T[0] &= D[0];
+	  D[1] = [A + 8*(5*((1) % 5) + ((4) % 5)) - 100];
+	  T[0] ^= T[1];
+	  D[2] = [A + 8*(5*((2) % 5) + ((0) % 5)) - 100];
+	  [R + 8*(5*((0) % 5) + ((4) % 5)) - 100] = T[0];
+	  T[1] |= D[0];
+	  D[0] = [A + 8*(5*((0) % 5) + ((3) % 5)) - 100];
+	  T[1] ^= D[3];
+	  D[3] = [A + 8*(5*((3) % 5) + ((1) % 5)) - 100];
+	  [R + 8*(5*((0) % 5) + ((3) % 5)) - 100] = T[1];
+	  D[0] ^= C[4];
+	  D[4] ^= C[3];
+	  D[0] = ROL64(D[0], 28);
+	  D[3] ^= C[2];
+	  D[1] ^= C[0];
+	  D[4] = ROL64(D[4], 61);
+	  D[3] = ROL64(D[3], 45);
+	  D[2] ^= C[1];
+	  D[1] = ROL64(D[1], 20);
+	  T[0] = D[0];
+	  D[0] |= D[4];
+	  D[2] = ROL64(D[2], 3);
+	  D[0] ^= D[3];
+	  [R + 8*(5*((1) % 5) + ((3) % 5)) - 100] = D[0];
+	  T[1] = D[1];
+	  D[1] &= T[0];
+	  D[0] = [A + 8*(5*((0) % 5) + ((1) % 5)) - 100];
+	  D[1] ^= D[4];
+	  D[4] = !D[4];
+	  [R + 8*(5*((1) % 5) + ((4) % 5)) - 100] = D[1];
+	  D[4] |= D[3];
+	  D[1] = [A + 8*(5*((1) % 5) + ((2) % 5)) - 100];
+	  D[4] ^= D[2];
+	  [R + 8*(5*((1) % 5) + ((2) % 5)) - 100] = D[4];
+	  D[3] &= D[2];
+	  D[4] = [A + 8*(5*((4) % 5) + ((0) % 5)) - 100];
+	  D[3] ^= T[1];
+	  [R + 8*(5*((1) % 5) + ((1) % 5)) - 100] = D[3];
+	  T[1] |= D[2];
+	  D[2] = [A + 8*(5*((2) % 5) + ((3) % 5)) - 100];
+	  T[1] ^= T[0];
+	  D[3] = [A + 8*(5*((3) % 5) + ((4) % 5)) - 100];
+	  [R + 8*(5*((1) % 5) + ((0) % 5)) - 100] = T[1];
+	  D[2] ^= C[4];
+	  D[3] ^= C[0];
+	  D[2] = ROL64(D[2], 25);
+	  D[1] ^= C[3];
+	  D[3] = ROL64(D[3], 8);
+	  D[4] ^= C[1];
+	  D[1] = ROL64(D[1], 6);
+	  D[0] ^= C[2];
+	  D[4] = ROL64(D[4], 18);
+	  T[0] = D[2];
+	  D[2] &= D[3];
+	  D[0] = ROL64(D[0], 1);
+	  D[3] = !D[3];
+	  D[2] ^= D[1];
+	  [R + 8*(5*((2) % 5) + ((1) % 5)) - 100] = D[2];
+	  T[1] = D[4];
+	  D[4] &= D[3];
+	  D[2] = [A + 8*(5*((2) % 5) + ((1) % 5)) - 100];
+	  D[4] ^= T[0];
+	  [R + 8*(5*((2) % 5) + ((2) % 5)) - 100] = D[4];
+	  T[0] |= D[1];
+	  D[4] = [A + 8*(5*((4) % 5) + ((3) % 5)) - 100];
+	  T[0] ^= D[0];
+	  [R + 8*(5*((2) % 5) + ((0) % 5)) - 100] = T[0];
+	  D[1] &= D[0];
+	  D[1] ^= T[1];
+	  [R + 8*(5*((2) % 5) + ((4) % 5)) - 100] = D[1];
+	  T[1] |= D[0];
+	  D[1] = [A + 8*(5*((1) % 5) + ((0) % 5)) - 100];
+	  T[1] ^= D[3];
+	  D[3] = [A + 8*(5*((3) % 5) + ((2) % 5)) - 100];
+	  [R + 8*(5*((2) % 5) + ((3) % 5)) - 100] = T[1];
+	  D[0] = [A + 8*(5*((0) % 5) + ((4) % 5)) - 100];
+	  D[2] ^= C[2];
+	  D[3] ^= C[3];
+	  D[2] = ROL64(D[2], 10);
+	  D[1] ^= C[1];
+	  D[3] = ROL64(D[3], 15);
+	  D[4] ^= C[4];
+	  D[1] = ROL64(D[1], 36);
+	  D[0] ^= C[0];
+	  D[4] = ROL64(D[4], 56);
+	  T[0] = D[2];
+	  D[2] |= D[3];
+	  D[0] = ROL64(D[0], 27);
+	  D[3] = !D[3];
+	  D[2] ^= D[1];
+	  [R + 8*(5*((3) % 5) + ((1) % 5)) - 100] = D[2];
+	  T[1] = D[4];
+	  D[4] |= D[3];
+	  D[4] ^= T[0];
+	  [R + 8*(5*((3) % 5) + ((2) % 5)) - 100] = D[4];
+	  T[0] &= D[1];
+	  T[0] ^= D[0];
+	  [R + 8*(5*((3) % 5) + ((0) % 5)) - 100] = T[0];
+	  D[1] |= D[0];
+	  D[1] ^= T[1];
+	  [R + 8*(5*((3) % 5) + ((4) % 5)) - 100] = D[1];
+	  D[0] &= T[1];
+	  D[0] ^= D[3];
+	  [R + 8*(5*((3) % 5) + ((3) % 5)) - 100] = D[0];
+	  C[3] ^= [A + 8*(5*((0) % 5) + ((2) % 5)) - 100];
+	  C[4] ^= [A + 8*(5*((1) % 5) + ((3) % 5)) - 100];
+	  C[3] = ROL64(C[3], 62);
+	  C[2] ^= [A + 8*(5*((4) % 5) + ((1) % 5)) - 100];
+	  C[4] = ROL64(C[4], 55);
+	  C[0] ^= [A + 8*(5*((2) % 5) + ((4) % 5)) - 100];
+	  C[2] = ROL64(C[2], 2);
+	  C[1] ^= [A + 8*(5*((3) % 5) + ((0) % 5)) - 100];
+	  A, R = swap(A, R);
+	  C[0] = ROL64(C[0], 39);
+	  C[1] = ROL64(C[1], 41);
+	  T[0] = C[3];
+	  C[3] &= C[4];
+	  C[4] = !C[4];
+	  C[3] ^= C[2];
+	  [A + 8*(5*((4) % 5) + ((4) % 5)) - 100] = C[3];
+	  T[1] = C[0];
+	  C[0] &= C[4];
+	  C[0] ^= T[0];
+	  [A + 8*(5*((4) % 5) + ((0) % 5)) - 100] = C[0];
+	  T[0] |= C[2];
+	  T[0] ^= C[1];
+	  [A + 8*(5*((4) % 5) + ((3) % 5)) - 100] = T[0];
+	  C[2] &= C[1];
+	  C[2] ^= T[1];
+	  [A + 8*(5*((4) % 5) + ((2) % 5)) - 100] = C[2];
+	  C[1] |= T[1];
+	  C[1] ^= C[4];
+	  [A + 8*(5*((4) % 5) + ((1) % 5)) - 100] = C[1];
+	  C[4] = C[3];
+	  C[3] = T[0];
+
+    _, _, _, _, zf = #x86_TEST_8(iotas,255);
+  } (!zf)
+
+  [A + 8*(5*((0) % 5) + ((1) % 5)) - 100] = #x86_NOT([A + 8*(5*((0) % 5) + ((1) % 5)) - 100]);
+  [A + 8*(5*((0) % 5) + ((2) % 5)) - 100] = #x86_NOT([A + 8*(5*((0) % 5) + ((2) % 5)) - 100]);
+  [A + 8*(5*((1) % 5) + ((3) % 5)) - 100] = #x86_NOT([A + 8*(5*((1) % 5) + ((3) % 5)) - 100]);
+  [A + 8*(5*((2) % 5) + ((2) % 5)) - 100] = #x86_NOT([A + 8*(5*((2) % 5) + ((2) % 5)) - 100]);
+  [A + 8*(5*((3) % 5) + ((2) % 5)) - 100] = #x86_NOT([A + 8*(5*((3) % 5) + ((2) % 5)) - 100]);
+  [A + 8*(5*((4) % 5) + ((0) % 5)) - 100] = #x86_NOT([A + 8*(5*((4) % 5) + ((0) % 5)) - 100]);
+
+	iotas -= 192;
+
+  A-=100;
+
+  return A, iotas;
+}
+
+
+
+fn keccak_1600_add_full_block(
+  reg u64 state,
+  reg u64 in,
+  reg u64 inlen,
+  inline int rate_in_bytes
+) -> reg u64, reg u64, reg u64
+{
+  inline int idx i;
+  reg u64 t;
+
+  for i = 0 to (rate_in_bytes / 8) 
+  {
+    t = [in + 8*i];
+    [state + 8*(i)] ^= t;
+  }
+
+  in += rate_in_bytes;
+  inlen -= rate_in_bytes;
+
+  return state, in, inlen;
+}
+
+
+
+// obs: @pre: inlen < rate_in_bytes
+fn keccak_1600_add_final_block(
+  reg u64 state,
+  reg u64 in,
+  reg u64 inlen,
+  inline int suffix,
+  inline int rate_in_bytes
+) -> reg u64
+{
+  reg u64 i t inlen8;
+  reg u8 c;
+
+  inlen8 = inlen;
+  inlen8 >>= 3;
+  i = 0;
+  while ( i < inlen8 )
+  {
+    t = [in + 8*i];
+    [state + 8*(i)] ^= t;
+    i += 1;
+  }
+  i <<= 3;
+
+  // inlen4 ?
+
+  while ( i < inlen )
+  {
+    c = (u8)[in + i];
+    (u8)[state + (i)] ^= c;
+    i += 1;
+  }
+
+  (u8)[state + (i)] ^= suffix;
+  (u8)[state + (rate_in_bytes-1)] ^= 0x80;
+
+  return state;
+}
+
+
+
+fn keccak_1600_absorb(
+  reg u64 state,
+  reg u64 iotas,
+  reg u64 in inlen,
+  inline int suffix,
+  inline int rate_in_bytes
+) -> reg u64, reg u64
+{
+  stack u64 s_in s_inlen;
+
+  // intermediate blocks
+  while ( inlen >= rate_in_bytes )
+  {
+    state, in, inlen = keccak_1600_add_full_block(state, in, inlen, rate_in_bytes);
+    s_in, s_inlen = spill_2(in, inlen);
+
+    state, iotas = keccak_f(state, iotas);
+    in, inlen = load_2(s_in, s_inlen);
+  }
+
+  // final block
+  state = keccak_1600_add_final_block(state, in, inlen, suffix, rate_in_bytes);
+  state, iotas = keccak_f(state, iotas);
+
+  return state, iotas;
+}
+
+
+
+// obs: @pre: len <= rate_in_bytes
+fn keccak_1600_xtr_block(
+  reg u64 state,
+  reg u64 out,
+  reg u64 len
+) -> reg u64
+{
+  reg u64 i t len8;
+  reg u8 c;
+
+  len8 = len;
+  len8 >>= 3;
+  i = 0;
+  while ( i < len8 )
+  {
+    t = [state + 8*(i)];
+    [out + 8*i] = t;
+    i += 1;
+  }
+  i <<= 3;
+
+  // inlen4 ?
+
+  while ( i < len )
+  {
+    c = (u8)[state + (i)];
+    (u8)[out + i] = c;
+    i += 1;
+  }
+
+  out += len;
+  return out;
+}
+
+
+
+fn keccak_1600_squeeze(
+  reg u64 state,
+  reg u64 iotas,
+  reg u64 out,
+  inline int rate_in_bytes,
+  inline int i_hash_bytes
+)
+{
+  stack u64 s_out s_hash_bytes;
+  reg u64 hash_bytes;
+
+  s_hash_bytes = i_hash_bytes;
+
+  // intermediate blocks
+  while ( s_hash_bytes >= rate_in_bytes )
+  {    
+    out = keccak_1600_xtr_block(state, out, rate_in_bytes);
+    s_out = out;
+
+    state, iotas = keccak_f(state, iotas);
+
+    s_hash_bytes -= rate_in_bytes;
+    out = s_out;
+  }
+
+  // final block
+  hash_bytes = s_hash_bytes;
+  out = keccak_1600_xtr_block(state, out, hash_bytes);
+}
+
+
+
+fn keccak_1600(
+  reg u64 out, // output pointer with at least hash_bytes available
+  reg u64 in, // input pointer with inlen bytes
+  reg u64 inlen, // input length in bytes
+  reg u64 iotas, // contains iotas, aligned at 256
+  reg u64 m, // external memory for 2 states
+  inline int suffix,
+  inline int rate,
+  inline int capacity,
+  inline int hash_bytes
+)
+{
+  stack u64 out_s;
+  reg u64 state;
+
+  out_s = out;
+  state = keccak_init(m);
+
+  // absorb
+  state, iotas = keccak_1600_absorb(state, iotas, in, inlen, suffix, (rate/8));
+
+  // squeeze
+  out = out_s;
+  keccak_1600_squeeze(state, iotas, out, (rate/8), hash_bytes);
+}
+
+export fn sha3512_ref2x_jazz(reg u64 out in inlen iotas m)
+{
+  keccak_1600(out, in, inlen, iotas, m, 0x06, 576, 1024, 64);
+}

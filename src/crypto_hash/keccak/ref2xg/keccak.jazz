@@ -1,20 +1,54 @@
 // TODO refactor iotas when global arrays are supported
 
+#ifndef KECCAK_F_IMPL
+  // 0 includes "keccak_f.jazz"
+  // 1 includes "keccak_f-short.jazz"
+  // 2 includes "keccak_f-openssl.jazz"
+  #define KECCAK_F_IMPL 2
+#endif
 
+#ifndef STATE_IN_STACK
+  // 0 uses external memory for the stack space
+  // 1 uses stack u64[] array
+  #define STATE_IN_STACK 0
+#endif
 
-        
+#if !STATE_IN_STACK
+  #define _state_t reg u64
+  #define OFFSET 100
+  #define S(base,x,y) [base + 8*(5*((x) % 5) + ((y) % 5)) - OFFSET]
+  #define B(base,x) [base + 8*(x)]
+  #define B8(base,x) (u8)[base + (x)]
+
+  fn swap(_state_t a b) -> _state_t, _state_t
+  { _state_t t;
+    t = a; a = b; b = t; // XCHG
+    return a, b; }
+
+  #define setup(a,b) a += OFFSET;b = a + 200;
+  #define restore(a,b) a-=OFFSET;
+
+#else
+  #define _state_t stack u64[25]
+  #define S(base,x,y) base[(5*((x) % 5) + ((y) % 5))]
+  #define B(base,x) base[(int)x]
+  #define B8(base,x) base[u8 (int)(x)]
+
   // TODO: README
   // atm I think this is the best way of simulating this particular stack swap
   // we only need the contents of b to be put in a
   // if we could swap directly the stack pointers would be cool :-)
   // in the case that is unfeasible we could try to unroll the main loop 2x
-  fn swap(stack u64[25] a b) -> stack u64[25], stack u64[25]
+  fn swap(_state_t a b) -> _state_t, _state_t
   { inline int i; reg u64 t;
     for i=0 to 25
     { t=b[i]; a[i]=t; }    
     return a, b;}
 
-    
+  #define setup(a,b)
+  #define restore(a,b)
+
+#endif
 
 
 fn spill_2(reg u64 a b) -> stack u64, stack u64
@@ -58,17 +92,20 @@ fn ROL64(reg u64 x, inline int c) -> reg u64
 
 
 
-fn keccak_init(reg u64 m) -> stack u64[25]
+fn keccak_init(reg u64 m) -> _state_t
 {
-  stack u64[25] state;
+  _state_t state;
   reg u64 i t;
 
   _, _, _, _, _, t = #set0();
 
-  
+  #if !STATE_IN_STACK
+  state = m; //if state is in stack this is just ignored
+  #endif
+
   i = 0;
   while (i < 50)
-  { state[(int)i] = t;
+  { B(state,i) = t;
     i += 1;
   }
 
@@ -115,141 +152,22 @@ fn rhotates(inline int x y) -> inline int
 
 
 
-fn theta_sum(stack u64[25] A) -> reg u64[5]
-{
-  inline int idx i j;
-  reg u64[5] C;
-  reg u64 t;
-
-  for i = 0 to 5
-  { C[i] = A[(5*(( 0) % 5) + (( i) % 5))];
-    for j = 1 to 5
-    { C[i] ^= A[(5*(( j) % 5) + (( i) % 5))];
-    }
-  }
-
-  return C;
-}
-
-
-
-fn theta_rol(reg u64[5] C) -> reg u64[5]
-{
-  inline int i;
-  reg u64[5] D;
-  reg u64 t r;
-
-  for i = 0 to 5
-  {
-    r = ROL64(C[(i+1)%5], 1);
-    D[i] = r;
-    D[i] ^= C[(i+4)%5];
-  }
-
-  return D;
-}
-
-
-
-fn rol_sum(
-  reg u64[5] D,
-  stack u64[25] A,
-  inline int offset
-) -> reg u64[5]
-{
-  inline int idx j j1 k;
-  reg u64[5] C;
-  reg u64 t;
-
-  for j = 0 to 5
-  {
-    j1 = (j+offset) % 5;
-    k = rhotates(j, j1);
-    t = A[(5*((j) % 5) + ((j1) % 5))];
-    t ^= D[j1];
-    t = ROL64(t, k);
-    C[j] = t;
-  }
-
-  return C;
-}
-
-
-
-fn set_row(
-  stack u64[25] R,
-  inline int row,
-  reg u64[5] C,
-  stack u64 iota
-) -> stack u64[25]
-{
-  inline int idx j j1 j2;
-  reg u64 t;
-
-  for j= 0 to 5
-  {
-    j1 = (j+1) % 5;
-    j2 = (j+2) % 5;
-    t = ANDN( C[j1], C[j2] );
-    if row==0 && j==0 { t ^= iota; }
-    t ^= C[j];
-    R[(5*(( row) % 5) + (( j) % 5))] = t;
-  }
-
-  return R;
-}
-
-
-
-fn keccak_f(
-  stack u64[25] A,
-  reg u64 iotas
-) -> stack u64[25], reg u64
-{
-  reg bool zf;
-  reg u64[5] C D;
-  stack u64 iota;
-  stack u64[25] R;
-
-  
-
-  while
-  {
-
-    iota = [iotas + 0];
-    C = theta_sum(A);
-    D = theta_rol(C);
-    C = rol_sum(D, A, 0);
-    R = set_row(R, 0, C, iota);
-    C = rol_sum(D, A, 3);
-    R = set_row(R, 1, C, iota);
-    C = rol_sum(D, A, 1);
-    R = set_row(R, 2, C, iota);
-    C = rol_sum(D, A, 4);
-    R = set_row(R, 3, C, iota);
-    C = rol_sum(D, A, 2);
-    R = set_row(R, 4, C, iota);
-    A, R = swap(A, R);
-
-    iotas += 8;
-    _, _, _, _, zf = #x86_TEST_8(iotas,255);
-  } (!zf)
-
-  iotas -= 192;
-
-  
-
-  return A, iotas;
-}
+#if KECCAK_F_IMPL==0
+#include "keccak_f.jazz"
+#elif KECCAK_F_IMPL==1
+#include "keccak_f-short.jazz"
+#else
+#include "keccak_f-openssl.jazz"
+#endif
 
 
 
 fn keccak_1600_add_full_block(
-  stack u64[25] state,
+  _state_t state,
   reg u64 in,
   reg u64 inlen,
   inline int rate_in_bytes
-) -> stack u64[25], reg u64, reg u64
+) -> _state_t, reg u64, reg u64
 {
   inline int idx i;
   reg u64 t;
@@ -257,7 +175,7 @@ fn keccak_1600_add_full_block(
   for i = 0 to (rate_in_bytes / 8) 
   {
     t = [in + 8*i];
-    state[(int)i] ^= t;
+    B(state,i) ^= t;
   }
 
   in += rate_in_bytes;
@@ -270,12 +188,12 @@ fn keccak_1600_add_full_block(
 
 // obs: @pre: inlen < rate_in_bytes
 fn keccak_1600_add_final_block(
-  stack u64[25] state,
+  _state_t state,
   reg u64 in,
   reg u64 inlen,
   inline int suffix,
   inline int rate_in_bytes
-) -> stack u64[25]
+) -> _state_t
 {
   reg u64 i t inlen8;
   reg u8 c;
@@ -286,7 +204,7 @@ fn keccak_1600_add_final_block(
   while ( i < inlen8 )
   {
     t = [in + 8*i];
-    state[(int)i] ^= t;
+    B(state,i) ^= t;
     i += 1;
   }
   i <<= 3;
@@ -296,12 +214,12 @@ fn keccak_1600_add_final_block(
   while ( i < inlen )
   {
     c = (u8)[in + i];
-    state[u8 (int)(i)] ^= c;
+    B8(state,i) ^= c;
     i += 1;
   }
 
-  state[u8 (int)(i)] ^= suffix;
-  state[u8 (int)(rate_in_bytes-1)] ^= 0x80;
+  B8(state,i) ^= suffix;
+  B8(state,rate_in_bytes-1) ^= 0x80;
 
   return state;
 }
@@ -309,12 +227,12 @@ fn keccak_1600_add_final_block(
 
 
 fn keccak_1600_absorb(
-  stack u64[25] state,
+  _state_t state,
   reg u64 iotas,
   reg u64 in inlen,
   inline int suffix,
   inline int rate_in_bytes
-) -> stack u64[25], reg u64
+) -> _state_t, reg u64
 {
   stack u64 s_in s_inlen;
 
@@ -339,7 +257,7 @@ fn keccak_1600_absorb(
 
 // obs: @pre: len <= rate_in_bytes
 fn keccak_1600_xtr_block(
-  stack u64[25] state,
+  _state_t state,
   reg u64 out,
   reg u64 len
 ) -> reg u64
@@ -352,7 +270,7 @@ fn keccak_1600_xtr_block(
   i = 0;
   while ( i < len8 )
   {
-    t = state[(int)i];
+    t = B(state,i);
     [out + 8*i] = t;
     i += 1;
   }
@@ -362,7 +280,7 @@ fn keccak_1600_xtr_block(
 
   while ( i < len )
   {
-    c = state[u8 (int)(i)];
+    c = B8(state,i);
     (u8)[out + i] = c;
     i += 1;
   }
@@ -374,7 +292,7 @@ fn keccak_1600_xtr_block(
 
 
 fn keccak_1600_squeeze(
-  stack u64[25] state,
+  _state_t state,
   reg u64 iotas,
   reg u64 out,
   inline int rate_in_bytes,
@@ -418,7 +336,7 @@ fn keccak_1600(
 )
 {
   stack u64 out_s;
-  stack u64[25] state;
+  _state_t state;
 
   out_s = out;
   state = keccak_init(m);
@@ -429,9 +347,4 @@ fn keccak_1600(
   // squeeze
   out = out_s;
   keccak_1600_squeeze(state, iotas, out, (rate/8), hash_bytes);
-}
-
-export fn shake256_ref2x_jazz(reg u64 out in inlen iotas m)
-{
-  keccak_1600(out, in, inlen, iotas, m, 0x1F, 1088, 512, 136);
 }
