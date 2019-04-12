@@ -96,7 +96,7 @@ fn keccak_f(
 
   setup(A,R)
 
-  while
+  align while
   {
 
     iota = [iotas + 0];

@@ -31,12 +31,6 @@ fn load_2(stack u64 sa sb) -> reg u64, reg u64
 
 
 
-fn ANDN(reg u64 x, reg u64 y) -> reg u64
-{
-  reg u64 r;
-  _, _, _, _, _, r = #x86_ANDN(x, y);
-  return r;
-}
 
 
 
@@ -107,7 +101,6 @@ fn rhotates(inline int x y) -> inline int
   r = keccak_rho_offsets(i);
   return r;
 }
-
 
 
 

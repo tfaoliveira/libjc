@@ -41,7 +41,7 @@ fn keccak_f(
   C[4] = S(A,4,4);
 
   // round loop
-  while {
+  align while {
     // obs: C[j] == S(A,4,j)
     D[0] = S(A,0,0);
     D[1] = S(A,1,1);
