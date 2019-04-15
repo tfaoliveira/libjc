@@ -9,7 +9,9 @@ fi
 
 cat config/$bench | egrep -v "^$|^#" | while read implementation
 do
- (cd supercop-$version && (./do-part $implementation || true))
- implementationid=`echo "$implementation" | sed -e 's/\//_/g' -e 's/\ /_/g'`.data
+ implementation_expand=`eval echo -n $implementation`
+ implementation_cut=`echo -n $implementation | cut -d' ' -f1-3`
+ (cd supercop-$version && (./do-part $implementation_expand || true))
+ implementationid=`echo "$implementation_cut" | sed -e 's/\//_/g' -e 's/\ /_/g'`.data
  find supercop-$version/bench/ -name data -exec cp {} data/$implementationid \;
 done

@@ -1,8 +1,2 @@
-#crypto_hash shake256 jazz/avx2
-
-#crypto_hash shake256 openssl
 crypto_hash shake256 jazz/ref2x
-
-#crypto_hash sha3512 jazz/ref2x
-#crypto_hash shake128 jazz/ref2x
-#crypto_hash shake256 gil/singlefile/
+crypto_hash shake256 jazz/avx2

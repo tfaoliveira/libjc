@@ -58,7 +58,6 @@ Lshake256_ref2x_jazz$18:
 	leaq	-136(%rdx), %rdx
 	movq	%rax, 208(%rsp)
 	movq	%rdx, 200(%rsp)
-	.p2align	5
 Lshake256_ref2x_jazz$19:
 	movq	(%rcx), %rax
 	movq	%rax, 416(%rsp)
@@ -477,7 +476,6 @@ Lshake256_ref2x_jazz$13:
 	jb  	Lshake256_ref2x_jazz$14
 	xorb	$31, (%rsp,%rdi)
 	xorb	$-128, 135(%rsp)
-	.p2align	5
 Lshake256_ref2x_jazz$12:
 	movq	(%rcx), %rax
 	movq	%rax, 416(%rsp)
@@ -896,7 +894,6 @@ Lshake256_ref2x_jazz$8:
 	jb  	Lshake256_ref2x_jazz$9
 	leaq	(%rcx,%rdx), %rcx
 	movq	%rcx, 424(%rsp)
-	.p2align	5
 Lshake256_ref2x_jazz$7:
 	movq	(%rax), %rcx
 	movq	%rcx, 416(%rsp)

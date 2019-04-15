@@ -12,7 +12,23 @@ sfocus=""
 if [ "$#" -eq 3 ]; then
   sfocus="/$3";
 fi
+
+libpath=""
+liblink=""
+if [ "$#" -eq 5 ]; then
+  sfocus="/$3";
+  libpath="$4";
+  liblink="$5";
+fi
+
+echo $focus
+echo $pfocus
+echo $opfocus
+echo $sfocus
+echo $libpath
+echo $liblink
 # end patch
+
 
 
 version=`cat version`
@@ -531,7 +547,7 @@ do
 	      -DSUPERCOP -DLOOPS=3 \
 	      -I. -I"$include" -I"$include/$abi" \
 	      -o measure measure.$language measure-anything.$language \
-	      "$op.a" $measurelibs >../errors 2>&1 || ok=0
+	      "$op.a" $libpath $liblink $measurelibs >../errors 2>&1 || ok=0
 	    cat ../errors \
 	    | while read err
 	    do

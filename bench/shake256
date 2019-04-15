@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# remove previous benchmarks files related to poly1305
+ls data/crypto_hash_shake256_* | xargs rm
+
+# copy implementations and bindings into supercop-*
+./sync
+./sync openssl
+./sync libsodium
+./sync hacl_star
+./sync vale
+
+prev_ld_library_path=`echo -n $LD_LIBRARY_PATH`
+
+## run benchmarks with openssl compiled with default keccak
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/third_party_shared_libs/openssl/lib/
+sudo ldconfig
+./bench shake256
+mv data/crypto_hash_shake256_openssl.data data/crypto_hash_shake256_openssl_ref.data
+
+## run with keccak avx2
+export LD_LIBRARY_PATH=$prev_ld_library_path:`pwd`/third_party_shared_libs/openssl-keccak-avx2/lib/
+sudo ldconfig
+echo $LD_LIBRARY_PATH
+./bench shake256-openssl-keccak-avx2
+mv data/crypto_hash_shake256_openssl.data data/crypto_hash_shake256_openssl_avx2.data
+
+./plot shake256 cycles 32 16384 ""
+
+exit
+
