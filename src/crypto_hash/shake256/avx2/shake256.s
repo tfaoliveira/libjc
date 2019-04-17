@@ -6,7 +6,12 @@ _shake256_avx2_jazz:
 shake256_avx2_jazz:
 	pushq	%rbp
 	pushq	%rbx
+#
+	pushq	%r15
+	movq	%rsp,	%r15
 	subq	$224, %rsp
+	andq	$-32,	%rsp
+#
 	vpbroadcastq	g_zero(%rip), %ymm1
 	vmovdqu	%ymm1, %ymm2
 	vmovdqu	%ymm1, %ymm3
@@ -539,7 +544,11 @@ Lshake256_avx2_jazz$2:
 Lshake256_avx2_jazz$1:
 	cmpq	%rdx, %rsi
 	jb  	Lshake256_avx2_jazz$2
-	addq	$224, %rsp
+#
+	movq	%r15,	%rsp
+	popq	%r15
+#
+	#addq	$224, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret 
