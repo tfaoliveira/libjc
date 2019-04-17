@@ -1,3 +1,19 @@
+crypto_hash sha3224 jazz/ref2x
+crypto_hash sha3224 jazz/avx2
+crypto_hash sha3224 openssl -L`pwd`/third_party_shared_libs/openssl/lib/ -l:libcrypto.so.1.1
+
+crypto_hash sha3256 jazz/ref2x
+crypto_hash sha3256 jazz/avx2
+crypto_hash sha3256 openssl -L`pwd`/third_party_shared_libs/openssl/lib/ -l:libcrypto.so.1.1
+
+crypto_hash sha3384 jazz/ref2x
+crypto_hash sha3384 jazz/avx2
+crypto_hash sha3384 openssl -L`pwd`/third_party_shared_libs/openssl/lib/ -l:libcrypto.so.1.1
+
+crypto_hash sha3512 jazz/ref2x
+crypto_hash sha3512 jazz/avx2
+crypto_hash sha3512 openssl -L`pwd`/third_party_shared_libs/openssl/lib/ -l:libcrypto.so.1.1
+
 crypto_hash shake128 jazz/ref2x
 crypto_hash shake128 jazz/avx2
 crypto_hash shake128 openssl -L`pwd`/third_party_shared_libs/openssl/lib/ -l:libcrypto.so.1.1

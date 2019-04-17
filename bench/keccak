@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # remove previous benchmarks files related to keccak
+ls data/crypto_hash_sha3*  | xargs rm
 ls data/crypto_hash_shake* | xargs rm
 
 # copy implementations and bindings into supercop-*
@@ -12,17 +13,29 @@ prev_ld_library_path=`echo -n $LD_LIBRARY_PATH`
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/third_party_shared_libs/openssl/lib/
 sudo ldconfig
 ./bench keccak
-mv data/crypto_hash_shake256_openssl.data data/crypto_hash_shake256_openssl_ref.data
+mv data/crypto_hash_sha3224_openssl.data  data/crypto_hash_sha3224_openssl_ref.data # this copy paste is getting boring
+mv data/crypto_hash_sha3256_openssl.data  data/crypto_hash_sha3256_openssl_ref.data # this copy paste is getting boring
+mv data/crypto_hash_sha3384_openssl.data  data/crypto_hash_sha3384_openssl_ref.data # this copy paste is getting boring
+mv data/crypto_hash_sha3512_openssl.data  data/crypto_hash_sha3512_openssl_ref.data
 mv data/crypto_hash_shake128_openssl.data data/crypto_hash_shake128_openssl_ref.data
+mv data/crypto_hash_shake256_openssl.data data/crypto_hash_shake256_openssl_ref.data
 
 ## run with keccak avx2
 export LD_LIBRARY_PATH=$prev_ld_library_path:`pwd`/third_party_shared_libs/openssl-keccak-avx2/lib/
 sudo ldconfig
 echo $LD_LIBRARY_PATH
 ./bench keccak-openssl-avx2
-mv data/crypto_hash_shake256_openssl.data data/crypto_hash_shake256_openssl_avx2.data
+mv data/crypto_hash_sha3224_openssl.data  data/crypto_hash_sha3224_openssl_avx2.data
+mv data/crypto_hash_sha3256_openssl.data  data/crypto_hash_sha3256_openssl_avx2.data
+mv data/crypto_hash_sha3384_openssl.data  data/crypto_hash_sha3384_openssl_avx2.data
+mv data/crypto_hash_sha3512_openssl.data  data/crypto_hash_sha3512_openssl_avx2.data
 mv data/crypto_hash_shake128_openssl.data data/crypto_hash_shake128_openssl_avx2.data
+mv data/crypto_hash_shake256_openssl.data data/crypto_hash_shake256_openssl_avx2.data
 
+./plot sha3224  cycles 128 16384 ""
+./plot sha3256  cycles 128 16384 ""
+./plot sha3384  cycles 128 16384 ""
+./plot sha3512  cycles 128 16384 ""
 ./plot shake128 cycles 128 16384 ""
 ./plot shake256 cycles 128 16384 ""
 

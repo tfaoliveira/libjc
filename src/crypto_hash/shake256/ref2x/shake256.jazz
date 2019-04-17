@@ -1,5 +1,3 @@
-#define KECCAK_F_IMPL 0
-#define STATE_IN_STACK 1
 #include "../../keccak/ref2xg/keccak.jazz"
 
 export fn shake256_ref2x_jazz(reg u64 out in inlen iotas m)

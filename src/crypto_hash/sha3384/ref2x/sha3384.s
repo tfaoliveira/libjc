@@ -1,9 +1,9 @@
 	.text
 	.p2align	5
-	.globl	_sha3512_ref2x_jazz
-	.globl	sha3512_ref2x_jazz
-_sha3512_ref2x_jazz:
-sha3512_ref2x_jazz:
+	.globl	_sha3384_ref2x_jazz
+	.globl	sha3384_ref2x_jazz
+_sha3384_ref2x_jazz:
+sha3384_ref2x_jazz:
 	pushq	%rbp
 	pushq	%rbx
 	pushq	%r12
@@ -11,15 +11,15 @@ sha3512_ref2x_jazz:
 	movq	%rdi, 424(%rsp)
 	xorl	%eax, %eax
 	movq	$0, %rdi
-	jmp 	Lsha3512_ref2x_jazz$20
-Lsha3512_ref2x_jazz$21:
+	jmp 	Lsha3384_ref2x_jazz$20
+Lsha3384_ref2x_jazz$21:
 	movq	%rax, (%rsp,%rdi,8)
 	leaq	1(%rdi), %rdi
-Lsha3512_ref2x_jazz$20:
+Lsha3384_ref2x_jazz$20:
 	cmpq	$50, %rdi
-	jb  	Lsha3512_ref2x_jazz$21
-	jmp 	Lsha3512_ref2x_jazz$17
-Lsha3512_ref2x_jazz$18:
+	jb  	Lsha3384_ref2x_jazz$21
+	jmp 	Lsha3384_ref2x_jazz$17
+Lsha3384_ref2x_jazz$18:
 	movq	(%rsi), %rax
 	xorq	%rax, (%rsp)
 	movq	8(%rsi), %rax
@@ -38,11 +38,19 @@ Lsha3512_ref2x_jazz$18:
 	xorq	%rax, 56(%rsp)
 	movq	64(%rsi), %rax
 	xorq	%rax, 64(%rsp)
-	leaq	72(%rsi), %rax
-	leaq	-72(%rdx), %rdx
+	movq	72(%rsi), %rax
+	xorq	%rax, 72(%rsp)
+	movq	80(%rsi), %rax
+	xorq	%rax, 80(%rsp)
+	movq	88(%rsi), %rax
+	xorq	%rax, 88(%rsp)
+	movq	96(%rsi), %rax
+	xorq	%rax, 96(%rsp)
+	leaq	104(%rsi), %rax
+	leaq	-104(%rdx), %rdx
 	movq	%rax, 208(%rsp)
 	movq	%rdx, 200(%rsp)
-Lsha3512_ref2x_jazz$19:
+Lsha3384_ref2x_jazz$19:
 	movq	(%rcx), %rax
 	movq	%rax, 416(%rsp)
 	movq	(%rsp), %rax
@@ -431,36 +439,36 @@ Lsha3512_ref2x_jazz$19:
 	movq	%rax, 192(%rsp)
 	leaq	16(%rcx), %rcx
 	testb	$-1, %cl
-	jne 	Lsha3512_ref2x_jazz$19
+	jne 	Lsha3384_ref2x_jazz$19
 	leaq	-192(%rcx), %rcx
 	movq	208(%rsp), %rsi
 	movq	200(%rsp), %rdx
-Lsha3512_ref2x_jazz$17:
-	cmpq	$72, %rdx
-	jnb 	Lsha3512_ref2x_jazz$18
+Lsha3384_ref2x_jazz$17:
+	cmpq	$104, %rdx
+	jnb 	Lsha3384_ref2x_jazz$18
 	movq	%rdx, %rax
 	shrq	$3, %rax
 	movq	$0, %rdi
-	jmp 	Lsha3512_ref2x_jazz$15
-Lsha3512_ref2x_jazz$16:
+	jmp 	Lsha3384_ref2x_jazz$15
+Lsha3384_ref2x_jazz$16:
 	movq	(%rsi,%rdi,8), %r8
 	xorq	%r8, (%rsp,%rdi,8)
 	leaq	1(%rdi), %rdi
-Lsha3512_ref2x_jazz$15:
+Lsha3384_ref2x_jazz$15:
 	cmpq	%rax, %rdi
-	jb  	Lsha3512_ref2x_jazz$16
+	jb  	Lsha3384_ref2x_jazz$16
 	shlq	$3, %rdi
-	jmp 	Lsha3512_ref2x_jazz$13
-Lsha3512_ref2x_jazz$14:
+	jmp 	Lsha3384_ref2x_jazz$13
+Lsha3384_ref2x_jazz$14:
 	movb	(%rsi,%rdi), %al
 	xorb	%al, (%rsp,%rdi)
 	leaq	1(%rdi), %rdi
-Lsha3512_ref2x_jazz$13:
+Lsha3384_ref2x_jazz$13:
 	cmpq	%rdx, %rdi
-	jb  	Lsha3512_ref2x_jazz$14
+	jb  	Lsha3384_ref2x_jazz$14
 	xorb	$6, (%rsp,%rdi)
-	xorb	$-128, 71(%rsp)
-Lsha3512_ref2x_jazz$12:
+	xorb	$-128, 103(%rsp)
+Lsha3384_ref2x_jazz$12:
 	movq	(%rcx), %rax
 	movq	%rax, 416(%rsp)
 	movq	(%rsp), %rax
@@ -849,36 +857,36 @@ Lsha3512_ref2x_jazz$12:
 	movq	%rax, 192(%rsp)
 	leaq	16(%rcx), %rcx
 	testb	$-1, %cl
-	jne 	Lsha3512_ref2x_jazz$12
+	jne 	Lsha3384_ref2x_jazz$12
 	leaq	-192(%rcx), %rax
 	movq	424(%rsp), %rcx
-	movq	$64, 208(%rsp)
-	jmp 	Lsha3512_ref2x_jazz$5
-Lsha3512_ref2x_jazz$6:
-	movq	$72, %rdx
+	movq	$48, 208(%rsp)
+	jmp 	Lsha3384_ref2x_jazz$5
+Lsha3384_ref2x_jazz$6:
+	movq	$104, %rdx
 	movq	%rdx, %rsi
 	shrq	$3, %rsi
 	movq	$0, %rdi
-	jmp 	Lsha3512_ref2x_jazz$10
-Lsha3512_ref2x_jazz$11:
+	jmp 	Lsha3384_ref2x_jazz$10
+Lsha3384_ref2x_jazz$11:
 	movq	(%rsp,%rdi,8), %r8
 	movq	%r8, (%rcx,%rdi,8)
 	leaq	1(%rdi), %rdi
-Lsha3512_ref2x_jazz$10:
+Lsha3384_ref2x_jazz$10:
 	cmpq	%rsi, %rdi
-	jb  	Lsha3512_ref2x_jazz$11
+	jb  	Lsha3384_ref2x_jazz$11
 	shlq	$3, %rdi
-	jmp 	Lsha3512_ref2x_jazz$8
-Lsha3512_ref2x_jazz$9:
+	jmp 	Lsha3384_ref2x_jazz$8
+Lsha3384_ref2x_jazz$9:
 	movb	(%rsp,%rdi), %sil
 	movb	%sil, (%rcx,%rdi)
 	leaq	1(%rdi), %rdi
-Lsha3512_ref2x_jazz$8:
+Lsha3384_ref2x_jazz$8:
 	cmpq	%rdx, %rdi
-	jb  	Lsha3512_ref2x_jazz$9
+	jb  	Lsha3384_ref2x_jazz$9
 	leaq	(%rcx,%rdx), %rcx
 	movq	%rcx, 424(%rsp)
-Lsha3512_ref2x_jazz$7:
+Lsha3384_ref2x_jazz$7:
 	movq	(%rax), %rcx
 	movq	%rcx, 416(%rsp)
 	movq	(%rsp), %rcx
@@ -1267,34 +1275,34 @@ Lsha3512_ref2x_jazz$7:
 	movq	%rcx, 192(%rsp)
 	leaq	16(%rax), %rax
 	testb	$-1, %al
-	jne 	Lsha3512_ref2x_jazz$7
+	jne 	Lsha3384_ref2x_jazz$7
 	leaq	-192(%rax), %rax
-	subq	$72, 208(%rsp)
+	subq	$104, 208(%rsp)
 	movq	424(%rsp), %rcx
-Lsha3512_ref2x_jazz$5:
-	cmpq	$72, 208(%rsp)
-	jnb 	Lsha3512_ref2x_jazz$6
+Lsha3384_ref2x_jazz$5:
+	cmpq	$104, 208(%rsp)
+	jnb 	Lsha3384_ref2x_jazz$6
 	movq	208(%rsp), %rax
 	movq	%rax, %rdx
 	shrq	$3, %rdx
 	movq	$0, %rsi
-	jmp 	Lsha3512_ref2x_jazz$3
-Lsha3512_ref2x_jazz$4:
+	jmp 	Lsha3384_ref2x_jazz$3
+Lsha3384_ref2x_jazz$4:
 	movq	(%rsp,%rsi,8), %rdi
 	movq	%rdi, (%rcx,%rsi,8)
 	leaq	1(%rsi), %rsi
-Lsha3512_ref2x_jazz$3:
+Lsha3384_ref2x_jazz$3:
 	cmpq	%rdx, %rsi
-	jb  	Lsha3512_ref2x_jazz$4
+	jb  	Lsha3384_ref2x_jazz$4
 	shlq	$3, %rsi
-	jmp 	Lsha3512_ref2x_jazz$1
-Lsha3512_ref2x_jazz$2:
+	jmp 	Lsha3384_ref2x_jazz$1
+Lsha3384_ref2x_jazz$2:
 	movb	(%rsp,%rsi), %dl
 	movb	%dl, (%rcx,%rsi)
 	leaq	1(%rsi), %rsi
-Lsha3512_ref2x_jazz$1:
+Lsha3384_ref2x_jazz$1:
 	cmpq	%rax, %rsi
-	jb  	Lsha3512_ref2x_jazz$2
+	jb  	Lsha3384_ref2x_jazz$2
 	addq	$432, %rsp
 	popq	%r12
 	popq	%rbx

@@ -1,0 +1,6 @@
+#include "../../keccak/ref2xg/keccak.jazz"
+
+export fn sha3384_ref2x_jazz(reg u64 out in inlen iotas m)
+{
+  keccak_1600(out, in, inlen, iotas, m, 0x06, 832, 768, 48);
+}
