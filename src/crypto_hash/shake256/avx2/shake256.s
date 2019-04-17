@@ -18,8 +18,6 @@ shake256_avx2_jazz:
 	movq	8(%rcx), %r8
 	movq	16(%rcx), %r9
 	movq	24(%rcx), %rcx
-	jmp 	Lshake256_avx2_jazz$17
-Lshake256_avx2_jazz$18:
 	vpbroadcastq	g_zero(%rip), %ymm0
 	vmovdqu	%ymm0, (%rsp)
 	vmovdqu	%ymm0, 32(%rsp)
@@ -28,6 +26,8 @@ Lshake256_avx2_jazz$18:
 	vmovdqu	%ymm0, 128(%rsp)
 	vmovdqu	%ymm0, 160(%rsp)
 	vmovdqu	%ymm0, 192(%rsp)
+	jmp 	Lshake256_avx2_jazz$17
+Lshake256_avx2_jazz$18:
 	movq	(%rsi), %r10
 	movq	%r10, (%rsp)
 	movq	%r10, 8(%rsp)

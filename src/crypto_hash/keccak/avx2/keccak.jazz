@@ -21,6 +21,19 @@ fn init_state() -> reg u256[7]
   return state;
 }
 
+fn init_s_state() -> stack u64[28]
+{
+  inline int i;
+  stack u64[28] s_state;
+  reg u256 zero;
+
+  zero = #x86_VPBROADCAST_4u64(g_zero);
+  for i=0 to 7
+  { s_state[u256 i] = zero; }
+
+  return s_state;
+}
+
 
 fn a_jagged_f(inline int i) -> inline int
 {
@@ -56,19 +69,15 @@ fn a_jagged_f(inline int i) -> inline int
 
 fn keccak_1600_add_full_block(
   reg u256[7] state,
+  stack u64[28] s_state,
   reg u64 in,
   reg u64 inlen,
   inline int rate_in_bytes
-) -> reg u256[7], reg u64, reg u64
+) -> reg u256[7], stack u64[28], reg u64, reg u64
 {
   inline int i j;
-  stack u64[28] s_state;
   reg u256 zero;
   reg u64 t;
-
-  zero = #x86_VPBROADCAST_4u64(g_zero);
-  for i=0 to 7
-  { s_state[u256 i] = zero; }
 
   t = [in + 8*0];
   s_state[0] = t;
@@ -88,13 +97,14 @@ fn keccak_1600_add_full_block(
   in += rate_in_bytes;
   inlen -= rate_in_bytes;
 
-  return state, in, inlen;
+  return state, s_state, in, inlen;
 }
 
 
 
 fn keccak_1600_add_final_block(
   reg u256[7] state,
+  stack u64[28] s_state,
   reg u64 a_jagged,
   reg u64 in,
   reg u64 inlen,
@@ -103,14 +113,12 @@ fn keccak_1600_add_final_block(
 ) -> reg u256[7]
 {
   inline int i;
-  stack u64[28] s_state;
+
   reg u256 zero;
   reg u64 j l t inlen8;
   reg u8 c;
 
-  zero = #x86_VPBROADCAST_4u64(g_zero);
-  for i=0 to 7
-  { s_state[u256 i] = zero; }
+  s_state = init_s_state();
 
   inlen8 = inlen;
   inlen8 >>= 3;
@@ -220,16 +228,19 @@ fn keccak_1600_absorb(
   inline int rate_in_bytes
 ) -> reg u256[7]
 {
+  stack u64[28] s_state;
+
+  s_state = init_s_state();
 
   // intermediate blocks
   while ( inlen >= rate_in_bytes )
   {
-    state, in, inlen = keccak_1600_add_full_block(state, in, inlen, rate_in_bytes);
+    state, s_state, in, inlen = keccak_1600_add_full_block(state, s_state, in, inlen, rate_in_bytes);
     state = keccak_f(state, rhotates_left, rhotates_right, iotas);
   }
 
   // final block
-  state = keccak_1600_add_final_block(state, a_jagged, in, inlen, suffix, rate_in_bytes);
+  state = keccak_1600_add_final_block(state, s_state, a_jagged, in, inlen, suffix, rate_in_bytes);
   state = keccak_f(state, rhotates_left, rhotates_right, iotas);
 
   return state;
