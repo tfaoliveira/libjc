@@ -35,6 +35,7 @@ fn init_s_state() -> stack u64[28]
 }
 
 
+#ifndef KECCAK_1600_ADD_FULL_BLOCK_IMPLEMENTATION
 fn a_jagged_f(inline int i) -> inline int
 {
   inline int r;
@@ -67,6 +68,7 @@ fn a_jagged_f(inline int i) -> inline int
 }
 
 
+
 fn keccak_1600_add_full_block(
   reg u256[7] state,
   stack u64[28] s_state,
@@ -76,7 +78,6 @@ fn keccak_1600_add_full_block(
 ) -> reg u256[7], stack u64[28], reg u64, reg u64
 {
   inline int i j;
-  reg u256 zero;
   reg u64 t;
 
   t = [in + 8*0];
@@ -99,6 +100,7 @@ fn keccak_1600_add_full_block(
 
   return state, s_state, in, inlen;
 }
+#endif
 
 
 
