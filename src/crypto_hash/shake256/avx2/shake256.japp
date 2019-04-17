@@ -1,333 +1,232 @@
-
-
-fn spill_2(reg u64 a b) -> stack u64, stack u64
-{
-  stack u64 sa sb;
-  sa = a;
-  sb = b;
-  return sa, sb;
-}
+// TODO: zero stuff better : set0 for u256
 
 
 
-fn load_2(stack u64 sa sb) -> reg u64, reg u64
-{
-  reg u64 a b;
-  a = sa;
-  b = sb;
-  return a, b;
-}
+u64 g_zero = 0;
 
-
-
-fn ANDN(reg u64 x, reg u64 y) -> reg u64
-{
-  reg u64 r;
-  _, _, _, _, _, r = #x86_ANDN(x, y);
-  return r;
-}
-
-
-
-fn ROL64(reg u64 x, inline int c) -> reg u64
-{
-  reg u64 y;
-  if (c == 0)
-  { y = x; }
-  else
-  { _, _, y = #x86_ROL_64(x, c); }
-  return y;
-}
-
-
-
-fn index(inline int x, inline int y) -> inline int {
-  inline int r;
-  r = 5*(x % 5) + (y % 5);
-  return r;
-}
-
-
-
-fn keccak_rho_offsets(inline int i) -> inline int
-{
-  inline int r, x, y, z, t;
-  r = 0;
-  x = 1;
-  y = 0;
-  for t = 0 to 24
-  { if i == x + 5 * y
-    { r = ((t + 1) * (t + 2) / 2) % 64;
-    }
-    z = (2 * x + 3 * y) % 5;
-    x = y;
-    y = z;
-  }
-
-  return r;
-}
-
-
-
-fn rhotates(inline int x y) -> inline int
-{
-  inline int i r;
-  i = index(x, y);
-  r = keccak_rho_offsets(i);
-  return r;
-}
-
-
-
-param int A_jagged_0 =    0/8;
-param int A_jagged_1 =   32/8;
-param int A_jagged_2 =   40/8;
-param int A_jagged_3 =   48/8;
-param int A_jagged_4 =   56/8;
-param int A_jagged_5 =   80/8;
-param int A_jagged_6 =  192/8;
-param int A_jagged_7 =  104/8;
-param int A_jagged_8 =  144/8;
-param int A_jagged_9 =  184/8;
-param int A_jagged_10 =  64/8;
-param int A_jagged_11 = 128/8;
-param int A_jagged_12 = 200/8;
-param int A_jagged_13 = 176/8;
-param int A_jagged_14 = 120/8;
-param int A_jagged_15 =  88/8;
-param int A_jagged_16 =  96/8;
-param int A_jagged_17 = 168/8;
-param int A_jagged_18 = 208/8;
-param int A_jagged_19 = 152/8;
-param int A_jagged_20 =  72/8;
-param int A_jagged_21 = 160/8;
-param int A_jagged_22 = 136/8;
-param int A_jagged_23 = 112/8;
-param int A_jagged_24 = 216/8;
-
-inline fn __keccak_f(
-  reg u256 A00 A01 A20 A31
-           A21 A41 A11,
-  reg u64 _rhotates_left
-          _rhotates_right
-          _iotas
-) -> reg u256, reg u256, reg u256, reg u256,
-     reg u256, reg u256, reg u256
-{
-  reg u32 i; // why 32-bit?
-  reg u256 C00, C14; 
-  reg u256 D00, D14;
-  reg u256[9] T;
-  reg bool zf;
-  reg u64 rhotates_left rhotates_right iotas; // these should all be 32-bit
-
-  rhotates_left = _rhotates_left + 96;
-  rhotates_right = _rhotates_right + 96;
-  iotas = _iotas;
-
-  i = 24;
-  while
-  {
-	  /* ######################################### Theta */
-	  C00  = #x86_VPSHUFD_256(A20, 0x4e /*0b01001110 */);
-	  C14  = A41 ^4u64 A31 ;
-	  T[2] = A21 ^4u64 A11 ;
-	  C14  = C14 ^4u64 A01 ;
-	  C14  = C14 ^4u64 T[2];
-
-	  T[4] = #x86_VPERMQ(C14, 0x93 /* 0b10010011 */);
-	  C00 = C00 ^4u64 A20;
-	  T[0] = #x86_VPERMQ(C00, 0x4e /* 0b01001110 */);
-
-
-      T[1] = C14 >>4u64 63; 
-      T[2] = C14 +4u64 C14;
-	  T[1] = T[1] |4u64 T[2];
-
-	  D14 = #x86_VPERMQ(T[1], 0x39 /*0b00111001 */);
-	  D00 = T[1] ^4u64 T[4];
-	  D00 = #x86_VPERMQ(D00, 0x00 /*0b00000000 */);
-
-	  C00 = C00 ^4u64 A00;
-	  C00 = C00 ^4u64 T[0];
-
-      T[0] = C00 >>4u64 63; 
-      T[1] = C00 +4u64 C00;
-	  T[1] = T[1] |4u64 T[0];
-
-	  A20 = A20 ^4u64 D00;
-	  A00 = A00 ^4u64 D00;
-
-      D14  = #x86_VPBLENDD_256(D14,T[1], (4u2)[3,0,0,0] /* 0b11000000 */);
-      T[4] = #x86_VPBLENDD_256(T[4],C00, (4u2)[0,0,0,3] /* 0b00000011 */);
-	  D14 = D14 ^4u64 T[4];
-
-	  /* ######################################### Rho + Pi + pre-Chi shuffle */
-
-	  T[3] = #x86_VPSLLV_4u64(A20,(u256)[rhotates_left + 0*32-96]); //vpsllvq 0*32-96(%r8),$A20,@T[3]
-	  A20  = #x86_VPSRLV_4u64(A20,(u256)[rhotates_right+ 0*32-96]); //vpsrlvq	0*32-96(%r9),$A20,$A20
-	  A20 = A20 |4u64 T[3];
-
-	  A31 = A31 ^4u64 D14;
-	  T[4] = #x86_VPSLLV_4u64(A31,(u256)[rhotates_left + 2*32-96]); //vpsllvq 2*32-96(%r8),$A31,@T[4]
-	  A31  = #x86_VPSRLV_4u64(A31,(u256)[rhotates_right+ 2*32-96]); //vpsllvq 2*32-96(%r9),$A31,$A31
-	  A31 = A31 |4u64 T[4];
-
-	  A21 = A21 ^4u64 D14;
-	  T[5] = #x86_VPSLLV_4u64(A21,(u256)[rhotates_left + 3*32-96]); //vpsllvq 3*32-96(%r8),$A21,@T[5]
-	  A21  = #x86_VPSRLV_4u64(A21,(u256)[rhotates_right+ 3*32-96]); //vpsrlvq 3*32-96(%r9),$A21,$A21
-	  A21 = A21 |4u64 T[5];
-			
-
-	  A41 = A41 ^4u64 D14;
-	  T[6] = #x86_VPSLLV_4u64(A41,(u256)[rhotates_left + 4*32-96]); //vpsllvq 4*32-96(%r8),$A41,@T[6]
-	  A41  = #x86_VPSRLV_4u64(A41,(u256)[rhotates_right+ 4*32-96]); //vpsrlvq 4*32-96(%r9),$A41,$A41
-	  A41 = A41 |4u64 T[6];
-
-	  A11 = A11 ^4u64 D14;
-	  T[3] = #x86_VPERMQ(A20, 0x8d /*0b10001101 */);
-	  T[4] = #x86_VPERMQ(A31, 0x8d /*0b10001101 */);
-	  T[7] = #x86_VPSLLV_4u64(A11,(u256)[rhotates_left + 5*32-96]); //vpsllvq 5*32-96(%r8),$A11,@T[7]
-	  T[1] = #x86_VPSRLV_4u64(A11,(u256)[rhotates_right+ 5*32-96]); //vpsrlvq 5*32-96(%r9),$A11,@T[1]
-	  T[1] = T[1] |4u64 T[7];
-
-	  A01 = A01 ^4u64 D14;
-	  T[5] = #x86_VPERMQ(A21, 0x1b /*0b00011011 */);
-	  T[6] = #x86_VPERMQ(A41, 0x72 /*0b01110010 */);
-	  T[8] = #x86_VPSLLV_4u64(A01,(u256)[rhotates_left + 1*32-96]); //vpsllvq 1*32-96(%r8),$A01,@T[8]
-	  T[2] = #x86_VPSRLV_4u64(A01,(u256)[rhotates_right+ 1*32-96]); //vpsrlvq 1*32-96(%r9),$A01,@T[2]
-	  T[2] = T[2] |4u64 T[8];
-
-
-	  /* ######################################### Chi */
-      T[7] = #x86_VPSRLDQ_256(T[1], 8); // >>2u128 vpsrldq
-	  T[0] = !T[1] & T[7]; // #x86_VPANDN_256(T[1],T[7]);  
-
-      A31  = #x86_VPBLENDD_256(T[2],T[6], (4u2)[0,0,3,0] );
-      T[8] = #x86_VPBLENDD_256(T[4],T[2], (4u2)[0,0,3,0] );
-      A41  = #x86_VPBLENDD_256(T[3],T[4], (4u2)[0,0,3,0] );
-      T[7] = #x86_VPBLENDD_256(T[2],T[3], (4u2)[0,0,3,0] );
-
-      A31  = #x86_VPBLENDD_256(A31, T[4], (4u2)[0,3,0,0] );
-      T[8] = #x86_VPBLENDD_256(T[8],T[5], (4u2)[0,3,0,0] );
-      A41  = #x86_VPBLENDD_256(A41, T[2], (4u2)[0,3,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[6], (4u2)[0,3,0,0] );
-
-      A31  = #x86_VPBLENDD_256(A31, T[5], (4u2)[3,0,0,0] );
-      T[8] = #x86_VPBLENDD_256(T[8],T[6], (4u2)[3,0,0,0] );
-      A41  = #x86_VPBLENDD_256(A41, T[6], (4u2)[3,0,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[4], (4u2)[3,0,0,0] );
-
-	  A31 = #x86_VPANDN_256(A31,T[8]);
-	  A41 = #x86_VPANDN_256(A41,T[7]);
-
-      A11  = #x86_VPBLENDD_256(T[5],T[2], (4u2)[0,0,3,0] );
-      T[8] = #x86_VPBLENDD_256(T[3],T[5], (4u2)[0,0,3,0] ); 
-	  A31 = A31 ^4u64 T[3];
-
-      A11  = #x86_VPBLENDD_256(A11,T[3],  (4u2)[0,3,0,0] );
-      T[8] = #x86_VPBLENDD_256(T[8],T[4], (4u2)[0,3,0,0] );
-	  A41 = A41 ^4u64 T[5];
-
-      A11  = #x86_VPBLENDD_256(A11,T[4],  (4u2)[3,0,0,0] );
-      T[8] = #x86_VPBLENDD_256(T[8],T[2], (4u2)[3,0,0,0] );
-	  A11 = #x86_VPANDN_256(A11,T[8]);
-	  A11 = A11 ^4u64 T[6];
-
-	  A21 = #x86_VPERMQ(T[1], 0x1e /*0b00011110 */);
-      T[8] = #x86_VPBLENDD_256(A21,A00, (4u2)[0,3,0,0] );
-	  A01 = #x86_VPERMQ(T[1], 0x39 /*0b00111001 */);
-      A01 = #x86_VPBLENDD_256(A01,A00, (4u2)[3,0,0,0] );
-	  A01 = #x86_VPANDN_256(A01,T[8]);
-
-      A20  = #x86_VPBLENDD_256(T[4],T[5], (4u2)[0,0,3,0] );
-      T[7] = #x86_VPBLENDD_256(T[6],T[4], (4u2)[0,0,3,0] );
-      A20  = #x86_VPBLENDD_256(A20, T[6], (4u2)[0,3,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[3], (4u2)[0,3,0,0] );
-      A20  = #x86_VPBLENDD_256(A20, T[3], (4u2)[3,0,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[5], (4u2)[3,0,0,0] );
-
-	  A20 = #x86_VPANDN_256(A20,T[7]);
-	  A20 = A20 ^4u64 T[2];
-
-	  T[0] = #x86_VPERMQ(T[0], 0x00/*0b00000000 */);
-	  A31  = #x86_VPERMQ(A31, 0x1b/*0b00011011 */);
-	  A41  = #x86_VPERMQ(A41, 0x8d/*0b10001101 */);
-	  A11  = #x86_VPERMQ(A11, 0x72/*0b01110010 */);
-
-      A21  = #x86_VPBLENDD_256(T[6],T[3], (4u2)[0,0,3,0] );
-      T[7] = #x86_VPBLENDD_256(T[5],T[6], (4u2)[0,0,3,0] );
-      A21  = #x86_VPBLENDD_256(A21, T[5], (4u2)[0,3,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[2], (4u2)[0,3,0,0] );
-      A21  = #x86_VPBLENDD_256(A21, T[2], (4u2)[3,0,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[3], (4u2)[3,0,0,0] );
-
-	  A21 = #x86_VPANDN_256(A21,T[7]);
-
-	  A00 = A00 ^4u64 T[0];
-	  A01 = A01 ^4u64 T[1];
-	  A21 = A21 ^4u64 T[4];
-
-      /*	######################################### Iota */
-	  A00 = A00 ^4u64 (u256)[iotas + 0];
-	  iotas = iotas + 32;
-
-    (_,_,_,zf,i) = #x86_DEC_32(i); // dec = decl?
-   } (!zf)
-
-   return A00, A01, A20, A31, A21, A41, A11;
-}
 
 fn keccak_f(
-  reg u64 r _rhotates_left _rhotates_right _iotas
-) -> reg u64
+  reg u256[7] A,
+  reg u64 _rhotates_left,
+  reg u64 _rhotates_right,
+  reg u64 _iotas
+) -> reg u256[7]
 {
-  reg u256 A00, A01, A20, A31,
-           A21, A41, A11;
+  reg u256[9] T;
+  reg u256 C00 C14 D00 D14;
 
-  A00 = (u256)[r +   0];
-  A01 = (u256)[r +  32];
-  A20 = (u256)[r +  64];
-  A31 = (u256)[r +  96];
-  A21 = (u256)[r + 128];
-  A41 = (u256)[r + 160];
-  A11 = (u256)[r + 192];
+  reg bool zf;
+  reg u32 r;
+  reg u64 rhotates_left;
+  reg u64 rhotates_right;
+  reg u64 iotas;
 
-	A00, A01, A20, A31, A21, A41, A11 = __keccak_f(A00, A01, A20, A31,
-                                                 A21, A41, A11,
-		                                             _rhotates_left,
-                                                 _rhotates_right,
-                                                 _iotas);
+  rhotates_left  = _rhotates_left + 96;
+  rhotates_right = _rhotates_right + 96;
+  iotas          = _iotas;
 
-  (u256)[r +   0] = A00;
-  (u256)[r +  32] = A01;
-  (u256)[r +  64] = A20;
-  (u256)[r +  96] = A31;
-  (u256)[r + 128] = A21;
-  (u256)[r + 160] = A41;
-  (u256)[r + 192] = A11;
+  r = 24;
 
-  // easy to support state in stack if the types are right
-  return r;
+  align while
+  {
+	  //######################################## Theta
+	  C00 = #x86_VPSHUFD_256(A[2], (4u2)[1,0,3,2]);
+	  C14 = A[5] ^ A[3];
+	  T[2] = A[4] ^ A[6];
+	  C14 = C14 ^ A[1];
+	  C14 = C14 ^ T[2];
+	  T[4] = #x86_VPERMQ(C14, (4u2)[2,1,0,3]);
+	  C00 = C00 ^ A[2];
+	  T[0] = #x86_VPERMQ(C00, (4u2)[1,0,3,2]);
+	  T[1] = C14 >>4u64 63;
+	  T[2] = C14 +4u64 C14;
+	  T[1] = T[1] | T[2];
+	  D14 = #x86_VPERMQ(T[1], (4u2)[0,3,2,1]);
+	  D00 = T[1] ^ T[4];
+	  D00 = #x86_VPERMQ(D00, (4u2)[0,0,0,0]);
+	  C00 = C00 ^ A[0];
+	  C00 = C00 ^ T[0];
+	  T[0] = C00 >>4u64 63;
+	  T[1] = C00 +4u64 C00;
+	  T[1] = T[1] | T[0];
+	  A[2] = A[2] ^ D00;
+	  A[0] = A[0] ^ D00;
+	  D14 = #x86_VPBLENDD_256(D14, T[1], (4u2)[3,0,0,0]);
+	  T[4] = #x86_VPBLENDD_256(T[4], C00, (4u2)[0,0,0,3]);
+	  D14 = D14 ^ T[4];
+
+	  //######################################## Rho + Pi + pre-Chi shuffle
+	  T[3] = #x86_VPSLLV_4u64(A[2], (u256)[rhotates_left + 0*32-96] );
+	  A[2] = #x86_VPSRLV_4u64(A[2], (u256)[rhotates_right + 0*32-96] );
+	  A[2] = A[2] | T[3];
+	  A[3] = A[3] ^ D14;
+	  T[4] = #x86_VPSLLV_4u64(A[3], (u256)[rhotates_left + 2*32-96] );
+	  A[3] = #x86_VPSRLV_4u64(A[3], (u256)[rhotates_right + 2*32-96] );
+	  A[3] = A[3] | T[4];
+	  A[4] = A[4] ^ D14;
+	  T[5] = #x86_VPSLLV_4u64(A[4], (u256)[rhotates_left + 3*32-96] );
+	  A[4] = #x86_VPSRLV_4u64(A[4], (u256)[rhotates_right + 3*32-96] );
+	  A[4] = A[4] | T[5];
+	  A[5] = A[5] ^ D14;
+	  T[6] = #x86_VPSLLV_4u64(A[5], (u256)[rhotates_left + 4*32-96] );
+	  A[5] = #x86_VPSRLV_4u64(A[5], (u256)[rhotates_right + 4*32-96] );
+	  A[5] = A[5] | T[6];
+	  A[6] = A[6] ^ D14;
+	  T[3] = #x86_VPERMQ(A[2], (4u2)[2,0,3,1]);
+	  T[4] = #x86_VPERMQ(A[3], (4u2)[2,0,3,1]);
+	  T[7] = #x86_VPSLLV_4u64(A[6], (u256)[rhotates_left + 5*32-96] );
+	  T[1] = #x86_VPSRLV_4u64(A[6], (u256)[rhotates_right + 5*32-96] );
+	  T[1] = T[1] | T[7];
+	  A[1] = A[1] ^ D14;
+	  T[5] = #x86_VPERMQ(A[4], (4u2)[0,1,2,3]);
+	  T[6] = #x86_VPERMQ(A[5], (4u2)[1,3,0,2]);
+	  T[8] = #x86_VPSLLV_4u64(A[1], (u256)[rhotates_left + 1*32-96] );
+	  T[2] = #x86_VPSRLV_4u64(A[1], (u256)[rhotates_right + 1*32-96] );
+	  T[2] = T[2] | T[8];
+
+	  //######################################## Chi
+	  T[7] = #x86_VPSRLDQ_256(T[1], 8);
+	  T[0] = !T[1] & T[7];
+	  A[3] = #x86_VPBLENDD_256(T[2], T[6], (4u2)[0,0,3,0]);
+	  T[8] = #x86_VPBLENDD_256(T[4], T[2], (4u2)[0,0,3,0]);
+	  A[5] = #x86_VPBLENDD_256(T[3], T[4], (4u2)[0,0,3,0]);
+	  T[7] = #x86_VPBLENDD_256(T[2], T[3], (4u2)[0,0,3,0]);
+	  A[3] = #x86_VPBLENDD_256(A[3], T[4], (4u2)[0,3,0,0]);
+	  T[8] = #x86_VPBLENDD_256(T[8], T[5], (4u2)[0,3,0,0]);
+	  A[5] = #x86_VPBLENDD_256(A[5], T[2], (4u2)[0,3,0,0]);
+	  T[7] = #x86_VPBLENDD_256(T[7], T[6], (4u2)[0,3,0,0]);
+	  A[3] = #x86_VPBLENDD_256(A[3], T[5], (4u2)[3,0,0,0]);
+	  T[8] = #x86_VPBLENDD_256(T[8], T[6], (4u2)[3,0,0,0]);
+	  A[5] = #x86_VPBLENDD_256(A[5], T[6], (4u2)[3,0,0,0]);
+	  T[7] = #x86_VPBLENDD_256(T[7], T[4], (4u2)[3,0,0,0]);
+	  A[3] = !A[3] & T[8];
+	  A[5] = !A[5] & T[7];
+	  A[6] = #x86_VPBLENDD_256(T[5], T[2], (4u2)[0,0,3,0]);
+	  T[8] = #x86_VPBLENDD_256(T[3], T[5], (4u2)[0,0,3,0]);
+	  A[3] = A[3] ^ T[3];
+	  A[6] = #x86_VPBLENDD_256(A[6], T[3], (4u2)[0,3,0,0]);
+	  T[8] = #x86_VPBLENDD_256(T[8], T[4], (4u2)[0,3,0,0]);
+	  A[5] = A[5] ^ T[5];
+	  A[6] = #x86_VPBLENDD_256(A[6], T[4], (4u2)[3,0,0,0]);
+	  T[8] = #x86_VPBLENDD_256(T[8], T[2], (4u2)[3,0,0,0]);
+	  A[6] = !A[6] & T[8];
+	  A[6] = A[6] ^ T[6];
+	  A[4] = #x86_VPERMQ(T[1], (4u2)[0,1,3,2]);
+	  T[8] = #x86_VPBLENDD_256(A[4], A[0], (4u2)[0,3,0,0]);
+	  A[1] = #x86_VPERMQ(T[1], (4u2)[0,3,2,1]);
+	  A[1] = #x86_VPBLENDD_256(A[1], A[0], (4u2)[3,0,0,0]);
+	  A[1] = !A[1] & T[8];
+	  A[2] = #x86_VPBLENDD_256(T[4], T[5], (4u2)[0,0,3,0]);
+	  T[7] = #x86_VPBLENDD_256(T[6], T[4], (4u2)[0,0,3,0]);
+	  A[2] = #x86_VPBLENDD_256(A[2], T[6], (4u2)[0,3,0,0]);
+	  T[7] = #x86_VPBLENDD_256(T[7], T[3], (4u2)[0,3,0,0]);
+	  A[2] = #x86_VPBLENDD_256(A[2], T[3], (4u2)[3,0,0,0]);
+	  T[7] = #x86_VPBLENDD_256(T[7], T[5], (4u2)[3,0,0,0]);
+	  A[2] = !A[2] & T[7];
+	  A[2] = A[2] ^ T[2];
+	  T[0] = #x86_VPERMQ(T[0], (4u2)[0,0,0,0]);
+	  A[3] = #x86_VPERMQ(A[3], (4u2)[0,1,2,3]);
+	  A[5] = #x86_VPERMQ(A[5], (4u2)[2,0,3,1]);
+	  A[6] = #x86_VPERMQ(A[6], (4u2)[1,3,0,2]);
+	  A[4] = #x86_VPBLENDD_256(T[6], T[3], (4u2)[0,0,3,0]);
+	  T[7] = #x86_VPBLENDD_256(T[5], T[6], (4u2)[0,0,3,0]);
+	  A[4] = #x86_VPBLENDD_256(A[4], T[5], (4u2)[0,3,0,0]);
+	  T[7] = #x86_VPBLENDD_256(T[7], T[2], (4u2)[0,3,0,0]);
+	  A[4] = #x86_VPBLENDD_256(A[4], T[2], (4u2)[3,0,0,0]);
+	  T[7] = #x86_VPBLENDD_256(T[7], T[3], (4u2)[3,0,0,0]);
+	  A[4] = !A[4] & T[7];
+	  A[0] = A[0] ^ T[0];
+	  A[1] = A[1] ^ T[1];
+	  A[4] = A[4] ^ T[4];
+
+	  //######################################## Iota
+	  A[0] = A[0] ^ (u256)[iotas + 0*32-0];
+
+    iotas = iotas + 32;
+    (_,_,_,zf,r) = #x86_DEC_32(r);
+  } (!zf)
+
+  return A;
 }
 
+
+
+fn init_state() -> reg u256[7]
+{
+  inline int i;
+  reg u256[7] state;
+
+  state[0] = #x86_VPBROADCAST_4u64(g_zero);
+
+  for i=1 to 7
+  { state[i] = state[0]; }
+
+  return state;
+}
+
+
+fn a_jagged_f(inline int i) -> inline int
+{
+  inline int r;
+  if(i == 0 ){ r = 0;  }
+  if(i == 1 ){ r = 4;  }
+  if(i == 2 ){ r = 5;  }
+  if(i == 3 ){ r = 6;  }
+  if(i == 4 ){ r = 7;  }
+  if(i == 5 ){ r = 10; }
+  if(i == 6 ){ r = 24; }
+  if(i == 7 ){ r = 13; }
+  if(i == 8 ){ r = 18; }
+  if(i == 9 ){ r = 23; }
+  if(i == 10){ r = 8;  }
+  if(i == 11){ r = 16; }
+  if(i == 12){ r = 25; }
+  if(i == 13){ r = 22; }
+  if(i == 14){ r = 15; }
+  if(i == 15){ r = 11; }
+  if(i == 16){ r = 12; }
+  if(i == 17){ r = 21; }
+  if(i == 18){ r = 26; }
+  if(i == 19){ r = 19; }
+  if(i == 20){ r = 9;  }
+  if(i == 21){ r = 20; }
+  if(i == 22){ r = 17; }
+  if(i == 23){ r = 14; }
+  if(i == 24){ r = 27; }
+  return r;
+}
 
 
 fn keccak_1600_add_full_block(
-  reg u64 state,
+  reg u256[7] state,
   reg u64 in,
   reg u64 inlen,
   inline int rate_in_bytes
-) -> reg u64, reg u64, reg u64
+) -> reg u256[7], reg u64, reg u64
 {
-  inline int idx i;
+  inline int i j;
+  stack u64[28] s_state;
+  reg u256 zero;
   reg u64 t;
 
-  for i = 0 to (rate_in_bytes / 8) 
-  {
-    t = [in + 8*i];
-    [state + 8*(i)] ^= t;
+  zero = #x86_VPBROADCAST_4u64(g_zero);
+  for i=0 to 7
+  { s_state[u256 i] = zero; }
+
+  t = [in + 8*0];
+  s_state[0] = t;
+  s_state[1] = t;
+  s_state[2] = t;
+  s_state[3] = t;
+
+  for i = 1 to (rate_in_bytes / 8) 
+  { t = [in + 8*i];
+    j = a_jagged_f(i);
+    s_state[j] = t;
   }
+
+  for i = 0 to 7
+  { state[i] ^= s_state[u256 i]; }
 
   in += rate_in_bytes;
   inlen -= rate_in_bytes;
@@ -337,71 +236,68 @@ fn keccak_1600_add_full_block(
 
 
 
-// obs: @pre: inlen < rate_in_bytes
 fn keccak_1600_add_final_block(
-  reg u64 state,
+  reg u256[7] state,
+  reg u64 a_jagged,
   reg u64 in,
   reg u64 inlen,
   inline int suffix,
   inline int rate_in_bytes
-) -> reg u64
+) -> reg u256[7]
 {
-  reg u64 i t inlen8;
+  inline int i;
+  stack u64[28] s_state;
+  reg u256 zero;
+  reg u64 j l t inlen8;
   reg u8 c;
+
+  zero = #x86_VPBROADCAST_4u64(g_zero);
+  for i=0 to 7
+  { s_state[u256 i] = zero; }
 
   inlen8 = inlen;
   inlen8 >>= 3;
-  i = 0;
-  while ( i < inlen8 )
+  j = 0;
+  while ( j < inlen8 )
   {
-    t = [in + 8*i];
-    [state + 8*(i)] ^= t;
-    i += 1;
+    t = [in + 8*j];
+    l = [a_jagged + 8*( j)];
+    s_state[(int) l] = t;
+    j += 1;
   }
-  i <<= 3;
+  l = [a_jagged + 8*( j)];
+
+  j <<= 3;
+  l <<= 3;
 
   // inlen4 ?
 
-  while ( i < inlen )
+  while ( j < inlen )
   {
-    c = (u8)[in + i];
-    (u8)[state + (i)] ^= c;
-    i += 1;
+    c = (u8)[in + j];
+    s_state[u8 (int) l] = c;
+    j += 1;
+    l += 1;
   }
 
-  (u8)[state + (i)] ^= suffix;
-  (u8)[state + (rate_in_bytes-1)] ^= 0x80;
+  s_state[u8 (int) l] = suffix;
 
-  return state;
-}
+  j  = (rate_in_bytes-1) >> 3;
+  l  = [a_jagged + 8*( j)];
+  l <<= 3;
+  l += ((rate_in_bytes-1) & 0x7);
 
+  s_state[u8 (int) l] ^= 0x80;
 
+  //
+  t = s_state[0];
+  s_state[1] = t;
+  s_state[2] = t;
+  s_state[3] = t;
+  //
 
-fn keccak_1600_absorb(
-  reg u64 state,
-  reg u64 rhotates_left,
-  reg u64 rhotates_right,
-  reg u64 iotas,
-  reg u64 in inlen,
-  inline int suffix,
-  inline int rate_in_bytes
-) -> reg u64
-{
-  stack u64 s_in s_inlen;
-
-  // intermediate blocks
-  while ( inlen >= rate_in_bytes )
-  {
-    state, in, inlen = keccak_1600_add_full_block(state, in, inlen, rate_in_bytes);
-    s_in, s_inlen = spill_2(in, inlen);
-
-    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
-    in, inlen = load_2(s_in, s_inlen);
-  }
-
-  // final block
-  state = keccak_1600_add_final_block(state, in, inlen, suffix, rate_in_bytes);
-  state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+  for i = 0 to 7
+  { state[i] ^= s_state[u256 i]; }
 
   return state;
 }
@@ -410,103 +306,138 @@ fn keccak_1600_absorb(
 
 // obs: @pre: len <= rate_in_bytes
 fn keccak_1600_xtr_block(
-  reg u64 state,
+  reg u256[7] state,
+  reg u64 a_jagged,
   reg u64 out,
   reg u64 len
 ) -> reg u64
 {
-  reg u64 i t len8;
+  inline int i;
+  stack u64[28] s_state;
+  reg u64 j l t len8;
   reg u8 c;
+
+  for i = 0 to 7
+  { s_state[u256 i] = state[i]; }
 
   len8 = len;
   len8 >>= 3;
-  i = 0;
-  while ( i < len8 )
+  j = 0;
+  while ( j < len8 )
   {
-    t = [state + 8*(i)];
-    [out + 8*i] = t;
-    i += 1;
+    l = [a_jagged + 8*( j)];
+    t = s_state[(int) l];
+    [out + 8*j] = t;
+    j += 1;
   }
-  i <<= 3;
+  l = [a_jagged + 8*( j)];
+
+  j <<= 3;
+  l <<= 3;
 
   // inlen4 ?
 
-  while ( i < len )
+  while ( j < len )
   {
-    c = (u8)[state + (i)];
-    (u8)[out + i] = c;
-    i += 1;
+    c = s_state[u8 (int) l];
+    (u8)[out + j] = c;
+    j += 1;
+    l += 1;
   }
 
   out += len;
+
   return out;
 }
 
 
 
-fn keccak_1600_squeeze(
-  reg u64 state,
+fn keccak_1600_absorb(
+  reg u256[7] state,
   reg u64 rhotates_left,
   reg u64 rhotates_right,
   reg u64 iotas,
+  reg u64 a_jagged,
+  reg u64 in inlen,
+  inline int suffix,
+  inline int rate_in_bytes
+) -> reg u256[7]
+{
+
+  // intermediate blocks
+  while ( inlen >= rate_in_bytes )
+  {
+    state, in, inlen = keccak_1600_add_full_block(state, in, inlen, rate_in_bytes);
+    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+  }
+
+  // final block
+  state = keccak_1600_add_final_block(state, a_jagged, in, inlen, suffix, rate_in_bytes);
+  state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+
+  return state;
+}
+
+
+
+fn keccak_1600_squeeze(
+  reg u256[7] state,
+  reg u64 rhotates_left,
+  reg u64 rhotates_right,
+  reg u64 iotas,
+  reg u64 a_jagged,
   reg u64 out,
   inline int rate_in_bytes,
   inline int i_hash_bytes
 )
 {
-  stack u64 s_out s_hash_bytes;
   reg u64 hash_bytes;
 
-  s_hash_bytes = i_hash_bytes;
+  hash_bytes = i_hash_bytes;
 
   // intermediate blocks
-  while ( s_hash_bytes >= rate_in_bytes )
+  while ( hash_bytes >= rate_in_bytes )
   {    
-    out = keccak_1600_xtr_block(state, out, rate_in_bytes);
-    s_out = out;
-
+    out = keccak_1600_xtr_block(state, a_jagged, out, rate_in_bytes);
     state = keccak_f(state, rhotates_left, rhotates_right, iotas);
-
-    s_hash_bytes -= rate_in_bytes;
-    out = s_out;
+    hash_bytes -= rate_in_bytes;
   }
 
   // final block
-  hash_bytes = s_hash_bytes;
-  out = keccak_1600_xtr_block(state, out, hash_bytes);
+  out = keccak_1600_xtr_block(state, a_jagged, out, hash_bytes);
 }
 
 
 
 fn keccak_1600(
-  reg u64 out, // output pointer with at least hash_bytes available
-  reg u64 in, // input pointer with inlen bytes
+  reg u64 out,   // output pointer with at least hash_bytes available
+  reg u64 in,    // input pointer with inlen bytes
   reg u64 inlen, // input length in bytes
-  reg u64 m, // external memory: it contains 4 pointers: (state, rhotates_left, rhotates_right, iotas)
+  reg u64 m,     // external memory: it contains 4 pointers: (rhotates_left, rhotates_right, iotas, a_jagged)
   inline int suffix,
   inline int rate,
   inline int capacity,
   inline int hash_bytes
 )
 {
-  reg u64 rhotates_left rhotates_right iotas;
-  stack u64 out_s;
-  reg u64 state;
+  reg u64 rhotates_left rhotates_right iotas a_jagged;
+  reg u256[7] state;
 
-  out_s = out;
-
-  state          = [m + 8*0];
-  rhotates_left  = [m + 8*1];
-  rhotates_right = [m + 8*2];
-  iotas          = [m + 8*3];
+  state          = init_state();
+  rhotates_left  = [m + 8*0];
+  rhotates_right = [m + 8*1];
+  iotas          = [m + 8*2];
+  a_jagged       = [m + 8*3];
 
   // absorb
-  state = keccak_1600_absorb(state, rhotates_left, rhotates_right, iotas, in, inlen, suffix, (rate/8));
+  state = keccak_1600_absorb(state, rhotates_left, rhotates_right, iotas, a_jagged,
+                             in, inlen, suffix, (rate/8));
 
   // squeeze
-  out = out_s;
-  keccak_1600_squeeze(state, rhotates_left, rhotates_right, iotas, out, (rate/8), hash_bytes);
+  keccak_1600_squeeze(state, rhotates_left, rhotates_right, iotas, a_jagged,
+                      out, (rate/8), hash_bytes);
 }
+
 
 export fn shake256_avx2_jazz(reg u64 out in inlen m)
 {

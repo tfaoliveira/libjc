@@ -54,11 +54,16 @@ uint64_t iotas[24*4] __attribute__((aligned(32))) = {
     0x0000000080000001UL, 0x0000000080000001UL, 0x0000000080000001UL, 0x0000000080000001UL,
     0x8000000080008008UL, 0x8000000080008008UL, 0x8000000080008008UL, 0x8000000080008008UL };
 
+uint64_t a_jagged[25] __attribute__((aligned(32))) = {
+ 0 , 4, 5, 6, 7,10,
+ 24,13,18,23, 8,16,
+ 25,22,15,11,12,21,
+ 26,19, 9,20,17,14,
+ 27 };
+
 int shake256_avx2(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
-  uint64_t state[28] __attribute__((aligned(32)));
-  memset(state, 0, sizeof(state));
-  uint64_t *m[4] = {state, rhotates_left, rhotates_right, iotas};
+  uint64_t *m[4] = {rhotates_left, rhotates_right, iotas, a_jagged};
   shake256_avx2_jazz(out, in, inlen, m);
   return 0;
 }

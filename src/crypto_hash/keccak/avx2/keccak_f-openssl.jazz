@@ -197,20 +197,197 @@ inline fn __keccak_f(
    return A00, A01, A20, A31, A21, A41, A11;
 }
 
+
+fn load_state(stack u64[28] state_p, reg u64 state) -> stack u64[28]
+{
+  reg u64 t;
+
+  t = [state + 8*0];
+  state_p[0 ]  = t;
+  state_p[1 ]  = t;
+  state_p[2 ]  = t;
+  state_p[3 ]  = t;
+
+  t = [state + 8*1];
+  state_p[A_jagged_1 ]  = t;
+
+  t = [state + 8*2];
+  state_p[A_jagged_2 ]  = t;
+
+  t = [state + 8*3];
+  state_p[A_jagged_3 ]  = t;
+
+  t = [state + 8*4];
+  state_p[A_jagged_4 ]  = t;
+
+  t = [state + 8*5];
+  state_p[A_jagged_5 ]  = t;
+
+  t = [state + 8*6];
+  state_p[A_jagged_6 ]  = t;
+
+  t = [state + 8*7];
+  state_p[A_jagged_7 ]  = t;
+
+  t = [state + 8*8];
+  state_p[A_jagged_8 ]  = t;
+
+  t = [state + 8*9];
+  state_p[A_jagged_9 ]  = t;
+
+  t = [state + 8*10];
+  state_p[A_jagged_10]  = t;
+
+  t = [state + 8*11];
+  state_p[A_jagged_11]  = t;
+
+  t = [state + 8*12];
+  state_p[A_jagged_12]  = t;
+
+  t = [state + 8*13];
+  state_p[A_jagged_13]  = t;
+
+  t = [state + 8*14];
+  state_p[A_jagged_14]  = t;
+
+  t = [state + 8*15];
+  state_p[A_jagged_15]  = t;
+
+  t = [state + 8*16];
+  state_p[A_jagged_16]  = t;
+
+  t = [state + 8*17];
+  state_p[A_jagged_17]  = t;
+
+  t = [state + 8*18];
+  state_p[A_jagged_18]  = t;
+
+  t = [state + 8*19];
+  state_p[A_jagged_19]  = t;
+
+  t = [state + 8*20];
+  state_p[A_jagged_20]  = t;
+
+  t = [state + 8*21];
+  state_p[A_jagged_21]  = t;
+
+  t = [state + 8*22];
+  state_p[A_jagged_22]  = t;
+
+  t = [state + 8*23];
+  state_p[A_jagged_23]  = t;
+
+  t = [state + 8*24];
+  state_p[A_jagged_24]  = t;
+
+  return state_p;
+}
+
+
+fn save_state(stack u64[28] state_p, reg u64 state) -> reg u64
+{
+  reg u64 t;
+  t = state_p[A_jagged_0 ];
+  [state + 8*0] = t;
+
+  t = state_p[A_jagged_1 ];
+  [state + 8*1] = t;
+
+  t = state_p[A_jagged_2 ];
+  [state + 8*2] = t;
+
+  t = state_p[A_jagged_3 ];
+  [state + 8*3] = t;
+
+  t = state_p[A_jagged_4 ];
+  [state + 8*4] = t;
+
+  t = state_p[A_jagged_5 ];
+  [state + 8*5] = t;
+
+  t = state_p[A_jagged_6 ];
+  [state + 8*6] = t;
+
+  t = state_p[A_jagged_7 ];
+  [state + 8*7] = t;
+
+  t = state_p[A_jagged_8 ];
+  [state + 8*8] = t;
+
+  t = state_p[A_jagged_9 ];
+  [state + 8*9] = t;
+
+  t = state_p[A_jagged_10];
+  [state + 8*10] = t;
+
+  t = state_p[A_jagged_11];
+  [state + 8*11] = t;
+
+  t = state_p[A_jagged_12];
+  [state + 8*12] = t;
+
+  t = state_p[A_jagged_13];
+  [state + 8*13] = t;
+
+  t = state_p[A_jagged_14];
+  [state + 8*14] = t;
+
+  t = state_p[A_jagged_15];
+  [state + 8*15] = t;
+
+  t = state_p[A_jagged_16];
+  [state + 8*16] = t;
+
+  t = state_p[A_jagged_17];
+  [state + 8*17] = t;
+
+  t = state_p[A_jagged_18];
+  [state + 8*18] = t;
+
+  t = state_p[A_jagged_19];
+  [state + 8*19] = t;
+
+  t = state_p[A_jagged_20];
+  [state + 8*20] = t;
+
+  t = state_p[A_jagged_21];
+  [state + 8*21] = t;
+
+  t = state_p[A_jagged_22];
+  [state + 8*22] = t;
+
+  t = state_p[A_jagged_23];
+  [state + 8*23] = t;
+
+  t = state_p[A_jagged_24];
+  [state + 8*24] = t;
+
+  return state;
+}
+
+// dummy implementation only to test, it will be refactored
 fn keccak_f(
-  reg u64 r _rhotates_left _rhotates_right _iotas
+  reg u64 state _rhotates_left _rhotates_right _iotas
 ) -> reg u64
 {
+  inline int i;
   reg u256 A00, A01, A20, A31,
            A21, A41, A11;
 
-  A00 = (u256)[r +   0];
-  A01 = (u256)[r +  32];
-  A20 = (u256)[r +  64];
-  A31 = (u256)[r +  96];
-  A21 = (u256)[r + 128];
-  A41 = (u256)[r + 160];
-  A11 = (u256)[r + 192];
+  stack u64[28] state_p;
+
+  for i=0 to 28
+  { state_p[i] = 0; }
+
+  state_p = load_state(state_p, state);
+
+  A00 = state_p[u256 0];
+  A01 = state_p[u256 1];
+  A20 = state_p[u256 2];
+  A31 = state_p[u256 3];
+  A21 = state_p[u256 4];
+  A41 = state_p[u256 5];
+  A11 = state_p[u256 6];
 
 	A00, A01, A20, A31, A21, A41, A11 = __keccak_f(A00, A01, A20, A31,
                                                  A21, A41, A11,
@@ -218,14 +395,16 @@ fn keccak_f(
                                                  _rhotates_right,
                                                  _iotas);
 
-  (u256)[r +   0] = A00;
-  (u256)[r +  32] = A01;
-  (u256)[r +  64] = A20;
-  (u256)[r +  96] = A31;
-  (u256)[r + 128] = A21;
-  (u256)[r + 160] = A41;
-  (u256)[r + 192] = A11;
+  state_p[u256 0] = A00;
+  state_p[u256 1] = A01;
+  state_p[u256 2] = A20;
+  state_p[u256 3] = A31;
+  state_p[u256 4] = A21;
+  state_p[u256 5] = A41;
+  state_p[u256 6] = A11;
+
+  state = save_state(state_p, state);
 
   // easy to support state in stack if the types are right
-  return r;
+  return state;
 }
