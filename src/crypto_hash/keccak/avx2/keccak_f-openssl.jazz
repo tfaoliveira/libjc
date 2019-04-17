@@ -1,410 +1,143 @@
-param int A_jagged_0 =    0/8;
-param int A_jagged_1 =   32/8;
-param int A_jagged_2 =   40/8;
-param int A_jagged_3 =   48/8;
-param int A_jagged_4 =   56/8;
-param int A_jagged_5 =   80/8;
-param int A_jagged_6 =  192/8;
-param int A_jagged_7 =  104/8;
-param int A_jagged_8 =  144/8;
-param int A_jagged_9 =  184/8;
-param int A_jagged_10 =  64/8;
-param int A_jagged_11 = 128/8;
-param int A_jagged_12 = 200/8;
-param int A_jagged_13 = 176/8;
-param int A_jagged_14 = 120/8;
-param int A_jagged_15 =  88/8;
-param int A_jagged_16 =  96/8;
-param int A_jagged_17 = 168/8;
-param int A_jagged_18 = 208/8;
-param int A_jagged_19 = 152/8;
-param int A_jagged_20 =  72/8;
-param int A_jagged_21 = 160/8;
-param int A_jagged_22 = 136/8;
-param int A_jagged_23 = 112/8;
-param int A_jagged_24 = 216/8;
 
-inline fn __keccak_f(
-  reg u256 A00 A01 A20 A31
-           A21 A41 A11,
-  reg u64 _rhotates_left
-          _rhotates_right
-          _iotas
-) -> reg u256, reg u256, reg u256, reg u256,
-     reg u256, reg u256, reg u256
-{
-  reg u32 i; // why 32-bit?
-  reg u256 C00, C14; 
-  reg u256 D00, D14;
-  reg u256[9] T;
-  reg bool zf;
-  reg u64 rhotates_left rhotates_right iotas; // these should all be 32-bit
-
-  rhotates_left = _rhotates_left + 96;
-  rhotates_right = _rhotates_right + 96;
-  iotas = _iotas;
-
-  i = 24;
-  while
-  {
-	  /* ######################################### Theta */
-	  C00  = #x86_VPSHUFD_256(A20, 0x4e /*0b01001110 */);
-	  C14  = A41 ^4u64 A31 ;
-	  T[2] = A21 ^4u64 A11 ;
-	  C14  = C14 ^4u64 A01 ;
-	  C14  = C14 ^4u64 T[2];
-
-	  T[4] = #x86_VPERMQ(C14, 0x93 /* 0b10010011 */);
-	  C00 = C00 ^4u64 A20;
-	  T[0] = #x86_VPERMQ(C00, 0x4e /* 0b01001110 */);
-
-
-      T[1] = C14 >>4u64 63; 
-      T[2] = C14 +4u64 C14;
-	  T[1] = T[1] |4u64 T[2];
-
-	  D14 = #x86_VPERMQ(T[1], 0x39 /*0b00111001 */);
-	  D00 = T[1] ^4u64 T[4];
-	  D00 = #x86_VPERMQ(D00, 0x00 /*0b00000000 */);
-
-	  C00 = C00 ^4u64 A00;
-	  C00 = C00 ^4u64 T[0];
-
-      T[0] = C00 >>4u64 63; 
-      T[1] = C00 +4u64 C00;
-	  T[1] = T[1] |4u64 T[0];
-
-	  A20 = A20 ^4u64 D00;
-	  A00 = A00 ^4u64 D00;
-
-      D14  = #x86_VPBLENDD_256(D14,T[1], (4u2)[3,0,0,0] /* 0b11000000 */);
-      T[4] = #x86_VPBLENDD_256(T[4],C00, (4u2)[0,0,0,3] /* 0b00000011 */);
-	  D14 = D14 ^4u64 T[4];
-
-	  /* ######################################### Rho + Pi + pre-Chi shuffle */
-
-	  T[3] = #x86_VPSLLV_4u64(A20,(u256)[rhotates_left + 0*32-96]); //vpsllvq 0*32-96(%r8),$A20,@T[3]
-	  A20  = #x86_VPSRLV_4u64(A20,(u256)[rhotates_right+ 0*32-96]); //vpsrlvq	0*32-96(%r9),$A20,$A20
-	  A20 = A20 |4u64 T[3];
-
-	  A31 = A31 ^4u64 D14;
-	  T[4] = #x86_VPSLLV_4u64(A31,(u256)[rhotates_left + 2*32-96]); //vpsllvq 2*32-96(%r8),$A31,@T[4]
-	  A31  = #x86_VPSRLV_4u64(A31,(u256)[rhotates_right+ 2*32-96]); //vpsllvq 2*32-96(%r9),$A31,$A31
-	  A31 = A31 |4u64 T[4];
-
-	  A21 = A21 ^4u64 D14;
-	  T[5] = #x86_VPSLLV_4u64(A21,(u256)[rhotates_left + 3*32-96]); //vpsllvq 3*32-96(%r8),$A21,@T[5]
-	  A21  = #x86_VPSRLV_4u64(A21,(u256)[rhotates_right+ 3*32-96]); //vpsrlvq 3*32-96(%r9),$A21,$A21
-	  A21 = A21 |4u64 T[5];
-			
-
-	  A41 = A41 ^4u64 D14;
-	  T[6] = #x86_VPSLLV_4u64(A41,(u256)[rhotates_left + 4*32-96]); //vpsllvq 4*32-96(%r8),$A41,@T[6]
-	  A41  = #x86_VPSRLV_4u64(A41,(u256)[rhotates_right+ 4*32-96]); //vpsrlvq 4*32-96(%r9),$A41,$A41
-	  A41 = A41 |4u64 T[6];
-
-	  A11 = A11 ^4u64 D14;
-	  T[3] = #x86_VPERMQ(A20, 0x8d /*0b10001101 */);
-	  T[4] = #x86_VPERMQ(A31, 0x8d /*0b10001101 */);
-	  T[7] = #x86_VPSLLV_4u64(A11,(u256)[rhotates_left + 5*32-96]); //vpsllvq 5*32-96(%r8),$A11,@T[7]
-	  T[1] = #x86_VPSRLV_4u64(A11,(u256)[rhotates_right+ 5*32-96]); //vpsrlvq 5*32-96(%r9),$A11,@T[1]
-	  T[1] = T[1] |4u64 T[7];
-
-	  A01 = A01 ^4u64 D14;
-	  T[5] = #x86_VPERMQ(A21, 0x1b /*0b00011011 */);
-	  T[6] = #x86_VPERMQ(A41, 0x72 /*0b01110010 */);
-	  T[8] = #x86_VPSLLV_4u64(A01,(u256)[rhotates_left + 1*32-96]); //vpsllvq 1*32-96(%r8),$A01,@T[8]
-	  T[2] = #x86_VPSRLV_4u64(A01,(u256)[rhotates_right+ 1*32-96]); //vpsrlvq 1*32-96(%r9),$A01,@T[2]
-	  T[2] = T[2] |4u64 T[8];
-
-
-	  /* ######################################### Chi */
-      T[7] = #x86_VPSRLDQ_256(T[1], 8); // >>2u128 vpsrldq
-	  T[0] = !T[1] & T[7]; // #x86_VPANDN_256(T[1],T[7]);  
-
-      A31  = #x86_VPBLENDD_256(T[2],T[6], (4u2)[0,0,3,0] );
-      T[8] = #x86_VPBLENDD_256(T[4],T[2], (4u2)[0,0,3,0] );
-      A41  = #x86_VPBLENDD_256(T[3],T[4], (4u2)[0,0,3,0] );
-      T[7] = #x86_VPBLENDD_256(T[2],T[3], (4u2)[0,0,3,0] );
-
-      A31  = #x86_VPBLENDD_256(A31, T[4], (4u2)[0,3,0,0] );
-      T[8] = #x86_VPBLENDD_256(T[8],T[5], (4u2)[0,3,0,0] );
-      A41  = #x86_VPBLENDD_256(A41, T[2], (4u2)[0,3,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[6], (4u2)[0,3,0,0] );
-
-      A31  = #x86_VPBLENDD_256(A31, T[5], (4u2)[3,0,0,0] );
-      T[8] = #x86_VPBLENDD_256(T[8],T[6], (4u2)[3,0,0,0] );
-      A41  = #x86_VPBLENDD_256(A41, T[6], (4u2)[3,0,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[4], (4u2)[3,0,0,0] );
-
-	  A31 = #x86_VPANDN_256(A31,T[8]);
-	  A41 = #x86_VPANDN_256(A41,T[7]);
-
-      A11  = #x86_VPBLENDD_256(T[5],T[2], (4u2)[0,0,3,0] );
-      T[8] = #x86_VPBLENDD_256(T[3],T[5], (4u2)[0,0,3,0] ); 
-	  A31 = A31 ^4u64 T[3];
-
-      A11  = #x86_VPBLENDD_256(A11,T[3],  (4u2)[0,3,0,0] );
-      T[8] = #x86_VPBLENDD_256(T[8],T[4], (4u2)[0,3,0,0] );
-	  A41 = A41 ^4u64 T[5];
-
-      A11  = #x86_VPBLENDD_256(A11,T[4],  (4u2)[3,0,0,0] );
-      T[8] = #x86_VPBLENDD_256(T[8],T[2], (4u2)[3,0,0,0] );
-	  A11 = #x86_VPANDN_256(A11,T[8]);
-	  A11 = A11 ^4u64 T[6];
-
-	  A21 = #x86_VPERMQ(T[1], 0x1e /*0b00011110 */);
-      T[8] = #x86_VPBLENDD_256(A21,A00, (4u2)[0,3,0,0] );
-	  A01 = #x86_VPERMQ(T[1], 0x39 /*0b00111001 */);
-      A01 = #x86_VPBLENDD_256(A01,A00, (4u2)[3,0,0,0] );
-	  A01 = #x86_VPANDN_256(A01,T[8]);
-
-      A20  = #x86_VPBLENDD_256(T[4],T[5], (4u2)[0,0,3,0] );
-      T[7] = #x86_VPBLENDD_256(T[6],T[4], (4u2)[0,0,3,0] );
-      A20  = #x86_VPBLENDD_256(A20, T[6], (4u2)[0,3,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[3], (4u2)[0,3,0,0] );
-      A20  = #x86_VPBLENDD_256(A20, T[3], (4u2)[3,0,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[5], (4u2)[3,0,0,0] );
-
-	  A20 = #x86_VPANDN_256(A20,T[7]);
-	  A20 = A20 ^4u64 T[2];
-
-	  T[0] = #x86_VPERMQ(T[0], 0x00/*0b00000000 */);
-	  A31  = #x86_VPERMQ(A31, 0x1b/*0b00011011 */);
-	  A41  = #x86_VPERMQ(A41, 0x8d/*0b10001101 */);
-	  A11  = #x86_VPERMQ(A11, 0x72/*0b01110010 */);
-
-      A21  = #x86_VPBLENDD_256(T[6],T[3], (4u2)[0,0,3,0] );
-      T[7] = #x86_VPBLENDD_256(T[5],T[6], (4u2)[0,0,3,0] );
-      A21  = #x86_VPBLENDD_256(A21, T[5], (4u2)[0,3,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[2], (4u2)[0,3,0,0] );
-      A21  = #x86_VPBLENDD_256(A21, T[2], (4u2)[3,0,0,0] );
-      T[7] = #x86_VPBLENDD_256(T[7],T[3], (4u2)[3,0,0,0] );
-
-	  A21 = #x86_VPANDN_256(A21,T[7]);
-
-	  A00 = A00 ^4u64 T[0];
-	  A01 = A01 ^4u64 T[1];
-	  A21 = A21 ^4u64 T[4];
-
-      /*	######################################### Iota */
-	  A00 = A00 ^4u64 (u256)[iotas + 0];
-	  iotas = iotas + 32;
-
-    (_,_,_,zf,i) = #x86_DEC_32(i); // dec = decl?
-   } (!zf)
-
-   return A00, A01, A20, A31, A21, A41, A11;
-}
-
-
-fn load_state(stack u64[28] state_p, reg u64 state) -> stack u64[28]
-{
-  reg u64 t;
-
-  t = [state + 8*0];
-  state_p[0 ]  = t;
-  state_p[1 ]  = t;
-  state_p[2 ]  = t;
-  state_p[3 ]  = t;
-
-  t = [state + 8*1];
-  state_p[A_jagged_1 ]  = t;
-
-  t = [state + 8*2];
-  state_p[A_jagged_2 ]  = t;
-
-  t = [state + 8*3];
-  state_p[A_jagged_3 ]  = t;
-
-  t = [state + 8*4];
-  state_p[A_jagged_4 ]  = t;
-
-  t = [state + 8*5];
-  state_p[A_jagged_5 ]  = t;
-
-  t = [state + 8*6];
-  state_p[A_jagged_6 ]  = t;
-
-  t = [state + 8*7];
-  state_p[A_jagged_7 ]  = t;
-
-  t = [state + 8*8];
-  state_p[A_jagged_8 ]  = t;
-
-  t = [state + 8*9];
-  state_p[A_jagged_9 ]  = t;
-
-  t = [state + 8*10];
-  state_p[A_jagged_10]  = t;
-
-  t = [state + 8*11];
-  state_p[A_jagged_11]  = t;
-
-  t = [state + 8*12];
-  state_p[A_jagged_12]  = t;
-
-  t = [state + 8*13];
-  state_p[A_jagged_13]  = t;
-
-  t = [state + 8*14];
-  state_p[A_jagged_14]  = t;
-
-  t = [state + 8*15];
-  state_p[A_jagged_15]  = t;
-
-  t = [state + 8*16];
-  state_p[A_jagged_16]  = t;
-
-  t = [state + 8*17];
-  state_p[A_jagged_17]  = t;
-
-  t = [state + 8*18];
-  state_p[A_jagged_18]  = t;
-
-  t = [state + 8*19];
-  state_p[A_jagged_19]  = t;
-
-  t = [state + 8*20];
-  state_p[A_jagged_20]  = t;
-
-  t = [state + 8*21];
-  state_p[A_jagged_21]  = t;
-
-  t = [state + 8*22];
-  state_p[A_jagged_22]  = t;
-
-  t = [state + 8*23];
-  state_p[A_jagged_23]  = t;
-
-  t = [state + 8*24];
-  state_p[A_jagged_24]  = t;
-
-  return state_p;
-}
-
-
-fn save_state(stack u64[28] state_p, reg u64 state) -> reg u64
-{
-  reg u64 t;
-  t = state_p[A_jagged_0 ];
-  [state + 8*0] = t;
-
-  t = state_p[A_jagged_1 ];
-  [state + 8*1] = t;
-
-  t = state_p[A_jagged_2 ];
-  [state + 8*2] = t;
-
-  t = state_p[A_jagged_3 ];
-  [state + 8*3] = t;
-
-  t = state_p[A_jagged_4 ];
-  [state + 8*4] = t;
-
-  t = state_p[A_jagged_5 ];
-  [state + 8*5] = t;
-
-  t = state_p[A_jagged_6 ];
-  [state + 8*6] = t;
-
-  t = state_p[A_jagged_7 ];
-  [state + 8*7] = t;
-
-  t = state_p[A_jagged_8 ];
-  [state + 8*8] = t;
-
-  t = state_p[A_jagged_9 ];
-  [state + 8*9] = t;
-
-  t = state_p[A_jagged_10];
-  [state + 8*10] = t;
-
-  t = state_p[A_jagged_11];
-  [state + 8*11] = t;
-
-  t = state_p[A_jagged_12];
-  [state + 8*12] = t;
-
-  t = state_p[A_jagged_13];
-  [state + 8*13] = t;
-
-  t = state_p[A_jagged_14];
-  [state + 8*14] = t;
-
-  t = state_p[A_jagged_15];
-  [state + 8*15] = t;
-
-  t = state_p[A_jagged_16];
-  [state + 8*16] = t;
-
-  t = state_p[A_jagged_17];
-  [state + 8*17] = t;
-
-  t = state_p[A_jagged_18];
-  [state + 8*18] = t;
-
-  t = state_p[A_jagged_19];
-  [state + 8*19] = t;
-
-  t = state_p[A_jagged_20];
-  [state + 8*20] = t;
-
-  t = state_p[A_jagged_21];
-  [state + 8*21] = t;
-
-  t = state_p[A_jagged_22];
-  [state + 8*22] = t;
-
-  t = state_p[A_jagged_23];
-  [state + 8*23] = t;
-
-  t = state_p[A_jagged_24];
-  [state + 8*24] = t;
-
-  return state;
-}
-
-// dummy implementation only to test, it will be refactored
 fn keccak_f(
-  reg u64 state _rhotates_left _rhotates_right _iotas
-) -> reg u64
+  reg u256[7] state,
+  reg u64 _rhotates_left,
+  reg u64 _rhotates_right,
+  reg u64 _iotas
+) -> reg u256[7]
 {
-  inline int i;
-  reg u256 A00, A01, A20, A31,
-           A21, A41, A11;
+  reg u256[9] t;
+  reg u256 c00 c14 d00 d14;
 
-  stack u64[28] state_p;
+  reg bool zf;
+  reg u32 r;
+  reg u64 rhotates_left;
+  reg u64 rhotates_right;
+  reg u64 iotas;
 
-  for i=0 to 28
-  { state_p[i] = 0; }
+  rhotates_left  = _rhotates_left + 96;
+  rhotates_right = _rhotates_right + 96;
+  iotas          = _iotas;
 
-  state_p = load_state(state_p, state);
+  r = 24;
+  align while
+  {
+    //######################################## Theta
+    c00 = #x86_VPSHUFD_256(state[2], (4u2)[1,0,3,2]);
+    c14 = state[5] ^ state[3];
+    t[2] = state[4] ^ state[6];
+    c14 = c14 ^ state[1];
+    c14 = c14 ^ t[2];
+    t[4] = #x86_VPERMQ(c14, (4u2)[2,1,0,3]);
+    c00 = c00 ^ state[2];
+    t[0] = #x86_VPERMQ(c00, (4u2)[1,0,3,2]);
+    t[1] = c14 >>4u64 63;
+    t[2] = c14 +4u64 c14;
+    t[1] = t[1] | t[2];
+    d14 = #x86_VPERMQ(t[1], (4u2)[0,3,2,1]);
+    d00 = t[1] ^ t[4];
+    d00 = #x86_VPERMQ(d00, (4u2)[0,0,0,0]);
+    c00 = c00 ^ state[0];
+    c00 = c00 ^ t[0];
+    t[0] = c00 >>4u64 63;
+    t[1] = c00 +4u64 c00;
+    t[1] = t[1] | t[0];
+    state[2] = state[2] ^ d00;
+    state[0] = state[0] ^ d00;
+    d14 = #x86_VPBLENDD_256(d14, t[1], (4u2)[3,0,0,0]);
+    t[4] = #x86_VPBLENDD_256(t[4], c00, (4u2)[0,0,0,3]);
+    d14 = d14 ^ t[4];
 
-  A00 = state_p[u256 0];
-  A01 = state_p[u256 1];
-  A20 = state_p[u256 2];
-  A31 = state_p[u256 3];
-  A21 = state_p[u256 4];
-  A41 = state_p[u256 5];
-  A11 = state_p[u256 6];
+    //######################################## Rho + Pi + pre-Chi shuffle
+    t[3] = #x86_VPSLLV_4u64(state[2], B256(rhotates_left,0,96) );
+    state[2] = #x86_VPSRLV_4u64(state[2], B256(rhotates_right,0,96) );
+    state[2] = state[2] | t[3];
+    state[3] = state[3] ^ d14;
+    t[4] = #x86_VPSLLV_4u64(state[3], B256(rhotates_left,2,96) );
+    state[3] = #x86_VPSRLV_4u64(state[3], B256(rhotates_right,2,96) );
+    state[3] = state[3] | t[4];
+    state[4] = state[4] ^ d14;
+    t[5] = #x86_VPSLLV_4u64(state[4], B256(rhotates_left,3,96) );
+    state[4] = #x86_VPSRLV_4u64(state[4], B256(rhotates_right,3,96) );
+    state[4] = state[4] | t[5];
+    state[5] = state[5] ^ d14;
+    t[6] = #x86_VPSLLV_4u64(state[5], B256(rhotates_left,4,96) );
+    state[5] = #x86_VPSRLV_4u64(state[5], B256(rhotates_right,4,96) );
+    state[5] = state[5] | t[6];
+    state[6] = state[6] ^ d14;
+    t[3] = #x86_VPERMQ(state[2], (4u2)[2,0,3,1]);
+    t[4] = #x86_VPERMQ(state[3], (4u2)[2,0,3,1]);
+    t[7] = #x86_VPSLLV_4u64(state[6], B256(rhotates_left,5,96) );
+    t[1] = #x86_VPSRLV_4u64(state[6], B256(rhotates_right,5,96) );
+    t[1] = t[1] | t[7];
+    state[1] = state[1] ^ d14;
+    t[5] = #x86_VPERMQ(state[4], (4u2)[0,1,2,3]);
+    t[6] = #x86_VPERMQ(state[5], (4u2)[1,3,0,2]);
+    t[8] = #x86_VPSLLV_4u64(state[1], B256(rhotates_left,1,96) );
+    t[2] = #x86_VPSRLV_4u64(state[1], B256(rhotates_right,1,96) );
+    t[2] = t[2] | t[8];
 
-	A00, A01, A20, A31, A21, A41, A11 = __keccak_f(A00, A01, A20, A31,
-                                                 A21, A41, A11,
-		                                             _rhotates_left,
-                                                 _rhotates_right,
-                                                 _iotas);
+    //######################################## Chi
+    t[7] = #x86_VPSRLDQ_256(t[1], 8);
+    t[0] = !t[1] & t[7];
+    state[3] = #x86_VPBLENDD_256(t[2], t[6], (4u2)[0,0,3,0]);
+    t[8] = #x86_VPBLENDD_256(t[4], t[2], (4u2)[0,0,3,0]);
+    state[5] = #x86_VPBLENDD_256(t[3], t[4], (4u2)[0,0,3,0]);
+    t[7] = #x86_VPBLENDD_256(t[2], t[3], (4u2)[0,0,3,0]);
+    state[3] = #x86_VPBLENDD_256(state[3], t[4], (4u2)[0,3,0,0]);
+    t[8] = #x86_VPBLENDD_256(t[8], t[5], (4u2)[0,3,0,0]);
+    state[5] = #x86_VPBLENDD_256(state[5], t[2], (4u2)[0,3,0,0]);
+    t[7] = #x86_VPBLENDD_256(t[7], t[6], (4u2)[0,3,0,0]);
+    state[3] = #x86_VPBLENDD_256(state[3], t[5], (4u2)[3,0,0,0]);
+    t[8] = #x86_VPBLENDD_256(t[8], t[6], (4u2)[3,0,0,0]);
+    state[5] = #x86_VPBLENDD_256(state[5], t[6], (4u2)[3,0,0,0]);
+    t[7] = #x86_VPBLENDD_256(t[7], t[4], (4u2)[3,0,0,0]);
+    state[3] = !state[3] & t[8];
+    state[5] = !state[5] & t[7];
+    state[6] = #x86_VPBLENDD_256(t[5], t[2], (4u2)[0,0,3,0]);
+    t[8] = #x86_VPBLENDD_256(t[3], t[5], (4u2)[0,0,3,0]);
+    state[3] = state[3] ^ t[3];
+    state[6] = #x86_VPBLENDD_256(state[6], t[3], (4u2)[0,3,0,0]);
+    t[8] = #x86_VPBLENDD_256(t[8], t[4], (4u2)[0,3,0,0]);
+    state[5] = state[5] ^ t[5];
+    state[6] = #x86_VPBLENDD_256(state[6], t[4], (4u2)[3,0,0,0]);
+    t[8] = #x86_VPBLENDD_256(t[8], t[2], (4u2)[3,0,0,0]);
+    state[6] = !state[6] & t[8];
+    state[6] = state[6] ^ t[6];
+    state[4] = #x86_VPERMQ(t[1], (4u2)[0,1,3,2]);
+    t[8] = #x86_VPBLENDD_256(state[4], state[0], (4u2)[0,3,0,0]);
+    state[1] = #x86_VPERMQ(t[1], (4u2)[0,3,2,1]);
+    state[1] = #x86_VPBLENDD_256(state[1], state[0], (4u2)[3,0,0,0]);
+    state[1] = !state[1] & t[8];
+    state[2] = #x86_VPBLENDD_256(t[4], t[5], (4u2)[0,0,3,0]);
+    t[7] = #x86_VPBLENDD_256(t[6], t[4], (4u2)[0,0,3,0]);
+    state[2] = #x86_VPBLENDD_256(state[2], t[6], (4u2)[0,3,0,0]);
+    t[7] = #x86_VPBLENDD_256(t[7], t[3], (4u2)[0,3,0,0]);
+    state[2] = #x86_VPBLENDD_256(state[2], t[3], (4u2)[3,0,0,0]);
+    t[7] = #x86_VPBLENDD_256(t[7], t[5], (4u2)[3,0,0,0]);
+    state[2] = !state[2] & t[7];
+    state[2] = state[2] ^ t[2];
+    t[0] = #x86_VPERMQ(t[0], (4u2)[0,0,0,0]);
+    state[3] = #x86_VPERMQ(state[3], (4u2)[0,1,2,3]);
+    state[5] = #x86_VPERMQ(state[5], (4u2)[2,0,3,1]);
+    state[6] = #x86_VPERMQ(state[6], (4u2)[1,3,0,2]);
+    state[4] = #x86_VPBLENDD_256(t[6], t[3], (4u2)[0,0,3,0]);
+    t[7] = #x86_VPBLENDD_256(t[5], t[6], (4u2)[0,0,3,0]);
+    state[4] = #x86_VPBLENDD_256(state[4], t[5], (4u2)[0,3,0,0]);
+    t[7] = #x86_VPBLENDD_256(t[7], t[2], (4u2)[0,3,0,0]);
+    state[4] = #x86_VPBLENDD_256(state[4], t[2], (4u2)[3,0,0,0]);
+    t[7] = #x86_VPBLENDD_256(t[7], t[3], (4u2)[3,0,0,0]);
+    state[4] = !state[4] & t[7];
+    state[0] = state[0] ^ t[0];
+    state[1] = state[1] ^ t[1];
+    state[4] = state[4] ^ t[4];
 
-  state_p[u256 0] = A00;
-  state_p[u256 1] = A01;
-  state_p[u256 2] = A20;
-  state_p[u256 3] = A31;
-  state_p[u256 4] = A21;
-  state_p[u256 5] = A41;
-  state_p[u256 6] = A11;
+    //######################################## Iota
+    state[0] = state[0] ^ B256(iotas,0,0);
 
-  state = save_state(state_p, state);
+    iotas = iotas + 32;
+    (_,_,_,zf,r) = #x86_DEC_32(r);
+  } (!zf)
 
-  // easy to support state in stack if the types are right
   return state;
 }

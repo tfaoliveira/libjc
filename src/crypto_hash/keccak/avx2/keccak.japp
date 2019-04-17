@@ -434,8 +434,3 @@ fn keccak_1600(
                       out, (rate/8), hash_bytes);
 }
 
-
-export fn shake256_avx2_jazz(reg u64 out in inlen m)
-{
-  keccak_1600(out, in, inlen, m, 0x1F, 1088, 512, 136);
-}
