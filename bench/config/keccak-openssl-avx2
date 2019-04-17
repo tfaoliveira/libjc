@@ -1,0 +1,3 @@
+crypto_hash shake128 openssl -L`pwd`/third_party_shared_libs/openssl-keccak-avx2/lib/ -l:libcrypto.so.1.1
+
+crypto_hash shake256 openssl -L`pwd`/third_party_shared_libs/openssl-keccak-avx2/lib/ -l:libcrypto.so.1.1

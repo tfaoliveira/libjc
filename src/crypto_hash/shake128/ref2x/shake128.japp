@@ -234,7 +234,7 @@ fn keccak_f(
 
   
 
-  align while
+  while
   {
     A, R = round2x(A, R, iotas, 0);
     R, A = round2x(R, A, iotas, 8);

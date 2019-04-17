@@ -1,0 +1,458 @@
+// the following macro indicates that shake128 provides a specific implementation
+// for adding a full block to the state: it is size specific
+
+
+u64 s_zero = 0;
+
+fn keccak_1600_add_full_block(
+  reg u256[7] state,
+  stack u64[28] s_state,
+  reg u64 in,
+  reg u64 inlen,
+  inline int rate_in_bytes
+) -> reg u256[7], stack u64[28], reg u64, reg u64
+{
+  reg u256 a00 a01 a11 a21 a31 a32;
+  reg u256 t11 t41 t31 t21;
+  reg u256 zero;
+  reg u64 r10 r20 r30 r40;
+  stack u64[4] s20;
+
+  r10 = [in + 8*5];
+  r20 = [in + 8*10];
+  r30 = [in + 8*15];
+  r40 = [in + 8*20];
+
+  s20[0] = r20;
+  s20[1] = r40;
+  s20[2] = r10;
+  s20[3] = r30;
+
+  a00 = #x86_VPBROADCAST_4u64([in + 8*0]); // (0,0) (0,0) (0,0) (0,0)
+  a01 = (u256)[in + 8*1]; // (0,4) (0,3) (0,2) (0,1)
+
+  state[0] ^= a00;
+  state[1] ^= a01;
+  state[2] ^= s20[u256 0];
+ 
+  zero = #x86_VPBROADCAST_4u64(s_zero);
+
+  a11 = (u256)[in + 8*6 ]; // (1,4) (1,3) (1,2) (1,1)
+  a21 = (u256)[in + 8*11]; // (2,4) (2,3) (2,2) (2,1)
+  a31 = (u256)[in + 8*16]; // (3,4) (3,3) (3,2) (3,1)
+
+  a32 = #x86_VPBLENDD_256(a31, zero, (8u1)[1,1,0,0,0,0,1,1]); //  ___  (3,3) (3,2)  ___
+  a31 = #x86_VPBLENDD_256(a31, zero, (8u1)[0,0,1,1,1,1,0,0]); // (3,4)  ___   ___  (3,1)
+
+  t41 = #x86_VPBLENDD_256(a21, a11,  (8u1)[1,1,0,0,0,0,1,1]); // (1,4) (2,3) (2,2) (1,1)
+  t31 = #x86_VPBLENDD_256(a21, a11,  (8u1)[0,0,1,1,1,1,0,0]); // (2,4) (1,3) (1,2) (2,1)
+
+
+  t11 = #x86_VPBLENDD_256(t41, a32,  (8u1)[1,1,1,1,0,0,0,0]); //  ___  (3,3) (2,2) (1,1)
+  t21 = #x86_VPBLENDD_256(t31, a31,  (8u1)[1,1,0,0,1,1,0,0]); // (3,4) (1,3)  ___  (2,1)
+  t31 = #x86_VPBLENDD_256(t31, a31,  (8u1)[0,0,1,1,0,0,1,1]); // (2,4)  ___  (1,2) (3,1)
+
+  state[6] ^= t11;
+  state[4] ^= t21;
+
+  t41 = #x86_VPBLENDD_256(t41, a32,  (8u1)[0,0,0,0,1,1,1,1]); // (1,4) (2,3) (3,2)   ___
+  t31 = #x86_VPBLENDD_256(t31, a31,  (8u1)[0,0,0,0,0,0,1,1]); // (2,4)  ___  (1,2) (3,1)
+
+  state[5] ^= t41;
+  state[3] ^= t31; 
+
+  in += rate_in_bytes;
+  inlen -= rate_in_bytes;
+
+  return state, s_state, in, inlen;
+}
+
+// TODO: zero stuff better : set0 for u256
+
+
+
+fn keccak_f(
+  reg u256[7] state,
+  reg u64 _rhotates_left,
+  reg u64 _rhotates_right,
+  reg u64 _iotas
+) -> reg u256[7]
+{
+  reg u256[9] t;
+  reg u256 c00 c14 d00 d14;
+
+  reg bool zf;
+  reg u32 r;
+  reg u64 rhotates_left;
+  reg u64 rhotates_right;
+  reg u64 iotas;
+
+  rhotates_left  = _rhotates_left + 96;
+  rhotates_right = _rhotates_right + 96;
+  iotas          = _iotas;
+
+  r = 24;
+  align while
+  {
+
+	  //######################################## Theta
+	  c00 = #x86_VPSHUFD_256(state[2], (4u2)[1,0,3,2]);
+	  c14 = state[5] ^ state[3];
+	  t[2] = state[4] ^ state[6];
+	  c14 = c14 ^ state[1];
+	  c14 = c14 ^ t[2];
+	  t[4] = #x86_VPERMQ(c14, (4u2)[2,1,0,3]);
+	  c00 = c00 ^ state[2];
+	  t[0] = #x86_VPERMQ(c00, (4u2)[1,0,3,2]);
+	  t[1] = c14 >>4u64 63;
+	  t[2] = c14 +4u64 c14;
+	  t[1] = t[1] | t[2];
+	  d14 = #x86_VPERMQ(t[1], (4u2)[0,3,2,1]);
+	  d00 = t[1] ^ t[4];
+	  d00 = #x86_VPERMQ(d00, (4u2)[0,0,0,0]);
+	  c00 = c00 ^ state[0];
+	  c00 = c00 ^ t[0];
+	  t[0] = c00 >>4u64 63;
+	  t[1] = c00 +4u64 c00;
+	  t[1] = t[1] | t[0];
+	  state[2] = state[2] ^ d00;
+	  state[0] = state[0] ^ d00;
+	  d14 = #x86_VPBLENDD_256(d14, t[1], (8u1)[1,1,0,0,0,0,0,0]);
+	  t[4] = #x86_VPBLENDD_256(t[4], c00, (8u1)[0,0,0,0,0,0,1,1]);
+	  d14 = d14 ^ t[4];
+
+	  //######################################## Rho + Pi + pre-Chi shuffle
+	  t[3] = #x86_VPSLLV_4u64(state[2], (u256)[rhotates_left + 0*32-96] );
+	  state[2] = #x86_VPSRLV_4u64(state[2], (u256)[rhotates_right + 0*32-96] );
+	  state[2] = state[2] | t[3];
+	  state[3] = state[3] ^ d14;
+	  t[4] = #x86_VPSLLV_4u64(state[3], (u256)[rhotates_left + 2*32-96] );
+	  state[3] = #x86_VPSRLV_4u64(state[3], (u256)[rhotates_right + 2*32-96] );
+	  state[3] = state[3] | t[4];
+	  state[4] = state[4] ^ d14;
+	  t[5] = #x86_VPSLLV_4u64(state[4], (u256)[rhotates_left + 3*32-96] );
+	  state[4] = #x86_VPSRLV_4u64(state[4], (u256)[rhotates_right + 3*32-96] );
+	  state[4] = state[4] | t[5];
+	  state[5] = state[5] ^ d14;
+	  t[6] = #x86_VPSLLV_4u64(state[5], (u256)[rhotates_left + 4*32-96] );
+	  state[5] = #x86_VPSRLV_4u64(state[5], (u256)[rhotates_right + 4*32-96] );
+	  state[5] = state[5] | t[6];
+	  state[6] = state[6] ^ d14;
+	  t[3] = #x86_VPERMQ(state[2], (4u2)[2,0,3,1]);
+	  t[4] = #x86_VPERMQ(state[3], (4u2)[2,0,3,1]);
+	  t[7] = #x86_VPSLLV_4u64(state[6], (u256)[rhotates_left + 5*32-96] );
+	  t[1] = #x86_VPSRLV_4u64(state[6], (u256)[rhotates_right + 5*32-96] );
+	  t[1] = t[1] | t[7];
+	  state[1] = state[1] ^ d14;
+	  t[5] = #x86_VPERMQ(state[4], (4u2)[0,1,2,3]);
+	  t[6] = #x86_VPERMQ(state[5], (4u2)[1,3,0,2]);
+	  t[8] = #x86_VPSLLV_4u64(state[1], (u256)[rhotates_left + 1*32-96] );
+	  t[2] = #x86_VPSRLV_4u64(state[1], (u256)[rhotates_right + 1*32-96] );
+	  t[2] = t[2] | t[8];
+
+	  //######################################## Chi
+	  t[7] = #x86_VPSRLDQ_256(t[1], 8);
+	  t[0] = !t[1] & t[7];
+	  state[3] = #x86_VPBLENDD_256(t[2], t[6], (8u1)[0,0,0,0,1,1,0,0]);
+	  t[8] = #x86_VPBLENDD_256(t[4], t[2], (8u1)[0,0,0,0,1,1,0,0]);
+	  state[5] = #x86_VPBLENDD_256(t[3], t[4], (8u1)[0,0,0,0,1,1,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[2], t[3], (8u1)[0,0,0,0,1,1,0,0]);
+	  state[3] = #x86_VPBLENDD_256(state[3], t[4], (8u1)[0,0,1,1,0,0,0,0]);
+	  t[8] = #x86_VPBLENDD_256(t[8], t[5], (8u1)[0,0,1,1,0,0,0,0]);
+	  state[5] = #x86_VPBLENDD_256(state[5], t[2], (8u1)[0,0,1,1,0,0,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[7], t[6], (8u1)[0,0,1,1,0,0,0,0]);
+	  state[3] = #x86_VPBLENDD_256(state[3], t[5], (8u1)[1,1,0,0,0,0,0,0]);
+	  t[8] = #x86_VPBLENDD_256(t[8], t[6], (8u1)[1,1,0,0,0,0,0,0]);
+	  state[5] = #x86_VPBLENDD_256(state[5], t[6], (8u1)[1,1,0,0,0,0,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[7], t[4], (8u1)[1,1,0,0,0,0,0,0]);
+	  state[3] = !state[3] & t[8];
+	  state[5] = !state[5] & t[7];
+	  state[6] = #x86_VPBLENDD_256(t[5], t[2], (8u1)[0,0,0,0,1,1,0,0]);
+	  t[8] = #x86_VPBLENDD_256(t[3], t[5], (8u1)[0,0,0,0,1,1,0,0]);
+	  state[3] = state[3] ^ t[3];
+	  state[6] = #x86_VPBLENDD_256(state[6], t[3], (8u1)[0,0,1,1,0,0,0,0]);
+	  t[8] = #x86_VPBLENDD_256(t[8], t[4], (8u1)[0,0,1,1,0,0,0,0]);
+	  state[5] = state[5] ^ t[5];
+	  state[6] = #x86_VPBLENDD_256(state[6], t[4], (8u1)[1,1,0,0,0,0,0,0]);
+	  t[8] = #x86_VPBLENDD_256(t[8], t[2], (8u1)[1,1,0,0,0,0,0,0]);
+	  state[6] = !state[6] & t[8];
+	  state[6] = state[6] ^ t[6];
+	  state[4] = #x86_VPERMQ(t[1], (4u2)[0,1,3,2]);
+	  t[8] = #x86_VPBLENDD_256(state[4], state[0], (8u1)[0,0,1,1,0,0,0,0]);
+	  state[1] = #x86_VPERMQ(t[1], (4u2)[0,3,2,1]);
+	  state[1] = #x86_VPBLENDD_256(state[1], state[0], (8u1)[1,1,0,0,0,0,0,0]);
+	  state[1] = !state[1] & t[8];
+	  state[2] = #x86_VPBLENDD_256(t[4], t[5], (8u1)[0,0,0,0,1,1,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[6], t[4], (8u1)[0,0,0,0,1,1,0,0]);
+	  state[2] = #x86_VPBLENDD_256(state[2], t[6], (8u1)[0,0,1,1,0,0,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[7], t[3], (8u1)[0,0,1,1,0,0,0,0]);
+	  state[2] = #x86_VPBLENDD_256(state[2], t[3], (8u1)[1,1,0,0,0,0,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[7], t[5], (8u1)[1,1,0,0,0,0,0,0]);
+	  state[2] = !state[2] & t[7];
+	  state[2] = state[2] ^ t[2];
+	  t[0] = #x86_VPERMQ(t[0], (4u2)[0,0,0,0]);
+	  state[3] = #x86_VPERMQ(state[3], (4u2)[0,1,2,3]);
+	  state[5] = #x86_VPERMQ(state[5], (4u2)[2,0,3,1]);
+	  state[6] = #x86_VPERMQ(state[6], (4u2)[1,3,0,2]);
+	  state[4] = #x86_VPBLENDD_256(t[6], t[3], (8u1)[0,0,0,0,1,1,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[5], t[6], (8u1)[0,0,0,0,1,1,0,0]);
+	  state[4] = #x86_VPBLENDD_256(state[4], t[5], (8u1)[0,0,1,1,0,0,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[7], t[2], (8u1)[0,0,1,1,0,0,0,0]);
+	  state[4] = #x86_VPBLENDD_256(state[4], t[2], (8u1)[1,1,0,0,0,0,0,0]);
+	  t[7] = #x86_VPBLENDD_256(t[7], t[3], (8u1)[1,1,0,0,0,0,0,0]);
+	  state[4] = !state[4] & t[7];
+	  state[0] = state[0] ^ t[0];
+	  state[1] = state[1] ^ t[1];
+	  state[4] = state[4] ^ t[4];
+
+	  //######################################## Iota
+	  state[0] = state[0] ^ (u256)[iotas + 0*32-0];
+
+    iotas = iotas + 32;
+    (_,_,_,zf,r) = #x86_DEC_32(r);
+  } (!zf)
+
+  return state;
+}
+
+u64 g_zero = 0;
+
+fn init_state() -> reg u256[7]
+{
+  inline int i;
+  reg u256[7] state;
+
+  state[0] = #x86_VPBROADCAST_4u64(g_zero);
+
+  for i=1 to 7
+  { state[i] = state[0]; }
+
+  return state;
+}
+
+fn init_s_state() -> stack u64[28]
+{
+  inline int i;
+  stack u64[28] s_state;
+  reg u256 zero;
+
+  zero = #x86_VPBROADCAST_4u64(g_zero);
+  for i=0 to 7
+  { s_state[u256 i] = zero; }
+
+  return s_state;
+}
+
+
+
+
+
+fn keccak_1600_add_final_block(
+  reg u256[7] state,
+  stack u64[28] s_state,
+  reg u64 a_jagged,
+  reg u64 in,
+  reg u64 inlen,
+  inline int suffix,
+  inline int rate_in_bytes
+) -> reg u256[7]
+{
+  inline int i;
+
+  reg u256 zero;
+  reg u64 j l t inlen8;
+  reg u8 c;
+
+  s_state = init_s_state();
+
+  inlen8 = inlen;
+  inlen8 >>= 3;
+  j = 0;
+  while ( j < inlen8 )
+  {
+    t = [in + 8*j];
+    l = [a_jagged + 8*( j)];
+    s_state[(int) l] = t;
+    j += 1;
+  }
+  l = [a_jagged + 8*( j)];
+
+  j <<= 3;
+  l <<= 3;
+
+  // inlen4 ?
+
+  while ( j < inlen )
+  {
+    c = (u8)[in + j];
+    s_state[u8 (int) l] = c;
+    j += 1;
+    l += 1;
+  }
+
+  s_state[u8 (int) l] = suffix;
+
+  j  = (rate_in_bytes-1) >> 3;
+  l  = [a_jagged + 8*( j)];
+  l <<= 3;
+  l += ((rate_in_bytes-1) & 0x7);
+
+  s_state[u8 (int) l] ^= 0x80;
+
+  //
+  t = s_state[0];
+  s_state[1] = t;
+  s_state[2] = t;
+  s_state[3] = t;
+  //
+
+  for i = 0 to 7
+  { state[i] ^= s_state[u256 i]; }
+
+  return state;
+}
+
+
+
+// obs: @pre: len <= rate_in_bytes
+fn keccak_1600_xtr_block(
+  reg u256[7] state,
+  reg u64 a_jagged,
+  reg u64 out,
+  reg u64 len
+) -> reg u64
+{
+  inline int i;
+  stack u64[28] s_state;
+  reg u64 j l t len8;
+  reg u8 c;
+
+  for i = 0 to 7
+  { s_state[u256 i] = state[i]; }
+
+  len8 = len;
+  len8 >>= 3;
+  j = 0;
+  while ( j < len8 )
+  {
+    l = [a_jagged + 8*( j)];
+    t = s_state[(int) l];
+    [out + 8*j] = t;
+    j += 1;
+  }
+  l = [a_jagged + 8*( j)];
+
+  j <<= 3;
+  l <<= 3;
+
+  // inlen4 ?
+
+  while ( j < len )
+  {
+    c = s_state[u8 (int) l];
+    (u8)[out + j] = c;
+    j += 1;
+    l += 1;
+  }
+
+  out += len;
+
+  return out;
+}
+
+
+
+fn keccak_1600_absorb(
+  reg u256[7] state,
+  reg u64 rhotates_left,
+  reg u64 rhotates_right,
+  reg u64 iotas,
+  reg u64 a_jagged,
+  reg u64 in inlen,
+  inline int suffix,
+  inline int rate_in_bytes
+) -> reg u256[7]
+{
+  stack u64[28] s_state;
+
+  s_state = init_s_state();
+
+  // intermediate blocks
+  while ( inlen >= rate_in_bytes )
+  {
+    state, s_state, in, inlen = keccak_1600_add_full_block(state, s_state, in, inlen, rate_in_bytes);
+    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+  }
+
+  // final block
+  state = keccak_1600_add_final_block(state, s_state, a_jagged, in, inlen, suffix, rate_in_bytes);
+  state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+
+  return state;
+}
+
+
+
+fn keccak_1600_squeeze(
+  reg u256[7] state,
+  reg u64 rhotates_left,
+  reg u64 rhotates_right,
+  reg u64 iotas,
+  reg u64 a_jagged,
+  reg u64 out,
+  inline int rate_in_bytes,
+  inline int i_hash_bytes
+)
+{
+  reg u64 hash_bytes;
+
+  hash_bytes = i_hash_bytes;
+
+  // intermediate blocks
+  while ( hash_bytes >= rate_in_bytes )
+  {    
+    out = keccak_1600_xtr_block(state, a_jagged, out, rate_in_bytes);
+    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+    hash_bytes -= rate_in_bytes;
+  }
+
+  // final block
+  out = keccak_1600_xtr_block(state, a_jagged, out, hash_bytes);
+}
+
+
+
+fn keccak_1600(
+  reg u64 out,   // output pointer with at least hash_bytes available
+  reg u64 in,    // input pointer with inlen bytes
+  reg u64 inlen, // input length in bytes
+  reg u64 m,     // external memory: it contains 4 pointers: (rhotates_left, rhotates_right, iotas, a_jagged)
+  inline int suffix,
+  inline int rate,
+  inline int capacity,
+  inline int hash_bytes
+)
+{
+  reg u64 rhotates_left rhotates_right iotas a_jagged;
+  reg u256[7] state;
+
+  state          = init_state();
+  rhotates_left  = [m + 8*0];
+  rhotates_right = [m + 8*1];
+  iotas          = [m + 8*2];
+  a_jagged       = [m + 8*3];
+
+  // absorb
+  state = keccak_1600_absorb(state, rhotates_left, rhotates_right, iotas, a_jagged,
+                             in, inlen, suffix, (rate/8));
+
+  // squeeze
+  keccak_1600_squeeze(state, rhotates_left, rhotates_right, iotas, a_jagged,
+                      out, (rate/8), hash_bytes);
+}
+
+
+export fn shake128_avx2_jazz(reg u64 out in inlen m)
+{
+  keccak_1600(out, in, inlen, m, 0x1F, 1344, 256, 168);
+}
