@@ -1,7 +1,13 @@
 // TODO refactor iotas when global arrays are supported
 
-
-
+  // 0 includes "keccak_f.jazz"
+  // 1 includes "keccak_f-short.jazz"
+  // 2 includes "keccak_f-short2.jazz"
+  // 3 includes "keccak_f-openssl.jazz"
+  
+  // 0 uses external memory for the stack space
+  // 1 uses stack u64[] array
+  
         
   // TODO: README
   // atm I think this is the best way of simulating this particular stack swap
@@ -393,16 +399,19 @@ fn keccak_1600_squeeze(
 
   s_hash_bytes = i_hash_bytes;
 
-  // intermediate blocks
-  while ( s_hash_bytes >= rate_in_bytes )
-  {    
-    out = keccak_1600_xtr_block(state, out, rate_in_bytes);
-    s_out = out;
+  if (i_hash_bytes > rate_in_bytes)
+  {
+    // intermediate blocks
+    while ( s_hash_bytes > rate_in_bytes )
+    {    
+      out = keccak_1600_xtr_block(state, out, rate_in_bytes);
+      s_out = out;
 
-    state, iotas = keccak_f(state, iotas);
+      state, iotas = keccak_f(state, iotas);
 
-    s_hash_bytes -= rate_in_bytes;
-    out = s_out;
+      s_hash_bytes -= rate_in_bytes;
+      out = s_out;
+    }
   }
 
   // final block

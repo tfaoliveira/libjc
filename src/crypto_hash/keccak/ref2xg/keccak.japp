@@ -399,16 +399,19 @@ fn keccak_1600_squeeze(
 
   s_hash_bytes = i_hash_bytes;
 
-  // intermediate blocks
-  while ( s_hash_bytes >= rate_in_bytes )
-  {    
-    out = keccak_1600_xtr_block(state, out, rate_in_bytes);
-    s_out = out;
+  if (i_hash_bytes > rate_in_bytes)
+  {
+    // intermediate blocks
+    while ( s_hash_bytes > rate_in_bytes )
+    {    
+      out = keccak_1600_xtr_block(state, out, rate_in_bytes);
+      s_out = out;
 
-    state, iotas = keccak_f(state, iotas);
+      state, iotas = keccak_f(state, iotas);
 
-    s_hash_bytes -= rate_in_bytes;
-    out = s_out;
+      s_hash_bytes -= rate_in_bytes;
+      out = s_out;
+    }
   }
 
   // final block

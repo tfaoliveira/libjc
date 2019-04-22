@@ -265,12 +265,15 @@ fn keccak_1600_squeeze(
 
   hash_bytes = i_hash_bytes;
 
-  // intermediate blocks
-  while ( hash_bytes >= rate_in_bytes )
-  {    
-    out = keccak_1600_xtr_block(state, a_jagged, out, rate_in_bytes);
-    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
-    hash_bytes -= rate_in_bytes;
+  if (i_hash_bytes > rate_in_bytes)
+  {
+    // intermediate blocks
+    while ( hash_bytes > rate_in_bytes )
+    {    
+      out = keccak_1600_xtr_block(state, a_jagged, out, rate_in_bytes);
+      state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+      hash_bytes -= rate_in_bytes;
+    }
   }
 
   // final block
