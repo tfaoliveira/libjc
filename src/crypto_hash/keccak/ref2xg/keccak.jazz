@@ -183,7 +183,7 @@ fn keccak_1600_add_full_block(
 }
 
 
-
+#if 0
 // obs: @pre: inlen < rate_in_bytes
 fn keccak_1600_add_final_block(
   _state_t state,
@@ -221,6 +221,78 @@ fn keccak_1600_add_final_block(
 
   return state;
 }
+#else
+// obs: @pre: inlen < 8
+fn lastu64(
+  reg u64 in inlen,
+  inline int suffix
+) -> reg u64
+{
+  reg bool zf;
+  reg u64 res delta t suffix_u64;
+
+  res = 0;
+  delta = 0;
+  zf = #x86_TEST_8(inlen,4);
+  if (!zf) {
+    res = (64u)(u32)[in + 0];
+    in += 4;
+    delta = 32;
+  }
+  zf = #x86_TEST_8(inlen,2);
+  if (!zf) {
+    t = (64u)(u16)[in + 0];
+    in += 2;
+    t <<= delta;
+    delta += 16;
+    res += t;
+  }
+  zf = #x86_TEST_8(inlen,1);
+  if (!zf) {
+    t = (64u)(u8)[in + 0];
+    t <<= delta;
+    delta += 8;
+    res += t;
+  }
+  suffix_u64 = suffix;
+  suffix_u64 <<= delta;
+  res += suffix_u64;
+
+  return res;
+}
+
+
+// obs: @pre: inlen < rate_in_bytes
+fn keccak_1600_add_final_block(
+  _state_t state,
+  reg u64 in,
+  reg u64 inlen,
+  inline int suffix,
+  inline int rate_in_bytes
+) -> _state_t
+{
+  reg u64 i t inlen8;
+  reg u8 c;
+
+  inlen8 = inlen;
+  inlen8 >>= 3;
+  i = 0;
+  while ( i < inlen8 )
+  {
+    t = [in + 8*i];
+    B(state,i) ^= t;
+    i += 1;
+  }
+  in += 8*i;
+  inlen &= 7; // inlen = inlen % 8
+  t = lastu64(in, inlen, suffix);
+  B(state,i) ^= t;
+
+  B8(state,rate_in_bytes-1) ^= 0x80;
+
+  return state;
+}
+#endif
 
 
 
@@ -328,7 +400,7 @@ fn keccak_1600(
   reg u64 out, // output pointer with at least hash_bytes available
   reg u64 in, // input pointer with inlen bytes
   reg u64 inlen, // input length in bytes
-  reg u64 iotas, // contains iotas, aligned at 256
+  reg u64 iotas_, // contains iotas, aligned at 256
   reg u64 m, // external memory for 2 states
   inline int suffix,
   inline int rate,
@@ -338,6 +410,9 @@ fn keccak_1600(
 {
   stack u64 out_s;
   _state_t state;
+  reg u64 iotas; // lastu64 needs iota register
+
+  iotas = iotas_;
 
   out_s = out;
   state = keccak_init(m);
