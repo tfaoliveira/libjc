@@ -54,8 +54,8 @@ fn keccak_1600_add_full_block(
   t41 = #x86_VPBLENDD_256(t41, a32,  (8u1)[0,0,0,0,1,1,1,1]); // (1,4) (2,3) (3,2)   ___
 
   state[4] ^= t21;
-  state[5] ^= t41;
   state[3] ^= t31;
+  state[5] ^= t41;
 
   in += rate_in_bytes;
   inlen -= rate_in_bytes;

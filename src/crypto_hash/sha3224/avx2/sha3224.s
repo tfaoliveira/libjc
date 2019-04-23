@@ -10,9 +10,9 @@ sha3224_avx2_jazz:
 	vpbroadcastq	g_zero(%rip), %ymm2
 	vmovdqu	%ymm2, %ymm3
 	vmovdqu	%ymm2, %ymm4
-	vmovdqu	%ymm2, %ymm12
-	vmovdqu	%ymm2, %ymm10
 	vmovdqu	%ymm2, %ymm11
+	vmovdqu	%ymm2, %ymm10
+	vmovdqu	%ymm2, %ymm12
 	vmovdqu	%ymm2, %ymm9
 	movq	(%rcx), %rax
 	movq	8(%rcx), %r8
@@ -46,8 +46,8 @@ Lsha3224_avx2_jazz$11:
 	vpxor	%ymm5, %ymm9, %ymm9
 	vpblendd	$15, %ymm7, %ymm8, %ymm5
 	vpxor	%ymm0, %ymm10, %ymm10
-	vpxor	%ymm5, %ymm11, %ymm11
-	vpxor	%ymm1, %ymm12, %ymm12
+	vpxor	%ymm1, %ymm11, %ymm11
+	vpxor	%ymm5, %ymm12, %ymm12
 	leaq	144(%rsi), %rsi
 	leaq	-144(%rdx), %rdx
 	leaq	96(%rax), %r10
@@ -57,7 +57,7 @@ Lsha3224_avx2_jazz$11:
 	.p2align	5
 Lsha3224_avx2_jazz$12:
 	vpshufd	$78, %ymm4, %ymm0
-	vpxor	%ymm12, %ymm11, %ymm1
+	vpxor	%ymm11, %ymm12, %ymm1
 	vpxor	%ymm9, %ymm10, %ymm5
 	vpxor	%ymm3, %ymm1, %ymm1
 	vpxor	%ymm5, %ymm1, %ymm1
@@ -83,7 +83,7 @@ Lsha3224_avx2_jazz$12:
 	vpsllvq	-96(%r10), %ymm4, %ymm2
 	vpsrlvq	-96(%r11), %ymm4, %ymm4
 	vpor	%ymm2, %ymm4, %ymm2
-	vpxor	%ymm0, %ymm12, %ymm4
+	vpxor	%ymm0, %ymm11, %ymm4
 	vpsllvq	-32(%r10), %ymm4, %ymm5
 	vpsrlvq	-32(%r11), %ymm4, %ymm4
 	vpor	%ymm5, %ymm4, %ymm4
@@ -91,7 +91,7 @@ Lsha3224_avx2_jazz$12:
 	vpsllvq	(%r10), %ymm5, %ymm6
 	vpsrlvq	(%r11), %ymm5, %ymm5
 	vpor	%ymm6, %ymm5, %ymm5
-	vpxor	%ymm0, %ymm11, %ymm6
+	vpxor	%ymm0, %ymm12, %ymm6
 	vpsllvq	32(%r10), %ymm6, %ymm7
 	vpsrlvq	32(%r11), %ymm6, %ymm6
 	vpor	%ymm7, %ymm6, %ymm6
@@ -147,8 +147,8 @@ Lsha3224_avx2_jazz$12:
 	vpandn	%ymm11, %ymm4, %ymm4
 	vpxor	%ymm0, %ymm4, %ymm4
 	vpermq	$0, %ymm6, %ymm6
-	vpermq	$27, %ymm12, %ymm12
-	vpermq	$-115, %ymm9, %ymm11
+	vpermq	$27, %ymm12, %ymm11
+	vpermq	$-115, %ymm9, %ymm12
 	vpermq	$114, %ymm10, %ymm9
 	vpblendd	$12, %ymm2, %ymm5, %ymm10
 	vpblendd	$12, %ymm5, %ymm3, %ymm5
@@ -212,9 +212,9 @@ Lsha3224_avx2_jazz$6:
 	vpxor	(%rsp), %ymm2, %ymm0
 	vpxor	32(%rsp), %ymm3, %ymm1
 	vpxor	64(%rsp), %ymm4, %ymm2
-	vpxor	96(%rsp), %ymm12, %ymm3
+	vpxor	96(%rsp), %ymm11, %ymm3
 	vpxor	128(%rsp), %ymm10, %ymm4
-	vpxor	160(%rsp), %ymm11, %ymm5
+	vpxor	160(%rsp), %ymm12, %ymm5
 	vpxor	192(%rsp), %ymm9, %ymm6
 	leaq	96(%rax), %rax
 	leaq	96(%r8), %rdx
