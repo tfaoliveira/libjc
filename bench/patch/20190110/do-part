@@ -496,6 +496,10 @@ do
 	      continue
 	    fi
 
+      # patch
+      cp try try.small
+      # end patch
+
 	    [ x"$expectedchecksumsmall" != x ] \
 	    && [ x"$expectedchecksumsmall" != "x$checksumsmall" ] \
 	    && echo "$version $shorthostname $abi $startdate $o $p try $checksumsmall fails $cycles $checksumcycles $cyclespersecond $impl $compilerword" >&5 \
@@ -529,6 +533,10 @@ do
 	      done
 	      continue
 	    fi
+
+      # patch
+      cp try try.big
+      # end patch
 
 	    [ x"$expectedchecksumbig" != x ] \
 	    && [ x"$expectedchecksumbig" != "x$checksumbig" ] \
