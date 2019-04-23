@@ -4,7 +4,7 @@ set logscale x 2
 set xlabel "message length in bytes"
 set ylabel "cycles per byte"
 
-set output "../svg/poly1305_libsodium_static_disable_asm_16384.svg"
+set output "../svg/poly1305_libjc_libsodium_static_disable_asm_cycles_32_16384.svg"
 
 plot \
 \
