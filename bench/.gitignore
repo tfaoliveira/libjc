@@ -1,4 +1,5 @@
 supercop-*
 data/
-third_party_build/
+third_party_static_libs/
 third_party_shared_libs/
+config/bench

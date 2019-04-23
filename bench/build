@@ -1,6 +1,6 @@
 #!/bin/bash
 
-idir="third_party_build"
+idir="third_party_static_libs"
 ilib="third_party_shared_libs"
 mkdir -p $idir/
 mkdir -p $ilib/openssl
