@@ -1,5 +1,6 @@
 
 set term svg enhanced background rgb 'white'
+set yrange [0:180000]
 set title "curve25519"
 set output "../svg/curve25519_cycles.svg"
 set boxwidth 0.5 relative
