@@ -1,0 +1,19 @@
+#include "../../../src/crypto_hash/keccak/ref2xg/keccak.jazz"
+
+export fn KeccakF1600_x86_64(
+  reg u64 state,
+  reg u64 iotas
+)
+{
+  inline int i;
+  _state_t A;
+  reg u64 t;
+
+  for i=0 to 25
+  { t = [state + 8*i]; B(A,i) = t; }
+
+  A, iotas = keccak_f(A,iotas);
+
+  for i=0 to 25
+  { t = B(A,i); [state + 8*i] = t; }
+}

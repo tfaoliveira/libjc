@@ -1,0 +1,20 @@
+#include "../../../src/crypto_hash/keccak/avx2/keccak.jazz"
+
+export fn KeccakF1600_AVX2(
+  reg u64 state,
+  reg u64 rhotates_left,
+  reg u64 rhotates_right,
+  reg u64 iotas
+)
+{
+  inline int i;
+  reg u256[7] A;
+
+  for i=0 to 7
+  { A[i] = (u256)[state + 8*i]; }
+
+  A = keccak_f(A, rhotates_left, rhotates_right, iotas);
+
+  for i=0 to 7
+  { (u256)[state + 8*i] = A[i]; }
+}
