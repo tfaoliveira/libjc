@@ -1,0 +1,28 @@
+===keccakf1600 performance:
+
+OpenSSL_x86_64: 1298 cycles
+Jasmin_x86_64: 1288 cycles
+OpenSSL_AVX2: 1064 cycles
+Jasmin_AVX2: 1064 cycles
+
+===performance in cycles per byte for 16KiB inputs for shake256:
+
+OpenSSL_x86_64: 9.83
+Jasmin_x86_64: 9.67 ~ -0.16
+OpenSSL_AVX2: 8.17
+Jasmin_AVX2: 8.01
+
+===cycles per byte spent in the permutation (division by 136 to get the cpb):
+
+OpenSSL_x86_64: 1298 ~> --9.54 cpb
+Jasmin_x86_64: 1288 ~> 9.47 cpb ~ -0.07
+OpenSSL_AVX2: 1064 ~> 7.82 cpb
+Jasmin_AVX2: 1064 ~> "
+
+===conclusions:
+
+shake256 x86_64: --roughly-- half of the performance improvment is in keccakf1600
+(~ -0.07 cpb) and the other half is in the remaining code (~ 0.16-0.07 <=> ~ 0.09)
+
+shake256 AVX2: gains are mostly related to 'keccak_1600_add_full_block'
+
