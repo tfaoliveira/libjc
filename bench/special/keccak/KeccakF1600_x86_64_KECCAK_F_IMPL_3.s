@@ -12,12 +12,12 @@ KeccakF1600_x86_64_KECCAK_F_IMPL_3:
 	pushq	%r15
 	leaq	100(%rdi), %rax
 	leaq	200(%rax), %rcx
-	notq	-92(%rax)
-	notq	-84(%rax)
-	notq	-36(%rax)
-	notq	-4(%rax)
-	notq	36(%rax)
-	notq	60(%rax)
+#	notq	-92(%rax) # nots are outside of OpenSSL __KeccakF we comment them here for the sake of comparison
+#	notq	-84(%rax)
+#	notq	-36(%rax)
+#	notq	-4(%rax)
+#	notq	36(%rax)
+#	notq	60(%rax)
 	movq	60(%rax), %rdx
 	movq	68(%rax), %rdi
 	movq	76(%rax), %r8
@@ -228,12 +228,12 @@ LKeccakF1600_x86_64_KECCAK_F_IMPL_3$1:
 	movq	%r11, %r9
 	testb	$-1, %sil
 	jne 	LKeccakF1600_x86_64_KECCAK_F_IMPL_3$1
-	notq	-92(%rax)
-	notq	-84(%rax)
-	notq	-36(%rax)
-	notq	-4(%rax)
-	notq	36(%rax)
-	notq	60(%rax)
+#	notq	-92(%rax) # same
+#	notq	-84(%rax)
+#	notq	-36(%rax)
+#	notq	-4(%rax)
+#	notq	36(%rax)
+#	notq	60(%rax)
 	popq	%r15
 	popq	%r14
 	popq	%r13

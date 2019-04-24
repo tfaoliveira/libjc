@@ -267,7 +267,8 @@ KeccakF1600_OpenSSL_x86_64:
 	test	$255,%r15
 	jnz	.Loop
 
-	lea	-192(%r15),%r15	# rewind iotas
+  #no need to rewind iotas for this benchmark
+	#lea	-192(%r15),%r15	# rewind iotas
 
   # begin patch
   popq	%r15

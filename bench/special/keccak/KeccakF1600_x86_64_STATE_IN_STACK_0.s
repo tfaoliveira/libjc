@@ -9,6 +9,7 @@ KeccakF1600_x86_64_STATE_IN_STACK_0:
 	pushq	%r12
 	pushq	%r13
 	pushq	%r14
+	pushq	%r15 # number of pushs equal
 	subq	$8, %rsp
 	leaq	100(%rdi), %rax
 	leaq	200(%rax), %rcx
@@ -403,6 +404,7 @@ LKeccakF1600_x86_64_STATE_IN_STACK_0$1:
 	testb	$-1, %sil
 	jne 	LKeccakF1600_x86_64_STATE_IN_STACK_0$1
 	addq	$8, %rsp
+  popq  %r15 # number of pops equal
 	popq	%r14
 	popq	%r13
 	popq	%r12

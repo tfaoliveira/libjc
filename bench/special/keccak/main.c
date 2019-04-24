@@ -3,7 +3,7 @@
 
 // begin code from supercop
 #define WARM_TIMINGS (128*64 +1)
-#define TIMINGS (8192*16)
+#define TIMINGS (8192*128)
 
 static long long cycles[TIMINGS + 1];
 
@@ -145,7 +145,7 @@ int main()
   uint64_t s1[25], s2[25], s3[28], s4[50];
 
 
-  // KeccakF1600_OpenSSL_x86_64
+  // to increase the cpu frequency if necessary
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
     KeccakF1600_OpenSSL_x86_64(s1, s2); }
@@ -165,33 +165,33 @@ int main()
 
   // KeccakF1600_x86_64
   for (i = 0;i <= WARM_TIMINGS;++i)
-  { KeccakF1600_x86_64(s1, iotas_x86_64); }
+  { KeccakF1600_x86_64(s1, iotas_x86_64+8); }
 
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
-    KeccakF1600_x86_64(s1, iotas_x86_64); }
+    KeccakF1600_x86_64(s1, iotas_x86_64+8); }
   printcycles("KeccakF1600_x86_64");
 
 
 
   // KeccakF1600_x86_64_STATE_IN_STACK_0
   for (i = 0;i <= WARM_TIMINGS;++i)
-  { KeccakF1600_x86_64_STATE_IN_STACK_0(s4, iotas_x86_64); }
+  { KeccakF1600_x86_64_STATE_IN_STACK_0(s4, iotas_x86_64+8); }
 
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
-    KeccakF1600_x86_64_STATE_IN_STACK_0(s4, iotas_x86_64); }
+    KeccakF1600_x86_64_STATE_IN_STACK_0(s4, iotas_x86_64+8); }
   printcycles("KeccakF1600_x86_64_STATE_IN_STACK_0");
 
 
 
   // KeccakF1600_x86_64_KECCAK_F_IMPL_3
   for (i = 0;i <= WARM_TIMINGS;++i)
-  { KeccakF1600_x86_64_KECCAK_F_IMPL_3(s4, iotas_x86_64); }
+  { KeccakF1600_x86_64_KECCAK_F_IMPL_3(s4, iotas_x86_64+8); }
 
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
-    KeccakF1600_x86_64_KECCAK_F_IMPL_3(s4, iotas_x86_64); }
+    KeccakF1600_x86_64_KECCAK_F_IMPL_3(s4, iotas_x86_64+9); }
   printcycles("KeccakF1600_x86_64_KECCAK_F_IMPL_3");
 
 

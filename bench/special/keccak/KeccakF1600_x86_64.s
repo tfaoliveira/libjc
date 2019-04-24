@@ -8,6 +8,8 @@ KeccakF1600_x86_64:
 	pushq	%rbx
 	pushq	%r12
 	pushq	%r13
+	pushq	%r14 # just to make the number of push equal
+	pushq	%r15 #
 	subq	$408, %rsp
 #	movq	(%rdi), %rax
 #	movq	%rax, 200(%rsp)
@@ -500,6 +502,9 @@ LKeccakF1600_x86_64$1:
 #	movq	392(%rsp), %rax
 #	movq	%rax, 192(%rdi)
 	addq	$408, %rsp
+
+  popq	%r15 # number of pops equal
+	popq	%r14 #
 	popq	%r13
 	popq	%r12
 	popq	%rbx
