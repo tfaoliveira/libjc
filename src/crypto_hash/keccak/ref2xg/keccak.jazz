@@ -43,7 +43,7 @@
   fn swap(_state_t a b) -> _state_t, _state_t
   { inline int i; reg u64 t;
     for i=0 to 25
-    { t=b[i]; a[i]=t; }    
+    { t=b[i]; a[i]=t; }
     return a, b;}
 
   #define setup(a,b)
@@ -170,7 +170,7 @@ fn keccak_1600_add_full_block(
   inline int idx i;
   reg u64 t;
 
-  for i = 0 to (rate_in_bytes / 8) 
+  for i = 0 to (rate_in_bytes / 8)
   {
     t = [in + 8*i];
     B(state,i) ^= t;
@@ -222,6 +222,7 @@ fn keccak_1600_add_final_block(
   return state;
 }
 #else
+
 // obs: @pre: inlen < 8
 fn lastu64(
   reg u64 in inlen,
@@ -378,7 +379,7 @@ fn keccak_1600_squeeze(
   {
     // intermediate blocks
     while ( s_hash_bytes > rate_in_bytes )
-    {    
+    {
       out = keccak_1600_xtr_block(state, out, rate_in_bytes);
       s_out = out;
 
