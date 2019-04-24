@@ -25,15 +25,11 @@ void allocate(void)
   h = alignedcalloc(crypto_onetimeauth_BYTES);
 }
 
-#define EST_TIMINGS (64)
-#define MAX_TIMINGS (8192*16)
-#define CPU_TIME (25000000)
-
+#define WARM_TIMINGS (16)
+#define TIMINGS (1024)
 #define LOOPS 3
 
-static long long est_cycles[EST_TIMINGS + 1]; // estimate cycles
-static long long cycles[MAX_TIMINGS + 1];
-static long long loops[LOOPS][MAXTEST_BYTES + 1];
+static long long cycles[TIMINGS+1];
 
 int update_increment_setup1(int mlen)
 {
@@ -63,38 +59,12 @@ int update_increment(int mlen)
   return update_increment_setup1(mlen);
 }
 
-/* copied and adapted from printentry from file measure-anything.c */
-long long getcycles(long long *cycles, long long timings)
-{
-  long long i;
-  long long j;
-  long long belowj;
-  long long abovej;
-  long long sum;
-
-  j = 0;
-  for (;j + 1 < timings;++j) { 
-    belowj = 0;
-    for (i = 0;i < timings;++i) if (cycles[i] < cycles[j]) ++belowj;
-    abovej = 0;
-    for (i = 0;i < timings;++i) if (cycles[i] > cycles[j]) ++abovej;
-    if (belowj * 2 < timings && abovej * 2 < timings) break;
-  }
-
-  return cycles[j];
-}
-
 void measure(void)
 {
   int i;
   int loop;
   int mlen;
   int inc = 1;
-
-  // estimate number of cycles that a function takes to execute
-  // real, or as real it can be... , number of cycles that a function takes to execute
-  // timings, number of times that a function will be executed 
-  long long estimate, real, timings; 
 
   for (loop = 0;loop < LOOPS;++loop) {
 
@@ -107,36 +77,22 @@ void measure(void)
       kernelrandombytes(m,mlen);
       kernelrandombytes(h,crypto_onetimeauth_BYTES);
 
-      // get an estimate of how many cycles it takes to execute crypto_stream_xor
-      for (i = 0;i <= EST_TIMINGS;++i) {
-        est_cycles[i] = cpucycles();
+      // warm up
+      for (i = 0;i < WARM_TIMINGS;++i) {
         crypto_onetimeauth(h,m,mlen,k);
       }
-      for (i = 0;i < EST_TIMINGS;++i) {
-        est_cycles[i] = est_cycles[i + 1] - est_cycles[i];
-      }
 
-      // for example, if we estimate a function to take 1000 cpu cycles to execute
-      // and we want to measure it for 10M cpu cycles then we are going to measure
-      // it 10001 times
-      estimate = getcycles(est_cycles, EST_TIMINGS);
-      timings = (CPU_TIME > estimate) ? (CPU_TIME / estimate) : 1;
-      timings |= 1;
-      timings = (timings > MAX_TIMINGS) ? MAX_TIMINGS : timings;
-
-      for (i = 0;i <= timings;++i) {
+      // measure
+      for (i = 0;i <= TIMINGS;++i) {
         cycles[i] = cpucycles();
         crypto_onetimeauth(h,m,mlen,k);
       }
 
-      for (i = 0;i < timings;++i) {
+      for (i = 0;i < TIMINGS;++i) {
         cycles[i] = cycles[i + 1] - cycles[i];
       }
-      real = getcycles(cycles, timings);
 
-      loops[loop][mlen] = real;
-
-      printentry(mlen,"cycles",cycles,timings);
+      printentry(mlen,"cycles",cycles,TIMINGS);
 
       inc = update_increment(mlen);
     }

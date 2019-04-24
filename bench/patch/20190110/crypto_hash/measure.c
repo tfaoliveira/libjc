@@ -10,11 +10,6 @@ const char *sizenames[] = { "outputbytes", 0 };
 const long long sizes[] = { crypto_hash_BYTES };
 
 #define MAXTEST_BYTES 16384
-#ifdef SUPERCOP
-#define MGAP 8192
-#else
-#define MGAP 8
-#endif
 
 static unsigned char *h;
 static unsigned char *m;
@@ -29,7 +24,10 @@ void allocate(void)
   m = alignedcalloc(MAXTEST_BYTES);
 }
 
-#define TIMINGS 127
+#define WARM_TIMINGS (16)
+#define TIMINGS (128)
+#define LOOPS 3
+
 static long long cycles[TIMINGS + 1];
 
 int update_increment_setup1(int mlen)
@@ -75,12 +73,21 @@ void measure(void)
   int inc = 1;
 
   for (loop = 0;loop < LOOPS;++loop) {
-    for (mlen = 0;mlen <= MAXTEST_BYTES;mlen += inc) {
+    for (mlen = 1;mlen <= MAXTEST_BYTES;mlen += inc) {
+
       kernelrandombytes(m,mlen);
+
+      // warm up
+      for (i = 0;i < WARM_TIMINGS;++i) {
+        crypto_hash(h,m,mlen);
+      }
+
+      // measure
       for (i = 0;i <= TIMINGS;++i) {
         cycles[i] = cpucycles();
         crypto_hash(h,m,mlen);
       }
+
       printcycles(mlen);
 
       inc = update_increment(mlen);

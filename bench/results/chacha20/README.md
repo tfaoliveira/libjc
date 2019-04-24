@@ -1,25 +1,33 @@
 # Overview
-Cycles per byte over message length. Each following section contains 3 images, the first for messages from 16 to 512 bytes, the second from 512 to 4096 bytes and the last from 4096 to 16384.
+Cycles per byte over message length.
 
-# Jazz / OpenSSL 1_1_1-stable (GCC 8.1)
-![Jazz / OpenSSL 1_1_1-stable (GCC 8.1) - 16 to 512 bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_openssl_512.svg)
-![Jazz / OpenSSL 1_1_1-stable (GCC 8.1) - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_openssl_4096.svg)
-![Jazz / OpenSSL 1_1_1-stable (GCC 8.1) - 4K to 16K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_openssl_16384.svg)
+# libjc
+![libjc](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_xor_cycles_32_16384.svg)
 
+# libjc / OpenSSL (static)
+![libjc / OpenSSL (static)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_openssl_static_xor_cycles_32_16384.svg)
 
-# Jazz / Libsodium (GCC 8.1)
-![Jazz / Libsodium (GCC 8.1) - 16 to 512 bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_libsodium_512.svg)
-![Jazz / Libsodium (GCC 8.1) - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_libsodium_4096.svg)
-![Jazz / Libsodium (GCC 8.1) - 4K to 16K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_libsodium_16384.svg)
+# libjc / OpenSSL (static/no-asm)
+![libjc / OpenSSL (static/no-asm)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_openssl_static_no_asm_xor_cycles_32_16384.svg)
 
+# libjc / Libsodium (static)
+![libjc / Libsodium (static)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_libsodium_static_xor_cycles_32_16384.svg)
 
-# Jazz / HACL*
-![Jazz / HACL* (GCC 8.1) - 16 to 512 bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_hacl_star_512.svg)
-![Jazz / HACL* (GCC 8.1) - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_hacl_star_4096.svg)
-![Jazz / HACL* (GCC 8.1) - 4K to 16K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_hacl_star_16384.svg)
+# libjc / Libsodium (static/disable-asm)
+![libjc / Libsodium (static/disable-asm)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_libsodium_static_disable_asm_xor_cycles_32_16384.svg)
 
-# Jazz / usuba
-![Jazz / usuba - 16 to 512 bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_usuba_512.svg)
-![Jazz / usuba - 512 to 4K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_usuba_4096.svg)
-![Jazz / usuba - 4K to 16K bytes](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_jazz_vs_usuba_16384.svg)
+# libjc / HACL*
+![libjc / HACL*](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_hacl_star_gcc_xor_cycles_32_16384.svg)
+
+# libjc / HACL* (CompCert 3.4)
+![libjc / HACL* (CompCert 3.4)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_hacl_star_compcert_xor_cycles_32_16384.svg)
+
+# libjc / Usuba
+![libjc / Vale](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_usuba_xor_cycles_32_16384.svg)
+
+# libjc / SUPERCOP
+![libjc / SUPERCOP](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_supercop_xor_cycles_32_16384.svg)
+
+# libjc / SUPERCOP
+![libjc / SUPERCOP](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_supercop_xor_cycles_32_16384.svg)
 

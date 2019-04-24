@@ -28,9 +28,9 @@ void allocate(void)
   c = alignedcalloc(MAXTEST_BYTES);
 }
 
-#define WARM_TIMINGS (128)
-#define TIMINGS (512)
-#define LOOPS 5
+#define WARM_TIMINGS (16)
+#define TIMINGS (256)
+#define LOOPS 3
 
 static long long cycles[TIMINGS+1];
 
@@ -69,11 +69,6 @@ void measure(void)
   int mlen;
   int inc = 1;
 
-  // estimate number of cycles that a function takes to execute
-  // real, or as real it can be... , number of cycles that a function takes to execute
-  // timings, number of times that a function will be executed 
-  long long estimate, real, timings; 
-
   for (loop = 0;loop < LOOPS;++loop) {
 
     /* originally mlen = 0; but we are not interested in measuring the cpu time
@@ -101,7 +96,7 @@ void measure(void)
         cycles[i] = cycles[i + 1] - cycles[i];
       }
 
-      printentry(mlen,"xor_cycles",cycles,timings);
+      printentry(mlen,"xor_cycles",cycles,TIMINGS);
 
       inc = update_increment(mlen);
     }

@@ -7,6 +7,7 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.synced_folder "../../../", "/home/vagrant/libjc"
+  config.vm.synced_folder "../../../../", "/home/vagrant/root"
 
   config.vm.provision "shell", binary: true, inline: <<-SHELL
     apt-get update
@@ -18,12 +19,11 @@ Vagrant.configure(2) do |config|
     opam remote add coq-released  https://coq.inria.fr/opam/released
   	opam remote add coq-core-dev  https://coq.inria.fr/opam/core-dev
 	  opam remote add coq-extra-dev https://coq.inria.fr/opam/extra-dev
-    opam pin add -n coq 8.8.1
-    opam pin add -n coq-mathcomp-ssreflect 1.7.0
+    opam pin add -n coq 8.9.0
+    opam pin add -n menhir 20180905
     opam install depext
     opam depext conf-m4.1
-    opam install coq coq-mathcomp-ssreflect coq-mathcomp-algebra menhir
-    opam depext conf-gmp.1
+    opam install coq menhir
     (cd /home/vagrant/libjc/bench/third_party/compcert/CompCert && ./configure x86_64-linux && make && make install)
   SHELL
 

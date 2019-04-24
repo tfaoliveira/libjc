@@ -13,8 +13,6 @@ mkdir -p $ilib/openssl-keccak-avx2
 #    this disables CPU-specific implementations on
 #    non-Windows platforms."
 # - symbols in libsodium.a will be renamed to avoid conflicts with supercop
-#
-# The previous description applies to all libraries that benchmarked.
 
 rename_lib()
 {
@@ -85,7 +83,6 @@ if [ "$#" -eq 0 ]; then
     git checkout crypto/sha/build.info
   )
 
-
   # hacl-star : gcc and gcc_vec
   (cd third_party/hacl-star/ && \
     make clean-build && make build && \
@@ -107,9 +104,11 @@ fi
 # hacl-star : compcert (this should be run in a machine with ccomp, for instance by using third_party/compcert/Vagrantfile)
 # to exec this part of the code call the script with an argument, for example: ./build 1
 (cd third_party/hacl-star/snapshots/hacl-c-compcert && \
-  cp ../../../../patch/hacl-star/Makefile .
+  cp ../../../../patch/hacl-star/Makefile . && \
   make clean && make libhacl.a && \ 
   cp libhacl.a ../../../../$idir/hacl_star_compcert.a
 )
 rename_lib hacl_star_compcert;
+
+exit
 
