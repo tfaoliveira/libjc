@@ -1,5 +1,10 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+
+int compare(const void * a, const void * b)
+{ return ( *(uint64_t*)a - *(uint64_t*)b ); }
+
 
 // begin code from supercop
 #define WARM_TIMINGS (128*64 +1)
@@ -12,7 +17,7 @@ static void printnum(long long x)
   printf("%lld ",x);
 }
 
-void printentry(const char *measuring,long long *m,long long mlen)
+void printentry(const char *filename, const char *measuring,long long *m,long long mlen)
 {
   long long i;
   long long j;
@@ -40,13 +45,22 @@ void printentry(const char *measuring,long long *m,long long mlen)
   } 
   printf("\n");
   fflush(stdout);
+
+  //
+  FILE *file;
+  file = fopen(filename, "w");
+  qsort(cycles+1, TIMINGS, sizeof(uint64_t), compare);
+  for(i=2;i<=TIMINGS;i+=512)
+  { fprintf(file, "%llu, %llu\n", i, cycles[i]); }
+  fclose(file);
+  //
 }
 
-static void printcycles(char *m)
+static void printcycles(char *f, char *m)
 {
   int i;
   for (i = 0;i < TIMINGS;++i) cycles[i] = cycles[i + 1] - cycles[i];
-  printentry(m,cycles,TIMINGS);
+  printentry(f, m,cycles,TIMINGS);
 }
 
 long long cpucycles(void)
@@ -141,14 +155,13 @@ extern void KeccakF1600_AVX2(uint64_t *, uint64_t *, uint64_t *, uint64_t *);
 
 int main()
 {
-  int i;
+  long long i;
   uint64_t s1[25], s2[25], s3[28], s4[50];
 
 
   // to increase the cpu frequency if necessary
-  for (i = 0;i <= TIMINGS;++i)
-  { cycles[i] = cpucycles();
-    KeccakF1600_OpenSSL_x86_64(s1, s2); }
+  for (i = 0;i <= TIMINGS*2;++i)
+  { KeccakF1600_OpenSSL_x86_64(s1, s2); }
 
 
 
@@ -159,7 +172,7 @@ int main()
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
     KeccakF1600_OpenSSL_x86_64(s1, s2); }
-  printcycles("KeccakF1600_OpenSSL_x86_64");
+  printcycles("plot/openssl_x86_64.csv","KeccakF1600_OpenSSL_x86_64");
 
 
 
@@ -170,7 +183,7 @@ int main()
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
     KeccakF1600_x86_64(s1, iotas_x86_64+8); }
-  printcycles("KeccakF1600_x86_64");
+  printcycles("plot/jazz_x86_64.csv","KeccakF1600_x86_64");
 
 
 
@@ -181,7 +194,7 @@ int main()
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
     KeccakF1600_x86_64_STATE_IN_STACK_0(s4, iotas_x86_64+8); }
-  printcycles("KeccakF1600_x86_64_STATE_IN_STACK_0");
+  printcycles("plot/jazz_x86_64_state_in_stack_0.csv","KeccakF1600_x86_64_STATE_IN_STACK_0");
 
 
 
@@ -192,7 +205,7 @@ int main()
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
     KeccakF1600_x86_64_KECCAK_F_IMPL_3(s4, iotas_x86_64+9); }
-  printcycles("KeccakF1600_x86_64_KECCAK_F_IMPL_3");
+  printcycles("plot/jazz_x86_64_keccak_f_impl_3.csv","KeccakF1600_x86_64_KECCAK_F_IMPL_3");
 
 
 
@@ -203,7 +216,7 @@ int main()
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
     KeccakF1600_OpenSSL_AVX2(); }
-  printcycles("KeccakF1600_OpenSSL_AVX2");
+  printcycles("plot/openssl_avx2.csv","KeccakF1600_OpenSSL_AVX2");
 
 
 
@@ -214,7 +227,7 @@ int main()
   for (i = 0;i <= TIMINGS;++i)
   { cycles[i] = cpucycles();
     KeccakF1600_AVX2(s3,rhotates_left_avx2, rhotates_right_avx2, iotas_avx2); }
-  printcycles("KeccakF1600_AVX2");
+  printcycles("plot/jazz_avx2.csv","KeccakF1600_AVX2");
 
 
 
