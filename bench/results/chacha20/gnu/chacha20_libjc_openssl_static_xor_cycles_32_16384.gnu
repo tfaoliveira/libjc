@@ -4,7 +4,7 @@ set logscale x 2
 set xlabel "message length in bytes"
 set ylabel "cycles per byte"
 
-set output "../svg/chach20_libjc_openssl_static_xor_cycles_32_16384.svg"
+set output "../svg/chacha20_libjc_openssl_static_xor_cycles_32_16384.svg"
 
 plot \
 \

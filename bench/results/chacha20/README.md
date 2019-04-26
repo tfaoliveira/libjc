@@ -19,8 +19,8 @@ Cycles per byte over message length.
 # libjc / HACL*
 ![libjc / HACL*](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_hacl_star_gcc_xor_cycles_32_16384.svg)
 
-# libjc / HACL* (CompCert 3.4)
-![libjc / HACL* (CompCert 3.4)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_hacl_star_compcert_xor_cycles_32_16384.svg)
+# libjc / HACL* (CompCert 3.5)
+![libjc / HACL* (CompCert 3.5)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_hacl_star_compcert_xor_cycles_32_16384.svg)
 
 # libjc / Usuba
 ![libjc / Vale](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_usuba_xor_cycles_32_16384.svg)
@@ -29,5 +29,5 @@ Cycles per byte over message length.
 ![libjc / SUPERCOP](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_supercop_xor_cycles_32_16384.svg)
 
 # libjc / SUPERCOP
-![libjc / SUPERCOP](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_supercop_xor_cycles_32_16384.svg)
+![libjc / SUPERCOP](https://github.com/tfaoliveira/libjc/blob/master/bench/results/chacha20/svg/chacha20_libjc_supercop_v2_xor_cycles_32_16384.svg)
 

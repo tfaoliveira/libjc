@@ -19,8 +19,8 @@ Cycles per byte over message length.
 # libjc / HACL*
 ![libjc / HACL*](https://github.com/tfaoliveira/libjc/blob/master/bench/results/poly1305/svg/poly1305_libjc_hacl_star_gcc_cycles_32_16384.svg)
 
-# libjc / HACL* (CompCert 3.4)
-![libjc / HACL* (CompCert 3.4)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/poly1305/svg/poly1305_libjc_hacl_star_compcert_cycles_32_16384.svg)
+# libjc / HACL* (CompCert 3.5)
+![libjc / HACL* (CompCert 3.5)](https://github.com/tfaoliveira/libjc/blob/master/bench/results/poly1305/svg/poly1305_libjc_hacl_star_compcert_cycles_32_16384.svg)
 
 # libjc / Vale
 ![libjc / Vale](https://github.com/tfaoliveira/libjc/blob/master/bench/results/poly1305/svg/poly1305_libjc_vale_cycles_32_16384.svg)
