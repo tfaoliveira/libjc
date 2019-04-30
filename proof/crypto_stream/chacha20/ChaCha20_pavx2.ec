@@ -482,7 +482,8 @@ proof.
   proc.
   conseq (_: Array16.all_eq k{1} k{2}).
   + by move=> ?????;apply Array16.all_eq_eq.
-  by rewrite /all_eq /=; inline *; wp; skip.
+  inline *. wp. skip. 
+  by move=> &1 &2 <<-; cbv delta.
 qed.
 
 equiv eq_diagonal_round_x1 : ChaCha20_pref.M.diagonal_round ~M.diagonal_round_x1 : ={k} ==> = {res}.
@@ -646,6 +647,14 @@ proof.
   do !(call eq_line); wp => /=; skip => />.
 qed.
 
+axiom order_rw (t:W32.t Array16.t) (i j:int) (wi wj) : i < j =>
+   t.[j <- wj].[i <- wi] = t.[i <- wi].[j <- wj].
+
+axiom order_eq_rw (t:W32.t Array16.t) (i j:int) (wi wj) : i = j =>
+   t.[j <- wj].[i <- wi] = t.[i <- wi].
+
+(* hint simplify (order_rw, order_eq_rw). *)
+       
 equiv eq_body_x8 : ChaCha20_pavx2_cf.M.body_x8 ~ M.body_x8 : 
    is_incr_count8 st_1{1} st1{2} st2{2} st3{2} st4{2} st5{2} st6{2} st7{2} st8{2} ==>
    is_incr_count8 res{1}.`1 
@@ -717,6 +726,17 @@ proof.
     interleave {1} [1:1] [3:1] [5:1] [7:1] [9:1] [11:1] [13:1] [15:1] 1.
     seq 8 1: (#post).
     + inline M.column_round_x8 M.column_round_x1.
+      conseq (_: all_eq k_1{1} k10{2} /\
+                 all_eq k_2{1}  k20{2} /\
+                 all_eq k_3{1}  k30{2} /\ 
+                 all_eq k_4{1}  k40{2} /\ 
+                 all_eq k_5{1}  k50{2} /\ 
+                 all_eq k_6{1}  k60{2} /\ 
+                 all_eq k_7{1}  k70{2} /\ 
+                 all_eq k_8{1}  k80{2}).
+       + admit.
+time inline *; wp; skip => &1 &2 [#] 9!<<-; cbv delta.
+
       interleave{1} [1:1] [5:1] [9:1] [13:1] [17:1] [21:1] [25:1] [29:1] 1.
       interleave{1} [9:1] [12:1] [15:1] [18:1] [21:1] [24:1] [27:1] [30:1] 1.
       interleave{1} [17:1] [19:1] [21:1] [23:1] [25:1] [27:1] [29:1] [31:1] 1.
