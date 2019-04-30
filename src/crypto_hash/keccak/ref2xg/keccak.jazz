@@ -100,7 +100,7 @@ fn keccak_init(reg u64 m) -> _state_t
   #endif
 
   i = 0;
-  while (i < 50)
+  while (i < 25)
   { B(state,i) = t;
     i += 1;
   }
