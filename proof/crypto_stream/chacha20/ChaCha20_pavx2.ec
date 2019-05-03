@@ -726,17 +726,6 @@ proof.
     interleave {1} [1:1] [3:1] [5:1] [7:1] [9:1] [11:1] [13:1] [15:1] 1.
     seq 8 1: (#post).
     + inline M.column_round_x8 M.column_round_x1.
-      conseq (_: all_eq k_1{1} k10{2} /\
-                 all_eq k_2{1}  k20{2} /\
-                 all_eq k_3{1}  k30{2} /\ 
-                 all_eq k_4{1}  k40{2} /\ 
-                 all_eq k_5{1}  k50{2} /\ 
-                 all_eq k_6{1}  k60{2} /\ 
-                 all_eq k_7{1}  k70{2} /\ 
-                 all_eq k_8{1}  k80{2}).
-       + admit.
-time inline *; wp; skip => &1 &2 [#] 9!<<-; cbv delta.
-
       interleave{1} [1:1] [5:1] [9:1] [13:1] [17:1] [21:1] [25:1] [29:1] 1.
       interleave{1} [9:1] [12:1] [15:1] [18:1] [21:1] [24:1] [27:1] [30:1] 1.
       interleave{1} [17:1] [19:1] [21:1] [23:1] [25:1] [27:1] [29:1] [31:1] 1.
