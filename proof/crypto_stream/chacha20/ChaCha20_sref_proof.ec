@@ -23,7 +23,7 @@ module M = {
     return w;
   }
 
- proc store (output plain: address, len: int, k:W32.t Array16.t)  : int * int * int = {
+  proc store (output plain: address, len: int, k:W32.t Array16.t)  : int * int * int = {
     var kk:W64.t Array8.t;
     var i:int;
 
@@ -35,6 +35,40 @@ module M = {
     Glob.mem <- storeW64 Glob.mem (output + 8 * 0) kk.[0];
     i <- 2;
     while (i < 8) {
+      kk.[i] <@ merge(k.[2*i], k.[2*i +1]);
+      kk.[i] <- kk.[i] `^` loadW64 Glob.mem (plain + 8 * i);
+      Glob.mem <- storeW64 Glob.mem (output + 8 * (i - 1)) kk.[i - 1];
+      i <- i + 1;
+    }
+    Glob.mem <- storeW64 Glob.mem (output + 8 * 7) kk.[7];
+    (output, plain, len) <@ update_ptr (output, plain, len, 64);
+    return (output, plain, len);
+  }
+
+  proc sum_states_store1 (output plain: address, len: int, k st:W32.t Array16.t)  : int * int * int = {
+    k <@ sum_states (k, st);
+    (output, plain, len) <@ store (output, plain, len, k);
+    return (output, plain, len);
+  }
+
+  proc sum_states_store (output plain: address, len: int, k st:W32.t Array16.t)  : int * int * int = {
+    var kk:W64.t Array8.t;
+    var i:int;
+
+    kk <- witness;
+    k.[0] <- k.[0] + st.[0];
+    k.[1] <- k.[1] + st.[1];
+    kk.[0] <@ merge(k.[0], k.[1]);
+    kk.[0] <- kk.[0] `^` loadW64 Glob.mem (plain + 8 * 0);
+    k.[2] <- k.[2] + st.[2];
+    k.[3] <- k.[3] + st.[3];
+    kk.[1] <@ merge(k.[2], k.[3]);
+    kk.[1] <- kk.[1] `^` loadW64 Glob.mem (plain + 8 * 1);
+    Glob.mem <- storeW64 Glob.mem (output + 8 * 0) kk.[0];
+    i <- 2;
+    while (i < 8) {
+      k.[2*i] <- k.[2*i] + st.[2*i];
+      k.[2*i +1] <- k.[2*i + 1] + st.[2*i + 1];
       kk.[i] <@ merge(k.[2*i], k.[2*i +1]);
       kk.[i] <- kk.[i] `^` loadW64 Glob.mem (plain + 8 * i);
       Glob.mem <- storeW64 Glob.mem (output + 8 * (i - 1)) kk.[i - 1];
@@ -77,8 +111,7 @@ module M = {
     st <@ init (key, nonce, counter);    
     while (64 <= len) {
       k <@ rounds (st);
-      k <@ sum_states (k, st);
-      (output, plain, len) <@ store (output, plain, len, k);
+      (output, plain, len) <@ sum_states_store (output, plain, len, k, st);
       st <@ increment_counter (st);
     }
     if (0 < len) {
@@ -91,20 +124,6 @@ module M = {
 
 end ChaCha20_srefi.
 
-(* FIXME 
-
-lemma zeroextu64_bit (w:W32.t) i: (zeroextu64 w).[i] = ((0 <= i < 32) /\ w.[i]).
-proof.
-  rewrite /zeroextu64 W64.of_intwE /W64.int_bit (modz_small (to_uint w)).
-  + by have /= /# := W32.to_uint_cmp w.
-  have := W32.get_to_uint w i.
-  case: (0 <= i < 32) => hi /= hw;1: smt().
-  have [ /# | h]: (i < 0 \/ 32 <= i) by smt().
-  rewrite divz_small 2://.
-  by have /= /(_ h):= pow_Mle 32 i; have /= /# := W32.to_uint_cmp w.
-qed.
-*)
-
 hoare merge_spec lo0 hi0 : ChaCha20_srefi.M.merge : 
    lo = lo0 /\ hi = hi0 ==> res = W2u32.pack2 [lo0; hi0].
 proof.
@@ -112,23 +131,7 @@ proof.
   apply W64.wordP=> i hi.
   rewrite /(`<<`) /=  W2u32.pack2wE hi /= !zeroextu64_bit W2u32.Pack.of_listE initiE 1:/# /= /#.
 qed.
-(*
-lemma get8_W2u32 (ws: W2u32.Pack.pack_t) i : 
-  W2u32.pack2_t ws \bits8 i = 
-   if 0 <= i < 8 then 
-     if i < 4 then ws.[0] \bits8 i else ws.[1] \bits8 (i - 4)
-  else W8.zero.
-proof.
-  apply W8.wordP => i0 hi0; rewrite bits8iE 1://.
-  case : (0 <= i < 8) => hi.
-  + rewrite pack2wE 1:/#. 
-    case : (i < 4) => hi'; rewrite bits8iE 1://.
-    + smt (modz_small divz_small).
-    have -> : (i * 8 + i0) = (i * 8 + i0 - 32) + 1 * 32 by ring.
-    by rewrite modzMDr divzMDr 1://;smt (modz_small divz_small).
-  by rewrite /= get_out /#.
-qed.
-*)
+
 lemma get_storeW64E m p w j: 
     (storeW64 m p w).[j] = if p <= j < p + 8 then w \bits8 j - p else m.[j].
 proof. rewrite storeW64E /= get_storesE /= /#. qed.
@@ -217,12 +220,24 @@ proof.
   proc; inline *;wp; while true (8-i); auto => /#.
 qed.
 
-(* FIXME
-lemma pack2u32_8u8 (w0 w1 w2 w3 w4 w5 w6 w7: W8.t) :
-   pack2 [pack4 [w0;w1;w2;w3]; pack4 [w4;w5;w6;w7]] =
-   pack8 [w0; w1; w2; w3; w4; w5; w6; w7].
-proof. by apply W64.all_eq_eq;cbv W64.all_eq (%/) (%%). qed.
-*)
+equiv eq_sum_states_store_srefi : ChaCha20_srefi.M.sum_states_store1 ~ ChaCha20_srefi.M.sum_states_store :
+  ={output, plain, len, k, st, Glob.mem} ==> ={res, Glob.mem}.
+proof.
+  proc => /=.
+  seq 1 0 : (={output, plain, len, Glob.mem} /\ k{1} = map2 W32.(+) k{2} st{2}).
+  + inline *; conseq (_: Array16.all_eq k{1} (map2 W32.(+) k{2} st{2})).
+    + move=> |> &2 ?; apply Array16.all_eq_eq.
+    by unroll for{1} ^while; wp; skip => />.
+  inline ChaCha20_srefi.M.store ChaCha20_srefi.M.update_ptr; wp.
+  while (={i,Glob.mem} /\ 2 <= i{1} <= 8 /\ kk.[i-1]{1} = kk.[i-1]{2} /\
+         (forall j, 2*i{1} <= j < 16 => k0.[j]{1} = (k.[j] + st.[j]){2}) /\
+         output0{1} = output{2} /\ plain0{1} = plain{2}).
+  + wp; call(_: true); 1: by sim.
+    wp; skip => />; smt (Array16.get_setE Array8.get_setE).
+  do 2!(wp; call(_:true); 1: by sim); wp; skip => /> &2.
+  smt (Array16.get_setE Array8.get_setE Array16.map2iE).
+qed.
+
 hoare store_last_srefi_spec output0 plain0 len0 k0 mem0 : ChaCha20_srefi.M.store_last : 
   output = output0 /\ plain = plain0 /\ len = len0 /\ k = k0 /\ Glob.mem = mem0 /\ 
   0 <= len < 64 /\ inv_ptr output plain len 
@@ -318,10 +333,25 @@ proof.
   splitwhile{1} 2 : (64 <= len).
   seq 2 2 : (={st, output, plain, len, Glob.mem} /\ (inv_ptr output plain len){1} /\ len{1} < 64).
   + while (={st, output, plain, len, Glob.mem} /\ (inv_ptr output plain len){1}).
-    + call (_:true); 1: sim.
-      ecall (eq_store32_pref_srefi len{1}) => /=.
-      conseq (_: ={k,st}); 1: by move=> /> /#.
-      by sim.
+    + call (_:true); 1: by sim.
+      seq 1 1 : (#pre /\ ={k}).
+      + conseq (_: ={k}); 1: by move=> /> /#.
+        by sim.
+      conseq (_: (={st, output, plain, len, Glob.mem} /\ inv_ptr output{1} plain{1} len{1}));1: smt().
+      transitivity {1} {
+          (output, plain, len) <@  ChaCha20_srefi.M.sum_states_store1(output, plain, len, k, st);
+        }
+        ((={st, output, plain, len, Glob.mem,k} /\ inv_ptr output{1} plain{1} len{1}) /\
+                  (0 < len{1} /\ 64 <= len{1}) /\ 64 <= len{2} ==>
+         (={st, output, plain, len, Glob.mem} /\ inv_ptr output{1} plain{1} len{1}))
+        (={Glob.mem, k, st, output, plain, len} ==> ={st,Glob.mem, output, plain, len}) => //.
+      + smt().       
+      + inline ChaCha20_srefi.M.sum_states_store1.
+        wp; ecall (eq_store32_pref_srefi len{1}) => /=.
+        swap{2} [1..3] 3; wp.
+        conseq (_: k{1} = k0{2} /\ ={st}) => //.
+        by sim.
+      by call eq_sum_states_store_srefi; auto.
     conseq (_: ={st}); 1: by move=> /> /#.
     by sim.  
   if{2}; last by rcondf{1} 1; auto.
@@ -374,50 +404,108 @@ proof.
   by unroll for ^while; wp; skip => />.
 qed.
 
-equiv line_spec i ki: ChaCha20_srefi.M.line ~ ChaCha20_sref.M.line : 
-    (0 <= i < 16 /\ ={a,b,c,r} /\ k{1} = k{2}.[i <- ki] /\ (a <> i /\ b <> i /\ c <> i /\ 0 <=r < 256){1}) ==>
-    res{1} = res{2}.[i <- ki].
-proof.
-  proc;wp;skip => /> &2 h0i hi ha hb hc h0r hr2_8.
-  rewrite !(Array16.get_setE _ i) // ha hb /=.
-  rewrite (Array16.set_set_if _ i) (eq_sym i) ha /=.
-  rewrite (Array16.set_set_if _ i) (eq_sym i) hc /=.
-  congr; congr.
-  rewrite (Array16.set_set_if _ i) (eq_sym i) hc /=.
-  rewrite x86_ROL_32_E /= !(Array16.get_setE _ i) // hc ha /= modz_small //.
-qed.
+module AUX = { 
+  proc double_quarter_round (k:W32.t Array16.t, a0:int, b0:int,
+                                     c0:int, d0:int, a1:int, b1:int, c1:int,
+                                     d1:int) = {
+    k <@ ChaCha20_pref.M.quarter_round(k, a0, b0, c0, d0);
+    k <@ ChaCha20_pref.M.quarter_round(k, a1, b1, c1, d1);
+    return k;
+  }
 
-equiv quarter_round_spec i ki: ChaCha20_srefi.M.quarter_round ~ ChaCha20_sref.M.quarter_round : 
-    (0 <= i < 16 /\ ={a,b,c,d} /\ k{1} = k{2}.[i <- ki] /\ (a <> i /\ b <> i /\ c <> i /\ d<>i){1}) ==>
-    res{1} = res{2}.[i <- ki].
+  proc round (k:W32.t Array16.t, k15:W32.t) : W32.t Array16.t * W32.t = {
+    var k14:W32.t;
+    
+    k <@ ChaCha20_sref.M.inlined_double_quarter_round (k, 0, 4, 8, 12, 2, 6, 10, 14);
+    k14 <- k.[14];
+    k.[15] <- k15;
+    k <@ ChaCha20_sref.M.inlined_double_quarter_round (k, 1, 5, 9, 13, 3, 7, 11, 15);
+    k <@ ChaCha20_sref.M.inlined_double_quarter_round (k, 1, 6, 11, 12, 0, 5, 10, 15);
+    k15 <- k.[15];
+    k.[14] <- k14;
+    k <@ ChaCha20_sref.M.inlined_double_quarter_round (k, 2, 7, 8, 13, 3, 4, 9, 14);
+    return (k, k15);
+  }
+
+  proc rounds (k:W32.t Array16.t, k15:W32.t) : W32.t Array16.t * W32.t = {
+    
+    var c:int;
+    var zf:bool;
+    var  _0:bool;
+    var  _1:bool;
+    var  _2:bool;
+    
+    c <- 0; 
+    while (c < 10) {
+      (k, k15) <@ round(k, k15);
+      c <- c + 1;
+    }
+    return (k, k15);
+  }
+}.
+
+hint simplify x86_ROL_32_E.
+
+equiv eq_quarter_round : ChaCha20_pref.M.quarter_round ~ ChaCha20_pref.M.quarter_round : ={k, a, b, c, d} ==> ={res}.
+proof. sim. qed.
+
+equiv eq_round_srefi_aux : ChaCha20_srefi.M.round ~ AUX.round :
+  k{1} = k{2}.[15 <- k15{2}] ==>
+  res{1} = res{2}.`1.[15 <- res{2}.`2].
 proof.
-  proc; do 4! call (line_spec i ki);skip => />.
+  proc => /=.
+  transitivity {1} {
+     k <@ AUX.double_quarter_round(k, 0, 4, 8, 12, 2, 6, 10, 14);
+     k <@ AUX.double_quarter_round(k, 1, 5, 9, 13, 3, 7, 11, 15);
+     k <@ AUX.double_quarter_round(k, 1, 6, 11, 12, 0, 5, 10, 15); 
+     k <@ AUX.double_quarter_round(k, 2, 7, 8, 13, 3, 4, 9, 14);
+   }
+   (={k} ==> ={k})
+   (k{1} = k{2}.[15 <- k15{2}] ==> k{1} = k{2}.[15 <- k15{2}]) => //.
+  + smt().
+  + inline ChaCha20_pref.M.column_round ChaCha20_pref.M.diagonal_round AUX.double_quarter_round.
+    by do !(wp; do !call eq_quarter_round); wp; skip.
+  seq 1 1: #pre.
+  conseq (_: Array16.all_eq k{1} k{2}.[15 <- k15{2}]).
+  + move=> &1 &2 ???; apply Array16.all_eq_eq.
+  + by inline *;wp; skip => &1 &2 ->>; cbv delta.
+  seq 1 3:  (k{1} = k{2}.[14 <- k14{2}]).
+  conseq (_: Array16.all_eq k{1} k{2}.[14 <- k14{2}]).
+  + move=> &1 &2 ????; apply Array16.all_eq_eq.
+  + by inline *;wp; skip => &1 &2 ->>; cbv delta.
+  seq 1 1:  (k{1} = k{2}.[14 <- k14{2}]).
+  conseq (_: Array16.all_eq k{1} k{2}.[14 <- k14{2}]).
+  + move=> &1 &2 ???; apply Array16.all_eq_eq.
+  + by inline *;wp; skip => &1 &2 ->>; cbv delta.
+  conseq (_: Array16.all_eq k{1} k{2}.[15 <- k15{2}]).
+  + move=> &1 &2 ????; apply Array16.all_eq_eq.
+  by inline *;wp; skip => &1 &2 ->>; cbv delta.
 qed.
 
 equiv eq_rounds_srefi_sref : ChaCha20_srefi.M.rounds ~ ChaCha20_sref.M.rounds :
   k{1} = k{2}.[15 <- k15{2}] ==>
   res{1} = res{2}.`1.[15 <- res{2}.`2].
 proof.
+  transitivity AUX.rounds
+    (k{1} = k{2}.[15 <- k15{2}] ==> res{1} = res{2}.`1.[15 <- res{2}.`2])
+    (={k, k15} ==> ={res}) => //.
+  + smt().
+  + proc => /=; while (#pre /\ ={c}); last by auto.
+    by wp; call eq_round_srefi_aux; auto.
   proc => /=.
-  while ( c{1} = to_uint c{2} /\ 0 <= c{1} /\ k{1} = k{2}.[15 <- k15{2}]);last by wp;skip.
-  inline{1} ChaCha20_pref.M.round ChaCha20_pref.M.column_round ChaCha20_pref.M.diagonal_round.
-  wp. 
-  ecall (quarter_round_spec 15 k15{2}) => /=.
-  ecall (quarter_round_spec 15 k15{2}) => /=.
-  wp.
-  ecall (quarter_round_spec 14 k14{2}) => /=.
-  ecall (quarter_round_spec 14 k14{2}) => /=.
-  wp;ecall (quarter_round_spec 14 k14{2}) => /=.
-  wp;ecall (quarter_round_spec 14 k14{2}) => /=.
-  wp.
-  ecall (quarter_round_spec 15 k15{2}) => /=.
-  ecall (quarter_round_spec 15 k15{2}) => /=.
-  wp;skip => /> *; split => *; rewrite Array16.set_set_if /= Array16.set_notmod //=.
-  rewrite ultE /=.
-  have -> /= /#: to_uint (c{2} + W32.one) = to_uint c{2} + 1.
-  by rewrite to_uintD_small //= /#.
+  rcondt{1} ^while; 1: by auto.
+  while (={k,k15} /\ c{1} = 10 - W32.to_uint c{2} /\ zf{2}{2} = (c{2} = W32.zero)).
+  wp.  
+  + conseq (_: ={k,k15}).
+    + by move=> &1 &2 [#] 4!->> h1 h2 ???? [2!->>] /=; apply (DEC32_counter 10 c{2} h2).
+    inline AUX.round;sim.
+  swap{1} 1 1; swap{2} 1 8;wp.
+  conseq (_: ={k,k15}).
+  + move=> />; cbv delta; apply negP => heq.
+    have // : 9 = 0 by rewrite -W32.to_uint0 -heq.
+  inline AUX.round;sim.
 qed.
-
+ 
 equiv eq_sum_states_srefi_sref : ChaCha20_pref.M.sum_states ~ ChaCha20_sref.M.sum_states :
   ={st} /\ k{1} = k{2}.[15 <- k15{2}] ==>
   res{1} = res{2}.`1.[15 <- res{2}.`2].
@@ -429,8 +517,8 @@ proof.
   wp; skip => />.
 qed.
 
-equiv eq_store_srefi_sref : ChaCha20_srefi.M.store ~ ChaCha20_sref.M.store :
-  ={Glob.mem} /\ output{1} = to_uint s_output{2} /\ plain{1} = to_uint s_plain{2} /\ len{1} = to_uint s_len{2} /\
+equiv eq_sum_states_store_srefi_sref : ChaCha20_srefi.M.sum_states_store ~ ChaCha20_sref.M.sum_states_store :
+  ={Glob.mem, st} /\ output{1} = to_uint s_output{2} /\ plain{1} = to_uint s_plain{2} /\ len{1} = to_uint s_len{2} /\
   k{1} = k{2}.[15 <- k15{2}] /\
   (64 <= len /\ good_ptr output plain len){1} ==>
   ={Glob.mem} /\ (good_ptr res.`1 res.`2 res.`3){1} /\
@@ -438,25 +526,30 @@ equiv eq_store_srefi_sref : ChaCha20_srefi.M.store ~ ChaCha20_sref.M.store :
 proof.
   proc => /=.
   inline *;wp.
-  while (={i, Glob.mem, kk} /\ 2 <= i{1} /\ k{1} = k{2}.[15 <- k15{2}] /\
+  while (={i, st, Glob.mem, kk} /\ 2 <= i{1} /\ 
+          (forall j, 2*i{1} <= j < 16 => k{1}.[j] = k{2}.[15 <- k15{2}].[j]) /\
           output{1} = to_uint output{2} /\ plain{1} = to_uint plain{2} /\ 
           (64 <= len /\ good_ptr output plain len){1}).
-  + wp;skip => /> &1 &2 h1 h2 h3 h4 h5.
-    have hb : 0 <= i{2} < 8 by smt().
-    rewrite !Array8.get_setE 1..6:// /=.
-    have -> : k{2}.[15 <- k15{2}].[2 * i{2} + 1] = if i{2} = 7 then k15{2} else k{2}.[2 * i{2} + 1].
-    + by rewrite Array16.get_setE 1:// /#.
-    have -> : k{2}.[15 <- k15{2}].[2 * i{2}] = k{2}.[2 * i{2}].
-    + by rewrite Array16.get_setE 1:// /#.
+  + seq 0 1: (#pre /\ k.[2*i + 1]{1} = k.[2*i+1]{2}).
+    + wp;skip => /> *; split => h.
+      + by rewrite h Array16.set_set_eq H0 1:/# /= => *;apply H0.      
+      by rewrite H0 1:/#; rewrite Array16.get_setE // h.
+    wp;skip => /> &1 &2 h1 h2 h3 h4 h5 h6 h7.
     have heq1 : to_uint (W64.of_int (8 * i{2})) = 8 * i{2}.
     + rewrite W64.to_uint_small /= /#.
+    have -> : to_uint (plain{2} + W64.of_int (8 * i{2})) = 
+                to_uint plain{2} + 8 * i{2}.
+    + by rewrite W64.to_uintD_small heq1 /= /#.
     have heq2 : to_uint (W64.of_int (8 * (i{2} - 1))) = 8 * (i{2} - 1).
     + rewrite W64.to_uint_small /= /#.
-    by rewrite !W64.to_uintD_small ?heq1 ?heq2 /= /#.   
+    have -> : to_uint (output{2} + W64.of_int (8 * (i{2} - 1))) = 
+                to_uint output{2} + 8 * (i{2} - 1).
+    + by rewrite W64.to_uintD_small heq2 /= /#.
+    smt (Array8.get_setE Array16.get_setE).    
   wp; skip => /> &2 h1 h2 h3.
   rewrite to_uintD_small /= 1:/#.
-  move=> mem iR kkR h4 h5 h6.
-  by rewrite to_uintB 1:uleE //= !to_uintD_small /= /#.
+  split=> *;1: smt(Array16.get_setE).
+  rewrite to_uintB 1:uleE //= !to_uintD_small /= /#.
 qed.
 
 equiv eq_store_last_srefi_sref : ChaCha20_srefi.M.store_last ~ ChaCha20_sref.M.store_last :
@@ -518,8 +611,7 @@ seq 1 1 : (={st, Glob.mem} /\
            len{1} < 64). 
 + while (#{/~ len{1} < _}post).
   + call eq_increment_counter_srefi_sref.
-    call eq_store_srefi_sref.
-    call eq_sum_states_srefi_sref.
+    call eq_sum_states_store_srefi_sref.
     call eq_rounds_srefi_sref.
     by ecall{2} (copy_state_sref_spec st{2});skip => /> *; rewrite uleE.
   skip => /> *; rewrite uleE /= => ??; rewrite uleE => /#.
