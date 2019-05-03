@@ -401,14 +401,22 @@ module M = {
                             s_hash_bytes:W64.t, rate_in_bytes:int) : unit = {
     
     var s_out:W64.t;
+    var hash_bytes:W64.t;
     
     
-    while (((W64.of_int 0) \ult s_hash_bytes)) {
+    while (((W64.of_int 0) \slt s_hash_bytes)) {
       s_out <- out;
       (state, iotas) <@ keccak_f (state, iotas);
       out <- s_out;
-      out <@ keccak_1600_xtr_block (state, out, (W64.of_int rate_in_bytes));
-      s_hash_bytes <- (s_hash_bytes - (W64.of_int rate_in_bytes));
+      if (((W64.of_int rate_in_bytes) \ule s_hash_bytes)) {
+        out <@ keccak_1600_xtr_block (state, out,
+        (W64.of_int rate_in_bytes));
+        s_hash_bytes <- (s_hash_bytes - (W64.of_int rate_in_bytes));
+      } else {
+        hash_bytes <- s_hash_bytes;
+        out <@ keccak_1600_xtr_block (state, out, hash_bytes);
+        s_hash_bytes <- (W64.of_int 0);
+      }
     }
     return ();
   }

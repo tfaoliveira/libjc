@@ -1,6 +1,8 @@
+#define STATE_IN_STACK 1
+
 #include "../../keccak/ref2xg/keccak.jazz"
 
-export fn sha3224_ref2x_jazz(reg u64 out in inlen iotas m)
+export fn sha3224_ref2x_jazz(reg u64 out in inlen iotas)
 {
-  keccak_1600(out, in, inlen, iotas, m, 0x06, 1152, 448, 28);
+  keccak_1600(out, in, inlen, iotas, 28, 0x06, 1152, 448);
 }

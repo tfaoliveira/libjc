@@ -428,17 +428,26 @@ fn keccak_1600_squeeze(
 )
 {
   stack u64 s_out;
+  reg u64 hash_bytes;
 
   // intermediate blocks
-  while ( s_hash_bytes > 0 ) // 64 > 0
+  while ( s_hash_bytes >s 0 )
   {
     s_out = out;
     state, iotas = keccak_f(state, iotas);
     out = s_out;
 
-    out = keccak_1600_xtr_block(state, out, rate_in_bytes);
-
-    s_hash_bytes -= rate_in_bytes; // 64 - 72
+    if( s_hash_bytes >= rate_in_bytes)
+    {
+      out = keccak_1600_xtr_block(state, out, rate_in_bytes);
+      s_hash_bytes -= rate_in_bytes;
+    }
+    else
+    {
+      hash_bytes = s_hash_bytes;
+      out = keccak_1600_xtr_block(state, out, hash_bytes);
+      s_hash_bytes = 0;
+    }
   }
 }
 
@@ -449,7 +458,7 @@ fn keccak_1600(
   reg u64 in, // input pointer with inlen bytes
   reg u64 inlen, // input length in bytes
   reg u64 iotas_, // contains iotas, aligned at 256
-  reg u64 hash_bytes,
+    reg u64 hash_bytes,
   inline int suffix,
   inline int rate,
   inline int capacity
