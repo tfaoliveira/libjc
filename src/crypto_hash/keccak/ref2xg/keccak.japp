@@ -58,7 +58,8 @@ fn ROL64(reg u64 x, inline int c) -> reg u64
 
 
 
-fn keccak_init(reg u64 m) -> stack u64[25]
+fn keccak_init(
+  ) -> stack u64[25]
 {
   stack u64[25] state;
   reg u64 i t;
@@ -67,7 +68,7 @@ fn keccak_init(reg u64 m) -> stack u64[25]
 
   
   i = 0;
-  while (i < 50)
+  while (i < 25)
   { state[(int)i] = t;
     i += 1;
   }
@@ -376,7 +377,6 @@ fn keccak_1600_absorb(
 
   // final block
   state = keccak_1600_add_final_block(state, in, inlen, suffix, rate_in_bytes);
-  state, iotas = keccak_f(state, iotas);
 
   return state, iotas;
 }
@@ -423,33 +423,32 @@ fn keccak_1600_squeeze(
   stack u64[25] state,
   reg u64 iotas,
   reg u64 out,
-  inline int rate_in_bytes,
-  inline int i_hash_bytes
+  stack u64 s_hash_bytes,
+  inline int rate_in_bytes
 )
 {
-  stack u64 s_out s_hash_bytes;
+  stack u64 s_out;
   reg u64 hash_bytes;
 
-  s_hash_bytes = i_hash_bytes;
-
-  if (i_hash_bytes > rate_in_bytes)
+  // intermediate blocks
+  while ( s_hash_bytes >s 0 )
   {
-    // intermediate blocks
-    while ( s_hash_bytes > rate_in_bytes )
+    s_out = out;
+    state, iotas = keccak_f(state, iotas);
+    out = s_out;
+
+    if( s_hash_bytes >= rate_in_bytes)
     {
       out = keccak_1600_xtr_block(state, out, rate_in_bytes);
-      s_out = out;
-
-      state, iotas = keccak_f(state, iotas);
-
       s_hash_bytes -= rate_in_bytes;
-      out = s_out;
+    }
+    else
+    {
+      hash_bytes = s_hash_bytes;
+      out = keccak_1600_xtr_block(state, out, hash_bytes);
+      s_hash_bytes = 0;
     }
   }
-
-  // final block
-  hash_bytes = s_hash_bytes;
-  out = keccak_1600_xtr_block(state, out, hash_bytes);
 }
 
 
@@ -459,26 +458,28 @@ fn keccak_1600(
   reg u64 in, // input pointer with inlen bytes
   reg u64 inlen, // input length in bytes
   reg u64 iotas_, // contains iotas, aligned at 256
-  reg u64 m, // external memory for 2 states
+    reg u64 hash_bytes,
   inline int suffix,
   inline int rate,
-  inline int capacity,
-  inline int hash_bytes
+  inline int capacity
 )
 {
-  stack u64 out_s;
+  stack u64 out_s s_hash_bytes;
   stack u64[25] state;
   reg u64 iotas; // lastu64 needs iota register
 
   iotas = iotas_;
 
   out_s = out;
-  state = keccak_init(m);
+  s_hash_bytes = hash_bytes;
+
+  state = keccak_init(
+      );
 
   // absorb
   state, iotas = keccak_1600_absorb(state, iotas, in, inlen, suffix, (rate/8));
 
   // squeeze
   out = out_s;
-  keccak_1600_squeeze(state, iotas, out, (rate/8), hash_bytes);
+  keccak_1600_squeeze(state, iotas, out, s_hash_bytes, (rate/8));
 }

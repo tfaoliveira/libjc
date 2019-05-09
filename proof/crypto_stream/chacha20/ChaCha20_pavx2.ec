@@ -482,7 +482,8 @@ proof.
   proc.
   conseq (_: Array16.all_eq k{1} k{2}).
   + by move=> ?????;apply Array16.all_eq_eq.
-  by rewrite /all_eq /=; inline *; wp; skip.
+  inline *. wp. skip. 
+  by move=> &1 &2 <<-; cbv delta.
 qed.
 
 equiv eq_diagonal_round_x1 : ChaCha20_pref.M.diagonal_round ~M.diagonal_round_x1 : ={k} ==> = {res}.
@@ -646,6 +647,14 @@ proof.
   do !(call eq_line); wp => /=; skip => />.
 qed.
 
+axiom order_rw (t:W32.t Array16.t) (i j:int) (wi wj) : i < j =>
+   t.[j <- wj].[i <- wi] = t.[i <- wi].[j <- wj].
+
+axiom order_eq_rw (t:W32.t Array16.t) (i j:int) (wi wj) : i = j =>
+   t.[j <- wj].[i <- wi] = t.[i <- wi].
+
+(* hint simplify (order_rw, order_eq_rw). *)
+       
 equiv eq_body_x8 : ChaCha20_pavx2_cf.M.body_x8 ~ M.body_x8 : 
    is_incr_count8 st_1{1} st1{2} st2{2} st3{2} st4{2} st5{2} st6{2} st7{2} st8{2} ==>
    is_incr_count8 res{1}.`1 

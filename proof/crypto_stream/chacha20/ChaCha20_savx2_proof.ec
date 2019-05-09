@@ -1002,10 +1002,15 @@ equiv eq_rounds_x8 : ChaCha20_pavx2.M.rounds_x8 ~ ChaCha20_savx2.M.rounds_x8 :
   res{2} = x8 res{1}.`1 res{1}.`2 res{1}.`3 res{1}.`4 res{1}.`5 res{1}.`6 res{1}.`7 res{1}.`8.
 proof.
   proc => /=; wp.
-  while (#pre /\ c{1} = W64.to_uint c{2} /\ (k15 = k.[15]){2}).
-  + wp; call eq_diagonal_round_x8; call eq_column_round_x8; skip => /> *.
-    rewrite ultE /=;rewrite to_uintD_small //= 1:/#.
-  by wp; skip => /> *;rewrite Array16.set_notmod.
+  rcondt{1} ^while; 1:by auto.
+  while (#pre /\ (k15 = k.[15]){2} /\ c{1} = 10 - W64.to_uint c{2} /\ zf{2}{2} = (c{2} = W64.zero)).
+  + wp; call eq_diagonal_round_x8; call eq_column_round_x8; skip => /> &2 ? h2 *.
+    have /#:= DEC64_counter 10 c{2} h2.
+  wp; call eq_diagonal_round_x8; call eq_column_round_x8; wp; skip => /> *.
+  have h2 : (of_int 10)%W64 <> W64.zero.
+  + by apply negP => heq; have : 10 = 0 by rewrite -W64.to_uint0 -heq.
+  have /> := DEC64_counter 10 (W64.of_int 10) h2.
+  smt (Array16.set_notmod).
 qed.
  
 equiv eq_init_x8 : ChaCha20_pavx2.M.init_x8 ~ M.init_x8 : 
