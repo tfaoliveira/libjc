@@ -2,11 +2,11 @@
 
 .PHONY: default clean
 
-default: keccak.japp
+default: keccak_1600.japp
 	@true
 
 clean:
-	rm -f keccak.japp
+	rm -f keccak_1600.japp
 
 %.japp: %.jazz
-	gpp -o $@ $<
+	gpp -I../../../ -o $@ $<

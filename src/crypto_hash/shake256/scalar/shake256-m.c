@@ -4,13 +4,16 @@
 #include <string.h>
 #include <stdint.h>
 
-extern void shake256_ref2x_jazz(
+
+extern void keccak_1600(
          uint8_t *out,
-  const  uint8_t *in,
+        uint64_t outlen,
+   const uint8_t *in,
           size_t inlen,
-  const uint64_t *iotas,
-        uint64_t *m
+        uint64_t *c,
+        uint64_t *iotas
 );
+
 
 uint64_t iotas[32] __attribute__((aligned(256))) = 
 {
@@ -41,11 +44,11 @@ uint64_t iotas[32] __attribute__((aligned(256))) =
    , 0x8000000080008008
 };
 
-int shake256_ref2x(unsigned char *out,const unsigned char *in,unsigned long long inlen)
+
+int shake256_scalar(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
-  uint64_t m[50] __attribute__((aligned(32)));
-  shake256_ref2x_jazz(out, in, inlen, &(iotas[8]), m);
+  uint64_t c[] = {0x1F, 1088};
+  keccak_1600(out, 136, in, inlen, c, iotas);
   return 0;
 }
-
 
