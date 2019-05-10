@@ -1,6 +1,8 @@
 #include "crypto_core/keccakf160064bits/avx2/keccak_f1600.jazz"
 
+
 u64 g_zero = 0;
+
 
 fn keccak_init() -> reg u256[7]
 {
@@ -40,13 +42,13 @@ fn add_full_block(
 {
 
   inline int i;
-  reg u64 j l t inlen8;
+  reg u64 j l t rate8;
   reg u8 c;
 
-  inlen8 = inlen;
-  inlen8 >>= 3;
+  rate8 = rate;
+  rate8 >>= 3;
   j = 0;
-  while ( j < inlen8 )
+  while ( j < rate8 )
   {
     t = [in + 8*j];
     l = B(a_jagged, j);
@@ -240,7 +242,6 @@ fn absorb(
 }
 
 
-
 fn squeeze(
   reg u256[7] state,
   reg u64 rhotates_left rhotates_right iotas a_jagged,
@@ -259,7 +260,6 @@ fn squeeze(
   state = __keccak_f1600_avx2(state, rhotates_left, rhotates_right, iotas);
   out = xtr_bytes(state, a_jagged, out, outlen);
 }
-
 
 
 fn __keccak_1600(
@@ -285,11 +285,10 @@ fn __keccak_1600(
           out, outlen, rate);
 }
 
-export fn keccak_1600(reg u64 out outlen in inlen_ config glob)
+
+export fn keccak_1600(reg u64 out outlen in inlen config glob)
 {
-  reg   u64 out outlen;
   reg   u64 rhotates_left rhotates_right iotas a_jagged;
-  reg   u64 in inlen;
   reg   u8  suffix;
   reg   u64 rate;
 

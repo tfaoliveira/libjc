@@ -12,4 +12,4 @@ clean:
 	jasminc -lea -pasm $< > $@ || rm -f $@
 
 %.japp: %.jazz
-	gpp -o $@ $<
+	gpp -I../../../ -o $@ $<

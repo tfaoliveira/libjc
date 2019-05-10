@@ -2,12 +2,12 @@
 
 u64 s_zero = 0;
 
-fn keccak_1600_add_full_block( // function also used in shake256...
+fn add_full_block(
   reg u256[7] state,
   stack u64[28] s_state,
-  reg u64 in,
-  reg u64 inlen,
-  inline int rate_in_bytes
+  reg u64 a_jagged,
+  reg u64 in inlen,
+  reg u64 rate
 ) -> reg u256[7], stack u64[28], reg u64, reg u64
 {
   reg u256 a00, a01, a11, a21, a31;
@@ -54,15 +54,10 @@ fn keccak_1600_add_full_block( // function also used in shake256...
   state[5] ^= t41;
   state[3] ^= t31; 
 
-  in += rate_in_bytes;
-  inlen -= rate_in_bytes;
+  in += rate;
+  inlen -= rate;
 
   return state, s_state, in, inlen;
 }
 
-#include "../../keccak/avx2/keccak.jazz"
-
-export fn sha3256_avx2_jazz(reg u64 out in inlen m)
-{
-  keccak_1600(out, in, inlen, m, 0x06, 1088, 512, 32);
-}
+#include "crypto_hash/keccak1600/avx2/keccak_1600.jazz"

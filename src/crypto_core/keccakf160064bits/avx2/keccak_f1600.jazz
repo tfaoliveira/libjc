@@ -1,7 +1,6 @@
 #include "crypto_core/keccakf160064bits/avx2/keccak_f1600.jahh"
 
 
-
 fn __keccak_f1600_avx2(
   reg u256[7] state,
   reg u64 _rhotates_left,
