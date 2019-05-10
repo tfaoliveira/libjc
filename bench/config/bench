@@ -1,1 +1,1 @@
-crypto_hash shake256 jazz/scalar
+crypto_hash sha3224 jazz/scalar

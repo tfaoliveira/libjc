@@ -2,14 +2,14 @@
 
 .PHONY: default clean
 
-default: sha3384.japp sha3384.s
+default: sha3256.japp sha3256.s
 	@true
 
 clean:
-	rm -f sha3384.japp sha3384.s
+	rm -f sha3256.japp sha3256.s
 
 %.s: %.japp
 	jasminc -lea -pasm $< > $@ || rm -f $@
 
 %.japp: %.jazz
-	gpp -o $@ $<
+	gpp -I../../../ -o $@ $<
