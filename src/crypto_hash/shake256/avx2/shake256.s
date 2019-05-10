@@ -6,8 +6,9 @@ _shake256_avx2_jazz:
 shake256_avx2_jazz:
 	pushq	%rbp
 	pushq	%rbx
+	pushq	%r12
 	subq	$256, %rsp
-	vpbroadcastq	g_zero(%rip), %ymm2
+	vpbroadcastq	glob_data+8(%rip), %ymm2
 	vmovdqu	%ymm2, %ymm3
 	vmovdqu	%ymm2, %ymm4
 	vmovdqu	%ymm2, %ymm12
@@ -37,7 +38,7 @@ Lshake256_avx2_jazz$11:
 	vpbroadcastq	128(%rsi), %ymm5
 	vpblendd	$-61, %ymm0, %ymm1, %ymm6
 	vpblendd	$60, %ymm0, %ymm1, %ymm0
-	vpbroadcastq	s_zero(%rip), %ymm1
+	vpbroadcastq	glob_data(%rip), %ymm1
 	vpblendd	$-16, %ymm1, %ymm6, %ymm7
 	vpblendd	$-52, %ymm1, %ymm0, %ymm8
 	vpblendd	$51, %ymm1, %ymm0, %ymm0
@@ -52,7 +53,7 @@ Lshake256_avx2_jazz$11:
 	leaq	96(%rax), %r10
 	leaq	96(%r8), %r11
 	movq	%r9, %rbp
-	movl	$24, %ebx
+	movl	$24, %r12d
 	.p2align	5
 Lshake256_avx2_jazz$12:
 	vpshufd	$78, %ymm4, %ymm0
@@ -161,12 +162,12 @@ Lshake256_avx2_jazz$12:
 	vpxor	%ymm8, %ymm0, %ymm10
 	vpxor	(%rbp), %ymm1, %ymm2
 	leaq	32(%rbp), %rbp
-	decl	%ebx
+	decl	%r12d
 	jne 	Lshake256_avx2_jazz$12
 Lshake256_avx2_jazz$10:
 	cmpq	$136, %rdx
 	jnb 	Lshake256_avx2_jazz$11
-	vpbroadcastq	g_zero(%rip), %ymm0
+	vpbroadcastq	glob_data+8(%rip), %ymm0
 	vmovdqu	%ymm0, (%rsp)
 	vmovdqu	%ymm0, 32(%rsp)
 	vmovdqu	%ymm0, 64(%rsp)
@@ -361,19 +362,29 @@ Lshake256_avx2_jazz$1:
 	cmpq	%rax, %rsi
 	jb  	Lshake256_avx2_jazz$2
 	addq	$256, %rsp
+	popq	%r12
 	popq	%rbx
 	popq	%rbp
 	ret 
 	.data
-	.globl	_g_zero
-	.globl	g_zero
-	.p2align	3
-_g_zero:
-g_zero:
-	.quad	0
-	.globl	_s_zero
-	.globl	s_zero
-	.p2align	3
-_s_zero:
-s_zero:
-	.quad	0
+	.globl	_glob_data
+	.globl	glob_data
+	.p2align	5
+_glob_data:
+glob_data:
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0

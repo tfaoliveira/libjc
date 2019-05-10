@@ -1,10 +1,4 @@
-// TODO: zero stuff better : set0 for u256
-
-#define B(base,x) [base + 8*(x)]
-#define B8(base,x) (u8)[base + (x)]
-#define B256(b,i,o) (u256)[b + i*32-o]
-
-#include "keccak_f-openssl.jazz"
+#include "crypto_core/keccakf160064bits/avx2/keccak_f1600.jazz"
 
 u64 g_zero = 0;
 
@@ -68,8 +62,7 @@ fn a_jagged_f(inline int i) -> inline int
 }
 
 
-
-fn keccak_1600_add_full_block(
+fn add_full_block(
   reg u256[7] state,
   stack u64[28] s_state,
   reg u64 in,
@@ -103,8 +96,7 @@ fn keccak_1600_add_full_block(
 #endif
 
 
-
-fn keccak_1600_add_final_block(
+fn add_final_block(
   reg u256[7] state,
   stack u64[28] s_state,
   reg u64 a_jagged,
@@ -137,7 +129,6 @@ fn keccak_1600_add_final_block(
   j <<= 3;
   l <<= 3;
 
-  // inlen4 ?
 
   while ( j < inlen )
   {
@@ -170,9 +161,41 @@ fn keccak_1600_add_final_block(
 }
 
 
+// obs: @pre: len <= rate_in_bytes
+fn xtr_block(
+  reg u256[7] state,
+  reg u64 a_jagged,
+  reg u64 out,
+  reg u64 len
+) -> reg u64
+{
+  inline int i;
+  stack u64[28] s_state;
+  reg u64 j l t len8;
+  reg u8 c;
+
+  for i = 0 to 7
+  { s_state[u256 i] = state[i]; }
+
+  len8 = len;
+  len8 >>= 3;
+  j = 0;
+  while ( j < len8 )
+  {
+    l = B(a_jagged, j);
+    t = s_state[(int) l];
+    [out + 8*j] = t;
+    j += 1;
+  }
+
+  out += len;
+
+  return out;
+}
+
 
 // obs: @pre: len <= rate_in_bytes
-fn keccak_1600_xtr_block(
+fn xtr_bytes(
   reg u256[7] state,
   reg u64 a_jagged,
   reg u64 out,
@@ -218,8 +241,7 @@ fn keccak_1600_xtr_block(
 }
 
 
-
-fn keccak_1600_absorb(
+fn absorb(
   reg u256[7] state,
   reg u64 rhotates_left,
   reg u64 rhotates_right,
@@ -237,20 +259,20 @@ fn keccak_1600_absorb(
   // intermediate blocks
   while ( inlen >= rate_in_bytes )
   {
-    state, s_state, in, inlen = keccak_1600_add_full_block(state, s_state, in, inlen, rate_in_bytes);
-    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+    state, s_state, in, inlen = add_full_block(state, s_state, in, inlen, rate_in_bytes);
+    state = __keccak_f1600_avx2(state, rhotates_left, rhotates_right, iotas);
   }
 
   // final block
-  state = keccak_1600_add_final_block(state, s_state, a_jagged, in, inlen, suffix, rate_in_bytes);
-  state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+  state = add_final_block(state, s_state, a_jagged, in, inlen, suffix, rate_in_bytes);
+  state = __keccak_f1600_avx2(state, rhotates_left, rhotates_right, iotas);
 
   return state;
 }
 
 
 
-fn keccak_1600_squeeze(
+fn squeeze(
   reg u256[7] state,
   reg u64 rhotates_left,
   reg u64 rhotates_right,
@@ -270,23 +292,23 @@ fn keccak_1600_squeeze(
     // intermediate blocks
     while ( hash_bytes > rate_in_bytes )
     {    
-      out = keccak_1600_xtr_block(state, a_jagged, out, rate_in_bytes);
-      state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+      out = xtr_block(state, a_jagged, out, rate_in_bytes);
+      state = __keccak_f1600_avx2(state, rhotates_left, rhotates_right, iotas);
       hash_bytes -= rate_in_bytes;
     }
   }
 
   // final block
-  out = keccak_1600_xtr_block(state, a_jagged, out, hash_bytes);
+  out = xtr_bytes(state, a_jagged, out, hash_bytes);
 }
 
 
 
-fn keccak_1600(
-  reg u64 out,   // output pointer with at least hash_bytes available
-  reg u64 in,    // input pointer with inlen bytes
-  reg u64 inlen, // input length in bytes
-  reg u64 m,     // external memory: it contains 4 pointers: (rhotates_left, rhotates_right, iotas, a_jagged)
+fn __keccak_1600(
+  reg u64 out,
+  reg u64 in,
+  reg u64 inlen,
+  reg u64 m,
   inline int suffix,
   inline int rate,
   inline int capacity,
@@ -303,11 +325,11 @@ fn keccak_1600(
   a_jagged       = [m + 8*3];
 
   // absorb
-  state = keccak_1600_absorb(state, rhotates_left, rhotates_right, iotas, a_jagged,
+  state = absorb(state, rhotates_left, rhotates_right, iotas, a_jagged,
                              in, inlen, suffix, (rate/8));
 
   // squeeze
-  keccak_1600_squeeze(state, rhotates_left, rhotates_right, iotas, a_jagged,
+  squeeze(state, rhotates_left, rhotates_right, iotas, a_jagged,
                       out, (rate/8), hash_bytes);
 }
 
