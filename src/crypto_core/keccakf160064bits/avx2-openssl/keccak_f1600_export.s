@@ -1,9 +1,9 @@
 	.text
 	.p2align	5
-	.globl	___KeccakF1600_wrapper
-	.globl	__KeccakF1600_wrapper
-___KeccakF1600_wrapper:
-__KeccakF1600_wrapper:
+	.globl	_keccak_f1600_openssl
+	.globl	keccak_f1600_openssl
+_keccak_f1600_openssl:
+keccak_f1600_openssl:
 	pushq	%rbp
 	vmovdqu	(%rdi), %ymm0
 	vmovdqu	32(%rdi), %ymm1
@@ -15,7 +15,7 @@ __KeccakF1600_wrapper:
 	leaq	96(%rsi), %rax
 	leaq	96(%rdx), %rdx
 	movl	$24, %esi
-L__KeccakF1600_wrapper$1:
+Lkeccak_f1600_openssl$1:
 	vpshufd	$78, %ymm2, %ymm7
 	vpxor	%ymm3, %ymm5, %ymm8
 	vpxor	%ymm6, %ymm4, %ymm9
@@ -123,7 +123,7 @@ L__KeccakF1600_wrapper$1:
 	vpxor	(%rcx), %ymm0, %ymm0
 	leaq	32(%rcx), %rcx
 	decl	%esi
-	jne 	L__KeccakF1600_wrapper$1
+	jne 	Lkeccak_f1600_openssl$1
 	vmovdqu	%ymm0, (%rdi)
 	vmovdqu	%ymm1, 32(%rdi)
 	vmovdqu	%ymm2, 64(%rdi)
