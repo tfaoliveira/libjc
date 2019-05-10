@@ -47,7 +47,7 @@ inline int r, x, y, z, t;
   x = 1;
   y = 0;
   for t = 0 to 24 {
-    if i == x + 5 * y {
+    if (i == x + 5 * y) {
       r = ((t + 1) * (t + 2) / 2) % 64;
     }
     z = (2 * x + 3 * y) % 5;
@@ -151,7 +151,7 @@ fn keccakRoundConstants() -> stack u64[24] {
   return constants;
 }
 
-fn permute(stack u64[25] state) -> stack u64[25] {
+fn keccak_f1600(stack u64[25] state) -> stack u64[25] {
   inline int round;
   stack u64[24] constants;
   constants = keccakRoundConstants();
@@ -160,4 +160,3 @@ fn permute(stack u64[25] state) -> stack u64[25] {
   }
   return state;
 }
-
