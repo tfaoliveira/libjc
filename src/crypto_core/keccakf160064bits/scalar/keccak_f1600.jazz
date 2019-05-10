@@ -1,9 +1,6 @@
-inline
-fn ROL64(reg u64 x, inline int c) -> reg u64 {
-  reg u64 y;
-  _, _, y = #x86_ROL_64(x, c);
-  return y;
-}
+#include "crypto_core/keccakf160064bits/scalar/keccak_f1600.jahh"
+
+
 
 fn index(inline int x, inline int y) -> inline int {
   inline int r;
@@ -20,7 +17,7 @@ fn keccak_rho_offsets(inline int i) -> inline int
   x = 1;
   y = 0;
   for t = 0 to 24
-  { if i == x + 5 * y
+  { if ( i == x + 5 * y )
     { r = ((t + 1) * (t + 2) / 2) % 64;
     }
     z = (2 * x + 3 * y) % 5;
@@ -43,17 +40,28 @@ fn rhotates(inline int x y) -> inline int
 
 
 
-fn theta_sum(stack u64[25] A) -> reg u64[5]
+fn ROL64(reg u64 x, inline int c) -> reg u64
 {
-  inline int idx i j;
-  reg u64[5] C;
-  reg u64 t;
+  reg u64 y;
+  if (c == 0)
+  { y = x; }
+  else
+  { _, _, y = #x86_ROL_64(x, c); }
+  return y;
+}
 
-  for i = 0 to 5
-  { C[i] = A[(5*(( 0) % 5) + (( i) % 5))];
-    for j = 1 to 5
-    { C[i] ^= A[(5*(( j) % 5) + (( i) % 5))];
-    }
+
+fn theta_sum(_state_t A) -> reg u64[5]
+{
+  inline int i j;
+  reg u64[5] C;
+
+  for i=0 to 5
+  { C[i] = S(A, 0, i); }
+
+  for j=1 to 5
+  { for i=0 to 5
+    { C[i] ^= S(A, j, i); }
   }
 
   return C;
@@ -68,9 +76,7 @@ fn theta_rol(reg u64[5] C) -> reg u64[5]
   reg u64 t r;
 
   for i = 0 to 5
-  {
-    r = ROL64(C[(i+1)%5], 1);
-    D[i] = r;
+  { D[i] = ROL64(C[(i+1)%5], 1);
     D[i] ^= C[(i+4)%5];
   }
 
@@ -81,11 +87,11 @@ fn theta_rol(reg u64[5] C) -> reg u64[5]
 
 fn rol_sum(
   reg u64[5] D,
-  stack u64[25] A,
+  _state_t A,
   inline int offset
 ) -> reg u64[5]
 {
-  inline int idx j j1 k;
+  inline int j j1 k;
   reg u64[5] C;
   reg u64 t;
 
@@ -93,7 +99,7 @@ fn rol_sum(
   {
     j1 = (j+offset) % 5;
     k = rhotates(j, j1);
-    t = A[(5*((j) % 5) + ((j1) % 5))];
+    t = S(A,j,j1);
     t ^= D[j1];
     t = ROL64(t, k);
     C[j] = t;
@@ -105,23 +111,23 @@ fn rol_sum(
 
 
 fn set_row(
-  stack u64[25] R,
+  _state_t R,
   inline int row,
   reg u64[5] C,
   stack u64 iota
-) -> stack u64[25]
+) -> _state_t
 {
-  inline int idx j j1 j2;
+  inline int j j1 j2;
   reg u64 t;
 
   for j= 0 to 5
   {
     j1 = (j+1) % 5;
     j2 = (j+2) % 5;
-    t = !( C[j1]) & ( C[j2] );
+    t = !C[j1] & C[j2];
     if row==0 && j==0 { t ^= iota; }
     t ^= C[j];
-    R[(5*(( row) % 5) + (( j) % 5))] = t;
+    S(R, row, j) = t;
   }
 
   return R;
@@ -130,11 +136,11 @@ fn set_row(
 
 
 fn round2x(
-  stack u64[25] A,
-  stack u64[25] R,
+  _state_t A,
+  _state_t R,
   reg u64 iotas,
   inline int o
-) -> stack u64[25], stack u64[25]
+) -> _state_t, _state_t
 {
   reg u64[5] C D;
   stack u64 iota;
@@ -158,15 +164,13 @@ fn round2x(
 
 
 
-fn keccak_f(
-  stack u64[25] A,
+fn __keccak_f1600_scalar(
+  _state_t A,
   reg u64 iotas
-) -> stack u64[25], reg u64
+) -> _state_t, reg u64
 {
   reg bool zf;
-  stack u64[25] R;
-
-  
+  _state_t R;
 
   while
   {
@@ -177,8 +181,6 @@ fn keccak_f(
   } (!zf)
 
   iotas -= 192;
-
-  
 
   return A, iotas;
 }
