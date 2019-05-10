@@ -15,6 +15,7 @@ keccak_f1600:
 	leaq	96(%rsi), %rax
 	leaq	96(%rdx), %rdx
 	movl	$24, %esi
+	.p2align	5
 Lkeccak_f1600$1:
 	vpshufd	$78, %ymm2, %ymm7
 	vpxor	%ymm3, %ymm5, %ymm8

@@ -1,3 +1,6 @@
+#include "crypto_core/keccakf160064bits/avx2/keccak_f1600.jahh"
+
+
 
 fn __keccak_f1600_avx2(
   reg u256[7] state,
@@ -20,7 +23,7 @@ fn __keccak_f1600_avx2(
   iotas          = _iotas;
 
   r = 24;
-  while
+  align while
   {
 
 	  //######################################## Theta
@@ -50,32 +53,32 @@ fn __keccak_f1600_avx2(
 	  d14 = d14 ^ t[4];
 
 	  //######################################## Rho + Pi + pre-Chi shuffle
-	  t[3] = #x86_VPSLLV_4u64(state[2], (u256)[rhotates_left + 0*32-96] );
-	  state[2] = #x86_VPSRLV_4u64(state[2], (u256)[rhotates_right + 0*32-96] );
+	  t[3] = #x86_VPSLLV_4u64(state[2], B256(rhotates_left,0,96) );
+	  state[2] = #x86_VPSRLV_4u64(state[2], B256(rhotates_right,0,96) );
 	  state[2] = state[2] | t[3];
 	  state[3] = state[3] ^ d14;
-	  t[4] = #x86_VPSLLV_4u64(state[3], (u256)[rhotates_left + 2*32-96] );
-	  state[3] = #x86_VPSRLV_4u64(state[3], (u256)[rhotates_right + 2*32-96] );
+	  t[4] = #x86_VPSLLV_4u64(state[3], B256(rhotates_left,2,96) );
+	  state[3] = #x86_VPSRLV_4u64(state[3], B256(rhotates_right,2,96) );
 	  state[3] = state[3] | t[4];
 	  state[4] = state[4] ^ d14;
-	  t[5] = #x86_VPSLLV_4u64(state[4], (u256)[rhotates_left + 3*32-96] );
-	  state[4] = #x86_VPSRLV_4u64(state[4], (u256)[rhotates_right + 3*32-96] );
+	  t[5] = #x86_VPSLLV_4u64(state[4], B256(rhotates_left,3,96) );
+	  state[4] = #x86_VPSRLV_4u64(state[4], B256(rhotates_right,3,96) );
 	  state[4] = state[4] | t[5];
 	  state[5] = state[5] ^ d14;
-	  t[6] = #x86_VPSLLV_4u64(state[5], (u256)[rhotates_left + 4*32-96] );
-	  state[5] = #x86_VPSRLV_4u64(state[5], (u256)[rhotates_right + 4*32-96] );
+	  t[6] = #x86_VPSLLV_4u64(state[5], B256(rhotates_left,4,96) );
+	  state[5] = #x86_VPSRLV_4u64(state[5], B256(rhotates_right,4,96) );
 	  state[5] = state[5] | t[6];
 	  state[6] = state[6] ^ d14;
 	  t[3] = #x86_VPERMQ(state[2], (4u2)[2,0,3,1]);
 	  t[4] = #x86_VPERMQ(state[3], (4u2)[2,0,3,1]);
-	  t[7] = #x86_VPSLLV_4u64(state[6], (u256)[rhotates_left + 5*32-96] );
-	  t[1] = #x86_VPSRLV_4u64(state[6], (u256)[rhotates_right + 5*32-96] );
+	  t[7] = #x86_VPSLLV_4u64(state[6], B256(rhotates_left,5,96) );
+	  t[1] = #x86_VPSRLV_4u64(state[6], B256(rhotates_right,5,96) );
 	  t[1] = t[1] | t[7];
 	  state[1] = state[1] ^ d14;
 	  t[5] = #x86_VPERMQ(state[4], (4u2)[0,1,2,3]);
 	  t[6] = #x86_VPERMQ(state[5], (4u2)[1,3,0,2]);
-	  t[8] = #x86_VPSLLV_4u64(state[1], (u256)[rhotates_left + 1*32-96] );
-	  t[2] = #x86_VPSRLV_4u64(state[1], (u256)[rhotates_right + 1*32-96] );
+	  t[8] = #x86_VPSLLV_4u64(state[1], B256(rhotates_left,1,96) );
+	  t[2] = #x86_VPSRLV_4u64(state[1], B256(rhotates_right,1,96) );
 	  t[2] = t[2] | t[8];
 
 	  //######################################## Chi
@@ -134,7 +137,7 @@ fn __keccak_f1600_avx2(
 	  state[4] = state[4] ^ t[4];
 
 	  //######################################## Iota
-	  state[0] = state[0] ^ (u256)[iotas + 0*32-0];
+	  state[0] = state[0] ^ B256(iotas,0,0);
 
     iotas = iotas + 32;
     (_,_,_,zf,r) = #x86_DEC_32(r);
