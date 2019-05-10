@@ -1,10 +1,10 @@
-u64 s_zero = 0;
 
+u64 s_zero = 0;
 
 fn add_full_block(
   reg u256[7] state,
   stack u64[28] s_state,
-  reg   u64 a_jagged,
+  reg u64 a_jagged,
   reg u64 in inlen,
   reg u64 rate
 ) -> reg u256[7], stack u64[28], reg u64, reg u64
@@ -207,7 +207,9 @@ fn __keccak_f1600_avx2(
   return state;
 }
 
+
 u64 g_zero = 0;
+
 
 fn keccak_init() -> reg u256[7]
 {

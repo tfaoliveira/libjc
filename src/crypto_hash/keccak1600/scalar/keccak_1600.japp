@@ -487,26 +487,23 @@ fn __keccak_1600(
 }
 
 
-export fn keccak_1600(reg u64 out outlen in inlen_ config )
+export fn keccak_1600(reg u64 out outlen in inlen_ config iotas )
 {
   stack u8  s_suffix;
   stack u64 s_out s_outlen;
   reg   u8    suffix;
   reg   u64   rate inlen;
-  reg   u64   iotas;
 
   s_out = out;
   s_outlen = outlen;
 
-  inlen = inlen_; // swap register
+  inlen = inlen_; // swap register, rcx is needed
 
   suffix = (u8)[config + 8*0];
-  s_suffix = suffix;
 
+  s_suffix = suffix;
   rate = [config + 8*1];
   rate >>= 3; // rate in bytes
-
-  iotas = [config + 8*2];
 
   __keccak_1600(s_out, s_outlen, iotas, in, inlen, s_suffix, rate);
 }

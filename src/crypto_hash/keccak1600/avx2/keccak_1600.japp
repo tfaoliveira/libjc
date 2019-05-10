@@ -146,7 +146,9 @@ fn __keccak_f1600_avx2(
   return state;
 }
 
+
 u64 g_zero = 0;
+
 
 fn keccak_init() -> reg u256[7]
 {
