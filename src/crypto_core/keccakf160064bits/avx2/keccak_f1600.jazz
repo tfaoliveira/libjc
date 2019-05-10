@@ -1,5 +1,5 @@
 
-fn __keccak_f1600(
+fn __keccak_f1600_avx2(
   reg u256[7] state,
   reg u64 _rhotates_left,
   reg u64 _rhotates_right,
