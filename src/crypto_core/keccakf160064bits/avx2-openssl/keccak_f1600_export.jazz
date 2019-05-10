@@ -21,7 +21,7 @@ export fn keccak_f1600_openssl(
   A41 = (u256)[in + 160];
   A11 = (u256)[in + 192];
 
-  A00, A01, A20, A31, A21, A41, A11 = __keccak_f1600_avx2-openssl(A00, A01, A20, A31,
+  A00, A01, A20, A31, A21, A41, A11 = __keccak_f1600_avx2_openssl(A00, A01, A20, A31,
                                                              A21, A41, A11,
                                                              _rhotates_left,
                                                              _rhotates_right,
