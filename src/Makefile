@@ -13,6 +13,7 @@ crypto_hash/keccak1600/scalar/ \
 crypto_hash/keccak1600/avx2/ \
 crypto_hash/sha3384/scalar/ \
 crypto_hash/sha3384/avx2/ \
+crypto_hash/shake256/ref/ \
 crypto_hash/shake256/scalar/ \
 crypto_hash/shake256/avx2/ \
 crypto_hash/sha3256/scalar/ \
