@@ -20,5 +20,7 @@ crypto_hash shake128 openssl -L`pwd`/third_party_shared_libs/openssl/lib/ -l:lib
 
 crypto_hash shake256 jazz/ref
 crypto_hash shake256 jazz/scalar
+crypto_hash shake256 jazz/scalar_g
+crypto_hash shake256 jazz/scalar_gr
 crypto_hash shake256 jazz/avx2
 crypto_hash shake256 openssl -L`pwd`/third_party_shared_libs/openssl/lib/ -l:libcrypto.so.1.1

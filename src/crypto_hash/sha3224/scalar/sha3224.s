@@ -7,7 +7,7 @@ keccak_1600:
 	pushq	%rbp
 	pushq	%rbx
 	pushq	%r12
-	subq	$457, %rsp
+	subq	$464, %rsp
 	movq	%rdi, (%rsp)
 	movq	%rsi, 448(%rsp)
 	movq	%rcx, %rax
@@ -1312,7 +1312,7 @@ Lkeccak_1600$2:
 Lkeccak_1600$1:
 	cmpq	%rcx, %rsi
 	jb  	Lkeccak_1600$2
-	addq	$457, %rsp
+	addq	$464, %rsp
 	popq	%r12
 	popq	%rbx
 	popq	%rbp
