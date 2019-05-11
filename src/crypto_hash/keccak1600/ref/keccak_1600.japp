@@ -195,15 +195,13 @@ fn st0() -> stack u64[25]
 fn add_full_block(
   stack u64[25] state,
   reg u64 in,
-  stack u64 rate
+  reg u64 rate64
 ) -> stack u64[25] 
 {
-  reg u64 i, t, rate8;
+  reg u64 i, t;
 
-  rate8 = rate; // rate in blocks of 8 bytes
-  rate8 >>= 3;
   i = 0;
-  while (i < rate8)
+  while (i < rate64)
   {
     t = [in + 8 * i];
     state[(int) i] ^= t;
@@ -218,8 +216,8 @@ fn add_final_block(
   stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
-  stack u8 trail_byte,
-  stack u64 rate
+  stack u64 trail_byte,
+  reg u64 rate8
 ) -> stack u64[25] 
 {
   reg u64 i, j, t;
@@ -245,15 +243,15 @@ fn add_final_block(
 
   /*  state[u8 (int) j] ^= trail_byte;*/
   /* does not compile */
-  c = trail_byte;
+  c = (8u) trail_byte;
   state[u8 (int) j] ^= c;
 
   /*  state[u8 (int) rate - 1] ^= 0x80;*/
   /* does not compile */
 
-  j = rate;
-  j -= 1;
-  state[u8 (int) j] ^= 0x80;
+  //j = rate8;
+  //j -= 1;
+  state[u8 (int) rate8-1] ^= 0x80;
 
 
   return state;
@@ -263,13 +261,13 @@ fn add_final_block(
 fn xtr_full_block(
   stack u64[25] state,
   reg u64 out,
-  stack u64 rate
+  reg u64 rate64
 ) 
 {
   reg u64 i, t;
 
   i = 0;
-  while (i < rate)
+  while (i < rate64)
   {
     t = state[(int) i];
     [out + 8 * i] = t;
@@ -311,13 +309,15 @@ fn __keccak_1600(
   reg u64 outlen,
   reg u64 in,
   reg u64 inlen,
-  stack u8 trail_byte,
-  stack u64 rate
+  stack u64 trail_byte,
+  stack u64 rate64
 )
 {
   stack u64[25] state;
+  reg u64 rate;
 
   state = st0();
+  rate = rate64; // rate is rate64
 
   while ( inlen >= rate )
   {
@@ -325,37 +325,41 @@ fn __keccak_1600(
     state = __keccak_f1600_ref(state);
     inlen = inlen - rate;
     in = in + rate;
+    rate = rate64;
   }
 
+  rate >>= 3; // rate is now rate8
   state = add_final_block(state, in, inlen, trail_byte, rate);
 
   while ( outlen > rate )
   {
     state = __keccak_f1600_ref(state);
+    rate = rate64; // rate64
     xtr_full_block(state, out, rate);
+    rate >>= 3; // rate8
     outlen = outlen - rate;
     out = out + rate;
   }
 
-    state = __keccak_f1600_ref(state);
-    xtr_bytes(state, out, outlen);
+  state = __keccak_f1600_ref(state);
+  xtr_bytes(state, out, outlen);
 }
 
 
 export fn keccak_1600(reg u64 out outlen in inlen config)
 {
-  stack u8  s_suffix;
-  reg   u8    suffix;
+  stack u64 s_trailbyte;
+  //reg   u64   trailbyte;
 
   stack u64 s_rate;
-  reg   u64   rate;
+  //reg   u64   rate;
 
-  suffix = (u8)[config + 8*0];
-  s_suffix = suffix;
+  s_trailbyte = [config + 8*0];
+  //s_suffix = suffix;
 
-  rate = [config + 8*1];
-  rate >>= 3; // rate in bytes
-  s_rate = rate;
+  s_rate = [config + 8*1]; // rate64
+  //rate >>= 3; // rate in bytes
+  //s_rate = rate; // rate64
 
-  __keccak_1600(out, outlen, in, inlen, s_suffix, s_rate);
+  __keccak_1600(out, outlen, in, inlen, s_trailbyte, s_rate);
 }
