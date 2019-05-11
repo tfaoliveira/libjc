@@ -28,13 +28,7 @@ fn theta(stack u64[25] a) -> stack u64[25] {
   for x = 0 to 5 {
     /* d[x] = ROL64(c[(x + 1) % 5], 1); */
     /* extraction fails */
-
-    /*    _, _, d[x] = #x86_ROL_64(c[(x + 1) % 5], 1);*/
-    /*    d[x] ^= c[(x + 4) % 5];*/
-    /* does not compile */
-
-    d[x] = c[(x + 1) % 5];
-    _, _, d[x] = #x86_ROL_64(d[x], 1);
+    _, _, d[x] = #x86_ROL_64(c[(x + 1) % 5], 1);
     d[x] ^= c[(x + 4) % 5];
   }
 
@@ -137,7 +131,6 @@ fn keccakP1600_round(stack u64[25] state, reg u64 c) -> stack u64[25] {
 }
 
 
-#if 0
 inline
 fn keccakRoundConstants() -> stack u64[24] {
   stack u64[24] constants;
@@ -167,38 +160,6 @@ fn keccakRoundConstants() -> stack u64[24] {
   constants[23]=0x8000000080008008;
   return constants;
 }
-/* does not compile */
-#endif
-
-fn keccakRoundConstants() -> stack u64[24] {
-  stack u64[24] constants;
-  reg u64 t;
-  t = 0x0000000000000001; constants[ 0] = t;
-  t = 0x0000000000008082; constants[ 1] = t;
-  t = 0x800000000000808a; constants[ 2] = t;
-  t = 0x8000000080008000; constants[ 3] = t;
-  t = 0x000000000000808b; constants[ 4] = t;
-  t = 0x0000000080000001; constants[ 5] = t;
-  t = 0x8000000080008081; constants[ 6] = t;
-  t = 0x8000000000008009; constants[ 7] = t;
-  t = 0x000000000000008a; constants[ 8] = t;
-  t = 0x0000000000000088; constants[ 9] = t;
-  t = 0x0000000080008009; constants[10] = t;
-  t = 0x000000008000000a; constants[11] = t;
-  t = 0x000000008000808b; constants[12] = t;
-  t = 0x800000000000008b; constants[13] = t;
-  t = 0x8000000000008089; constants[14] = t;
-  t = 0x8000000000008003; constants[15] = t;
-  t = 0x8000000000008002; constants[16] = t;
-  t = 0x8000000000000080; constants[17] = t;
-  t = 0x000000000000800a; constants[18] = t;
-  t = 0x800000008000000a; constants[19] = t;
-  t = 0x8000000080008081; constants[20] = t;
-  t = 0x8000000000008080; constants[21] = t;
-  t = 0x0000000080000001; constants[22] = t;
-  t = 0x8000000080008008; constants[23] = t;
-  return constants;
-}
 
 
 fn __keccak_f1600_ref(stack u64[25] state) -> stack u64[25] {
@@ -209,4 +170,173 @@ fn __keccak_f1600_ref(stack u64[25] state) -> stack u64[25] {
     state = keccakP1600_round(state, constants[round]);
   }
   return state;
+}
+
+fn st0() -> stack u64[25] 
+{
+  stack u64[25] state;
+  inline int i;
+
+  for i = 0 to 25 {
+    state[i] = 0;
+  }
+
+  return state;
+}
+
+
+fn add_full_block(
+  stack u64[25] state,
+  reg u64 in,
+  stack u64 rate
+) -> stack u64[25] 
+{
+  reg u64 i, t;
+
+  i = 0;
+  while (i < rate)
+  {
+    t = [in + 8 * i];
+    state[(int) i] ^= t;
+    i = i + 1;
+  }
+
+  return state;
+}
+
+
+fn add_final_block(
+  stack u64[25] state,
+  reg u64 in,
+  reg u64 inlen,
+  stack u8 trail_byte,
+  stack u64 rate
+) -> stack u64[25] 
+{
+  reg u64 i, j, t;
+  reg u8 c;
+
+  i = 0;
+  while (inlen >= 8)
+  {
+    t = [in + 8 * i];
+    state[(int) i] ^= t;
+    i = i + 1;
+    inlen = inlen - 8;
+  }
+
+  j = 8 * i;
+  while (inlen > 0)
+  {
+    c = (u8)[in + j];
+    state[u8 (int) j] ^= c;
+    inlen = inlen - 1;
+    j = j + 1;
+  }
+
+  state[u8 (int) j] ^= trail_byte;
+  state[u8 (int) rate - 1] ^= 0x80;
+
+  return state;
+}
+
+
+fn xtr_full_block(
+  stack u64[25] state,
+  reg u64 out,
+  stack u64 rate
+) 
+{
+  reg u64 i, t;
+
+  i = 0;
+  while (i < rate)
+  {
+    t = state[(int) i];
+    [out + 8 * i] = t;
+    i = i + 1;
+  }
+}
+
+
+fn xtr_bytes(
+  stack u64[25] state,
+  reg u64 out,
+  reg u64 outlen
+) 
+{
+  reg u64 i, j, t;
+  reg u8 c;
+
+  i = 0;
+  while (outlen >= 8)
+  {
+    t = state[(int) i];
+    [out + 8 * i] = t;
+    i = i + 1;
+    outlen = outlen - 8;
+  }
+
+  j = 8 * i;
+  while (outlen > 0) {
+      c = state[u8 (int) j];
+      (u8)[out + j] = c;
+      outlen = outlen - 1;
+      j = j + 1;
+  }
+}
+
+
+fn __keccak_1600(
+  reg u64 out,
+  reg u64 outlen,
+  reg u64 in,
+  reg u64 inlen,
+  stack u8 trail_byte,
+  stack u64 rate
+)
+{
+  stack u64[25] state;
+
+  state = st0();
+
+  while ( inlen >= rate )
+  {
+    state = add_full_block(state, in, rate);
+    state = keccak_f1600(state);
+    inlen = inlen - rate;
+    in = in + rate;
+  }
+
+  state = add_final_block(state, in, inlen, trail_byte, rate);
+
+  while ( outlen > rate )
+  {
+    state = keccak_f1600(state);
+    xtr_full_block(state, out, rate);
+    outlen = outlen - rate;
+    out = out + rate;
+  }
+
+    state = keccak_f1600(state);
+    xtr_bytes(state, out, outlen);
+}
+
+
+export fn keccak_1600(reg u64 out outlen in inlen config)
+{
+  stack u8  s_suffix;
+  reg   u8    suffix;
+
+  stack u64 s_rate;
+  reg   u64   rate;
+
+  suffix = (u8)[config + 8*0];
+  s_suffix = suffix;
+
+  rate = [config + 8*1];
+  rate >>= 3; // rate in bytes
+  s_rate = rate;
+
+  __keccak_1600(out, outlen, in, inlen, s_suffix, s_rate);
 }
