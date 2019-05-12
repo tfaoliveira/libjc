@@ -382,31 +382,32 @@ module M = {
   }
   
   proc __keccak_1600 (out:W64.t, outlen:W64.t, in_0:W64.t, inlen:W64.t,
-                      trail_byte:W64.t, r64:W64.t) : unit = {
+                      trail_byte:W64.t, r8:W64.t) : unit = {
     
     var state:W64.t Array25.t;
     var rate:W64.t;
     var trailbyte:W8.t;
     state <- witness;
     state <@ st0 ();
-    rate <- r64;
+    rate <- r8;
     
     while ((rate \ule inlen)) {
+      rate <- (rate `>>` (W8.of_int 3));
       state <@ add_full_block (state, in_0, rate);
       state <@ __keccak_f1600_ref (state);
+      rate <- r8;
       inlen <- (inlen - rate);
       in_0 <- (in_0 + rate);
-      rate <- r64;
     }
     trailbyte <- (truncateu8 trail_byte);
-    rate <- (rate `>>` (W8.of_int 3));
     state <@ add_final_block (state, in_0, inlen, trailbyte, rate);
     
     while ((rate \ult outlen)) {
       state <@ __keccak_f1600_ref (state);
-      rate <- r64;
-      xtr_full_block (state, out, rate);
+      rate <- r8;
       rate <- (rate `>>` (W8.of_int 3));
+      xtr_full_block (state, out, rate);
+      rate <- (rate `<<` (W8.of_int 3));
       outlen <- (outlen - rate);
       out <- (out + rate);
     }
