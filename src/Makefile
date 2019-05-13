@@ -7,6 +7,10 @@ crypto_core/keccakf160064bits/scalar/ \
 crypto_core/keccakf160064bits/avx2-openssl/ \
 crypto_core/keccakf160064bits/avx2/ \
 \
+crypto_hash/keccak1600/ref/ \
+crypto_hash/keccak1600/scalar/ \
+crypto_hash/keccak1600/avx2/ \
+\
 crypto_hash/shake128/scalar/ \
 crypto_hash/shake128/avx2/ \
 crypto_hash/keccak1600/scalar/ \

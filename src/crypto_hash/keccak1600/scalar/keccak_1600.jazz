@@ -140,7 +140,7 @@ fn add_final_block(
 ) -> _state_t
 {
   reg u64 i t inlen8 trail_byte;
-  reg u8 c;
+  reg u8 trail_byte8 c;
 
   inlen8 = inlen;
   inlen8 >>= 3;
@@ -151,14 +151,31 @@ fn add_final_block(
     B(state,i) ^= t;
     i += 1;
   }
+
+  #if 0
   in += 8*i;
   inlen &= 7; // inlen = inlen % 8
   trail_byte = s_trail_byte;
   t = lastu64(in, inlen, trail_byte);
   B(state,i) ^= t;
+  #else
 
-  rate -= 1;
-  B8(state,rate) ^= 0x80;
+  i <<= 3;
+  while ( i < inlen )
+  {
+    c = (u8)[in + i];
+    B8(state,i) ^= c;
+    i += 1;
+  }
+
+  trail_byte = s_trail_byte;
+  trail_byte8 = (8u) trail_byte;
+  B8(state,i) ^= trail_byte8;
+  #endif
+
+  i = rate;
+  i -= 1;
+  B8(state,i) ^= 0x80;
 
   return state;
 }
@@ -169,8 +186,8 @@ fn absorb(
   reg   u64 iotas,
   reg   u64 in inlen,
   stack u64 s_trail_byte,
-  reg   u64 rate // rate already in bytes
-) -> _state_t, reg u64
+  reg   u64 rate // rate already in bytes -- it is returned bc of spills
+) -> _state_t, reg u64, reg u64
 {
   stack u64 s_in s_inlen s_rate;
 
@@ -187,7 +204,7 @@ fn absorb(
   // final block
   state = add_final_block(state, in, inlen, s_trail_byte, rate);
 
-  return state, iotas;
+  return state, iotas, rate;
 }
 
 
@@ -217,16 +234,16 @@ fn xtr_full_block(
 fn xtr_bytes(
   _state_t state,
   reg u64 out,
-  reg u64 len
+  reg u64 outlen
 ) -> reg u64
 {
-  reg u64 i t len8;
+  reg u64 i t outlen8;
   reg u8 c;
 
-  len8 = len;
-  len8 >>= 3;
+  outlen8 = outlen;
+  outlen8 >>= 3;
   i = 0;
-  while ( i < len8 )
+  while ( i < outlen8 )
   {
     t = B(state,i);
     [out + 8*i] = t;
@@ -234,14 +251,14 @@ fn xtr_bytes(
   }
   i <<= 3;
 
-  while ( i < len )
+  while ( i < outlen )
   {
     c = B8(state,i);
     (u8)[out + i] = c;
     i += 1;
   }
 
-  out += len;
+  out += outlen;
   return out;
 }
 
@@ -296,10 +313,9 @@ fn __keccak_1600(
   s_rate = rate;
 
   // absorb
-  state, iotas = absorb(state, iotas, in, inlen, s_trail_byte, rate);
+  state, iotas, rate = absorb(state, iotas, in, inlen, s_trail_byte, rate);
 
   // squeeze
-  rate = s_rate;
   squeeze(state, iotas, s_out, s_outlen, rate);
 }
 

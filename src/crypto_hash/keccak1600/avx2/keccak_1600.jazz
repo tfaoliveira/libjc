@@ -86,7 +86,7 @@ fn add_final_block(
 {
   inline int i;
   reg u64 j l t inlen8;
-  reg u8 trail_byte8, c;
+  reg u8 trail_byte8 c;
 
   s_state = init_s_state();
 

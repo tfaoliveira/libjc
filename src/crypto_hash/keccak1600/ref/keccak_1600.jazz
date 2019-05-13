@@ -119,33 +119,32 @@ fn add_final_block(
   reg u64 r8
 ) -> stack u64[25] 
 {
-  reg u64 i, j, t;
+  reg u64 i, t, inlen8;
   reg u8 c;
 
+  inlen8 = inlen;
+  inlen8 >>= 3;
   i = 0;
-  while (inlen >= 8)
+  while ( i < inlen8)
   {
-    t = [in + 8 * i];
+    t = [in + 8*i];
     state[(int) i] ^= t;
     i = i + 1;
-    inlen = inlen - 8;
   }
 
-  j = 8 * i;
-  while (inlen > 0)
+  i <<= 3;
+  while (i < inlen)
   {
-    c = (u8)[in + j];
-    state[u8 (int) j] ^= c;
-    inlen = inlen - 1;
-    j = j + 1;
+    c = (u8)[in + i];
+    state[u8 (int) i] ^= c;
+    i = i + 1;
   }
 
-  state[u8 (int) j] ^= trail_byte;
+  state[u8 (int) i] ^= trail_byte;
 
-  j = r8;
-  j -= 1;
-  state[u8 (int) j] ^= 0x80;
-
+  i = r8;
+  i -= 1;
+  state[u8 (int) i] ^= 0x80;
 
   return state;
 }
@@ -174,24 +173,25 @@ fn xtr_bytes(
   reg u64 outlen
 ) 
 {
-  reg u64 i, j, t;
+  reg u64 i t outlen8;
   reg u8 c;
 
+  outlen8 = outlen;
+  outlen8 >>= 3;
   i = 0;
-  while (outlen >= 8)
+  while (i < outlen8 )
   {
     t = state[(int) i];
     [out + 8 * i] = t;
     i = i + 1;
-    outlen = outlen - 8;
   }
+  i <<= 3;
 
-  j = 8 * i;
-  while (outlen > 0) {
-      c = state[u8 (int) j];
-      (u8)[out + j] = c;
-      outlen = outlen - 1;
-      j = j + 1;
+  while (i < outlen)
+  {
+    c = state[u8 (int) i];
+    (u8)[out + i] = c;
+    i = i + 1;
   }
 }
 

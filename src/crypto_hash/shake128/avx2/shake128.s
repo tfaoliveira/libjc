@@ -10,7 +10,7 @@ keccak_1600:
 	pushq	%r13
 	pushq	%r14
 	subq	$256, %rsp
-	movb	(%r8), %al
+	movzbq	(%r8), %rax
 	movq	8(%r8), %r8
 	movq	(%r9), %r10
 	movq	8(%r9), %r11
@@ -205,6 +205,7 @@ Lkeccak_1600$12:
 Lkeccak_1600$11:
 	cmpq	%rcx, %r12
 	jb  	Lkeccak_1600$12
+	movb	%al, %al
 	movb	%al, (%rsp,%rbx)
 	movq	%r8, %rax
 	leaq	-1(%rax), %rax
