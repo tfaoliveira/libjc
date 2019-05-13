@@ -249,7 +249,7 @@ fn read_last_u64(
   return res;
 }
 
-fn add_final_block(
+fn add_final_block2(
   stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
@@ -273,18 +273,27 @@ fn add_final_block(
   t = read_last_u64(in, inlen, trail_byte);
   state[(int) i] ^= t;
 
+/*
   // set last bit
   i = r8;
   i >>= 3;
   t = 1;
   t <<= 63;
   i -= 1;
-  state[(int) i] = t;
+  state[(int) i] ^= t;
+*/
+  // set last bit
+  i = r8;
+  i -=1;
+  state[u8 (int) i] ^= 0x80;
+  
+
+
 
   return state;
 }
 
-fn add_final_block2(
+fn add_final_block(
   stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
@@ -404,8 +413,8 @@ fn __keccak_1600(
 
   t = s_trail_byte;
   trail_byte = (8u) t;
-  //state = add_final_block(state, in, inlen, s_trail_byte, rate);
-  state = add_final_block2(state, in, inlen, trail_byte, rate);
+  //state = add_final_block2(state, in, inlen, s_trail_byte, rate);
+  state = add_final_block(state, in, inlen, trail_byte, rate);
 
   outlen = s_outlen;
   while ( outlen > rate )

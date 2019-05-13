@@ -326,15 +326,16 @@ module M = {
       inlen <- (inlen - (W64.of_int 1));
       j <- (j + (W64.of_int 1));
     }
-    c <- trail_byte;
     state =
     Array25.init
     (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j) (
-    (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j)) `^` c)));
+    (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j)) `^` trail_byte)));
+    j <- r8;
+    j <- (j - (W64.of_int 1));
     state =
     Array25.init
-    (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) ((W64.to_uint r8) - 1) (
-    (get8 (WArray200.init64 (fun i => state.[i])) ((W64.to_uint r8) - 1)) `^` (W8.of_int 128))));
+    (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j) (
+    (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j)) `^` (W8.of_int 128))));
     return (state);
   }
   
@@ -381,37 +382,53 @@ module M = {
     return ();
   }
   
-  proc __keccak_1600 (out:W64.t, outlen:W64.t, in_0:W64.t, inlen:W64.t,
-                      trail_byte:W64.t, r8:W64.t) : unit = {
+  proc __keccak_1600 (s_out:W64.t, s_outlen:W64.t, in_0:W64.t, inlen:W64.t,
+                      s_trail_byte:W64.t, s_r8:W64.t) : unit = {
     
     var state:W64.t Array25.t;
     var rate:W64.t;
-    var trailbyte:W8.t;
+    var s_in:W64.t;
+    var s_inlen:W64.t;
+    var t:W64.t;
+    var trail_byte:W8.t;
+    var outlen:W64.t;
+    var out:W64.t;
     state <- witness;
     state <@ st0 ();
-    rate <- r8;
+    rate <- s_r8;
     
     while ((rate \ule inlen)) {
       rate <- (rate `>>` (W8.of_int 3));
       state <@ add_full_block (state, in_0, rate);
+      s_in <- in_0;
+      s_inlen <- inlen;
       state <@ __keccak_f1600_ref (state);
-      rate <- r8;
+      inlen <- s_inlen;
+      in_0 <- s_in;
+      rate <- s_r8;
       inlen <- (inlen - rate);
       in_0 <- (in_0 + rate);
     }
-    trailbyte <- (truncateu8 trail_byte);
-    state <@ add_final_block (state, in_0, inlen, trailbyte, rate);
+    t <- s_trail_byte;
+    trail_byte <- (truncateu8 t);
+    state <@ add_final_block (state, in_0, inlen, trail_byte, rate);
+    outlen <- s_outlen;
     
     while ((rate \ult outlen)) {
+      outlen <- (outlen - rate);
+      s_out <- (s_out + rate);
+      s_outlen <- outlen;
       state <@ __keccak_f1600_ref (state);
-      rate <- r8;
+      rate <- s_r8;
+      out <- s_out;
+      outlen <- s_outlen;
       rate <- (rate `>>` (W8.of_int 3));
       xtr_full_block (state, out, rate);
       rate <- (rate `<<` (W8.of_int 3));
-      outlen <- (outlen - rate);
-      out <- (out + rate);
     }
     state <@ __keccak_f1600_ref (state);
+    out <- s_out;
+    outlen <- s_outlen;
     xtr_bytes (state, out, outlen);
     return ();
   }
