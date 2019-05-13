@@ -94,7 +94,7 @@ fn add_full_block(
 
 // obs: @pre: inlen < 8
 fn lastu64(
-  reg u64 in inlen suffix
+  reg u64 in inlen trail_byte
 ) -> reg u64
 {
   reg bool zf;
@@ -123,9 +123,8 @@ fn lastu64(
     delta += 8;
     res += t;
   }
-  suffix = suffix;
-  suffix <<= delta;
-  res += suffix;
+  trail_byte <<= delta;
+  res += trail_byte;
 
   return res;
 }
@@ -136,11 +135,11 @@ fn add_final_block(
   _state_t state,
   reg   u64 in,
   reg   u64 inlen,
-  stack u8  suffix,
+  stack u64 s_trail_byte,
   reg   u64 rate
 ) -> _state_t
 {
-  reg u64 i t inlen8 r_suffix;
+  reg u64 i t inlen8 trail_byte;
   reg u8 c;
 
   inlen8 = inlen;
@@ -154,8 +153,8 @@ fn add_final_block(
   }
   in += 8*i;
   inlen &= 7; // inlen = inlen % 8
-  r_suffix = (64u) suffix;
-  t = lastu64(in, inlen, r_suffix);
+  trail_byte = s_trail_byte;
+  t = lastu64(in, inlen, trail_byte);
   B(state,i) ^= t;
 
   rate -= 1;
@@ -169,7 +168,7 @@ fn absorb(
   _state_t state,
   reg   u64 iotas,
   reg   u64 in inlen,
-  stack u8  suffix,
+  stack u64 s_trail_byte,
   reg   u64 rate // rate already in bytes
 ) -> _state_t, reg u64
 {
@@ -186,7 +185,7 @@ fn absorb(
   }
 
   // final block
-  state = add_final_block(state, in, inlen, suffix, rate);
+  state = add_final_block(state, in, inlen, s_trail_byte, rate);
 
   return state, iotas;
 }
@@ -286,7 +285,7 @@ fn __keccak_1600(
   stack u64 s_out s_outlen,
   reg   u64 iotas,
   reg   u64 in inlen _mem,
-  stack u8  suffix,
+  stack u64 s_trail_byte,
   reg   u64 rate
 )
 {
@@ -297,7 +296,7 @@ fn __keccak_1600(
   s_rate = rate;
 
   // absorb
-  state, iotas = absorb(state, iotas, in, inlen, suffix, rate);
+  state, iotas = absorb(state, iotas, in, inlen, s_trail_byte, rate);
 
   // squeeze
   rate = s_rate;
@@ -307,9 +306,9 @@ fn __keccak_1600(
 
 export fn keccak_1600(reg u64 out outlen in inlen_ config iotas _mem)
 {
-  stack u8  s_suffix;
+  stack u64 s_trail_byte;
   stack u64 s_out s_outlen;
-  reg   u8    suffix;
+  reg   u64   trail_byte;
   reg   u64   rate inlen;
 
   s_out = out;
@@ -317,10 +316,10 @@ export fn keccak_1600(reg u64 out outlen in inlen_ config iotas _mem)
 
   inlen = inlen_; // swap register, rcx is needed
 
-  suffix = (u8)[config + 8*0];
-  s_suffix = suffix;
+  trail_byte = (64u)(u8)[config + 8*0];
+  s_trail_byte = trail_byte;
 
   rate = [config + 8*1]; // rate in bytes
 
-  __keccak_1600(s_out, s_outlen, iotas, in, inlen, s_suffix, rate);
+  __keccak_1600(s_out, s_outlen, iotas, in, inlen, s_trail_byte, rate);
 }
