@@ -7,8 +7,8 @@ require import WArray224 WArray288.
 
 
 module M = {
-  proc keccak_f1600 (state:W256.t Array7.t, _rhotates_left:W64.t,
-                     _rhotates_right:W64.t, _iotas:W64.t) : W256.t Array7.t = {
+  proc __keccak_f1600_avx2 (state:W256.t Array7.t, _rhotates_left:W64.t,
+                            _rhotates_right:W64.t, _iotas:W64.t) : W256.t Array7.t = {
     
     var rhotates_left:W64.t;
     var rhotates_right:W64.t;
@@ -72,27 +72,27 @@ module M = {
                                              2^1 * (0 %% 2^1 + 2^1 * 0))))))));
     d14 <- (d14 `^` t.[4]);
     t.[3] <- x86_VPSLLV_4u64 state.[2]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((0 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 0) - 96)))));
     state.[2] <- x86_VPSRLV_4u64 state.[2]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((0 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 0) - 96)))));
     state.[2] <- (state.[2] `|` t.[3]);
     state.[3] <- (state.[3] `^` d14);
     t.[4] <- x86_VPSLLV_4u64 state.[3]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((2 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 2) - 96)))));
     state.[3] <- x86_VPSRLV_4u64 state.[3]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((2 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 2) - 96)))));
     state.[3] <- (state.[3] `|` t.[4]);
     state.[4] <- (state.[4] `^` d14);
     t.[5] <- x86_VPSLLV_4u64 state.[4]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((3 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 3) - 96)))));
     state.[4] <- x86_VPSRLV_4u64 state.[4]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((3 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 3) - 96)))));
     state.[4] <- (state.[4] `|` t.[5]);
     state.[5] <- (state.[5] `^` d14);
     t.[6] <- x86_VPSLLV_4u64 state.[5]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((4 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 4) - 96)))));
     state.[5] <- x86_VPSRLV_4u64 state.[5]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((4 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 4) - 96)))));
     state.[5] <- (state.[5] `|` t.[6]);
     state.[6] <- (state.[6] `^` d14);
     t.[3] <- x86_VPERMQ state.[2]
@@ -100,9 +100,9 @@ module M = {
     t.[4] <- x86_VPERMQ state.[3]
     (W8.of_int (1 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 2))));
     t.[7] <- x86_VPSLLV_4u64 state.[6]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((5 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 5) - 96)))));
     t.[1] <- x86_VPSRLV_4u64 state.[6]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((5 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 5) - 96)))));
     t.[1] <- (t.[1] `|` t.[7]);
     state.[1] <- (state.[1] `^` d14);
     t.[5] <- x86_VPERMQ state.[4]
@@ -110,9 +110,9 @@ module M = {
     t.[6] <- x86_VPERMQ state.[5]
     (W8.of_int (2 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 1))));
     t.[8] <- x86_VPSLLV_4u64 state.[1]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((1 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 1) - 96)))));
     t.[2] <- x86_VPSRLV_4u64 state.[1]
-    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((1 * 32) - 96)))));
+    (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 1) - 96)))));
     t.[2] <- (t.[2] `|` t.[8]);
     t.[7] <- x86_VPSRLDQ_256 t.[1] (W8.of_int 8);
     t.[0] <- ((invw t.[1]) `&` t.[7]);
@@ -398,7 +398,7 @@ module M = {
     state.[1] <- (state.[1] `^` t.[1]);
     state.[4] <- (state.[4] `^` t.[4]);
     state.[0] <-
-    (state.[0] `^` (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int ((0 * 32) - 0))))));
+    (state.[0] `^` (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int ((32 * 0) - 0))))));
     iotas <- (iotas + (W64.of_int 32));
     ( _0,  _1,  _2, zf, r) <- x86_DEC_32 r;
     while ((! zf)) {
@@ -446,27 +446,27 @@ module M = {
                                                2^1 * (0 %% 2^1 + 2^1 * 0))))))));
       d14 <- (d14 `^` t.[4]);
       t.[3] <- x86_VPSLLV_4u64 state.[2]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((0 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 0) - 96)))));
       state.[2] <- x86_VPSRLV_4u64 state.[2]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((0 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 0) - 96)))));
       state.[2] <- (state.[2] `|` t.[3]);
       state.[3] <- (state.[3] `^` d14);
       t.[4] <- x86_VPSLLV_4u64 state.[3]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((2 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 2) - 96)))));
       state.[3] <- x86_VPSRLV_4u64 state.[3]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((2 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 2) - 96)))));
       state.[3] <- (state.[3] `|` t.[4]);
       state.[4] <- (state.[4] `^` d14);
       t.[5] <- x86_VPSLLV_4u64 state.[4]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((3 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 3) - 96)))));
       state.[4] <- x86_VPSRLV_4u64 state.[4]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((3 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 3) - 96)))));
       state.[4] <- (state.[4] `|` t.[5]);
       state.[5] <- (state.[5] `^` d14);
       t.[6] <- x86_VPSLLV_4u64 state.[5]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((4 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 4) - 96)))));
       state.[5] <- x86_VPSRLV_4u64 state.[5]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((4 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 4) - 96)))));
       state.[5] <- (state.[5] `|` t.[6]);
       state.[6] <- (state.[6] `^` d14);
       t.[3] <- x86_VPERMQ state.[2]
@@ -474,9 +474,9 @@ module M = {
       t.[4] <- x86_VPERMQ state.[3]
       (W8.of_int (1 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 2))));
       t.[7] <- x86_VPSLLV_4u64 state.[6]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((5 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 5) - 96)))));
       t.[1] <- x86_VPSRLV_4u64 state.[6]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((5 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 5) - 96)))));
       t.[1] <- (t.[1] `|` t.[7]);
       state.[1] <- (state.[1] `^` d14);
       t.[5] <- x86_VPERMQ state.[4]
@@ -484,9 +484,9 @@ module M = {
       t.[6] <- x86_VPERMQ state.[5]
       (W8.of_int (2 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 1))));
       t.[8] <- x86_VPSLLV_4u64 state.[1]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((1 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((32 * 1) - 96)))));
       t.[2] <- x86_VPSRLV_4u64 state.[1]
-      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((1 * 32) - 96)))));
+      (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((32 * 1) - 96)))));
       t.[2] <- (t.[2] `|` t.[8]);
       t.[7] <- x86_VPSRLDQ_256 t.[1] (W8.of_int 8);
       t.[0] <- ((invw t.[1]) `&` t.[7]);
@@ -772,7 +772,7 @@ module M = {
       state.[1] <- (state.[1] `^` t.[1]);
       state.[4] <- (state.[4] `^` t.[4]);
       state.[0] <-
-      (state.[0] `^` (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int ((0 * 32) - 0))))));
+      (state.[0] `^` (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int ((32 * 0) - 0))))));
       iotas <- (iotas + (W64.of_int 32));
       ( _0,  _1,  _2, zf, r) <- x86_DEC_32 r;
     }
