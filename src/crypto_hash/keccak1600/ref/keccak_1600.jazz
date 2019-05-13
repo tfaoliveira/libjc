@@ -134,17 +134,11 @@ fn add_final_block2(
     j = j + 1;
   }
 
-  /*  state[u8 (int) j] ^= trail_byte;*/
-  /* does not compile */
-  c = (8u) trail_byte;
-  state[u8 (int) j] ^= c;
+  state[u8 (int) j] ^= trail_byte;
 
-  /*  state[u8 (int) rate - 1] ^= 0x80;*/
-  /* does not compile */
-
-  //j = rate8;
-  //j -= 1;
-  state[u8 (int) r8-1] ^= 0x80;
+  j = r8;
+  j -= 1;
+  state[u8 (int) j] ^= 0x80;
 
 
   return state;
@@ -208,7 +202,7 @@ fn __keccak_1600(
 {
   stack u64[25] state;
   stack u64 s_in, s_inlen;
-  reg u64 out, outlen, rate;
+  reg u64 out, outlen, rate, t;
   reg u8 trail_byte;
 
   state = st0();
@@ -229,7 +223,8 @@ fn __keccak_1600(
     in = in + rate;
   }
 
-  trail_byte = 0; //(8u) s_trail_byte;
+  t = s_trail_byte;
+  trail_byte = (8u) t;
   //state = add_final_block(state, in, inlen, s_trail_byte, rate);
   state = add_final_block2(state, in, inlen, trail_byte, rate);
 
