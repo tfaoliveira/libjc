@@ -47,7 +47,7 @@ uint64_t iotas[32] __attribute__((aligned(256))) =
 
 int shake128_scalar(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
-  uint64_t c[] = {0x1F, 1344};
+  uint64_t c[] = {0x1F, (1344/8)};
   keccak_1600(out, 168, in, inlen, c, &(iotas[8]));
   return 0;
 }
