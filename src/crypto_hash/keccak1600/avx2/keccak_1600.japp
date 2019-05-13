@@ -224,13 +224,13 @@ fn add_final_block(
   stack u64[28] s_state,
   reg   u64 a_jagged,
   reg   u64 in inlen,
-  reg   u64 trail_byte,
+  reg   u8  trail_byte,
   reg   u64 rate
 ) -> reg u256[7]
 {
   inline int i;
   reg u64 j l t inlen8;
-  reg u8 trail_byte8 c;
+  reg u8 c;
 
   s_state = init_s_state();
 
@@ -245,10 +245,8 @@ fn add_final_block(
     j += 1;
   }
   l = [a_jagged + 8*( j)];
-
-  j <<= 3;
   l <<= 3;
-
+  j <<= 3;
 
   while ( j < inlen )
   {
@@ -258,8 +256,7 @@ fn add_final_block(
     l += 1;
   }
 
-  trail_byte8 = (8u) trail_byte;
-  s_state[u8 (int) l] = trail_byte8;
+  s_state[u8 (int) l] = trail_byte;
 
   // j  = (rate-1) >> 3; // TODO IMPROVE ME
   j = rate; j -= 1; j >>= 3;
@@ -367,7 +364,7 @@ fn absorb(
   reg u256[7] state,
   reg u64 rhotates_left rhotates_right iotas a_jagged,
   reg u64 in inlen,
-  reg u64 trail_byte,
+  reg u8  trail_byte,
   reg u64 rate
 ) -> reg u256[7]
 {
@@ -412,7 +409,7 @@ fn __keccak_1600(
   reg   u64 out outlen,
   reg   u64 rhotates_left rhotates_right iotas a_jagged,
   reg   u64 in inlen,
-  reg   u64 trail_byte,
+  reg   u8  trail_byte,
   reg   u64 rate
 )
 {
@@ -435,10 +432,10 @@ fn __keccak_1600(
 export fn keccak_1600(reg u64 out outlen in inlen config glob)
 {
   reg   u64 rhotates_left rhotates_right iotas a_jagged;
-  reg   u64 trail_byte;
+  reg   u8  trail_byte; // no need to spill
   reg   u64 rate;
 
-  trail_byte = (64u)(u8)[config + 8*0];
+  trail_byte = (u8)[config + 8*0];
   rate       = [config + 8*1]; // rate in bytes
 
   rhotates_left  = [glob + 8*0];

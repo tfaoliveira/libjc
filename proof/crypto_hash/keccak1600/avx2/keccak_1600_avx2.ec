@@ -851,8 +851,8 @@ module M = {
   }
   
   proc add_final_block (state:W256.t Array7.t, s_state:W64.t Array28.t,
-                        a_jagged:W64.t, in_0:W64.t, inlen:W64.t, suffix:W8.t,
-                        rate:W64.t) : W256.t Array7.t = {
+                        a_jagged:W64.t, in_0:W64.t, inlen:W64.t,
+                        trail_byte:W8.t, rate:W64.t) : W256.t Array7.t = {
     var aux: int;
     
     var inlen8:W64.t;
@@ -875,8 +875,8 @@ module M = {
       j <- (j + (W64.of_int 1));
     }
     l <- (loadW64 Glob.mem (W64.to_uint (a_jagged + ((W64.of_int 8) * j))));
-    j <- (j `<<` (W8.of_int 3));
     l <- (l `<<` (W8.of_int 3));
+    j <- (j `<<` (W8.of_int 3));
     
     while ((j \ult inlen)) {
       c <- (loadW8 Glob.mem (W64.to_uint (in_0 + j)));
@@ -888,7 +888,7 @@ module M = {
     }
     s_state =
     Array28.init
-    (WArray224.get64 (WArray224.set8 (WArray224.init64 (fun i => s_state.[i])) (W64.to_uint l) suffix));
+    (WArray224.get64 (WArray224.set8 (WArray224.init64 (fun i => s_state.[i])) (W64.to_uint l) trail_byte));
     j <- rate;
     j <- (j - (W64.of_int 1));
     j <- (j `>>` (W8.of_int 3));
@@ -998,7 +998,7 @@ module M = {
   
   proc absorb (state:W256.t Array7.t, rhotates_left:W64.t,
                rhotates_right:W64.t, iotas:W64.t, a_jagged:W64.t, in_0:W64.t,
-               inlen:W64.t, suffix:W8.t, rate:W64.t) : W256.t Array7.t = {
+               inlen:W64.t, trail_byte:W8.t, rate:W64.t) : W256.t Array7.t = {
     
     var s_state:W64.t Array28.t;
     s_state <- witness;
@@ -1010,8 +1010,8 @@ module M = {
       state <@ __keccak_f1600_avx2 (state, rhotates_left, rhotates_right,
       iotas);
     }
-    state <@ add_final_block (state, s_state, a_jagged, in_0, inlen, suffix,
-    rate);
+    state <@ add_final_block (state, s_state, a_jagged, in_0, inlen,
+    trail_byte, rate);
     return (state);
   }
   
@@ -1036,13 +1036,13 @@ module M = {
   
   proc __keccak_1600 (out:W64.t, outlen:W64.t, rhotates_left:W64.t,
                       rhotates_right:W64.t, iotas:W64.t, a_jagged:W64.t,
-                      in_0:W64.t, inlen:W64.t, suffix:W8.t, rate:W64.t) : unit = {
+                      in_0:W64.t, inlen:W64.t, trail_byte:W8.t, rate:W64.t) : unit = {
     
     var state:W256.t Array7.t;
     state <- witness;
     state <@ keccak_init ();
     state <@ absorb (state, rhotates_left, rhotates_right, iotas, a_jagged,
-    in_0, inlen, suffix, rate);
+    in_0, inlen, trail_byte, rate);
     squeeze (state, rhotates_left, rhotates_right, iotas, a_jagged, out,
     outlen, rate);
     return ();

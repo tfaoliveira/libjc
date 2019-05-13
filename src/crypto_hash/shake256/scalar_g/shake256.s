@@ -9,45 +9,43 @@ keccak_1600:
 	pushq	%r12
 	pushq	%r13
 	pushq	%r14
-	subq	$449, %rsp
+	subq	$448, %rsp
 	movq	%rdi, 400(%rsp)
 	movq	%rsi, 440(%rsp)
-	movq	%rcx, %rax
-	movb	(%r8), %cl
-	movb	%cl, 448(%rsp)
-	movq	8(%r8), %rsi
-	xorl	%ecx, %ecx
+	movzbq	(%r8), %rax
+	movq	%rax, 432(%rsp)
+	movq	8(%r8), %rax
+	xorl	%esi, %esi
 	movq	$0, %rdi
-	jmp 	Lkeccak_1600$21
-Lkeccak_1600$22:
-	movq	%rcx, 200(%rsp,%rdi,8)
-	leaq	1(%rdi), %rdi
+	jmp 	Lkeccak_1600$20
 Lkeccak_1600$21:
-	cmpq	$25, %rdi
-	jb  	Lkeccak_1600$22
-	movq	%rsi, 432(%rsp)
-	jmp 	Lkeccak_1600$16
-Lkeccak_1600$17:
-	movq	$0, %rcx
-	movq	%rsi, %rdi
-	shrq	$3, %rdi
-	jmp 	Lkeccak_1600$19
+	movq	%rsi, 200(%rsp,%rdi,8)
+	leaq	1(%rdi), %rdi
 Lkeccak_1600$20:
-	movq	(%rdx,%rcx,8), %r8
-	xorq	%r8, 200(%rsp,%rcx,8)
-	leaq	1(%rcx), %rcx
+	cmpq	$25, %rdi
+	jb  	Lkeccak_1600$21
+	jmp 	Lkeccak_1600$15
+Lkeccak_1600$16:
+	movq	%rax, %rsi
+	shrq	$3, %rsi
+	movq	$0, %rdi
+	jmp 	Lkeccak_1600$18
 Lkeccak_1600$19:
-	cmpq	%rdi, %rcx
-	jb  	Lkeccak_1600$20
-	leaq	(%rdx,%rsi), %rcx
-	subq	%rsi, %rax
-	movq	%rcx, 424(%rsp)
-	movq	%rax, 416(%rsp)
-	movq	%rsi, 408(%rsp)
+	movq	(%rdx,%rdi,8), %r8
+	xorq	%r8, 200(%rsp,%rdi,8)
+	leaq	1(%rdi), %rdi
+Lkeccak_1600$18:
+	cmpq	%rsi, %rdi
+	jb  	Lkeccak_1600$19
+	leaq	(%rdx,%rax), %rdx
+	subq	%rax, %rcx
+	movq	%rdx, 424(%rsp)
+	movq	%rcx, 416(%rsp)
+	movq	%rax, 408(%rsp)
 	movq	$24, %rax
 	leaq	glob_data(%rip), %rcx
 	.p2align	5
-Lkeccak_1600$18:
+Lkeccak_1600$17:
 	movq	200(%rsp), %rdx
 	movq	208(%rsp), %rsi
 	movq	216(%rsp), %rdi
@@ -432,60 +430,43 @@ Lkeccak_1600$18:
 	xorq	%r10, %rdx
 	movq	%rdx, 392(%rsp)
 	decq	%rax
-	jne 	Lkeccak_1600$18
+	jne 	Lkeccak_1600$17
 	movq	424(%rsp), %rdx
-	movq	416(%rsp), %rax
-	movq	408(%rsp), %rsi
-Lkeccak_1600$16:
-	cmpq	%rsi, %rax
-	jnb 	Lkeccak_1600$17
-	movq	%rax, %rcx
-	shrq	$3, %rcx
-	movq	$0, %rdi
-	jmp 	Lkeccak_1600$14
+	movq	416(%rsp), %rcx
+	movq	408(%rsp), %rax
 Lkeccak_1600$15:
-	movq	(%rdx,%rdi,8), %r8
-	xorq	%r8, 200(%rsp,%rdi,8)
-	leaq	1(%rdi), %rdi
+	cmpq	%rax, %rcx
+	jnb 	Lkeccak_1600$16
+	movq	432(%rsp), %rsi
+	movb	%sil, %sil
+	movq	%rcx, %rdi
+	shrq	$3, %rdi
+	movq	$0, %r8
+	jmp 	Lkeccak_1600$13
 Lkeccak_1600$14:
-	cmpq	%rcx, %rdi
-	jb  	Lkeccak_1600$15
-	leaq	(%rdx,%rdi,8), %r11
-	andq	$7, %rax
-	movzbq	448(%rsp), %rdx
-	movq	$0, %r10
-	movq	$0, %rcx
-	testb	$4, %al
-	je  	Lkeccak_1600$13
-	movl	(%r11), %r10d
-	leaq	4(%r11), %r11
-	movq	$32, %rcx
+	movq	(%rdx,%r8,8), %r10
+	xorq	%r10, 200(%rsp,%r8,8)
+	leaq	1(%r8), %r8
 Lkeccak_1600$13:
-	testb	$2, %al
-	je  	Lkeccak_1600$12
-	movzwq	(%r11), %r8
-	leaq	2(%r11), %r11
-	shlq	%cl, %r8
-	leaq	16(%rcx), %rcx
-	leaq	(%r10,%r8), %r10
+	cmpq	%rdi, %r8
+	jb  	Lkeccak_1600$14
+	shlq	$3, %r8
+	jmp 	Lkeccak_1600$11
 Lkeccak_1600$12:
-	testb	$1, %al
-	je  	Lkeccak_1600$11
-	movzbq	(%r11), %rax
-	shlq	%cl, %rax
-	leaq	8(%rcx), %rcx
-	leaq	(%r10,%rax), %r10
+	movb	(%rdx,%r8), %dil
+	xorb	%dil, 200(%rsp,%r8)
+	leaq	1(%r8), %r8
 Lkeccak_1600$11:
-	shlq	%cl, %rdx
-	leaq	(%r10,%rdx), %rax
-	xorq	%rax, 200(%rsp,%rdi,8)
-	leaq	-1(%rsi), %rax
-	xorb	$-128, 200(%rsp,%rax)
-	movq	432(%rsp), %rax
-	movq	440(%rsp), %rcx
+	cmpq	%rcx, %r8
+	jb  	Lkeccak_1600$12
+	xorb	%sil, 200(%rsp,%r8)
+	movq	%rax, %rcx
+	leaq	-1(%rcx), %rcx
+	xorb	$-128, 200(%rsp,%rcx)
+	movq	440(%rsp), %rdx
 	jmp 	Lkeccak_1600$6
 Lkeccak_1600$7:
-	movq	%rcx, 440(%rsp)
+	movq	%rdx, 440(%rsp)
 	movq	%rax, 432(%rsp)
 	movq	$24, %rax
 	leaq	glob_data(%rip), %rcx
@@ -877,26 +858,26 @@ Lkeccak_1600$10:
 	decq	%rax
 	jne 	Lkeccak_1600$10
 	movq	400(%rsp), %rcx
+	movq	440(%rsp), %rdx
 	movq	432(%rsp), %rax
-	movq	%rax, %rdx
-	shrq	$3, %rdx
-	movq	$0, %rsi
+	movq	%rax, %rsi
+	shrq	$3, %rsi
+	movq	$0, %rdi
 	jmp 	Lkeccak_1600$8
 Lkeccak_1600$9:
-	movq	200(%rsp,%rsi,8), %rdi
-	movq	%rdi, (%rcx,%rsi,8)
-	leaq	1(%rsi), %rsi
+	movq	200(%rsp,%rdi,8), %r8
+	movq	%r8, (%rcx,%rdi,8)
+	leaq	1(%rdi), %rdi
 Lkeccak_1600$8:
-	cmpq	%rdx, %rsi
+	cmpq	%rsi, %rdi
 	jb  	Lkeccak_1600$9
 	leaq	(%rcx,%rax), %rcx
+	subq	%rax, %rdx
 	movq	%rcx, 400(%rsp)
-	movq	440(%rsp), %rcx
-	subq	%rax, %rcx
 Lkeccak_1600$6:
-	cmpq	%rax, %rcx
+	cmpq	%rax, %rdx
 	jnbe	Lkeccak_1600$7
-	movq	%rcx, 440(%rsp)
+	movq	%rdx, 440(%rsp)
 	movq	$24, %rax
 	leaq	glob_data(%rip), %rcx
 	.p2align	5
@@ -1308,7 +1289,7 @@ Lkeccak_1600$2:
 Lkeccak_1600$1:
 	cmpq	%rcx, %rsi
 	jb  	Lkeccak_1600$2
-	addq	$449, %rsp
+	addq	$448, %rsp
 	popq	%r14
 	popq	%r13
 	popq	%r12

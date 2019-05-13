@@ -283,131 +283,139 @@ module M = {
     return (state);
   }
   
-  proc add_full_block (state:W64.t Array25.t, in_0:W64.t, r64:W64.t) : 
-  W64.t Array25.t = {
+  proc add_full_block (state:W64.t Array25.t, in_0:W64.t, inlen:W64.t,
+                       rate:W64.t) : W64.t Array25.t * W64.t * W64.t = {
     
+    var rate64:W64.t;
     var i:W64.t;
     var t:W64.t;
     
+    rate64 <- rate;
+    rate64 <- (rate64 `>>` (W8.of_int 3));
     i <- (W64.of_int 0);
     
-    while ((i \ult r64)) {
+    while ((i \ult rate64)) {
       t <- (loadW64 Glob.mem (W64.to_uint (in_0 + ((W64.of_int 8) * i))));
       state.[(W64.to_uint i)] <- (state.[(W64.to_uint i)] `^` t);
       i <- (i + (W64.of_int 1));
     }
-    return (state);
+    in_0 <- (in_0 + rate);
+    inlen <- (inlen - rate);
+    return (state, in_0, inlen);
   }
   
   proc add_final_block (state:W64.t Array25.t, in_0:W64.t, inlen:W64.t,
                         trail_byte:W8.t, r8:W64.t) : W64.t Array25.t = {
     
+    var inlen8:W64.t;
     var i:W64.t;
     var t:W64.t;
-    var j:W64.t;
     var c:W8.t;
     
+    inlen8 <- inlen;
+    inlen8 <- (inlen8 `>>` (W8.of_int 3));
     i <- (W64.of_int 0);
     
-    while (((W64.of_int 8) \ule inlen)) {
+    while ((i \ult inlen8)) {
       t <- (loadW64 Glob.mem (W64.to_uint (in_0 + ((W64.of_int 8) * i))));
       state.[(W64.to_uint i)] <- (state.[(W64.to_uint i)] `^` t);
       i <- (i + (W64.of_int 1));
-      inlen <- (inlen - (W64.of_int 8));
     }
-    j <- ((W64.of_int 8) * i);
+    i <- (i `<<` (W8.of_int 3));
     
-    while (((W64.of_int 0) \ult inlen)) {
-      c <- (loadW8 Glob.mem (W64.to_uint (in_0 + j)));
+    while ((i \ult inlen)) {
+      c <- (loadW8 Glob.mem (W64.to_uint (in_0 + i)));
       state =
       Array25.init
-      (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j) (
-      (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j)) `^` c)));
-      inlen <- (inlen - (W64.of_int 1));
-      j <- (j + (W64.of_int 1));
+      (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint i) (
+      (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint i)) `^` c)));
+      i <- (i + (W64.of_int 1));
     }
     state =
     Array25.init
-    (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j) (
-    (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j)) `^` trail_byte)));
-    j <- r8;
-    j <- (j - (W64.of_int 1));
+    (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint i) (
+    (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint i)) `^` trail_byte)));
+    i <- r8;
+    i <- (i - (W64.of_int 1));
     state =
     Array25.init
-    (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j) (
-    (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j)) `^` (W8.of_int 128))));
+    (WArray200.get64 (WArray200.set8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint i) (
+    (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint i)) `^` (W8.of_int 128))));
     return (state);
   }
   
-  proc xtr_full_block (state:W64.t Array25.t, out:W64.t, r64:W64.t) : unit = {
+  proc xtr_full_block (state:W64.t Array25.t, out:W64.t, outlen:W64.t,
+                       rate:W64.t) : W64.t * W64.t = {
     
+    var rate64:W64.t;
     var i:W64.t;
     var t:W64.t;
     
+    rate64 <- rate;
+    rate64 <- (rate64 `>>` (W8.of_int 3));
     i <- (W64.of_int 0);
     
-    while ((i \ult r64)) {
+    while ((i \ult rate64)) {
       t <- state.[(W64.to_uint i)];
       Glob.mem <-
       storeW64 Glob.mem (W64.to_uint (out + ((W64.of_int 8) * i))) t;
       i <- (i + (W64.of_int 1));
     }
-    return ();
+    out <- (out + rate);
+    outlen <- (outlen - rate);
+    return (out, outlen);
   }
   
   proc xtr_bytes (state:W64.t Array25.t, out:W64.t, outlen:W64.t) : unit = {
     
+    var outlen8:W64.t;
     var i:W64.t;
     var t:W64.t;
-    var j:W64.t;
     var c:W8.t;
     
+    outlen8 <- outlen;
+    outlen8 <- (outlen8 `>>` (W8.of_int 3));
     i <- (W64.of_int 0);
     
-    while (((W64.of_int 8) \ule outlen)) {
+    while ((i \ult outlen8)) {
       t <- state.[(W64.to_uint i)];
       Glob.mem <-
       storeW64 Glob.mem (W64.to_uint (out + ((W64.of_int 8) * i))) t;
       i <- (i + (W64.of_int 1));
-      outlen <- (outlen - (W64.of_int 8));
     }
-    j <- ((W64.of_int 8) * i);
+    i <- (i `<<` (W8.of_int 3));
     
-    while (((W64.of_int 0) \ult outlen)) {
-      c <- (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint j));
-      Glob.mem <- storeW8 Glob.mem (W64.to_uint (out + j)) c;
-      outlen <- (outlen - (W64.of_int 1));
-      j <- (j + (W64.of_int 1));
+    while ((i \ult outlen)) {
+      c <- (get8 (WArray200.init64 (fun i => state.[i])) (W64.to_uint i));
+      Glob.mem <- storeW8 Glob.mem (W64.to_uint (out + i)) c;
+      i <- (i + (W64.of_int 1));
     }
     return ();
   }
   
   proc __keccak_1600 (s_out:W64.t, s_outlen:W64.t, in_0:W64.t, inlen:W64.t,
-                      s_trail_byte:W64.t, s_r8:W64.t) : unit = {
+                      s_trail_byte:W64.t, rate:W64.t) : unit = {
     
     var state:W64.t Array25.t;
-    var rate:W64.t;
     var s_in:W64.t;
     var s_inlen:W64.t;
+    var s_rate:W64.t;
     var t:W64.t;
     var trail_byte:W8.t;
     var outlen:W64.t;
     var out:W64.t;
     state <- witness;
     state <@ st0 ();
-    rate <- s_r8;
     
     while ((rate \ule inlen)) {
-      rate <- (rate `>>` (W8.of_int 3));
-      state <@ add_full_block (state, in_0, rate);
+      (state, in_0, inlen) <@ add_full_block (state, in_0, inlen, rate);
       s_in <- in_0;
       s_inlen <- inlen;
+      s_rate <- rate;
       state <@ __keccak_f1600_ref (state);
       inlen <- s_inlen;
       in_0 <- s_in;
-      rate <- s_r8;
-      inlen <- (inlen - rate);
-      in_0 <- (in_0 + rate);
+      rate <- s_rate;
     }
     t <- s_trail_byte;
     trail_byte <- (truncateu8 t);
@@ -415,17 +423,16 @@ module M = {
     outlen <- s_outlen;
     
     while ((rate \ult outlen)) {
-      outlen <- (outlen - rate);
-      s_out <- (s_out + rate);
       s_outlen <- outlen;
+      s_rate <- rate;
       state <@ __keccak_f1600_ref (state);
-      rate <- s_r8;
       out <- s_out;
       outlen <- s_outlen;
-      rate <- (rate `>>` (W8.of_int 3));
-      xtr_full_block (state, out, rate);
-      rate <- (rate `<<` (W8.of_int 3));
+      rate <- s_rate;
+      (out, outlen) <@ xtr_full_block (state, out, outlen, rate);
+      s_out <- out;
     }
+    s_outlen <- outlen;
     state <@ __keccak_f1600_ref (state);
     out <- s_out;
     outlen <- s_outlen;

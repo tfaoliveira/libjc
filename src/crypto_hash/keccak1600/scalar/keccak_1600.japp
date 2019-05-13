@@ -255,12 +255,12 @@ fn add_full_block(
   reg u64 rate
 ) -> stack u64[25], reg u64, reg u64
 {
-  reg u64 i t rate8;
+  reg u64 i t rate64;
 
+  rate64 = rate;
+  rate64 >>= 3;
   i = 0;
-  rate8 = rate;
-  rate8 >>= 3;
-  while( i < rate8)
+  while( i < rate64)
   {
     t = [in + 8*i];
     state[(int)i] ^= t;
@@ -274,42 +274,6 @@ fn add_full_block(
 }
 
 
-// obs: @pre: inlen < 8
-fn lastu64(
-  reg u64 in inlen trail_byte
-) -> reg u64
-{
-  reg bool zf;
-  reg u64 res delta t;
-
-  res = 0;
-  delta = 0;
-  zf = #x86_TEST_8(inlen,4);
-  if (!zf) {
-    res = (64u)(u32)[in + 0];
-    in += 4;
-    delta = 32;
-  }
-  zf = #x86_TEST_8(inlen,2);
-  if (!zf) {
-    t = (64u)(u16)[in + 0];
-    in += 2;
-    t <<= delta;
-    delta += 16;
-    res += t;
-  }
-  zf = #x86_TEST_8(inlen,1);
-  if (!zf) {
-    t = (64u)(u8)[in + 0];
-    t <<= delta;
-    delta += 8;
-    res += t;
-  }
-  trail_byte <<= delta;
-  res += trail_byte;
-
-  return res;
-}
 
 
 // obs: @pre: inlen < rate_in_bytes
@@ -317,12 +281,12 @@ fn add_final_block(
   stack u64[25] state,
   reg   u64 in,
   reg   u64 inlen,
-  stack u64 s_trail_byte,
+  reg   u8  trail_byte,
   reg   u64 rate
 ) -> stack u64[25]
 {
-  reg u64 i t inlen8 trail_byte;
-  reg u8 trail_byte8 c;
+  reg u64 i t inlen8;
+  reg u8 c;
 
   inlen8 = inlen;
   inlen8 >>= 3;
@@ -343,9 +307,7 @@ fn add_final_block(
     i += 1;
   }
 
-  trail_byte = s_trail_byte;
-  trail_byte8 = (8u) trail_byte;
-  state[u8 (int)(i)] ^= trail_byte8;
+  state[u8 (int)(i)] ^= trail_byte;
   
   i = rate;
   i -= 1;
@@ -364,6 +326,8 @@ fn absorb(
 ) -> stack u64[25], reg u64, reg u64
 {
   stack u64 s_in s_inlen s_rate;
+  reg u8 trail_byte;
+  reg u64 t;
 
   // intermediate blocks
   while ( inlen >= rate )
@@ -376,7 +340,10 @@ fn absorb(
   }
 
   // final block
-  state = add_final_block(state, in, inlen, s_trail_byte, rate);
+  t = s_trail_byte;
+  trail_byte = (8u) t;
+
+  state = add_final_block(state, in, inlen, trail_byte, rate);
 
   return state, iotas, rate;
 }
@@ -385,23 +352,26 @@ fn absorb(
 fn xtr_full_block(
   stack u64[25] state,
   reg u64 out,
-  reg u64 len
-) -> reg u64
+  reg u64 outlen,
+  reg u64 rate
+) -> reg u64, reg u64
 {
-  reg u64 i t len8;
-  reg u8 c;
+  reg u64 i t rate64;
 
-  len8 = len;
-  len8 >>= 3;
+  rate64 = rate;
+  rate64 >>= 3;
   i = 0;
-  while ( i < len8 )
+  while ( i < rate64 )
   {
     t = state[(int)i];
     [out + 8*i] = t;
     i += 1;
   }
-  out += len;
-  return out;
+
+  out += rate;
+  outlen -= rate;
+
+  return out, outlen;
 }
 
 
@@ -441,27 +411,22 @@ fn squeeze(
   stack u64[25] state,
   reg   u64 iotas,
   stack u64 s_out,
-  stack u64 s_outlen,
+  reg   u64 outlen,
   reg   u64 rate
 )
 {
-  reg u64 out outlen;
-  stack u64 s_rate;
-
-  outlen = s_outlen;
+  reg u64 out;
+  stack u64 s_outlen s_rate;
 
   // intermediate blocks
   while ( outlen > rate )
   {
     s_outlen, s_rate = spill_2(outlen, rate);
     state, iotas = __keccak_f1600_scalar(state, iotas);
-    out, rate = load_2(s_out, s_rate);
+    out, outlen, rate = load_3(s_out, s_outlen, s_rate);
 
-    out = xtr_full_block(state, out, rate);
+    out, outlen = xtr_full_block(state, out, outlen, rate);
     s_out = out;
-
-    outlen = s_outlen;
-    outlen -= rate;
   }
 
   s_outlen = outlen;
@@ -481,16 +446,16 @@ fn __keccak_1600(
 )
 {
   stack u64[25] state;
-  stack u64 s_rate;
+  reg u64 outlen;
 
   state = keccak_init();
-  s_rate = rate;
 
   // absorb
   state, iotas, rate = absorb(state, iotas, in, inlen, s_trail_byte, rate);
 
   // squeeze
-  squeeze(state, iotas, s_out, s_outlen, rate);
+  outlen = s_outlen;
+  squeeze(state, iotas, s_out, outlen, rate);
 }
 
 

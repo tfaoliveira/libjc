@@ -1,3 +1,4 @@
+#if 0
 #define KECCAK_1600_ADD_FULL_BLOCK_IMPLEMENTATION 1
 
 u64 s_zero = 0;
@@ -59,5 +60,6 @@ fn add_full_block(
 
   return state, s_state, in, inlen;
 }
+#endif
 
 #include "crypto_hash/keccak1600/avx2/keccak_1600.jazz"
