@@ -7,8 +7,8 @@ require import WArray224 WArray288.
 
 
 module M = {
-  proc keccak_f (state:W256.t Array7.t, _rhotates_left:W64.t,
-                 _rhotates_right:W64.t, _iotas:W64.t) : W256.t Array7.t = {
+  proc keccak_f1600 (state:W256.t Array7.t, _rhotates_left:W64.t,
+                     _rhotates_right:W64.t, _iotas:W64.t) : W256.t Array7.t = {
     
     var rhotates_left:W64.t;
     var rhotates_right:W64.t;

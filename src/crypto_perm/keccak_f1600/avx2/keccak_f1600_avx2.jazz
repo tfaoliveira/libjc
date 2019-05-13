@@ -1,5 +1,5 @@
 
-fn keccak_f(
+fn keccak_f1600(
   reg u256[7] state,
   reg u64 _rhotates_left,
   reg u64 _rhotates_right,
