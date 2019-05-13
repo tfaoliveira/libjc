@@ -2,21 +2,26 @@
 
 # --------------------------------------------------------------------
 SUBDIRS := \
-crypto_hash/keccak/ref2xg/ \
-crypto_hash/keccak/avx2/ \
-crypto_hash/shake256/ref2x/ \
-crypto_hash/shake256/avx2/ \
-crypto_hash/shake128/ref2x/ \
+crypto_core/keccakf160064bits/ref/ \
+crypto_core/keccakf160064bits/scalar/ \
+crypto_core/keccakf160064bits/avx2-openssl/ \
+crypto_core/keccakf160064bits/avx2/ \
+\
+crypto_hash/shake128/scalar/ \
 crypto_hash/shake128/avx2/ \
-crypto_hash/sha3512/ref2x/ \
-crypto_hash/sha3512/avx2/ \
-crypto_hash/sha3384/ref2x/ \
+crypto_hash/keccak1600/scalar/ \
+crypto_hash/keccak1600/avx2/ \
+crypto_hash/sha3384/scalar/ \
 crypto_hash/sha3384/avx2/ \
-crypto_hash/sha3256/ref2x/ \
+crypto_hash/shake256/ref/ \
+crypto_hash/shake256/scalar/ \
+crypto_hash/shake256/avx2/ \
+crypto_hash/sha3256/scalar/ \
 crypto_hash/sha3256/avx2/ \
-crypto_hash/sha3224/ref2x/ \
+crypto_hash/sha3512/scalar/ \
+crypto_hash/sha3512/avx2/ \
+crypto_hash/sha3224/scalar/ \
 crypto_hash/sha3224/avx2/
-
 
 # --------------------------------------------------------------------
 .PHONY: default clean

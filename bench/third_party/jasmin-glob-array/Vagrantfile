@@ -1,0 +1,34 @@
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "ubuntu/xenial64"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "8192"
+  end
+
+  config.vm.synced_folder "../../../", "/home/vagrant/libjc"
+  config.vm.synced_folder "../../../../", "/home/vagrant/root"
+
+  config.vm.provision "shell", binary: true, privileged: false, inline: <<-SHELL
+    sudo apt-get update
+    sudo apt-get -q -y install sudo m4 opam gpp libmpfr-dev libppl-dev
+    opam init -a
+    opam switch 4.06.1    
+    opam update
+    eval `opam config env`
+    opam remote add coq-released  https://coq.inria.fr/opam/released
+  	opam remote add coq-core-dev  https://coq.inria.fr/opam/core-dev
+	  opam remote add coq-extra-dev https://coq.inria.fr/opam/extra-dev
+    opam pin add -n coq 8.8.2
+    opam pin add -n coq-mathcomp-ssreflect 1.7.0
+    opam install depext
+    opam depext conf-m4.1
+    opam install coq coq-mathcomp-ssreflect coq-mathcomp-algebra
+    opam depext conf-gmp.1
+    opam install conf-ppl
+    opam install apron
+    (cd /home/vagrant/libjc/bench/third_party/jasmin-glob-array/coqword/ && make distclean && make config && make && make install)
+    (cd /home/vagrant/libjc/bench/third_party/jasmin-glob-array/jasmin/ && make clean && opam pin -y add -n jasmin `pwd`/compiler && opam install --deps-only jasmin && cd compiler && make clean && make CIL && make && sudo make install)
+  SHELL
+
+end

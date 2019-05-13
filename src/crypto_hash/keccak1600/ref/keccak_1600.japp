@@ -1,0 +1,368 @@
+inline
+fn index(inline int x, inline int y) -> inline int {
+  inline int r;
+  r = (x % 5) + 5 * (y % 5);
+  return r;
+}
+
+
+inline
+fn ROL64(reg u64 x, inline int c) -> reg u64 {
+  reg u64 y;
+  _, _, y = #x86_ROL_64(x, c);
+  return y;
+}
+
+
+fn theta(stack u64[25] a) -> stack u64[25] {
+  inline int x, y;
+  reg u64[5] c, d;
+
+  for x = 0 to 5 {
+    c[x] = 0;
+    for y = 0 to 5 {
+      c[x] ^= a[x + 5 * y];
+    }
+  }
+
+  for x = 0 to 5 {
+    /* d[x] = ROL64(c[(x + 1) % 5], 1); */
+    /* extraction fails */
+
+    /*    _, _, d[x] = #x86_ROL_64(c[(x + 1) % 5], 1);*/
+    /*    d[x] ^= c[(x + 4) % 5];*/
+    /* does not compile */
+
+    d[x] = c[(x + 1) % 5];
+    _, _, d[x] = #x86_ROL_64(d[x], 1);
+    d[x] ^= c[(x + 4) % 5];
+  }
+
+  for x = 0 to 5 {
+    for y = 0 to 5 {
+      a[x + 5 * y] ^= d[x];
+    }
+  }
+
+  return a;
+}
+
+
+inline
+fn keccakRhoOffsets(inline int i) -> inline int {
+  inline int r, x, y, z, t;
+
+  r = 0;
+  x = 1;
+  y = 0;
+  for t = 0 to 24 {
+    if (i == x + 5 * y) {
+      r = ((t + 1) * (t + 2) / 2) % 64;
+    }
+    z = (2 * x + 3 * y) % 5;
+    x = y;
+    y = z;
+  }
+
+  return r;
+}
+
+
+fn rho(stack u64[25] a) -> stack u64[25] {
+  inline int x, y, i, z;
+
+  for x = 0 to 5 {
+    for y = 0 to 5 {
+      i = index(x, y);
+      z = keccakRhoOffsets(i);
+      _, _, a[i] = #x86_ROL_64(a[i], z);
+    }
+  }
+
+  return a;
+}
+
+
+fn pi(stack u64[25] a) -> stack u64[25] {
+  stack u64[25] b;
+  reg u64 t;
+  inline int x, y, i;
+  for i = 0 to 25 { t = a[i]; b[i] = t; }
+
+  for x = 0 to 5 {
+    for y = 0 to 5 {
+      t = b[x + 5 * y];
+      i = index(y, 2 * x + 3 * y);
+      a[i] = t;
+    }
+  }
+  return a;
+}
+
+
+fn chi(stack u64[25] a) -> stack u64[25] {
+  inline int x, y, i;
+  reg u64[5] c;
+  for y = 0 to 5 {
+    for x = 0 to 5 {
+      i = index(x + 1, y);
+      c[x] = a[i];
+      c[x] = !c[x];
+      i = index(x + 2, y);
+      c[x] &= a[i];
+      i = index(x, y);
+      c[x] ^= a[i];
+    }
+    for x = 0 to 5 {
+      a[x + 5 * y] = c[x];
+    }
+  }
+  return a;
+}
+
+
+fn iota(stack u64[25] a, reg u64 c) -> stack u64[25] {
+  a[0] ^= c;
+  return a;
+}
+
+
+fn keccakP1600_round(stack u64[25] state, reg u64 c) -> stack u64[25] {
+  state = theta(state);
+  state = rho(state);
+  state = pi(state);
+  state = chi(state);
+  state = iota(state, c);
+  return state;
+}
+
+
+
+fn keccakRoundConstants() -> stack u64[24] {
+  stack u64[24] constants;
+  reg u64 t;
+  t = 0x0000000000000001; constants[ 0] = t;
+  t = 0x0000000000008082; constants[ 1] = t;
+  t = 0x800000000000808a; constants[ 2] = t;
+  t = 0x8000000080008000; constants[ 3] = t;
+  t = 0x000000000000808b; constants[ 4] = t;
+  t = 0x0000000080000001; constants[ 5] = t;
+  t = 0x8000000080008081; constants[ 6] = t;
+  t = 0x8000000000008009; constants[ 7] = t;
+  t = 0x000000000000008a; constants[ 8] = t;
+  t = 0x0000000000000088; constants[ 9] = t;
+  t = 0x0000000080008009; constants[10] = t;
+  t = 0x000000008000000a; constants[11] = t;
+  t = 0x000000008000808b; constants[12] = t;
+  t = 0x800000000000008b; constants[13] = t;
+  t = 0x8000000000008089; constants[14] = t;
+  t = 0x8000000000008003; constants[15] = t;
+  t = 0x8000000000008002; constants[16] = t;
+  t = 0x8000000000000080; constants[17] = t;
+  t = 0x000000000000800a; constants[18] = t;
+  t = 0x800000008000000a; constants[19] = t;
+  t = 0x8000000080008081; constants[20] = t;
+  t = 0x8000000000008080; constants[21] = t;
+  t = 0x0000000080000001; constants[22] = t;
+  t = 0x8000000080008008; constants[23] = t;
+  return constants;
+}
+
+
+fn __keccak_f1600_ref(stack u64[25] state) -> stack u64[25] {
+  inline int round;
+  stack u64[24] constants;
+  constants = keccakRoundConstants();
+  for round = 0 to 24 {
+    state = keccakP1600_round(state, constants[round]);
+  }
+  return state;
+}
+
+fn st0() -> stack u64[25] 
+{
+  stack u64[25] state;
+  inline int i;
+
+  for i = 0 to 25 {
+    state[i] = 0;
+  }
+
+  return state;
+}
+
+
+fn add_full_block(
+  stack u64[25] state,
+  reg u64 in,
+  reg u64 r64
+) -> stack u64[25] 
+{
+  reg u64 i, t;
+
+  i = 0;
+  while (i < r64)
+  {
+    t = [in + 8 * i];
+    state[(int) i] ^= t;
+    i = i + 1;
+  }
+
+  return state;
+}
+
+
+fn add_final_block(
+  stack u64[25] state,
+  reg u64 in,
+  reg u64 inlen,
+  reg u8 trail_byte,
+  reg u64 r8
+) -> stack u64[25] 
+{
+  reg u64 i, j, t;
+  reg u8 c;
+
+  i = 0;
+  while (inlen >= 8)
+  {
+    t = [in + 8 * i];
+    state[(int) i] ^= t;
+    i = i + 1;
+    inlen = inlen - 8;
+  }
+
+  j = 8 * i;
+  while (inlen > 0)
+  {
+    c = (u8)[in + j];
+    state[u8 (int) j] ^= c;
+    inlen = inlen - 1;
+    j = j + 1;
+  }
+
+  /*  state[u8 (int) j] ^= trail_byte;*/
+  /* does not compile */
+  c = (8u) trail_byte;
+  state[u8 (int) j] ^= c;
+
+  /*  state[u8 (int) rate - 1] ^= 0x80;*/
+  /* does not compile */
+
+  //j = rate8;
+  //j -= 1;
+  state[u8 (int) r8-1] ^= 0x80;
+
+
+  return state;
+}
+
+
+fn xtr_full_block(
+  stack u64[25] state,
+  reg u64 out,
+  reg u64 r64
+) 
+{
+  reg u64 i, t;
+
+  i = 0;
+  while (i < r64)
+  {
+    t = state[(int) i];
+    [out + 8 * i] = t;
+    i = i + 1;
+  }
+}
+
+
+fn xtr_bytes(
+  stack u64[25] state,
+  reg u64 out,
+  reg u64 outlen
+) 
+{
+  reg u64 i, j, t;
+  reg u8 c;
+
+  i = 0;
+  while (outlen >= 8)
+  {
+    t = state[(int) i];
+    [out + 8 * i] = t;
+    i = i + 1;
+    outlen = outlen - 8;
+  }
+
+  j = 8 * i;
+  while (outlen > 0) {
+      c = state[u8 (int) j];
+      (u8)[out + j] = c;
+      outlen = outlen - 1;
+      j = j + 1;
+  }
+}
+
+
+fn __keccak_1600(
+  reg u64 out,
+  reg u64 outlen,
+  reg u64 in,
+  reg u64 inlen,
+  stack u64 trail_byte,
+  stack u64 r8
+)
+{
+  stack u64[25] state;
+  reg u64 rate;
+  reg u8 trailbyte;
+
+  state = st0();
+  rate = r8; // rate is rate8
+
+  while ( inlen >= rate )
+  {
+    rate >>= 3; // rate is rate64
+    state = add_full_block(state, in, rate);
+    state = __keccak_f1600_ref(state);
+    rate = r8;
+    inlen = inlen - rate;
+    in = in + rate;
+  }
+
+  trailbyte = (8u) trail_byte;
+  state = add_final_block(state, in, inlen, trailbyte, rate);
+
+  while ( outlen > rate )
+  {
+    state = __keccak_f1600_ref(state);
+    rate = r8; // rate is rate8
+    rate >>= 3; // rate is rate64
+    xtr_full_block(state, out, rate);
+    rate <<= 3; // rate is rate8 (again)
+    outlen = outlen - rate;
+    out = out + rate;
+  }
+
+  state = __keccak_f1600_ref(state);
+  xtr_bytes(state, out, outlen);
+}
+
+
+export fn keccak_1600(reg u64 out outlen in inlen config)
+{
+  stack u64 s_trailbyte;
+  //reg   u64   trailbyte;
+
+  stack u64 s_rate;
+  //reg   u64   rate;
+
+  s_trailbyte = [config + 8*0];
+  //s_suffix = suffix;
+
+  s_rate = [config + 8*1]; // rate64
+  //rate >>= 3; // rate in bytes
+  //s_rate = rate; // rate64
+
+  __keccak_1600(out, outlen, in, inlen, s_trailbyte, s_rate);
+}

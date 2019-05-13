@@ -1,15 +1,12 @@
-// the following macro indicates that shake256 provides a specific implementation
-// for adding a full block to the state: it is size specific
-
 
 u64 s_zero = 0;
 
-fn keccak_1600_add_full_block(
+fn add_full_block(
   reg u256[7] state,
   stack u64[28] s_state,
-  reg u64 in,
-  reg u64 inlen,
-  inline int rate_in_bytes
+  reg u64 a_jagged,
+  reg u64 in inlen,
+  reg u64 rate
 ) -> reg u256[7], stack u64[28], reg u64, reg u64
 {
   reg u256 a00, a01, a11, a21, a31;
@@ -56,17 +53,17 @@ fn keccak_1600_add_full_block(
   state[5] ^= t41;
   state[3] ^= t31; 
 
-  in += rate_in_bytes;
-  inlen -= rate_in_bytes;
+  in += rate;
+  inlen -= rate;
 
   return state, s_state, in, inlen;
 }
 
-// TODO: zero stuff better : set0 for u256
 
 
 
-fn keccak_f(
+
+fn __keccak_f1600_avx2(
   reg u256[7] state,
   reg u64 _rhotates_left,
   reg u64 _rhotates_right,
@@ -117,32 +114,32 @@ fn keccak_f(
 	  d14 = d14 ^ t[4];
 
 	  //######################################## Rho + Pi + pre-Chi shuffle
-	  t[3] = #x86_VPSLLV_4u64(state[2], (u256)[rhotates_left + 0*32-96] );
-	  state[2] = #x86_VPSRLV_4u64(state[2], (u256)[rhotates_right + 0*32-96] );
+	  t[3] = #x86_VPSLLV_4u64(state[2], (u256)[rhotates_left + 32*(0) - 96] );
+	  state[2] = #x86_VPSRLV_4u64(state[2], (u256)[rhotates_right + 32*(0) - 96] );
 	  state[2] = state[2] | t[3];
 	  state[3] = state[3] ^ d14;
-	  t[4] = #x86_VPSLLV_4u64(state[3], (u256)[rhotates_left + 2*32-96] );
-	  state[3] = #x86_VPSRLV_4u64(state[3], (u256)[rhotates_right + 2*32-96] );
+	  t[4] = #x86_VPSLLV_4u64(state[3], (u256)[rhotates_left + 32*(2) - 96] );
+	  state[3] = #x86_VPSRLV_4u64(state[3], (u256)[rhotates_right + 32*(2) - 96] );
 	  state[3] = state[3] | t[4];
 	  state[4] = state[4] ^ d14;
-	  t[5] = #x86_VPSLLV_4u64(state[4], (u256)[rhotates_left + 3*32-96] );
-	  state[4] = #x86_VPSRLV_4u64(state[4], (u256)[rhotates_right + 3*32-96] );
+	  t[5] = #x86_VPSLLV_4u64(state[4], (u256)[rhotates_left + 32*(3) - 96] );
+	  state[4] = #x86_VPSRLV_4u64(state[4], (u256)[rhotates_right + 32*(3) - 96] );
 	  state[4] = state[4] | t[5];
 	  state[5] = state[5] ^ d14;
-	  t[6] = #x86_VPSLLV_4u64(state[5], (u256)[rhotates_left + 4*32-96] );
-	  state[5] = #x86_VPSRLV_4u64(state[5], (u256)[rhotates_right + 4*32-96] );
+	  t[6] = #x86_VPSLLV_4u64(state[5], (u256)[rhotates_left + 32*(4) - 96] );
+	  state[5] = #x86_VPSRLV_4u64(state[5], (u256)[rhotates_right + 32*(4) - 96] );
 	  state[5] = state[5] | t[6];
 	  state[6] = state[6] ^ d14;
 	  t[3] = #x86_VPERMQ(state[2], (4u2)[2,0,3,1]);
 	  t[4] = #x86_VPERMQ(state[3], (4u2)[2,0,3,1]);
-	  t[7] = #x86_VPSLLV_4u64(state[6], (u256)[rhotates_left + 5*32-96] );
-	  t[1] = #x86_VPSRLV_4u64(state[6], (u256)[rhotates_right + 5*32-96] );
+	  t[7] = #x86_VPSLLV_4u64(state[6], (u256)[rhotates_left + 32*(5) - 96] );
+	  t[1] = #x86_VPSRLV_4u64(state[6], (u256)[rhotates_right + 32*(5) - 96] );
 	  t[1] = t[1] | t[7];
 	  state[1] = state[1] ^ d14;
 	  t[5] = #x86_VPERMQ(state[4], (4u2)[0,1,2,3]);
 	  t[6] = #x86_VPERMQ(state[5], (4u2)[1,3,0,2]);
-	  t[8] = #x86_VPSLLV_4u64(state[1], (u256)[rhotates_left + 1*32-96] );
-	  t[2] = #x86_VPSRLV_4u64(state[1], (u256)[rhotates_right + 1*32-96] );
+	  t[8] = #x86_VPSLLV_4u64(state[1], (u256)[rhotates_left + 32*(1) - 96] );
+	  t[2] = #x86_VPSRLV_4u64(state[1], (u256)[rhotates_right + 32*(1) - 96] );
 	  t[2] = t[2] | t[8];
 
 	  //######################################## Chi
@@ -201,7 +198,7 @@ fn keccak_f(
 	  state[4] = state[4] ^ t[4];
 
 	  //######################################## Iota
-	  state[0] = state[0] ^ (u256)[iotas + 0*32-0];
+	  state[0] = state[0] ^ (u256)[iotas + 32*(0) - 0];
 
     iotas = iotas + 32;
     (_,_,_,zf,r) = #x86_DEC_32(r);
@@ -210,9 +207,11 @@ fn keccak_f(
   return state;
 }
 
+
 u64 g_zero = 0;
 
-fn init_state() -> reg u256[7]
+
+fn keccak_init() -> reg u256[7]
 {
   inline int i;
   reg u256[7] state;
@@ -241,20 +240,16 @@ fn init_s_state() -> stack u64[28]
 
 
 
-
-fn keccak_1600_add_final_block(
-  reg u256[7] state,
+fn add_final_block(
+  reg  u256[7] state,
   stack u64[28] s_state,
-  reg u64 a_jagged,
-  reg u64 in,
-  reg u64 inlen,
-  inline int suffix,
-  inline int rate_in_bytes
+  reg   u64 a_jagged,
+  reg   u64 in inlen,
+  reg    u8 suffix,
+  reg   u64 rate
 ) -> reg u256[7]
 {
   inline int i;
-
-  reg u256 zero;
   reg u64 j l t inlen8;
   reg u8 c;
 
@@ -275,7 +270,6 @@ fn keccak_1600_add_final_block(
   j <<= 3;
   l <<= 3;
 
-  // inlen4 ?
 
   while ( j < inlen )
   {
@@ -287,10 +281,13 @@ fn keccak_1600_add_final_block(
 
   s_state[u8 (int) l] = suffix;
 
-  j  = (rate_in_bytes-1) >> 3;
+  // j  = (rate-1) >> 3; // TODO IMPROVE ME
+  j = rate; j -= 1; j >>= 3;
   l  = [a_jagged + 8*( j)];
   l <<= 3;
-  l += ((rate_in_bytes-1) & 0x7);
+  // l += ((rate-1) & 0x7); // TODO IMPROVE ME
+  j = rate; j -= 1; j &= 0x7;
+  l += j;
 
   s_state[u8 (int) l] ^= 0x80;
 
@@ -308,9 +305,41 @@ fn keccak_1600_add_final_block(
 }
 
 
+// obs: @pre: len <= rate_in_bytes
+fn xtr_full_block(
+  reg u256[7] state,
+  reg u64 a_jagged,
+  reg u64 out,
+  reg u64 len
+) -> reg u64
+{
+  inline int i;
+  stack u64[28] s_state;
+  reg u64 j l t len8;
+  reg u8 c;
+
+  for i = 0 to 7
+  { s_state[u256 i] = state[i]; }
+
+  len8 = len;
+  len8 >>= 3;
+  j = 0;
+  while ( j < len8 )
+  {
+    l = [a_jagged + 8*( j)];
+    t = s_state[(int) l];
+    [out + 8*j] = t;
+    j += 1;
+  }
+
+  out += len;
+
+  return out;
+}
+
 
 // obs: @pre: len <= rate_in_bytes
-fn keccak_1600_xtr_block(
+fn xtr_bytes(
   reg u256[7] state,
   reg u64 a_jagged,
   reg u64 out,
@@ -340,8 +369,6 @@ fn keccak_1600_xtr_block(
   j <<= 3;
   l <<= 3;
 
-  // inlen4 ?
-
   while ( j < len )
   {
     c = s_state[u8 (int) l];
@@ -356,101 +383,92 @@ fn keccak_1600_xtr_block(
 }
 
 
-
-fn keccak_1600_absorb(
+fn absorb(
   reg u256[7] state,
-  reg u64 rhotates_left,
-  reg u64 rhotates_right,
-  reg u64 iotas,
-  reg u64 a_jagged,
+  reg u64 rhotates_left rhotates_right iotas a_jagged,
   reg u64 in inlen,
-  inline int suffix,
-  inline int rate_in_bytes
+  reg  u8 suffix,
+  reg u64 rate
 ) -> reg u256[7]
 {
   stack u64[28] s_state;
-
   s_state = init_s_state();
 
   // intermediate blocks
-  while ( inlen >= rate_in_bytes )
+  while ( inlen >= rate )
   {
-    state, s_state, in, inlen = keccak_1600_add_full_block(state, s_state, in, inlen, rate_in_bytes);
-    state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+    state, s_state, in, inlen = add_full_block(state, s_state, a_jagged, in, inlen, rate);
+    state = __keccak_f1600_avx2(state, rhotates_left, rhotates_right, iotas);
   }
 
   // final block
-  state = keccak_1600_add_final_block(state, s_state, a_jagged, in, inlen, suffix, rate_in_bytes);
-  state = keccak_f(state, rhotates_left, rhotates_right, iotas);
+  state = add_final_block(state, s_state, a_jagged, in, inlen, suffix, rate);
 
   return state;
 }
 
 
-
-fn keccak_1600_squeeze(
+fn squeeze(
   reg u256[7] state,
-  reg u64 rhotates_left,
-  reg u64 rhotates_right,
-  reg u64 iotas,
-  reg u64 a_jagged,
-  reg u64 out,
-  inline int rate_in_bytes,
-  inline int i_hash_bytes
+  reg u64 rhotates_left rhotates_right iotas a_jagged,
+  reg u64 out outlen,
+  reg u64 rate
 )
 {
-  reg u64 hash_bytes;
-
-  hash_bytes = i_hash_bytes;
-
-  if (i_hash_bytes > rate_in_bytes)
+  // intermediate blocks
+  while ( outlen > rate )
   {
-    // intermediate blocks
-    while ( hash_bytes > rate_in_bytes )
-    {    
-      out = keccak_1600_xtr_block(state, a_jagged, out, rate_in_bytes);
-      state = keccak_f(state, rhotates_left, rhotates_right, iotas);
-      hash_bytes -= rate_in_bytes;
-    }
+    state = __keccak_f1600_avx2(state, rhotates_left, rhotates_right, iotas);
+    out = xtr_full_block(state, a_jagged, out, rate);
+    outlen -= rate;
   }
 
-  // final block
-  out = keccak_1600_xtr_block(state, a_jagged, out, hash_bytes);
+  state = __keccak_f1600_avx2(state, rhotates_left, rhotates_right, iotas);
+  out = xtr_bytes(state, a_jagged, out, outlen);
 }
 
 
-
-fn keccak_1600(
-  reg u64 out,   // output pointer with at least hash_bytes available
-  reg u64 in,    // input pointer with inlen bytes
-  reg u64 inlen, // input length in bytes
-  reg u64 m,     // external memory: it contains 4 pointers: (rhotates_left, rhotates_right, iotas, a_jagged)
-  inline int suffix,
-  inline int rate,
-  inline int capacity,
-  inline int hash_bytes
+fn __keccak_1600(
+  reg   u64 out outlen,
+  reg   u64 rhotates_left rhotates_right iotas a_jagged,
+  reg   u64 in inlen,
+  reg   u8  suffix,
+  reg   u64 rate
 )
 {
-  reg u64 rhotates_left rhotates_right iotas a_jagged;
   reg u256[7] state;
 
-  state          = init_state();
-  rhotates_left  = [m + 8*0];
-  rhotates_right = [m + 8*1];
-  iotas          = [m + 8*2];
-  a_jagged       = [m + 8*3];
+  state = keccak_init();
 
   // absorb
-  state = keccak_1600_absorb(state, rhotates_left, rhotates_right, iotas, a_jagged,
-                             in, inlen, suffix, (rate/8));
+  state = absorb(state,
+                 rhotates_left, rhotates_right, iotas, a_jagged,
+                 in, inlen, suffix, rate);
 
   // squeeze
-  keccak_1600_squeeze(state, rhotates_left, rhotates_right, iotas, a_jagged,
-                      out, (rate/8), hash_bytes);
+  squeeze(state,
+          rhotates_left, rhotates_right, iotas, a_jagged,
+          out, outlen, rate);
 }
 
 
-export fn shake256_avx2_jazz(reg u64 out in inlen m)
+export fn keccak_1600(reg u64 out outlen in inlen config glob)
 {
-  keccak_1600(out, in, inlen, m, 0x1F, 1088, 512, 136);
+  reg   u64 rhotates_left rhotates_right iotas a_jagged;
+  reg   u8  suffix;
+  reg   u64 rate;
+
+  suffix = (u8)[config + 8*0];
+  rate   = [config + 8*1];
+  rate >>= 3; // rate in bytes
+
+  rhotates_left  = [glob + 8*0];
+  rhotates_right = [glob + 8*1];
+  iotas          = [glob + 8*2];
+  a_jagged       = [glob + 8*3];
+
+  __keccak_1600(out, outlen,
+                rhotates_left, rhotates_right, iotas, a_jagged,
+                in, inlen,
+                suffix, rate);
 }

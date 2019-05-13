@@ -4,6 +4,10 @@ Cycles per byte over message length.
 # shake256 - libjc / OpenSSL
 ![shake256 - libjc / OpenSSL](https://github.com/tfaoliveira/libjc/blob/master/bench/results/keccak/svg/shake256_cycles_128_16384.svg)
 
+# shake256 - libjc / OpenSSL (scalar implementations only)
+![shake256 - libjc / OpenSSL](https://github.com/tfaoliveira/libjc/blob/master/bench/results/keccak/svg/shake256_scalar_cycles_128_16384.svg)
+
+
 # shake128 - libjc / OpenSSL
 ![shake128 - libjc / OpenSSL](https://github.com/tfaoliveira/libjc/blob/master/bench/results/keccak/svg/shake128_cycles_128_16384.svg)
 
