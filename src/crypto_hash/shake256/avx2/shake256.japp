@@ -459,8 +459,7 @@ export fn keccak_1600(reg u64 out outlen in inlen config glob)
   reg   u64 rate;
 
   suffix = (u8)[config + 8*0];
-  rate   = [config + 8*1];
-  rate >>= 3; // rate in bytes
+  rate   = [config + 8*1]; // rate in bytes
 
   rhotates_left  = [glob + 8*0];
   rhotates_right = [glob + 8*1];

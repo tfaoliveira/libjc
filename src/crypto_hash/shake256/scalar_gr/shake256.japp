@@ -530,8 +530,7 @@ export fn keccak_1600(reg u64 out outlen in inlen_ config )
   suffix = (u8)[config + 8*0];
 
   s_suffix = suffix;
-  rate = [config + 8*1];
-  rate >>= 3; // rate in bytes
+  rate = [config + 8*1]; // rate in bytes
 
   __keccak_1600(s_out, s_outlen, in, inlen, s_suffix, rate);
 }

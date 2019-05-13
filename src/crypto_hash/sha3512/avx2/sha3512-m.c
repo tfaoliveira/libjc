@@ -79,7 +79,7 @@ uint64_t a_jagged[25] __attribute__((aligned(32))) =
 int sha3512_avx2(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
   uint64_t *g[] = {rhotates_left, rhotates_right, iotas, a_jagged};
-  uint64_t c[] = {0x06, 576};
+  uint64_t c[] = {0x06, (576/8)};
   keccak_1600(out, 64, in, inlen, c, g);
   return 0;
 }

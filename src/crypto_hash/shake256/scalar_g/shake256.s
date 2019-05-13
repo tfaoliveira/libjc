@@ -9,14 +9,13 @@ keccak_1600:
 	pushq	%r12
 	pushq	%r13
 	pushq	%r14
-	subq	$464, %rsp
+	subq	$449, %rsp
 	movq	%rdi, 400(%rsp)
 	movq	%rsi, 440(%rsp)
 	movq	%rcx, %rax
 	movb	(%r8), %cl
 	movb	%cl, 448(%rsp)
 	movq	8(%r8), %rsi
-	shrq	$3, %rsi
 	xorl	%ecx, %ecx
 	movq	$0, %rdi
 	jmp 	Lkeccak_1600$21
@@ -1309,7 +1308,7 @@ Lkeccak_1600$2:
 Lkeccak_1600$1:
 	cmpq	%rcx, %rsi
 	jb  	Lkeccak_1600$2
-	addq	$464, %rsp
+	addq	$449, %rsp
 	popq	%r14
 	popq	%r13
 	popq	%r12

@@ -12,7 +12,6 @@ keccak_1600:
 	subq	$256, %rsp
 	movb	(%r8), %al
 	movq	8(%r8), %r8
-	shrq	$3, %r8
 	movq	(%r9), %r10
 	movq	8(%r9), %r11
 	movq	16(%r9), %rbp

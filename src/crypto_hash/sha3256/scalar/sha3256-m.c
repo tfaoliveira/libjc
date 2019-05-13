@@ -47,7 +47,7 @@ uint64_t iotas[32] __attribute__((aligned(256))) =
 
 int sha3256_scalar(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
-  uint64_t c[] = {0x06, 1088};
+  uint64_t c[] = {0x06, (1088/8)};
   keccak_1600(out, 32, in, inlen, c, &(iotas[8]));
   return 0;
 }
