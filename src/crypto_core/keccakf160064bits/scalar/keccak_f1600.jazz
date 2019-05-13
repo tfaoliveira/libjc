@@ -76,7 +76,8 @@ fn theta_rol(reg u64[5] C) -> reg u64[5]
   reg u64 t r;
 
   for i = 0 to 5
-  { D[i] = ROL64(C[(i+1)%5], 1);
+  { D[i] = C[(i+1)%5];
+    _, _, D[i] = #x86_ROL_64(D[i], 1);
     D[i] ^= C[(i+4)%5];
   }
 
