@@ -9,6 +9,7 @@ rm -f data/crypto_hash_shake*
 
 ## copy implementations and bindings into supercop-*
 ./sync
+./sync evercrypt
 
 PREVIOUS_LD_LIBRARY_PATH=`echo -n $LD_LIBRARY_PATH`
 
@@ -27,6 +28,9 @@ PREVIOUS_LD_LIBRARY_PATH=`echo -n $LD_LIBRARY_PATH`
 
 ## run libjc
 ./bench keccak
+
+## run evercrypt
+./bench keccak-evercrypt
 
 ## run benchmarks with openssl configured with no-asm
 export LD_LIBRARY_PATH=$PREVIOUS_LD_LIBRARY_PATH:`pwd`/third_party_shared_libs/openssl-no-asm/lib/

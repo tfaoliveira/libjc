@@ -1,0 +1,6 @@
+crypto_hash sha3224  evercrypt/compact_gcc
+crypto_hash sha3256  evercrypt/compact_gcc
+crypto_hash sha3384  evercrypt/compact_gcc
+crypto_hash sha3512  evercrypt/compact_gcc
+crypto_hash shake128 evercrypt/compact_gcc
+crypto_hash shake256 evercrypt/compact_gcc
