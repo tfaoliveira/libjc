@@ -9,16 +9,25 @@ rm -f data/crypto_hash_shake*
 # copy implementations and bindings into supercop-*
 ./sync
 
-prev_ld_library_path=`echo -n $LD_LIBRARY_PATH`
+PREVIOUS_LD_LIBRARY_PATH=`echo -n $LD_LIBRARY_PATH`
+
+### run libjc
+./bench keccak
+
+## run benchmarks with openssl configured with no-asm
+export LD_LIBRARY_PATH=$PREVIOUS_LD_LIBRARY_PATH:`pwd`/third_party_shared_libs/openssl-no-asm/lib/
+sudo ldconfig
+./bench keccak-openssl-no-asm
+for i in $ILIST; do mv data/crypto_hash_${i}_openssl.data data/crypto_hash_${i}_openssl_no_asm.data; done
 
 ## run benchmarks with openssl compiled with default keccak
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/third_party_shared_libs/openssl/lib/
+export LD_LIBRARY_PATH=$PREVIOUS_LD_LIBRARY_PATH:`pwd`/third_party_shared_libs/openssl/lib/
 sudo ldconfig
-./bench keccak
-for i in $ILIST; do mv data/crypto_hash_${i}_openssl.data data/crypto_hash_${i}_openssl_ref.data; done
+./bench keccak-openssl
+for i in $ILIST; do mv data/crypto_hash_${i}_openssl.data data/crypto_hash_${i}_openssl_scalar.data; done
 
 ## run with keccak avx2
-export LD_LIBRARY_PATH=$prev_ld_library_path:`pwd`/third_party_shared_libs/openssl-keccak-avx2/lib/
+export LD_LIBRARY_PATH=$PREVIOUS_LD_LIBRARY_PATH:`pwd`/third_party_shared_libs/openssl-keccak-avx2/lib/
 sudo ldconfig
 echo $LD_LIBRARY_PATH
 ./bench keccak-openssl-avx2

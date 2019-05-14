@@ -24,8 +24,8 @@ void allocate(void)
   m = alignedcalloc(MAXTEST_BYTES);
 }
 
-#define WARM_TIMINGS (16)
-#define TIMINGS (128)
+#define WARM_TIMINGS (128)
+#define TIMINGS (1024)
 #define LOOPS 3
 
 static long long cycles[TIMINGS + 1];

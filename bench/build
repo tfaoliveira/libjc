@@ -4,6 +4,7 @@ idir="third_party_static_libs"
 ilib="third_party_shared_libs"
 mkdir -p $idir/
 mkdir -p $ilib/openssl
+mkdir -p $ilib/openssl-no-asm
 mkdir -p $ilib/openssl-keccak-avx2
 
 # libsodium :
@@ -67,6 +68,12 @@ if [ "$#" -eq 0 ]; then
     cp libcrypto.a ../../$idir/openssl_static_no_asm.a
   )
   rename_lib openssl_static_no_asm;
+
+  # openssl shared - no-asm - keccak x86
+  (cd third_party/openssl/ && \
+    (make distclean || true) && ./Configure no-asm --prefix=`pwd`/../../$ilib/openssl-no-asm linux-x86_64 && make && \
+    make install_runtime_libs
+  )
 
   # openssl shared - keccak x86
   (cd third_party/openssl/ && \
