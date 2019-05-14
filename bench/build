@@ -6,6 +6,7 @@ mkdir -p $idir/
 mkdir -p $ilib/openssl
 mkdir -p $ilib/openssl-no-asm
 mkdir -p $ilib/openssl-keccak-avx2
+mkdir -p $ilib/evercrypt-compact-gcc
 
 # libsodium :
 # - 2 versions will be benchmarked: static and static with assembly disabled
@@ -98,6 +99,13 @@ if [ "$#" -eq 0 ]; then
   )
   rename_lib hacl_star_gcc;
   rename_lib hacl_star_gcc_vec;
+
+  # hacl-star : evercrypt branch : compact gcc
+  (cd third_party/hacl-star-evercrypt/hacl-star/dist/compact-gcc && \
+    make clean && make && \
+    cp libevercrypt.so ../../../../../$ilib/evercrypt-compact-gcc && \
+    cp libevercrypt.a ../../../../../$idir/evercrypt_compact_gcc.a
+  )
 
   # usuba : not really a build... its just a copy
   find third_party/usuba/supercop/crypto_stream/chacha20 -name "usuba*" -exec cp -r {} supercop-`cat config/version`/crypto_stream/chacha20/ \;
