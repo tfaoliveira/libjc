@@ -43,3 +43,5 @@
 [submodule "bench/third_party/hacl-star-evercrypt/hacl-star"]
 	path = bench/third_party/hacl-star-evercrypt/hacl-star
 	url = https://github.com/project-everest/hacl-star.git
+	branch = evercrypt-v0.1+
+	ignore = dirty
