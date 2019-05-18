@@ -25,7 +25,7 @@ void allocate(void)
 }
 
 #define WARM_TIMINGS (16)
-#define TIMINGS (128)
+#define TIMINGS (256)
 #define LOOPS 3
 
 static long long cycles[TIMINGS + 1];

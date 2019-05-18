@@ -40,3 +40,8 @@
 [submodule "bench/third_party/jasmin-glob-array/coqword"]
 	path = bench/third_party/jasmin-glob-array/coqword
 	url = git@github.com:jasmin-lang/coqword.git
+[submodule "bench/third_party/hacl-star-evercrypt/hacl-star"]
+	path = bench/third_party/hacl-star-evercrypt/hacl-star
+	url = https://github.com/project-everest/hacl-star.git
+	branch = evercrypt-v0.1+
+	ignore = dirty

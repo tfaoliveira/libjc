@@ -7,9 +7,9 @@ require import WArray288.
 
 
 module M = {
-  proc __keccak_f1600_avx2_openssl (A00:W256.t, A01:W256.t, A20:W256.t,
-                                    A31:W256.t, A21:W256.t, A41:W256.t,
-                                    A11:W256.t, _rhotates_left:W64.t,
+  proc __keccak_f1600_avx2_openssl (a00:W256.t, a01:W256.t, a20:W256.t,
+                                    a31:W256.t, a21:W256.t, a41:W256.t,
+                                    a11:W256.t, _rhotates_left:W64.t,
                                     _rhotates_right:W64.t, _iotas:W64.t) : 
   W256.t * W256.t * W256.t * W256.t * W256.t * W256.t * W256.t = {
     
@@ -18,330 +18,330 @@ module M = {
     var iotas:W64.t;
     var i:W32.t;
     var zf:bool;
-    var C00:W256.t;
-    var C14:W256.t;
-    var T:W256.t Array9.t;
-    var D14:W256.t;
-    var D00:W256.t;
+    var c00:W256.t;
+    var c14:W256.t;
+    var t:W256.t Array9.t;
+    var d14:W256.t;
+    var d00:W256.t;
     var  _0:bool;
     var  _1:bool;
     var  _2:bool;
-    T <- witness;
+    t <- witness;
     rhotates_left <- (_rhotates_left + (W64.of_int 96));
     rhotates_right <- (_rhotates_right + (W64.of_int 96));
     iotas <- _iotas;
     i <- (W32.of_int 24);
-    C00 <- x86_VPSHUFD_256 A20 (W8.of_int 78);
-    C14 <- (A41 `^` A31);
-    T.[2] <- (A21 `^` A11);
-    C14 <- (C14 `^` A01);
-    C14 <- (C14 `^` T.[2]);
-    T.[4] <- x86_VPERMQ C14 (W8.of_int 147);
-    C00 <- (C00 `^` A20);
-    T.[0] <- x86_VPERMQ C00 (W8.of_int 78);
-    T.[1] <- (C14 \vshr64u256 (W8.of_int 63));
-    T.[2] <- (C14 \vadd64u256 C14);
-    T.[1] <- (T.[1] `|` T.[2]);
-    D14 <- x86_VPERMQ T.[1] (W8.of_int 57);
-    D00 <- (T.[1] `^` T.[4]);
-    D00 <- x86_VPERMQ D00 (W8.of_int 0);
-    C00 <- (C00 `^` A00);
-    C00 <- (C00 `^` T.[0]);
-    T.[0] <- (C00 \vshr64u256 (W8.of_int 63));
-    T.[1] <- (C00 \vadd64u256 C00);
-    T.[1] <- (T.[1] `|` T.[0]);
-    A20 <- (A20 `^` D00);
-    A00 <- (A00 `^` D00);
-    D14 <- x86_VPBLENDD_256 D14 T.[1]
+    c00 <- x86_VPSHUFD_256 a20 (W8.of_int 78);
+    c14 <- (a41 `^` a31);
+    t.[2] <- (a21 `^` a11);
+    c14 <- (c14 `^` a01);
+    c14 <- (c14 `^` t.[2]);
+    t.[4] <- x86_VPERMQ c14 (W8.of_int 147);
+    c00 <- (c00 `^` a20);
+    t.[0] <- x86_VPERMQ c00 (W8.of_int 78);
+    t.[1] <- (c14 \vshr64u256 (W8.of_int 63));
+    t.[2] <- (c14 \vadd64u256 c14);
+    t.[1] <- (t.[1] `|` t.[2]);
+    d14 <- x86_VPERMQ t.[1] (W8.of_int 57);
+    d00 <- (t.[1] `^` t.[4]);
+    d00 <- x86_VPERMQ d00 (W8.of_int 0);
+    c00 <- (c00 `^` a00);
+    c00 <- (c00 `^` t.[0]);
+    t.[0] <- (c00 \vshr64u256 (W8.of_int 63));
+    t.[1] <- (c00 \vadd64u256 c00);
+    t.[1] <- (t.[1] `|` t.[0]);
+    a20 <- (a20 `^` d00);
+    a00 <- (a00 `^` d00);
+    d14 <- x86_VPBLENDD_256 d14 t.[1]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    T.[4] <- x86_VPBLENDD_256 T.[4] C00
+    t.[4] <- x86_VPBLENDD_256 t.[4] c00
     (W8.of_int (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    D14 <- (D14 `^` T.[4]);
-    T.[3] <- x86_VPSLLV_4u64 A20
+    d14 <- (d14 `^` t.[4]);
+    t.[3] <- x86_VPSLLV_4u64 a20
     (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((0 * 32) - 96)))));
-    A20 <- x86_VPSRLV_4u64 A20
+    a20 <- x86_VPSRLV_4u64 a20
     (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((0 * 32) - 96)))));
-    A20 <- (A20 `|` T.[3]);
-    A31 <- (A31 `^` D14);
-    T.[4] <- x86_VPSLLV_4u64 A31
+    a20 <- (a20 `|` t.[3]);
+    a31 <- (a31 `^` d14);
+    t.[4] <- x86_VPSLLV_4u64 a31
     (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((2 * 32) - 96)))));
-    A31 <- x86_VPSRLV_4u64 A31
+    a31 <- x86_VPSRLV_4u64 a31
     (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((2 * 32) - 96)))));
-    A31 <- (A31 `|` T.[4]);
-    A21 <- (A21 `^` D14);
-    T.[5] <- x86_VPSLLV_4u64 A21
+    a31 <- (a31 `|` t.[4]);
+    a21 <- (a21 `^` d14);
+    t.[5] <- x86_VPSLLV_4u64 a21
     (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((3 * 32) - 96)))));
-    A21 <- x86_VPSRLV_4u64 A21
+    a21 <- x86_VPSRLV_4u64 a21
     (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((3 * 32) - 96)))));
-    A21 <- (A21 `|` T.[5]);
-    A41 <- (A41 `^` D14);
-    T.[6] <- x86_VPSLLV_4u64 A41
+    a21 <- (a21 `|` t.[5]);
+    a41 <- (a41 `^` d14);
+    t.[6] <- x86_VPSLLV_4u64 a41
     (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((4 * 32) - 96)))));
-    A41 <- x86_VPSRLV_4u64 A41
+    a41 <- x86_VPSRLV_4u64 a41
     (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((4 * 32) - 96)))));
-    A41 <- (A41 `|` T.[6]);
-    A11 <- (A11 `^` D14);
-    T.[3] <- x86_VPERMQ A20 (W8.of_int 141);
-    T.[4] <- x86_VPERMQ A31 (W8.of_int 141);
-    T.[7] <- x86_VPSLLV_4u64 A11
+    a41 <- (a41 `|` t.[6]);
+    a11 <- (a11 `^` d14);
+    t.[3] <- x86_VPERMQ a20 (W8.of_int 141);
+    t.[4] <- x86_VPERMQ a31 (W8.of_int 141);
+    t.[7] <- x86_VPSLLV_4u64 a11
     (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((5 * 32) - 96)))));
-    T.[1] <- x86_VPSRLV_4u64 A11
+    t.[1] <- x86_VPSRLV_4u64 a11
     (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((5 * 32) - 96)))));
-    T.[1] <- (T.[1] `|` T.[7]);
-    A01 <- (A01 `^` D14);
-    T.[5] <- x86_VPERMQ A21 (W8.of_int 27);
-    T.[6] <- x86_VPERMQ A41 (W8.of_int 114);
-    T.[8] <- x86_VPSLLV_4u64 A01
+    t.[1] <- (t.[1] `|` t.[7]);
+    a01 <- (a01 `^` d14);
+    t.[5] <- x86_VPERMQ a21 (W8.of_int 27);
+    t.[6] <- x86_VPERMQ a41 (W8.of_int 114);
+    t.[8] <- x86_VPSLLV_4u64 a01
     (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((1 * 32) - 96)))));
-    T.[2] <- x86_VPSRLV_4u64 A01
+    t.[2] <- x86_VPSRLV_4u64 a01
     (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((1 * 32) - 96)))));
-    T.[2] <- (T.[2] `|` T.[8]);
-    T.[7] <- x86_VPSRLDQ_256 T.[1] (W8.of_int 8);
-    T.[0] <- ((invw T.[1]) `&` T.[7]);
-    A31 <- x86_VPBLENDD_256 T.[2] T.[6]
+    t.[2] <- (t.[2] `|` t.[8]);
+    t.[7] <- x86_VPSRLDQ_256 t.[1] (W8.of_int 8);
+    t.[0] <- ((invw t.[1]) `&` t.[7]);
+    a31 <- x86_VPBLENDD_256 t.[2] t.[6]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    T.[8] <- x86_VPBLENDD_256 T.[4] T.[2]
+    t.[8] <- x86_VPBLENDD_256 t.[4] t.[2]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    A41 <- x86_VPBLENDD_256 T.[3] T.[4]
+    a41 <- x86_VPBLENDD_256 t.[3] t.[4]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    T.[7] <- x86_VPBLENDD_256 T.[2] T.[3]
+    t.[7] <- x86_VPBLENDD_256 t.[2] t.[3]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    A31 <- x86_VPBLENDD_256 A31 T.[4]
+    a31 <- x86_VPBLENDD_256 a31 t.[4]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    T.[8] <- x86_VPBLENDD_256 T.[8] T.[5]
+    t.[8] <- x86_VPBLENDD_256 t.[8] t.[5]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    A41 <- x86_VPBLENDD_256 A41 T.[2]
+    a41 <- x86_VPBLENDD_256 a41 t.[2]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    T.[7] <- x86_VPBLENDD_256 T.[7] T.[6]
+    t.[7] <- x86_VPBLENDD_256 t.[7] t.[6]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    A31 <- x86_VPBLENDD_256 A31 T.[5]
+    a31 <- x86_VPBLENDD_256 a31 t.[5]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    T.[8] <- x86_VPBLENDD_256 T.[8] T.[6]
+    t.[8] <- x86_VPBLENDD_256 t.[8] t.[6]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    A41 <- x86_VPBLENDD_256 A41 T.[6]
+    a41 <- x86_VPBLENDD_256 a41 t.[6]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    T.[7] <- x86_VPBLENDD_256 T.[7] T.[4]
+    t.[7] <- x86_VPBLENDD_256 t.[7] t.[4]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    A31 <- x86_VPANDN_256 A31 T.[8];
-    A41 <- x86_VPANDN_256 A41 T.[7];
-    A11 <- x86_VPBLENDD_256 T.[5] T.[2]
+    a31 <- x86_VPANDN_256 a31 t.[8];
+    a41 <- x86_VPANDN_256 a41 t.[7];
+    a11 <- x86_VPBLENDD_256 t.[5] t.[2]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    T.[8] <- x86_VPBLENDD_256 T.[3] T.[5]
+    t.[8] <- x86_VPBLENDD_256 t.[3] t.[5]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    A31 <- (A31 `^` T.[3]);
-    A11 <- x86_VPBLENDD_256 A11 T.[3]
+    a31 <- (a31 `^` t.[3]);
+    a11 <- x86_VPBLENDD_256 a11 t.[3]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    T.[8] <- x86_VPBLENDD_256 T.[8] T.[4]
+    t.[8] <- x86_VPBLENDD_256 t.[8] t.[4]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    A41 <- (A41 `^` T.[5]);
-    A11 <- x86_VPBLENDD_256 A11 T.[4]
+    a41 <- (a41 `^` t.[5]);
+    a11 <- x86_VPBLENDD_256 a11 t.[4]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    T.[8] <- x86_VPBLENDD_256 T.[8] T.[2]
+    t.[8] <- x86_VPBLENDD_256 t.[8] t.[2]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    A11 <- x86_VPANDN_256 A11 T.[8];
-    A11 <- (A11 `^` T.[6]);
-    A21 <- x86_VPERMQ T.[1] (W8.of_int 30);
-    T.[8] <- x86_VPBLENDD_256 A21 A00
+    a11 <- x86_VPANDN_256 a11 t.[8];
+    a11 <- (a11 `^` t.[6]);
+    a21 <- x86_VPERMQ t.[1] (W8.of_int 30);
+    t.[8] <- x86_VPBLENDD_256 a21 a00
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    A01 <- x86_VPERMQ T.[1] (W8.of_int 57);
-    A01 <- x86_VPBLENDD_256 A01 A00
+    a01 <- x86_VPERMQ t.[1] (W8.of_int 57);
+    a01 <- x86_VPBLENDD_256 a01 a00
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    A01 <- x86_VPANDN_256 A01 T.[8];
-    A20 <- x86_VPBLENDD_256 T.[4] T.[5]
+    a01 <- x86_VPANDN_256 a01 t.[8];
+    a20 <- x86_VPBLENDD_256 t.[4] t.[5]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    T.[7] <- x86_VPBLENDD_256 T.[6] T.[4]
+    t.[7] <- x86_VPBLENDD_256 t.[6] t.[4]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    A20 <- x86_VPBLENDD_256 A20 T.[6]
+    a20 <- x86_VPBLENDD_256 a20 t.[6]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    T.[7] <- x86_VPBLENDD_256 T.[7] T.[3]
+    t.[7] <- x86_VPBLENDD_256 t.[7] t.[3]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    A20 <- x86_VPBLENDD_256 A20 T.[3]
+    a20 <- x86_VPBLENDD_256 a20 t.[3]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    T.[7] <- x86_VPBLENDD_256 T.[7] T.[5]
+    t.[7] <- x86_VPBLENDD_256 t.[7] t.[5]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    A20 <- x86_VPANDN_256 A20 T.[7];
-    A20 <- (A20 `^` T.[2]);
-    T.[0] <- x86_VPERMQ T.[0] (W8.of_int 0);
-    A31 <- x86_VPERMQ A31 (W8.of_int 27);
-    A41 <- x86_VPERMQ A41 (W8.of_int 141);
-    A11 <- x86_VPERMQ A11 (W8.of_int 114);
-    A21 <- x86_VPBLENDD_256 T.[6] T.[3]
+    a20 <- x86_VPANDN_256 a20 t.[7];
+    a20 <- (a20 `^` t.[2]);
+    t.[0] <- x86_VPERMQ t.[0] (W8.of_int 0);
+    a31 <- x86_VPERMQ a31 (W8.of_int 27);
+    a41 <- x86_VPERMQ a41 (W8.of_int 141);
+    a11 <- x86_VPERMQ a11 (W8.of_int 114);
+    a21 <- x86_VPBLENDD_256 t.[6] t.[3]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    T.[7] <- x86_VPBLENDD_256 T.[5] T.[6]
+    t.[7] <- x86_VPBLENDD_256 t.[5] t.[6]
     (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-    A21 <- x86_VPBLENDD_256 A21 T.[5]
+    a21 <- x86_VPBLENDD_256 a21 t.[5]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    T.[7] <- x86_VPBLENDD_256 T.[7] T.[2]
+    t.[7] <- x86_VPBLENDD_256 t.[7] t.[2]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-    A21 <- x86_VPBLENDD_256 A21 T.[2]
+    a21 <- x86_VPBLENDD_256 a21 t.[2]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    T.[7] <- x86_VPBLENDD_256 T.[7] T.[3]
+    t.[7] <- x86_VPBLENDD_256 t.[7] t.[3]
     (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-    A21 <- x86_VPANDN_256 A21 T.[7];
-    A00 <- (A00 `^` T.[0]);
-    A01 <- (A01 `^` T.[1]);
-    A21 <- (A21 `^` T.[4]);
-    A00 <-
-    (A00 `^` (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int 0)))));
+    a21 <- x86_VPANDN_256 a21 t.[7];
+    a00 <- (a00 `^` t.[0]);
+    a01 <- (a01 `^` t.[1]);
+    a21 <- (a21 `^` t.[4]);
+    a00 <-
+    (a00 `^` (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int 0)))));
     iotas <- (iotas + (W64.of_int 32));
     ( _0,  _1,  _2, zf, i) <- x86_DEC_32 i;
     while ((! zf)) {
-      C00 <- x86_VPSHUFD_256 A20 (W8.of_int 78);
-      C14 <- (A41 `^` A31);
-      T.[2] <- (A21 `^` A11);
-      C14 <- (C14 `^` A01);
-      C14 <- (C14 `^` T.[2]);
-      T.[4] <- x86_VPERMQ C14 (W8.of_int 147);
-      C00 <- (C00 `^` A20);
-      T.[0] <- x86_VPERMQ C00 (W8.of_int 78);
-      T.[1] <- (C14 \vshr64u256 (W8.of_int 63));
-      T.[2] <- (C14 \vadd64u256 C14);
-      T.[1] <- (T.[1] `|` T.[2]);
-      D14 <- x86_VPERMQ T.[1] (W8.of_int 57);
-      D00 <- (T.[1] `^` T.[4]);
-      D00 <- x86_VPERMQ D00 (W8.of_int 0);
-      C00 <- (C00 `^` A00);
-      C00 <- (C00 `^` T.[0]);
-      T.[0] <- (C00 \vshr64u256 (W8.of_int 63));
-      T.[1] <- (C00 \vadd64u256 C00);
-      T.[1] <- (T.[1] `|` T.[0]);
-      A20 <- (A20 `^` D00);
-      A00 <- (A00 `^` D00);
-      D14 <- x86_VPBLENDD_256 D14 T.[1]
+      c00 <- x86_VPSHUFD_256 a20 (W8.of_int 78);
+      c14 <- (a41 `^` a31);
+      t.[2] <- (a21 `^` a11);
+      c14 <- (c14 `^` a01);
+      c14 <- (c14 `^` t.[2]);
+      t.[4] <- x86_VPERMQ c14 (W8.of_int 147);
+      c00 <- (c00 `^` a20);
+      t.[0] <- x86_VPERMQ c00 (W8.of_int 78);
+      t.[1] <- (c14 \vshr64u256 (W8.of_int 63));
+      t.[2] <- (c14 \vadd64u256 c14);
+      t.[1] <- (t.[1] `|` t.[2]);
+      d14 <- x86_VPERMQ t.[1] (W8.of_int 57);
+      d00 <- (t.[1] `^` t.[4]);
+      d00 <- x86_VPERMQ d00 (W8.of_int 0);
+      c00 <- (c00 `^` a00);
+      c00 <- (c00 `^` t.[0]);
+      t.[0] <- (c00 \vshr64u256 (W8.of_int 63));
+      t.[1] <- (c00 \vadd64u256 c00);
+      t.[1] <- (t.[1] `|` t.[0]);
+      a20 <- (a20 `^` d00);
+      a00 <- (a00 `^` d00);
+      d14 <- x86_VPBLENDD_256 d14 t.[1]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      T.[4] <- x86_VPBLENDD_256 T.[4] C00
+      t.[4] <- x86_VPBLENDD_256 t.[4] c00
       (W8.of_int (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      D14 <- (D14 `^` T.[4]);
-      T.[3] <- x86_VPSLLV_4u64 A20
+      d14 <- (d14 `^` t.[4]);
+      t.[3] <- x86_VPSLLV_4u64 a20
       (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((0 * 32) - 96)))));
-      A20 <- x86_VPSRLV_4u64 A20
+      a20 <- x86_VPSRLV_4u64 a20
       (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((0 * 32) - 96)))));
-      A20 <- (A20 `|` T.[3]);
-      A31 <- (A31 `^` D14);
-      T.[4] <- x86_VPSLLV_4u64 A31
+      a20 <- (a20 `|` t.[3]);
+      a31 <- (a31 `^` d14);
+      t.[4] <- x86_VPSLLV_4u64 a31
       (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((2 * 32) - 96)))));
-      A31 <- x86_VPSRLV_4u64 A31
+      a31 <- x86_VPSRLV_4u64 a31
       (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((2 * 32) - 96)))));
-      A31 <- (A31 `|` T.[4]);
-      A21 <- (A21 `^` D14);
-      T.[5] <- x86_VPSLLV_4u64 A21
+      a31 <- (a31 `|` t.[4]);
+      a21 <- (a21 `^` d14);
+      t.[5] <- x86_VPSLLV_4u64 a21
       (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((3 * 32) - 96)))));
-      A21 <- x86_VPSRLV_4u64 A21
+      a21 <- x86_VPSRLV_4u64 a21
       (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((3 * 32) - 96)))));
-      A21 <- (A21 `|` T.[5]);
-      A41 <- (A41 `^` D14);
-      T.[6] <- x86_VPSLLV_4u64 A41
+      a21 <- (a21 `|` t.[5]);
+      a41 <- (a41 `^` d14);
+      t.[6] <- x86_VPSLLV_4u64 a41
       (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((4 * 32) - 96)))));
-      A41 <- x86_VPSRLV_4u64 A41
+      a41 <- x86_VPSRLV_4u64 a41
       (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((4 * 32) - 96)))));
-      A41 <- (A41 `|` T.[6]);
-      A11 <- (A11 `^` D14);
-      T.[3] <- x86_VPERMQ A20 (W8.of_int 141);
-      T.[4] <- x86_VPERMQ A31 (W8.of_int 141);
-      T.[7] <- x86_VPSLLV_4u64 A11
+      a41 <- (a41 `|` t.[6]);
+      a11 <- (a11 `^` d14);
+      t.[3] <- x86_VPERMQ a20 (W8.of_int 141);
+      t.[4] <- x86_VPERMQ a31 (W8.of_int 141);
+      t.[7] <- x86_VPSLLV_4u64 a11
       (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((5 * 32) - 96)))));
-      T.[1] <- x86_VPSRLV_4u64 A11
+      t.[1] <- x86_VPSRLV_4u64 a11
       (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((5 * 32) - 96)))));
-      T.[1] <- (T.[1] `|` T.[7]);
-      A01 <- (A01 `^` D14);
-      T.[5] <- x86_VPERMQ A21 (W8.of_int 27);
-      T.[6] <- x86_VPERMQ A41 (W8.of_int 114);
-      T.[8] <- x86_VPSLLV_4u64 A01
+      t.[1] <- (t.[1] `|` t.[7]);
+      a01 <- (a01 `^` d14);
+      t.[5] <- x86_VPERMQ a21 (W8.of_int 27);
+      t.[6] <- x86_VPERMQ a41 (W8.of_int 114);
+      t.[8] <- x86_VPSLLV_4u64 a01
       (loadW256 Glob.mem (W64.to_uint (rhotates_left + (W64.of_int ((1 * 32) - 96)))));
-      T.[2] <- x86_VPSRLV_4u64 A01
+      t.[2] <- x86_VPSRLV_4u64 a01
       (loadW256 Glob.mem (W64.to_uint (rhotates_right + (W64.of_int ((1 * 32) - 96)))));
-      T.[2] <- (T.[2] `|` T.[8]);
-      T.[7] <- x86_VPSRLDQ_256 T.[1] (W8.of_int 8);
-      T.[0] <- ((invw T.[1]) `&` T.[7]);
-      A31 <- x86_VPBLENDD_256 T.[2] T.[6]
+      t.[2] <- (t.[2] `|` t.[8]);
+      t.[7] <- x86_VPSRLDQ_256 t.[1] (W8.of_int 8);
+      t.[0] <- ((invw t.[1]) `&` t.[7]);
+      a31 <- x86_VPBLENDD_256 t.[2] t.[6]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      T.[8] <- x86_VPBLENDD_256 T.[4] T.[2]
+      t.[8] <- x86_VPBLENDD_256 t.[4] t.[2]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      A41 <- x86_VPBLENDD_256 T.[3] T.[4]
+      a41 <- x86_VPBLENDD_256 t.[3] t.[4]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      T.[7] <- x86_VPBLENDD_256 T.[2] T.[3]
+      t.[7] <- x86_VPBLENDD_256 t.[2] t.[3]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      A31 <- x86_VPBLENDD_256 A31 T.[4]
+      a31 <- x86_VPBLENDD_256 a31 t.[4]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      T.[8] <- x86_VPBLENDD_256 T.[8] T.[5]
+      t.[8] <- x86_VPBLENDD_256 t.[8] t.[5]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      A41 <- x86_VPBLENDD_256 A41 T.[2]
+      a41 <- x86_VPBLENDD_256 a41 t.[2]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      T.[7] <- x86_VPBLENDD_256 T.[7] T.[6]
+      t.[7] <- x86_VPBLENDD_256 t.[7] t.[6]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      A31 <- x86_VPBLENDD_256 A31 T.[5]
+      a31 <- x86_VPBLENDD_256 a31 t.[5]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      T.[8] <- x86_VPBLENDD_256 T.[8] T.[6]
+      t.[8] <- x86_VPBLENDD_256 t.[8] t.[6]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      A41 <- x86_VPBLENDD_256 A41 T.[6]
+      a41 <- x86_VPBLENDD_256 a41 t.[6]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      T.[7] <- x86_VPBLENDD_256 T.[7] T.[4]
+      t.[7] <- x86_VPBLENDD_256 t.[7] t.[4]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      A31 <- x86_VPANDN_256 A31 T.[8];
-      A41 <- x86_VPANDN_256 A41 T.[7];
-      A11 <- x86_VPBLENDD_256 T.[5] T.[2]
+      a31 <- x86_VPANDN_256 a31 t.[8];
+      a41 <- x86_VPANDN_256 a41 t.[7];
+      a11 <- x86_VPBLENDD_256 t.[5] t.[2]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      T.[8] <- x86_VPBLENDD_256 T.[3] T.[5]
+      t.[8] <- x86_VPBLENDD_256 t.[3] t.[5]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      A31 <- (A31 `^` T.[3]);
-      A11 <- x86_VPBLENDD_256 A11 T.[3]
+      a31 <- (a31 `^` t.[3]);
+      a11 <- x86_VPBLENDD_256 a11 t.[3]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      T.[8] <- x86_VPBLENDD_256 T.[8] T.[4]
+      t.[8] <- x86_VPBLENDD_256 t.[8] t.[4]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      A41 <- (A41 `^` T.[5]);
-      A11 <- x86_VPBLENDD_256 A11 T.[4]
+      a41 <- (a41 `^` t.[5]);
+      a11 <- x86_VPBLENDD_256 a11 t.[4]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      T.[8] <- x86_VPBLENDD_256 T.[8] T.[2]
+      t.[8] <- x86_VPBLENDD_256 t.[8] t.[2]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      A11 <- x86_VPANDN_256 A11 T.[8];
-      A11 <- (A11 `^` T.[6]);
-      A21 <- x86_VPERMQ T.[1] (W8.of_int 30);
-      T.[8] <- x86_VPBLENDD_256 A21 A00
+      a11 <- x86_VPANDN_256 a11 t.[8];
+      a11 <- (a11 `^` t.[6]);
+      a21 <- x86_VPERMQ t.[1] (W8.of_int 30);
+      t.[8] <- x86_VPBLENDD_256 a21 a00
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      A01 <- x86_VPERMQ T.[1] (W8.of_int 57);
-      A01 <- x86_VPBLENDD_256 A01 A00
+      a01 <- x86_VPERMQ t.[1] (W8.of_int 57);
+      a01 <- x86_VPBLENDD_256 a01 a00
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      A01 <- x86_VPANDN_256 A01 T.[8];
-      A20 <- x86_VPBLENDD_256 T.[4] T.[5]
+      a01 <- x86_VPANDN_256 a01 t.[8];
+      a20 <- x86_VPBLENDD_256 t.[4] t.[5]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      T.[7] <- x86_VPBLENDD_256 T.[6] T.[4]
+      t.[7] <- x86_VPBLENDD_256 t.[6] t.[4]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      A20 <- x86_VPBLENDD_256 A20 T.[6]
+      a20 <- x86_VPBLENDD_256 a20 t.[6]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      T.[7] <- x86_VPBLENDD_256 T.[7] T.[3]
+      t.[7] <- x86_VPBLENDD_256 t.[7] t.[3]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      A20 <- x86_VPBLENDD_256 A20 T.[3]
+      a20 <- x86_VPBLENDD_256 a20 t.[3]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      T.[7] <- x86_VPBLENDD_256 T.[7] T.[5]
+      t.[7] <- x86_VPBLENDD_256 t.[7] t.[5]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      A20 <- x86_VPANDN_256 A20 T.[7];
-      A20 <- (A20 `^` T.[2]);
-      T.[0] <- x86_VPERMQ T.[0] (W8.of_int 0);
-      A31 <- x86_VPERMQ A31 (W8.of_int 27);
-      A41 <- x86_VPERMQ A41 (W8.of_int 141);
-      A11 <- x86_VPERMQ A11 (W8.of_int 114);
-      A21 <- x86_VPBLENDD_256 T.[6] T.[3]
+      a20 <- x86_VPANDN_256 a20 t.[7];
+      a20 <- (a20 `^` t.[2]);
+      t.[0] <- x86_VPERMQ t.[0] (W8.of_int 0);
+      a31 <- x86_VPERMQ a31 (W8.of_int 27);
+      a41 <- x86_VPERMQ a41 (W8.of_int 141);
+      a11 <- x86_VPERMQ a11 (W8.of_int 114);
+      a21 <- x86_VPBLENDD_256 t.[6] t.[3]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      T.[7] <- x86_VPBLENDD_256 T.[5] T.[6]
+      t.[7] <- x86_VPBLENDD_256 t.[5] t.[6]
       (W8.of_int (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 0))));
-      A21 <- x86_VPBLENDD_256 A21 T.[5]
+      a21 <- x86_VPBLENDD_256 a21 t.[5]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      T.[7] <- x86_VPBLENDD_256 T.[7] T.[2]
+      t.[7] <- x86_VPBLENDD_256 t.[7] t.[2]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (3 %% 2^2 + 2^2 * 0))));
-      A21 <- x86_VPBLENDD_256 A21 T.[2]
+      a21 <- x86_VPBLENDD_256 a21 t.[2]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      T.[7] <- x86_VPBLENDD_256 T.[7] T.[3]
+      t.[7] <- x86_VPBLENDD_256 t.[7] t.[3]
       (W8.of_int (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * (0 %% 2^2 + 2^2 * 3))));
-      A21 <- x86_VPANDN_256 A21 T.[7];
-      A00 <- (A00 `^` T.[0]);
-      A01 <- (A01 `^` T.[1]);
-      A21 <- (A21 `^` T.[4]);
-      A00 <-
-      (A00 `^` (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int 0)))));
+      a21 <- x86_VPANDN_256 a21 t.[7];
+      a00 <- (a00 `^` t.[0]);
+      a01 <- (a01 `^` t.[1]);
+      a21 <- (a21 `^` t.[4]);
+      a00 <-
+      (a00 `^` (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int 0)))));
       iotas <- (iotas + (W64.of_int 32));
       ( _0,  _1,  _2, zf, i) <- x86_DEC_32 i;
     }
-    return (A00, A01, A20, A31, A21, A41, A11);
+    return (a00, a01, a20, a31, a21, a41, a11);
   }
 }.
 
