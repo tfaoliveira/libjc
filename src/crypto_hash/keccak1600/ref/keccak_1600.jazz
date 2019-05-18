@@ -17,23 +17,23 @@ fn add_full_block(
   stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
-  reg u64 rate
+  reg u64 r8
 ) -> stack u64[25], reg u64, reg u64
 {
-  reg u64 i t rate64;
+  reg u64 i t r64;
 
-  rate64 = rate;
-  rate64 >>= 3;
+  r64 = r8;
+  r64 >>= 3;
   i = 0;
-  while (i < rate64)
+  while (i < r64)
   {
     t = [in + 8 * i];
     state[(int) i] ^= t;
     i = i + 1;
   }
 
-  in += rate;
-  inlen -= rate;
+  in += r8;
+  inlen -= r8;
 
   return state, in, inlen;
 }
@@ -260,10 +260,10 @@ fn __keccak_1600(
     rate = s_rate;
 
     out, outlen = xtr_full_block(state, out, outlen, rate);
+    s_outlen = outlen;
     s_out = out;
   }
 
-  s_outlen = outlen;
   state = __keccak_f1600_ref(state);
   out = s_out;
   outlen = s_outlen;
