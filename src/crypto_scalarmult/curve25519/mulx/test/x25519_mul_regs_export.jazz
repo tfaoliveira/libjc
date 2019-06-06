@@ -1,0 +1,22 @@
+#include "x25519_mul_regs.jazz"
+
+export fn fe64_mul_regs(reg u64 _h _f _g)
+{
+  inline int i;
+  stack u64 _hs;
+  reg u64[4] h f g;
+  reg u64 t;
+
+  _hs = _h;
+
+  for i=0 to 4
+  { f[i] = [_f + 8*i];
+    g[i] = [_g + 8*i];
+  }
+
+  h = _fe64_mul_regs(f, g);
+
+  _h = _hs;
+  for i=0 to 4
+  { [_h + 8*i] = h[i]; }
+}

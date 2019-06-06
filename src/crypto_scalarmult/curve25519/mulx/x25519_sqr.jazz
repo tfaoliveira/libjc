@@ -1,0 +1,288 @@
+#ifndef X25519_SQR
+#define X25519_SQR
+#include "x25519_reduce.jazz"
+
+// note: _l stands for the lower 64 bits of multiplication, _h for higher
+//
+// 
+// h = f * f mod 2**255-19
+//
+// with
+//
+// f = f0 * 2**0 + f1 * 2**64 + f2 * 2**128 + f3 * 2**192
+//
+// with each of the limbs being >= 0 and < 2**64
+//
+// h = f * g
+//
+// <=>
+//
+// h = 2**0   * ( f0*f0 )                         +
+//     2**64  * ( f0*f1 + f1*f0 )                 +
+//     2**128 * ( f0*f2 + f1*f1 + f2*f0 )         +
+//     2**192 * ( f0*f3 + f1*f2 + f2*f1 + f3*f0 ) + 
+//     2**256 * ( f1*f3 + f2*f2 + f3*f1 )         +
+//     2**320 * ( f2*f3 + f3*f2 )                 +
+//     2**384 * ( f3*f3 )
+//
+// <=>
+//
+// h = 2**0   * ( f0*f0 + ( f1*f3 +   f2*f2 +   f3*f1 ) * 38 ) +
+//     2**64  * ( f0*f1 +   f1*f0 + ( f2*f3 +   f3*f2 ) * 38 ) +
+//     2**128 * ( f0*f2 +   f1*f1 +   f2*f0 + ( f3*f3 ) * 38 ) +
+//     2**192 * ( f0*f3 +   f1*f2 +   f2*f1 +   f3*f0 )
+//
+// <=>
+//
+// h = 2**0   * ( f0*f0_l + ( f1*f3_l +   f2*f2_l +   f3*f1_l ) * 38 ) +
+//     2**64  * ( f0*f0_h + ( f1*f3_h +   f2*f2_h +   f3*f1_h ) * 38 ) +
+//     2**64  * ( f0*f1_l +   f1*f0_l + ( f2*f3_l +   f3*f2_l ) * 38 ) +
+//     2**128 * ( f0*f1_h +   f1*f0_h + ( f2*f3_h +   f3*f2_h ) * 38 ) +
+//     2**128 * ( f0*f2_l +   f1*f1_l +   f2*f0_l + ( f3*f3_l ) * 38 ) +
+//     2**192 * ( f0*f2_h +   f1*f1_h +   f2*f0_h + ( f3*f3_h ) * 38 ) +
+//     2**192 * ( f0*f3_l +   f1*f2_l +   f2*f1_l +   f3*f0_l )        +
+//     2**256 * ( f0*f3_h +   f1*f2_h +   f2*f1_h +   f3*f0_h )
+//
+// <=>
+//
+// h = 2**0   * ( f0*f0_l + ( f1*f3_l +   f2*f2_l +   f3*f1_l ) * 38 ) +
+//     2**64  * ( f0*f0_h + ( f1*f3_h +   f2*f2_h +   f3*f1_h ) * 38 ) +
+//     2**64  * ( f0*f1_l +   f1*f0_l + ( f2*f3_l +   f3*f2_l ) * 38 ) +
+//     2**128 * ( f0*f1_h +   f1*f0_h + ( f2*f3_h +   f3*f2_h ) * 38 ) +
+//     2**128 * ( f0*f2_l +   f1*f1_l +   f2*f0_l + ( f3*f3_l ) * 38 ) +
+//     2**192 * ( f0*f2_h +   f1*f1_h +   f2*f0_h + ( f3*f3_h ) * 38 ) +
+//     2**192 * ( f0*f3_l +   f1*f2_l +   f2*f1_l +   f3*f0_l )
+//     2**0   * ( f0*f3_h +   f1*f2_h +   f2*f1_h +   f3*f0_h ) * 38
+//
+// ...
+//
+// h = h' + r
+//
+// where
+//
+// h' =            2**0*h0 + 2**64*h1 + 2**128*h2 + 2**192*h3
+// r  = 38     * ( 2**0*r0 + 2**64*r1 + 2**128*r2 + 2**192*r3 )
+//
+// but also
+//
+// r  = 2**256 * ( 2**0*r0 + 2**64*r1 + 2**128*r2 + 2**192*r3 )
+//
+// now the h0..3/r0..3
+//
+//   h0 = ( f0*f0_l )
+//   h1 = ( f0*f0_h  + f0*f1_l + f1*f0_l )
+//   h2 = ( f0*f1_h  + f0*f2_l + f1*f0_h  + f1*f1_l + f2*f0_l )
+//   h3 = ( f0*f2_h  + f0*f3_l + f1*f1_h  + f1*f2_l + f2*f0_h  + f2*f1_l + f3*f0_l )
+//   r0 = ( f0*f3_h  + f1*f2_h + f1*f3_l  + f2*f1_h + f2*f2_l  + f3*f0_h + f3*f1_l )
+//   r1 = ( f1*f3_h  + f2*f2_h + f2*f3_l  + f3*f1_h + f3*f2_l )
+//   r2 = ( f2*f3_h  + f3*f2_h + f3*f3_l )
+//   r3 = ( f3*f3_h )
+//
+// and rearranged:
+//
+//   h0 = (                                                                  f0*f0_l )
+//   h1 = ( ( f0*f1_l)*2                                                   + f0*f0_h )
+//   h2 = ( ( f0*f1_h + f0*f2_l)*2                                         + f1*f1_l )
+//   h3 = ( (           f0*f2_h + f0*f3_l + f1*f2_l)*2                     + f1*f1_h )
+//   r0 = ( (                     f0*f3_h + f1*f2_h + f1*f3_l)*2           + f2*f2_l )
+//   r1 = ( (                                         f1*f3_h + f2*f3_l)*2 + f2*f2_h )
+//   r2 = ( (                                                   f2*f3_h)*2 + f3*f3_l )
+//   r3 = (                                                                  f3*f3_h )
+//
+// rearranged again (by columns):
+//
+//   h0  = ( f0*f0_l )
+//
+//   h1  = ( f0*f1_l )
+//   h1 *= 2
+//   h1 += ( f0*f0_h )
+//
+//   h2  = ( f0*f1_h )
+//   h2 += ( f0*f2_l )
+//   h2 *= 2
+//   h2 += ( f1*f1_l )
+//
+//   h3  = ( f0*f2_h )
+//   h3 += ( f0*f3_l )
+//   h3 += ( f1*f2_l )
+//   h3 *= 2
+//   h3 += ( f1*f1_h )
+//
+//   r0  = ( f0*f3_h )
+//   r0 += ( f1*f2_h )
+//   r0 += ( f1*f3_l )
+//   r0 *= 2
+//   r0 += ( f2*f2_l )
+//
+//   r1  = ( f1*f3_h )
+//   r1 += ( f2*f3_l )
+//   r1 *= 2
+//   r1 += ( f2*f2_h )
+//
+//   r2  = ( f2*f3_h )
+//   r2 *= 2
+//   r2 += f3*f3_l
+//
+//   r3  = ( f3*f3_h )
+//
+// rearranged again (this can go wrong btw; backtrack until here):
+//
+//   h0  = ( f0*f0_l )
+//   h1  = ( f0*f1_l )
+//
+//   h2  = ( f0*f1_h )
+//   h2 += ( f0*f2_l )
+//
+//   h3  = ( f0*f2_h ) 
+//   h3 += ( f0*f3_l )
+//   h3 += ( f1*f2_l )
+//
+//   r0  = ( f0*f3_h )
+//   r0 += ( f1*f2_h )
+//   r0 += ( f1*f3_l )
+//
+//   r1  = ( f1*f3_h )
+//   r1 += ( f2*f3_l )
+//
+//   r2  = ( f2*f3_h )
+//                    
+//   r3  = ( f3*f3_h )
+//
+//////
+//
+//   h1 +=   h1
+//   h1 += ( f0*f0_h )
+//   h2 +=   h2
+//   h2 += ( f1*f1_l )
+//   h3 +=   h3
+//   h3 += ( f1*f1_h )
+//   r0 +=   r0
+//   r0 += ( f2*f2_l )
+//   r1 +=   r1
+//   r1 += ( f2*f2_h )
+//   r2 +=   r2
+//   r2 +=  f3*f3_l
+//   
+
+
+fn _fe64_sqr(reg u64[4] f) -> reg u64[4]
+{
+  reg bool cf of;
+  inline int i;
+  reg u64[8] t;
+  reg u64[4] h r;
+  reg u64 z _38 fx;
+
+  z = 0;
+  of, cf, _, _, _, z = #x86_XOR(z, z);
+
+  // 0
+  fx = f[0];
+
+  (t[1], h[0]) = #x86_MULX ( fx,   fx       ); // f0*f0
+  (h[2], h[1]) = #x86_MULX ( fx,   f[1]     ); // f0*f1
+
+  (h[3], t[2]) = #x86_MULX ( fx,   f[2]     ); // f0*f2
+     cf, h[2]  = #x86_ADCX ( h[2], t[2], cf );
+
+  (r[0], t[3]) = #x86_MULX ( fx,   f[3]     ); // f0*f3
+     cf, h[3]  = #x86_ADCX ( h[3], t[3], cf );
+
+  // 1
+  fx = f[1];
+
+  (t[4], t[3]) = #x86_MULX ( fx,   f[2]     ); // f1*f2
+
+  of, h[3]     = #x86_ADOX ( h[3], t[3], of );
+  cf, r[0]     = #x86_ADCX ( r[0], t[4], cf );
+  
+  (r[1], t[4]) = #x86_MULX ( fx,   f[3]     ); // f1*f3
+     of, r[0]  = #x86_ADOX ( r[0], t[4], of );
+
+  (t[3], t[2]) = #x86_MULX ( fx,   fx       ); // f1*f1
+
+  // 2
+  fx = f[2];
+
+  (r[2], t[5]) = #x86_MULX ( fx,   f[3]     ); // f2*f3
+
+   cf, r[1]    = #x86_ADCX ( r[1], t[5], cf );
+   of, r[1]    = #x86_ADOX ( r[1], z,    of );
+
+   cf, r[2]    = #x86_ADCX ( r[2], z,    cf ); // cf = 0
+   of, r[2]    = #x86_ADOX ( r[2], z,    of ); // of = 0 ?? TODO: VERIFYME
+
+  (t[5], t[4]) = #x86_MULX ( fx,   fx       ); // f2*f2
+
+  // 3
+  fx = f[3];
+
+  (r[3], t[6]) = #x86_MULX ( fx,   fx       ); // f3*f3
+
+  //
+  cf, h[1] = #x86_ADCX ( h[1], h[1], cf );
+  of, h[1] = #x86_ADOX ( h[1], t[1], of );
+
+  cf, h[2] = #x86_ADCX ( h[2], h[2], cf );
+  of, h[2] = #x86_ADOX ( h[2], t[2], of );
+
+  cf, h[3] = #x86_ADCX ( h[3], h[3], cf );
+  of, h[3] = #x86_ADOX ( h[3], t[3], of );
+
+  cf, r[0] = #x86_ADCX ( r[0], r[0], cf );
+  of, r[0] = #x86_ADOX ( r[0], t[4], of );
+
+  cf, r[1] = #x86_ADCX ( r[1], r[1], cf );
+  of, r[1] = #x86_ADOX ( r[1], t[5], of );
+
+  cf, r[2] = #x86_ADCX ( r[2], r[2], cf );
+  of, r[2] = #x86_ADOX ( r[2], t[6], of );
+
+  cf, r[3] = #x86_ADCX ( r[3], z,    cf ); // cf = 0
+  of, r[3] = #x86_ADOX ( r[3], z,    of ); // of = 0 ?? TODO: VERIFYME
+
+  _38 = 38;
+  h = _fe64_reduce(h, r, _38, z, cf, of);
+
+  return h;
+}
+
+
+fn _fe64_it_sqr(stack u64 i, reg u64[4] f) -> stack u64, reg u64[4]
+{
+  reg bool zf;
+  reg u64[4] h;
+
+  while
+  {
+    h = _fe64_sqr(f);
+    (_, _, _, _, i) = #x86_DEC(i);
+
+    f = _fe64_sqr(h);
+    (_, _, _, zf, i) = #x86_DEC(i);
+
+  } (!zf)
+
+  return i, f;
+}
+
+fn _fe64_sqr_s(stack u64[4] fs) -> stack u64[4]
+{
+  stack u64[4] hs;
+  reg u64[4] f h;
+
+  f = fs;
+  h = _fe64_sqr(f);
+  hs = h;
+
+  return hs;
+}
+
+#endif
+
+
+
+
+
+
+

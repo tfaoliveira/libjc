@@ -1,0 +1,67 @@
+#ifndef X25519_MUL121666
+#define X25519_MUL121666
+
+// h = (2**0*f0 + 2**64*f1 + 2**128*f2 + 2**192*f3) * 121666
+//
+// ...
+//
+// h0  = f0*_121666_l
+// h1  = f0*_121666_h
+// h1 += f1*_121666_l
+// h2  = f1*_121666_h
+// h2 += f2*_121666_l
+// h3  = f2*_121666_h
+// h3 += f3*_121666_l
+// h4  = f3*_121666_h
+
+
+fn _fe64_mul121666(stack u64[4] f) -> reg u64[4]
+{
+  inline int i;
+  reg bool cf;
+  reg u64[4] h;
+  reg u64 c r0 lo;
+
+  c = 121666;
+
+  (h[1], h[0]) = #x86_MULX(c, f[0]);
+  (h[2], lo)   = #x86_MULX(c, f[1]);
+
+  cf, h[1] += lo;
+
+  (h[3], lo)   = #x86_MULX(c, f[2]);
+
+  cf, h[2] += lo + cf;
+
+  (r0,   lo)   = #x86_MULX(c, f[3]);
+
+  cf, h[3] += lo + cf;
+
+     _, r0 += 0 + cf;
+
+  _, _, _, _, _, r0 = #x86_IMULtimm(r0, 38);
+
+  cf, h[0] += r0;
+  cf, h[1] += 0 + cf;
+  cf, h[2] += 0 + cf;
+  cf, h[3] += 0 + cf;
+
+  _, _, _, _, _, c = #x86_SBB(c, c, cf);
+  c &= 38; 
+  h[0] += c;
+
+  return h;
+}
+
+fn _fe64_mul121666_s(stack u64[4] f) -> stack u64[4]
+{
+  stack u64[4] hs;
+  reg u64[4] h;
+
+  h = _fe64_mul121666(f);
+  hs = h;
+
+  return hs;
+}
+
+#endif

@@ -1,1 +1,1 @@
-crypto_hash shake256 evercrypt/compact_gcc
+crypto_scalarmult curve25519 jazz/mulx

@@ -1,0 +1,35 @@
+#ifndef X25519_TOBYTES
+#define X25519_TOBYTES
+
+// ported from openssl
+fn _fe64_tobytes(reg u64[4] f) -> reg u64[4]
+{
+  reg bool cf;
+  reg u64 t;
+
+  t = f[3] + f[3];
+  f[3] = #x86_SAR(f[3], 63);
+  t >>= 1;
+  f[3] &= 19;
+  f[3] += 19;
+
+  cf, f[0] += f[3];
+  cf, f[1] += 0 + cf;
+  cf, f[2] += 0 + cf;
+  cf, t    += 0 + cf;
+
+  f[3] = t + t;
+  t    = #x86_SAR(t, 63);
+  f[3] >>= 1;
+  t = !t;
+  t &= 19;
+
+  cf, f[0] -= t;
+  cf, f[1] -= 0 - cf;
+  cf, f[2] -= 0 - cf;
+  cf, f[3] -= 0 - cf;
+
+  return f;
+}
+
+#endif

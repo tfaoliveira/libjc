@@ -1,0 +1,6 @@
+#include "x25519_scalarmult.jazz"
+
+export fn curve25519_mulx(reg u64 out scalar point)
+{
+  _x25519_scalarmult(out, scalar, point);
+}

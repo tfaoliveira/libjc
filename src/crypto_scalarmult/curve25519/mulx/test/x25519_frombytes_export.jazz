@@ -1,0 +1,18 @@
+#include "x25519_frombytes.jazz"
+
+export fn fe64_frombytes(reg u64 _x _y _f)
+{
+  inline int i;
+  stack u64[4] x y;
+  reg u64 t;
+
+  x, y = _fe64_frombytes(_f);
+
+  for i=0 to 4
+  { t = x[i];
+    [_x + 8*i] = t;
+
+    t = y[i];
+    [_y + 8*i] = t;
+  }
+}

@@ -1,0 +1,23 @@
+#include "x25519_invert_regs.jazz"
+
+export fn fe64_invert_regs(reg u64 _h _f)
+{
+  inline int i;
+  stack u64 _hs;
+  reg u64[4] h;
+  stack u64[4] fs;
+  reg u64 t;
+
+  _hs = _h;
+
+  for i=0 to 4
+  { t = [_f + 8*i];
+    fs[i] = t;
+  }
+
+  h = _fe64_invert_regs(fs);
+
+  _h = _hs;
+  for i=0 to 4
+  { [_h + 8*i] = h[i]; }
+}

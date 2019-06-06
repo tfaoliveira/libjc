@@ -1,5 +1,5 @@
-
-
+#ifndef X25519_MUL_REGS
+#define X25519_MUL_REGS
 
 /*
 
@@ -50,7 +50,7 @@
 /** args: reg u64[4] x <- not preserved
           reg u64[4] y <- preserved
     result: reg u64[4]                         */
-fn mul25519_regs(reg u64[4] x y) -> reg u64[4] {
+fn _fe64_mul_regs(reg u64[4] x y) -> reg u64[4] {
  reg u64[4] r;
  reg u64 tA tB tC; //temps
  reg bool cf of;
@@ -187,33 +187,6 @@ fn mul25519_regs(reg u64[4] x y) -> reg u64[4] {
  cf, r[3] = #x86_ADCX(r[3], tA, cf); // cf=0
 
  return r;
-}
-
-
-#if 0
-
-export fn x25519_fe64_mul(reg u64 f g) {
- reg u64[4] __R12 b c;
- reg u64 t;
- stack u64 s_f, s_g;
- inline int i;
- for i = 0 to 4 {
-  t = [f + 8*i];
-  b[i] = t; 
-  t = [g + 8*i];
-  c[i] = t; 
- }
- s_f = f;
- s_g = g;
- __R12 = mul25519_regs(b,c);
- f = s_f;
- g = s_g;
- for i = 0 to 4 {
-  t = __R12[i];
-  [f + 8*i] = t;
-  t = c[i]; // obs: to check that y is indeed preserved...
-  [g + 8*i] = t;
- } 
 }
 
 #endif

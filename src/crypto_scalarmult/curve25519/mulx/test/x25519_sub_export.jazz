@@ -1,0 +1,23 @@
+#include "x25519_sub.jazz"
+
+export fn fe64_sub(reg u64 _h _f _g)
+{
+  inline int i;
+  stack u64[4] g;
+  reg u64[4] h f;
+  reg u64 z t;
+
+  for i=0 to 4
+  { f[i] = [_f + 8*i]; }
+
+  for i=0 to 4
+  { t = [_g + 8*i];
+    g[i] = t;
+  }
+
+  z = 0;
+  h = _fe64_sub(f, g, z);
+
+  for i=0 to 4
+  { [_h + 8*i] = h[i]; }
+}
