@@ -105,7 +105,7 @@ fn sqr25519_inplace(reg u64[4] x) -> reg u64[4] {
  cf, x[0] = #x86_ADCX(x[0], tA, cf);
  x[1]     = h[1];
  tA, h[4] = #x86_MULX(tC, h[4]);
- cf, x[0] = #x86_ADCX(x[0], h[4], cf);
+ of, x[0] = #x86_ADOX(x[0], h[4], of);
  cf, x[1] = #x86_ADCX(x[1], tA, cf);
  x[2]     = h[2];
  tA, h[5] = #x86_MULX(tC, h[5]);
@@ -116,13 +116,8 @@ fn sqr25519_inplace(reg u64[4] x) -> reg u64[4] {
  cf, x[2] = #x86_ADCX(x[2], h[6], cf);
  cf, x[3] = #x86_ADCX(x[3], tA, cf);
  of, x[3] = #x86_ADOX(x[3], h[7], of);
- /*
-    # 2^64 ---- 3 - 1*, 5+, 3*
-    # final reduction
-    # 0:     4L
-    # 1:     0
-    # 2:     0
-    # 3:     0                             */
+ //# Final reduction
+/* USING INSTEAD AN ALTERNATIVE VERSION (below)
  tC       = 0;
  tA       = 0;
  cf, tA   = #x86_ADCX(tA, tC, cf);
@@ -137,6 +132,22 @@ fn sqr25519_inplace(reg u64[4] x) -> reg u64[4] {
  of, cf, _, _, _, tA = #x86_IMULtimm(tA,19); // #tC *= 19;
  // assert cf==0 and of==0
  cf, x[0] = #x86_ADCX(x[0], tA, cf);
+*/
+ tC       = 0;
+ of, tC   = #x86_ADOX(tC, tC, of);
+ _,_,_,_,_,tA = #x86_SBB(tA, tA, cf);
+ _,_,_,_,_,tA = #x86_AND(tA, 38);
+ tC = -tC;
+ _,_,_,_,_,tC = #x86_AND(tC, 38);
+ tA += tC;
+ of,cf,_,_,_,x[3] = #x86_SHL(x[3], 1);
+ _,_,_,_,_,tC = #x86_SBB(tC, tC, cf);
+ of,cf,_,_,_,tC = #x86_AND(tC, 19);
+ tA += tC;
+ of, cf, _, _, _, x[3] = #x86_SHR(x[3], 1);
+ tC       = 0;
+ of,cf,_,_,_,x[0] = #x86_ADD(x[0], tA);
+
  cf, x[1] = #x86_ADCX(x[1], tC, cf);
  cf, x[2] = #x86_ADCX(x[2], tC, cf);
  cf, x[3] = #x86_ADCX(x[3], tC, cf);
@@ -145,7 +156,7 @@ fn sqr25519_inplace(reg u64[4] x) -> reg u64[4] {
  return x;
 }
 
-#if 0
+//#if 1
 
 export fn x25519_fe64_sqr(reg u64 count f) {
  reg u64[4] __R12;
@@ -168,4 +179,4 @@ export fn x25519_fe64_sqr(reg u64 count f) {
  } 
 }
 
-#endif
+//#endif
