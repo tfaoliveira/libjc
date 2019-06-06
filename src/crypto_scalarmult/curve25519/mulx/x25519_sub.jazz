@@ -42,7 +42,7 @@ fn _fe64_sub_s(stack u64[4] fs gs) -> stack u64[4]
   reg u64[4] h f;
   reg u64 z;
 
-  z = 0;
+  z = #set0();
   f = fs;
   h = _fe64_sub(f, gs, z);
   hs = h;

@@ -443,7 +443,7 @@ fn _fe64_mul
   reg u64[4] h r;
   reg u64 _38 f z;
 
-  z = 0;
+  z = #set0();
   of, cf, _, _, _, z = #x86_XOR(z, z);
 
   f = fs[0];

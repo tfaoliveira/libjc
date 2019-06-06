@@ -173,7 +173,7 @@ fn _fe64_sqr(reg u64[4] f) -> reg u64[4]
   reg u64[4] h r;
   reg u64 z _38 fx;
 
-  z = 0;
+  z = #set0();
   of, cf, _, _, _, z = #x86_XOR(z, z);
 
   // 0
