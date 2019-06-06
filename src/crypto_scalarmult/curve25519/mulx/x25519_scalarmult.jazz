@@ -9,10 +9,11 @@
 #include "x25519_frombytes.jazz"
 #include "x25519_cswap.jazz"
 
-fn _fe64_0_1_x2() -> stack u64[4], stack u64[4], stack u64[4]
+fn _fe64_0_1_x2() -> reg u64[4], stack u64[4], stack u64[4]
 {
   inline int i;
-  stack u64[4] f1s, f2s f3s;
+  reg   u64[4] f1s;
+  stack u64[4] f2s f3s;
   reg u64 z;
 
   z = #set0();
@@ -71,7 +72,7 @@ fn _x25519_scalarmult(
   e[31] |= 0x40;
 
   x3, x1 = _fe64_frombytes(point); // point dead
-  z2, z3, x2 = _fe64_0_1_x2();
+  z2r, z3, x2 = _fe64_0_1_x2();
 
   pos = 254;
   swaps = 0;
@@ -83,42 +84,44 @@ fn _x25519_scalarmult(
     b = _bit_select(e, pos);
 
     swap ^= b;
-    x2, x3 = _fe64_cswap(x2, x3, swap);
-    z2, z3 = _fe64_cswap(z2, z3, swap);
+
+    x2,  x3 = _fe64_cswap_ssss(x2,  x3, swap);
+    z2r, z3 = _fe64_cswap_rsrs(z2r, z3, swap);
+
     swaps = b;
+                                               z2 = z2r;
+    tmp0 = _fe64_sub_ssr(x2, z2r);
+    x2   = _fe64_add_ssr(x2, z2r);
+                                             
+    tmp1 = _fe64_sub_sss(x3, z3);
+    z2   = _fe64_add_sss(x3, z3);
 
-    tmp0 = _fe64_sub_s(x2, z2);
-    x2   = _fe64_add_s(x2, z2);
+    z3   = _fe64_mul_sss(x2, tmp1);
+    z2   = _fe64_mul_sss(z2, tmp0);
 
-    tmp1 = _fe64_sub_s(x3, z3);
-    z2   = _fe64_add_s(x3, z3);
+    tmp1 = _fe64_sqr_ss(tmp0);
+    tmp0 = _fe64_sqr_ss(x2);
 
-    z3   = _fe64_mul_s(x2, tmp1);
-    z2   = _fe64_mul_s(z2, tmp0);
+    x3   = _fe64_add_sss(z3, z2);
+    z2   = _fe64_sub_sss(z3, z2);
 
-    tmp1 = _fe64_sqr_s(tmp0);
-    tmp0 = _fe64_sqr_s(x2);
+    x2   = _fe64_mul_sss(tmp0, tmp1);
+    tmp0 = _fe64_sub_sss(tmp0, tmp1);
 
-    x3   = _fe64_add_s(z3, z2);
-    z2   = _fe64_sub_s(z3, z2);
-
-    x2   = _fe64_mul_s(tmp0, tmp1);
-    tmp0 = _fe64_sub_s(tmp0, tmp1);
-
-    z2   = _fe64_sqr_s(z2);
+    z2   = _fe64_sqr_ss(z2);
     z3   = _fe64_mul121666_s(tmp0);
-    x3   = _fe64_sqr_s(x3);
+    x3   = _fe64_sqr_ss(x3);
 
-    tmp1 = _fe64_add_s(tmp1, z3);
-    z3   = _fe64_mul_s(x1, z2);
-    z2   = _fe64_mul_s(tmp0, tmp1);
+    tmp1 = _fe64_add_sss(tmp1, z3);
+    z3   = _fe64_mul_sss(x1, z2);
+    z2r  = _fe64_mul_rss(tmp0, tmp1);
 
     pos = poss;
     pos -= 1;
   } (pos >=s 0)
 
-  z2r = _fe64_invert(z2);
-  x2r = _fe64_mul(x2, z2r);
+  z2r = _fe64_invert(z2r);
+  x2r = _fe64_mul_rsr(x2, z2r);
   x2r = _fe64_tobytes(x2r);
 
   out = outs;

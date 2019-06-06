@@ -434,7 +434,7 @@ fn fe64_mul_c3
 }
 
 
-fn _fe64_mul
+fn _fe64_mul_rsr
 ( stack u64[4] fs,
   reg u64[4] g
 ) -> reg u64[4]
@@ -464,17 +464,26 @@ fn _fe64_mul
   return h;
 }
 
-
-fn _fe64_mul_s(stack u64[4] fs gs) -> stack u64[4]
+fn _fe64_mul_sss(stack u64[4] fs gs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h g;
 
   g = gs;
-  h = _fe64_mul(fs, g);
+  h = _fe64_mul_rsr(fs, g);
   hs = h;
 
   return hs;
+}
+
+fn _fe64_mul_rss(stack u64[4] fs gs) -> reg u64[4]
+{
+  reg u64[4] h g;
+
+  g = gs;
+  h = _fe64_mul_rsr(fs, g);
+
+  return h;
 }
 
 #endif 

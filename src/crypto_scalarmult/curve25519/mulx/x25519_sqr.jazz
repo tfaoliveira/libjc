@@ -165,7 +165,7 @@
 //   
 
 
-fn _fe64_sqr(reg u64[4] f) -> reg u64[4]
+fn _fe64_sqr_rr(reg u64[4] f) -> reg u64[4]
 {
   reg bool cf of;
   inline int i;
@@ -247,7 +247,6 @@ fn _fe64_sqr(reg u64[4] f) -> reg u64[4]
   return h;
 }
 
-
 fn _fe64_it_sqr(stack u64 i, reg u64[4] f) -> stack u64, reg u64[4]
 {
   reg bool zf;
@@ -255,10 +254,10 @@ fn _fe64_it_sqr(stack u64 i, reg u64[4] f) -> stack u64, reg u64[4]
 
   while
   {
-    h = _fe64_sqr(f);
+    h = _fe64_sqr_rr(f);
     (_, _, _, _, i) = #x86_DEC(i);
 
-    f = _fe64_sqr(h);
+    f = _fe64_sqr_rr(h);
     (_, _, _, zf, i) = #x86_DEC(i);
 
   } (!zf)
@@ -266,23 +265,16 @@ fn _fe64_it_sqr(stack u64 i, reg u64[4] f) -> stack u64, reg u64[4]
   return i, f;
 }
 
-fn _fe64_sqr_s(stack u64[4] fs) -> stack u64[4]
+fn _fe64_sqr_ss(stack u64[4] fs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] f h;
 
   f = fs;
-  h = _fe64_sqr(f);
+  h = _fe64_sqr_rr(f);
   hs = h;
 
   return hs;
 }
 
 #endif
-
-
-
-
-
-
-

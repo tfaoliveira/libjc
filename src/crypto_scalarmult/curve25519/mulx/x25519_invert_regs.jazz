@@ -21,18 +21,18 @@ fn _fe64_invert_regs(stack u64[4] fs) -> reg u64[4]
   t1  = _fe64_sqr_regs(t1);
 
   // z9 = z1*z8
-  t1  = _fe64_mul(fs,t1);
+  t1  = _fe64_mul_rsr(fs,t1);
   t1s = t1;
 
   // z11 = z2*z9
-  t0 = _fe64_mul(t0s,t1);
+  t0 = _fe64_mul_rsr(t0s,t1);
   t0s = t0;
 
   // z22 = z11^2^1
   t2 = _fe64_sqr_regs(t0);
 
   // z_5_0 = z9*z22
-  t1 = _fe64_mul(t1s,t2);
+  t1 = _fe64_mul_rsr(t1s,t2);
   t1s = t1;
 
   // z_10_5 = z_5_0^2^5
@@ -41,54 +41,54 @@ fn _fe64_invert_regs(stack u64[4] fs) -> reg u64[4]
   t2s = t2;
 
   // z_10_0 = z_10_5*z_5_0
-  t1 = _fe64_mul(t1s,t2);
+  t1 = _fe64_mul_rsr(t1s,t2);
   t1s = t1;
 
   // z_20_10 = z_10_0^2^10
   i = 10; i, t2 = _fe64_it_sqr_regs(i, t1);
 
   // z_20_0 = z_20_10*z_10_0
-  t2 = _fe64_mul(t1s,t2);
+  t2 = _fe64_mul_rsr(t1s,t2);
   t2s = t2;
 
   // z_40_20 = z_20_0^2^20
   i = 20; i, t3 = _fe64_it_sqr_regs(i, t2);
 
   // z_40_0 = z_40_20*z_20_0
-  t2 = _fe64_mul(t2s,t3);
+  t2 = _fe64_mul_rsr(t2s,t3);
 
   // z_50_10 = z_40_0^2^10
   i = 10; i, t2 = _fe64_it_sqr_regs(i, t2);
 
   // z_50_0 = z_50_10*z_10_0
-  t1 = _fe64_mul(t1s,t2);
+  t1 = _fe64_mul_rsr(t1s,t2);
   t1s = t1;
 
   // z_100_50 = z_50_0^2^50
   i = 50; i, t2 = _fe64_it_sqr_regs(i, t1);
 
   // z_100_0 = z_100_50*z_50_0
-  t2 = _fe64_mul(t1s,t2);
+  t2 = _fe64_mul_rsr(t1s,t2);
   t2s = t2;
 
   // z_200_100 = z_100_0^2^100
   i = 100; i, t3 = _fe64_it_sqr_regs(i, t2);
 
   // z_200_0 = z_200_100*z_100_0
-  t2 = _fe64_mul(t2s,t3);
+  t2 = _fe64_mul_rsr(t2s,t3);
 
   // z_250_50 = z_200_0^2^50
   i = 50; i, t2 = _fe64_it_sqr_regs(i, t2);
 
   // z_250_0 = z_250_50*z_50_0
-  t1 = _fe64_mul(t1s,t2);
+  t1 = _fe64_mul_rsr(t1s,t2);
 
   // z_255_5 = z_250_0^2^5
   i = 4; i, t1 = _fe64_it_sqr_regs(i, t1);
   t1 = _fe64_sqr_regs(t1);
 
   // z_255_21 = z_255_5*z11
-  t1 = _fe64_mul(t0s,t1);
+  t1 = _fe64_mul_rsr(t0s,t1);
 
   return t1;
 }
