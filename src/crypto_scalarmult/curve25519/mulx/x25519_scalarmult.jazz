@@ -90,31 +90,31 @@ fn _x25519_scalarmult(
 
     swaps = b;
                                                z2 = z2r;
-    tmp0 = _fe64_sub_ssr(x2, z2r);
-    x2   = _fe64_add_ssr(x2, z2r);
+    tmp0  = _fe64_sub_ssr(x2, z2r);
+    x2    = _fe64_add_ssr(x2, z2r);
                                              
-    tmp1 = _fe64_sub_sss(x3, z3);
-    z2   = _fe64_add_sss(x3, z3);
+    tmp1  = _fe64_sub_sss(x3, z3);
+    z2    = _fe64_add_sss(x3, z3);
 
-    z3   = _fe64_mul_sss(x2, tmp1);
-    z2   = _fe64_mul_sss(z2, tmp0);
+    z3    = _fe64_mul_sss(x2, tmp1);
+    z2    = _fe64_mul_sss(z2, tmp0);
 
-    tmp1 = _fe64_sqr_ss(tmp0);
-    tmp0 = _fe64_sqr_ss(x2);
+    tmp1  = _fe64_sqr_ss(tmp0);
+    tmp0  = _fe64_sqr_ss(x2);
 
-    x3   = _fe64_add_sss(z3, z2);
-    z2   = _fe64_sub_sss(z3, z2);
+    x3    = _fe64_add_sss(z3, z2);
+    z2    = _fe64_sub_sss(z3, z2);
 
-    x2   = _fe64_mul_sss(tmp0, tmp1);
-    tmp0 = _fe64_sub_sss(tmp0, tmp1);
+    x2    = _fe64_mul_sss(tmp0, tmp1);
+    tmp0  = _fe64_sub_sss(tmp0, tmp1);
 
-    z2   = _fe64_sqr_ss(z2);
-    z3   = _fe64_mul121666_s(tmp0);
-    x3   = _fe64_sqr_ss(x3);
+    z2    = _fe64_sqr_ss(z2);
+    z3    = _fe64_mul121666_s(tmp0);
+    x3    = _fe64_sqr_ss(x3);
 
-    tmp1 = _fe64_add_sss(tmp1, z3);
-    z3   = _fe64_mul_sss(x1, z2);
-    z2r  = _fe64_mul_rss(tmp0, tmp1);
+    tmp1  = _fe64_add_sss(tmp1, z3);
+    z3    = _fe64_mul_sss(x1, z2);
+    z2r   = _fe64_mul_rss(tmp0, tmp1);
 
     pos = poss;
     pos -= 1;
