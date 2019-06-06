@@ -41,5 +41,7 @@ Vagrant.configure(2) do |config|
     opam install proofgeneral
 
     cp /home/vagrant/libjc/proof/third_party/easycrypt/emacs .emacs
+    mkdir -p /home/vagrant/.config/easycrypt/
+    cp /home/vagrant/libjc/proof/third_party/easycrypt/easycrypt.conf /home/vagrant/.config/easycrypt/easycrypt.conf
   SHELL
 end
