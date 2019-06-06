@@ -12,19 +12,15 @@ fe64_invert:
 	pushq	%r15
 	subq	$144, %rsp
 	movq	%rdi, 136(%rsp)
-	movq	(%rsi), %rax
-	movq	%rax, 104(%rsp)
+	movq	(%rsi), %rdx
 	movq	8(%rsi), %rax
+	movq	16(%rsi), %rcx
+	movq	24(%rsi), %rsi
+	movq	%rdx, 104(%rsp)
 	movq	%rax, 112(%rsp)
-	movq	16(%rsi), %rax
-	movq	%rax, 120(%rsp)
-	movq	24(%rsi), %rax
-	movq	%rax, 128(%rsp)
-	movq	104(%rsp), %rdx
-	movq	112(%rsp), %rax
-	movq	120(%rsp), %rcx
-	movq	128(%rsp), %rsi
-	movq	$0, %rdi
+	movq	%rcx, 120(%rsp)
+	movq	%rsi, 128(%rsp)
+	xorl	%edi, %edi
 	xorq	%rdi, %rdi
 	mulxq	%rdx, %r9, %r8
 	mulxq	%rax, %r11, %r10
@@ -88,7 +84,7 @@ fe64_invert:
 	movq	%r11, 8(%rsp)
 	movq	%r10, 16(%rsp)
 	movq	%rbp, 24(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %r8, %rdi
@@ -148,7 +144,7 @@ fe64_invert:
 	sbbq	%rax, %rax
 	andq	$38, %rax
 	leaq	(%rsi,%rax), %rdx
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r8, %r11, %r10
@@ -208,7 +204,7 @@ fe64_invert:
 	sbbq	%rax, %rax
 	andq	$38, %rax
 	leaq	(%rsi,%rax), %rax
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	104(%rsp), %rdx
 	mulxq	%rax, %rdi, %rsi
@@ -287,7 +283,7 @@ fe64_invert:
 	movq	%rsi, 72(%rsp)
 	movq	%r8, 80(%rsp)
 	movq	%r9, 88(%rsp)
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	(%rsp), %rdx
 	mulxq	%rax, %r10, %rdi
@@ -366,7 +362,7 @@ fe64_invert:
 	movq	%rdi, 8(%rsp)
 	movq	%r11, 16(%rsp)
 	movq	%rbp, 24(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%rdi, %r9, %r8
@@ -426,7 +422,7 @@ fe64_invert:
 	sbbq	%rax, %rax
 	andq	$38, %rax
 	leaq	(%rsi,%rax), %rax
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	64(%rsp), %rdx
 	mulxq	%rax, %rdi, %rsi
@@ -505,7 +501,7 @@ fe64_invert:
 	movq	%rsi, 72(%rsp)
 	movq	%r11, 80(%rsp)
 	movq	%rbp, 88(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%rsi, %r9, %r8
@@ -567,7 +563,7 @@ fe64_invert:
 	leaq	(%rdi,%rax), %rax
 	movq	$4, 96(%rsp)
 Lfe64_invert$8:
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rsi, %rax
@@ -629,7 +625,7 @@ Lfe64_invert$8:
 	andq	$38, %rcx
 	leaq	(%rsi,%rcx), %rdx
 	decq	96(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %r9, %r8
@@ -695,7 +691,7 @@ Lfe64_invert$8:
 	movq	%r9, 40(%rsp)
 	movq	%r8, 48(%rsp)
 	movq	%r10, 56(%rsp)
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	64(%rsp), %rdx
 	mulxq	%rax, %rdi, %rsi
@@ -776,7 +772,7 @@ Lfe64_invert$8:
 	movq	%rbp, 88(%rsp)
 	movq	$10, 96(%rsp)
 Lfe64_invert$7:
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rdi, %rax
@@ -838,7 +834,7 @@ Lfe64_invert$7:
 	andq	$38, %rcx
 	leaq	(%rdi,%rcx), %rdx
 	decq	96(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%r9, %rsi, %r11
@@ -900,7 +896,7 @@ Lfe64_invert$7:
 	leaq	(%rdi,%rax), %rax
 	decq	96(%rsp)
 	jne 	Lfe64_invert$7
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	64(%rsp), %rdx
 	mulxq	%rax, %r8, %rdi
@@ -981,7 +977,7 @@ Lfe64_invert$7:
 	movq	%r10, 56(%rsp)
 	movq	$20, 96(%rsp)
 Lfe64_invert$6:
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rsi, %rax
@@ -1043,7 +1039,7 @@ Lfe64_invert$6:
 	andq	$38, %rcx
 	leaq	(%rsi,%rcx), %rdx
 	decq	96(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %rdi, %r9
@@ -1105,7 +1101,7 @@ Lfe64_invert$6:
 	leaq	(%rsi,%rax), %rax
 	decq	96(%rsp)
 	jne 	Lfe64_invert$6
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	32(%rsp), %rdx
 	mulxq	%rax, %r8, %rsi
@@ -1182,7 +1178,7 @@ Lfe64_invert$6:
 	leaq	(%r8,%rcx), %rax
 	movq	$10, 96(%rsp)
 Lfe64_invert$5:
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rdi, %rax
@@ -1244,7 +1240,7 @@ Lfe64_invert$5:
 	andq	$38, %rcx
 	leaq	(%rdi,%rcx), %rdx
 	decq	96(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%r9, %rsi, %r11
@@ -1306,7 +1302,7 @@ Lfe64_invert$5:
 	leaq	(%rdi,%rax), %rax
 	decq	96(%rsp)
 	jne 	Lfe64_invert$5
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	64(%rsp), %rdx
 	mulxq	%rax, %r8, %rdi
@@ -1387,7 +1383,7 @@ Lfe64_invert$5:
 	movq	%r10, 88(%rsp)
 	movq	$50, 96(%rsp)
 Lfe64_invert$4:
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rsi, %rax
@@ -1449,7 +1445,7 @@ Lfe64_invert$4:
 	andq	$38, %rcx
 	leaq	(%rsi,%rcx), %rdx
 	decq	96(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %rdi, %r9
@@ -1511,7 +1507,7 @@ Lfe64_invert$4:
 	leaq	(%rsi,%rax), %rax
 	decq	96(%rsp)
 	jne 	Lfe64_invert$4
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	64(%rsp), %rdx
 	mulxq	%rax, %r8, %rsi
@@ -1592,7 +1588,7 @@ Lfe64_invert$4:
 	movq	%rbp, 56(%rsp)
 	movq	$100, 96(%rsp)
 Lfe64_invert$3:
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rdi, %rax
@@ -1654,7 +1650,7 @@ Lfe64_invert$3:
 	andq	$38, %rcx
 	leaq	(%rdi,%rcx), %rdx
 	decq	96(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%r9, %rsi, %r11
@@ -1716,7 +1712,7 @@ Lfe64_invert$3:
 	leaq	(%rdi,%rax), %rax
 	decq	96(%rsp)
 	jne 	Lfe64_invert$3
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	32(%rsp), %rdx
 	mulxq	%rax, %r8, %rdi
@@ -1793,7 +1789,7 @@ Lfe64_invert$3:
 	leaq	(%r8,%rcx), %rax
 	movq	$50, 96(%rsp)
 Lfe64_invert$2:
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rsi, %rax
@@ -1855,7 +1851,7 @@ Lfe64_invert$2:
 	andq	$38, %rcx
 	leaq	(%rsi,%rcx), %rdx
 	decq	96(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %rdi, %r9
@@ -1917,7 +1913,7 @@ Lfe64_invert$2:
 	leaq	(%rsi,%rax), %rax
 	decq	96(%rsp)
 	jne 	Lfe64_invert$2
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	64(%rsp), %rdx
 	mulxq	%rax, %r8, %rsi
@@ -1994,7 +1990,7 @@ Lfe64_invert$2:
 	leaq	(%r8,%rcx), %rdx
 	movq	$4, 96(%rsp)
 Lfe64_invert$1:
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%rsi, %r9, %r8
@@ -2055,7 +2051,7 @@ Lfe64_invert$1:
 	andq	$38, %rax
 	leaq	(%rdi,%rax), %rdx
 	decq	96(%rsp)
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%r9, %rsi, %r11
@@ -2117,7 +2113,7 @@ Lfe64_invert$1:
 	leaq	(%rdi,%rax), %rdx
 	decq	96(%rsp)
 	jne 	Lfe64_invert$1
-	movq	$0, %rax
+	xorl	%eax, %eax
 	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%rsi, %r9, %r8
@@ -2177,7 +2173,7 @@ Lfe64_invert$1:
 	sbbq	%rax, %rax
 	andq	$38, %rax
 	leaq	(%rdi,%rax), %rax
-	movq	$0, %rcx
+	xorl	%ecx, %ecx
 	xorq	%rcx, %rcx
 	movq	(%rsp), %rdx
 	mulxq	%rax, %rdi, %rsi
@@ -2264,4 +2260,4 @@ Lfe64_invert$1:
 	popq	%r12
 	popq	%rbx
 	popq	%rbp
-	ret
+	ret 

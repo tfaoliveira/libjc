@@ -24,7 +24,7 @@ fe64_mul:
 	movq	8(%rdx), %rcx
 	movq	16(%rdx), %rsi
 	movq	24(%rdx), %rdi
-	movq	$0, %r8
+	xorl	%r8d, %r8d
 	xorq	%r8, %r8
 	movq	8(%rsp), %rdx
 	mulxq	%rax, %r10, %r9

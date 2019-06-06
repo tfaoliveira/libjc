@@ -4,18 +4,15 @@ export fn fe64_invert(reg u64 _h _f)
 {
   inline int i;
   stack u64 _hs;
-  reg u64[4] h;
-  stack u64[4] fs;
-  reg u64 t;
+  reg u64[4] h f;
 
   _hs = _h;
 
   for i=0 to 4
-  { t = [_f + 8*i];
-    fs[i] = t;
+  { f[i] = [_f + 8*i];
   }
 
-  h = _fe64_invert(fs);
+  h = _fe64_invert(f);
 
   _h = _hs;
   for i=0 to 4

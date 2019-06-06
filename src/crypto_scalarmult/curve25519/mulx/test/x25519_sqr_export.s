@@ -16,7 +16,7 @@ fe64_sqr:
 	movq	8(%rsi), %rax
 	movq	16(%rsi), %rcx
 	movq	24(%rsi), %rsi
-	movq	$0, %rdi
+	xorl	%edi, %edi
 	xorq	%rdi, %rdi
 	mulxq	%rdx, %r9, %r8
 	mulxq	%rax, %r11, %r10

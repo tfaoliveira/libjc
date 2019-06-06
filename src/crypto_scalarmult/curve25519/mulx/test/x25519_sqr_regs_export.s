@@ -64,7 +64,7 @@ fe64_sqr_regs:
 	adcxq	%rax, %r13
 	movq	%r9, %rax
 	mulxq	%r11, %rdi, %rsi
-	adcxq	%rdi, %r13
+	adoxq	%rdi, %r13
 	adcxq	%rsi, %rax
 	movq	%r8, %rsi
 	mulxq	%rbx, %r8, %rdi
@@ -76,18 +76,22 @@ fe64_sqr_regs:
 	adcxq	%rdx, %rdi
 	adoxq	%rcx, %rdi
 	movq	$0, %rcx
-	movq	$0, %rdx
-	adcxq	%rcx, %rdx
-	adoxq	%rcx, %rdx
-	shlq	$1, %rdx
+	adoxq	%rcx, %rcx
+	sbbq	%rdx, %rdx
+	andq	$38, %rdx
+	negq	%rcx
+	andq	$38, %rcx
+	leaq	(%rdx,%rcx), %rdx
 	shlq	$1, %rdi
-	adcxq	%rcx, %rdx
+	sbbq	%rcx, %rcx
+	andq	$19, %rcx
+	leaq	(%rdx,%rcx), %rcx
 	shrq	$1, %rdi
-	imulq	$19, %rdx, %rdx
-	adcxq	%rdx, %r13
-	adcxq	%rcx, %rax
-	adcxq	%rcx, %rsi
-	adcxq	%rcx, %rdi
+	movq	$0, %rdx
+	addq	%rcx, %r13
+	adcxq	%rdx, %rax
+	adcxq	%rdx, %rsi
+	adcxq	%rdx, %rdi
 	movq	(%rsp), %rcx
 	movq	%r13, (%rcx)
 	movq	%rax, 8(%rcx)

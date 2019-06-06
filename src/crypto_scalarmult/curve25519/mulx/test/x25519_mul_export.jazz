@@ -18,7 +18,7 @@ export fn fe64_mul(reg u64 _h _f _g)
   for i=0 to 4
   { g[i] = [_g + 8*i]; }
 
-  h = _fe64_mul(f, g);
+  h = _fe64_mul_rsr(f, g);
 
   _h = _hs;
   for i=0 to 4

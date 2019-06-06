@@ -8,8 +8,6 @@ curve25519_mulx:
 	pushq	%rbx
 	pushq	%r12
 	pushq	%r13
-	pushq	%r14
-	pushq	%r15
 	subq	$344, %rsp
 	movq	%rdi, 336(%rsp)
 	movq	(%rsi), %rax
@@ -224,6 +222,7 @@ Lcurve25519_mulx$9:
 	movq	272(%rsp), %rsi
 	movq	280(%rsp), %rdi
 	xorl	%r8d, %r8d
+	xorq	%r8, %r8
 	movq	160(%rsp), %rdx
 	mulxq	%rax, %r10, %r9
 	mulxq	%rcx, %rbp, %r11
@@ -306,6 +305,7 @@ Lcurve25519_mulx$9:
 	movq	208(%rsp), %rsi
 	movq	216(%rsp), %rdi
 	xorl	%r8d, %r8d
+	xorq	%r8, %r8
 	movq	224(%rsp), %rdx
 	mulxq	%rax, %r10, %r9
 	mulxq	%rcx, %rbp, %r11
@@ -388,6 +388,7 @@ Lcurve25519_mulx$9:
 	movq	208(%rsp), %rcx
 	movq	216(%rsp), %rsi
 	xorl	%edi, %edi
+	xorq	%rdi, %rdi
 	mulxq	%rdx, %r9, %r8
 	mulxq	%rax, %r11, %r10
 	mulxq	%rcx, %rbx, %rbp
@@ -455,6 +456,7 @@ Lcurve25519_mulx$9:
 	movq	176(%rsp), %rcx
 	movq	184(%rsp), %rsi
 	xorl	%edi, %edi
+	xorq	%rdi, %rdi
 	mulxq	%rdx, %r9, %r8
 	mulxq	%rax, %r11, %r10
 	mulxq	%rcx, %rbx, %rbp
@@ -566,6 +568,7 @@ Lcurve25519_mulx$9:
 	movq	112(%rsp), %rsi
 	movq	120(%rsp), %rdi
 	xorl	%r8d, %r8d
+	xorq	%r8, %r8
 	movq	224(%rsp), %rdx
 	mulxq	%rax, %r10, %r9
 	mulxq	%rcx, %rbp, %r11
@@ -670,6 +673,7 @@ Lcurve25519_mulx$9:
 	movq	208(%rsp), %rcx
 	movq	216(%rsp), %rsi
 	xorl	%edi, %edi
+	xorq	%rdi, %rdi
 	mulxq	%rdx, %r9, %r8
 	mulxq	%rax, %r11, %r10
 	mulxq	%rcx, %rbx, %rbp
@@ -758,6 +762,7 @@ Lcurve25519_mulx$9:
 	movq	176(%rsp), %rcx
 	movq	184(%rsp), %rsi
 	xorl	%edi, %edi
+	xorq	%rdi, %rdi
 	mulxq	%rdx, %r9, %r8
 	mulxq	%rax, %r11, %r10
 	mulxq	%rcx, %rbx, %rbp
@@ -847,6 +852,7 @@ Lcurve25519_mulx$9:
 	movq	80(%rsp), %rsi
 	movq	88(%rsp), %rdi
 	xorl	%r8d, %r8d
+	xorq	%r8, %r8
 	movq	32(%rsp), %rdx
 	mulxq	%rax, %r10, %r9
 	mulxq	%rcx, %rbp, %r11
@@ -929,6 +935,7 @@ Lcurve25519_mulx$9:
 	movq	208(%rsp), %r9
 	movq	216(%rsp), %r10
 	xorl	%r11d, %r11d
+	xorq	%r11, %r11
 	movq	(%rsp), %rdx
 	mulxq	%rax, %rbp, %rsi
 	mulxq	%rcx, %r8, %rdi
@@ -1011,6 +1018,7 @@ Lcurve25519_mulx$9:
 	movq	%rdi, 208(%rsp)
 	movq	%r8, 216(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %r9, %rcx
 	mulxq	%rsi, %r11, %r10
 	mulxq	%rdi, %rbx, %rbp
@@ -1074,6 +1082,7 @@ Lcurve25519_mulx$9:
 	movq	%r10, 176(%rsp)
 	movq	%rbp, 184(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %r8, %rdi
 	mulxq	%r10, %rbx, %r9
@@ -1133,6 +1142,7 @@ Lcurve25519_mulx$9:
 	andq	$38, %rax
 	leaq	(%rsi,%rax), %rdx
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r8, %r11, %r10
 	mulxq	%rdi, %rbx, %rbp
@@ -1192,6 +1202,7 @@ Lcurve25519_mulx$9:
 	andq	$38, %rax
 	leaq	(%rsi,%rax), %rax
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	192(%rsp), %rdx
 	mulxq	%rax, %rdi, %rsi
 	mulxq	%r11, %r9, %r8
@@ -1270,6 +1281,7 @@ Lcurve25519_mulx$9:
 	movq	%r8, 144(%rsp)
 	movq	%r9, 152(%rsp)
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	160(%rsp), %rdx
 	mulxq	%rax, %r10, %rdi
 	mulxq	%rsi, %rbp, %r11
@@ -1348,6 +1360,7 @@ Lcurve25519_mulx$9:
 	movq	%r11, 176(%rsp)
 	movq	%rbp, 184(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%rdi, %r9, %r8
 	mulxq	%r11, %rbx, %r10
@@ -1407,6 +1420,7 @@ Lcurve25519_mulx$9:
 	andq	$38, %rax
 	leaq	(%rsi,%rax), %rax
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	128(%rsp), %rdx
 	mulxq	%rax, %rdi, %rsi
 	mulxq	%r9, %rbp, %r11
@@ -1485,6 +1499,7 @@ Lcurve25519_mulx$9:
 	movq	%r11, 144(%rsp)
 	movq	%rbp, 152(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%rsi, %r9, %r8
 	mulxq	%r11, %rbx, %r10
@@ -1546,6 +1561,7 @@ Lcurve25519_mulx$9:
 	movq	$4, 328(%rsp)
 Lcurve25519_mulx$8:
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rsi, %rax
 	mulxq	%r9, %r11, %rdi
@@ -1607,6 +1623,7 @@ Lcurve25519_mulx$8:
 	leaq	(%rsi,%rcx), %rdx
 	decq	328(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %r9, %r8
 	mulxq	%rdi, %rbx, %r10
@@ -1672,6 +1689,7 @@ Lcurve25519_mulx$8:
 	movq	%r8, 240(%rsp)
 	movq	%r10, 248(%rsp)
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	128(%rsp), %rdx
 	mulxq	%rax, %rdi, %rsi
 	mulxq	%r9, %rbp, %r11
@@ -1752,6 +1770,7 @@ Lcurve25519_mulx$8:
 	movq	$10, 328(%rsp)
 Lcurve25519_mulx$7:
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rdi, %rax
 	mulxq	%rsi, %r9, %r8
@@ -1813,6 +1832,7 @@ Lcurve25519_mulx$7:
 	leaq	(%rdi,%rcx), %rdx
 	decq	328(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%r9, %rsi, %r11
 	mulxq	%r8, %rbx, %rbp
@@ -1874,6 +1894,7 @@ Lcurve25519_mulx$7:
 	decq	328(%rsp)
 	jne 	Lcurve25519_mulx$7
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	128(%rsp), %rdx
 	mulxq	%rax, %r8, %rdi
 	mulxq	%rsi, %r10, %r9
@@ -1954,6 +1975,7 @@ Lcurve25519_mulx$7:
 	movq	$20, 328(%rsp)
 Lcurve25519_mulx$6:
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rsi, %rax
 	mulxq	%rdi, %r11, %r8
@@ -2015,6 +2037,7 @@ Lcurve25519_mulx$6:
 	leaq	(%rsi,%rcx), %rdx
 	decq	328(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %rdi, %r9
 	mulxq	%r8, %rbx, %r10
@@ -2076,6 +2099,7 @@ Lcurve25519_mulx$6:
 	decq	328(%rsp)
 	jne 	Lcurve25519_mulx$6
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	224(%rsp), %rdx
 	mulxq	%rax, %r8, %rsi
 	mulxq	%rdi, %rbp, %r11
@@ -2152,6 +2176,7 @@ Lcurve25519_mulx$6:
 	movq	$10, 328(%rsp)
 Lcurve25519_mulx$5:
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rdi, %rax
 	mulxq	%rsi, %r9, %r8
@@ -2213,6 +2238,7 @@ Lcurve25519_mulx$5:
 	leaq	(%rdi,%rcx), %rdx
 	decq	328(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%r9, %rsi, %r11
 	mulxq	%r8, %rbx, %rbp
@@ -2274,6 +2300,7 @@ Lcurve25519_mulx$5:
 	decq	328(%rsp)
 	jne 	Lcurve25519_mulx$5
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	128(%rsp), %rdx
 	mulxq	%rax, %r8, %rdi
 	mulxq	%rsi, %r10, %r9
@@ -2354,6 +2381,7 @@ Lcurve25519_mulx$5:
 	movq	$50, 328(%rsp)
 Lcurve25519_mulx$4:
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rsi, %rax
 	mulxq	%rdi, %r11, %r8
@@ -2415,6 +2443,7 @@ Lcurve25519_mulx$4:
 	leaq	(%rsi,%rcx), %rdx
 	decq	328(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %rdi, %r9
 	mulxq	%r8, %rbx, %r10
@@ -2476,6 +2505,7 @@ Lcurve25519_mulx$4:
 	decq	328(%rsp)
 	jne 	Lcurve25519_mulx$4
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	128(%rsp), %rdx
 	mulxq	%rax, %r8, %rsi
 	mulxq	%rdi, %rbp, %r11
@@ -2556,6 +2586,7 @@ Lcurve25519_mulx$4:
 	movq	$100, 328(%rsp)
 Lcurve25519_mulx$3:
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rdi, %rax
 	mulxq	%rsi, %r9, %r8
@@ -2617,6 +2648,7 @@ Lcurve25519_mulx$3:
 	leaq	(%rdi,%rcx), %rdx
 	decq	328(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%r9, %rsi, %r11
 	mulxq	%r8, %rbx, %rbp
@@ -2678,6 +2710,7 @@ Lcurve25519_mulx$3:
 	decq	328(%rsp)
 	jne 	Lcurve25519_mulx$3
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	224(%rsp), %rdx
 	mulxq	%rax, %r8, %rdi
 	mulxq	%rsi, %r10, %r9
@@ -2754,6 +2787,7 @@ Lcurve25519_mulx$3:
 	movq	$50, 328(%rsp)
 Lcurve25519_mulx$2:
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	%rax, %rdx
 	mulxq	%rdx, %rsi, %rax
 	mulxq	%rdi, %r11, %r8
@@ -2815,6 +2849,7 @@ Lcurve25519_mulx$2:
 	leaq	(%rsi,%rcx), %rdx
 	decq	328(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rsi, %rcx
 	mulxq	%r11, %rdi, %r9
 	mulxq	%r8, %rbx, %r10
@@ -2876,6 +2911,7 @@ Lcurve25519_mulx$2:
 	decq	328(%rsp)
 	jne 	Lcurve25519_mulx$2
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	128(%rsp), %rdx
 	mulxq	%rax, %r8, %rsi
 	mulxq	%rdi, %rbp, %r11
@@ -2952,6 +2988,7 @@ Lcurve25519_mulx$2:
 	movq	$4, 328(%rsp)
 Lcurve25519_mulx$1:
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%rsi, %r9, %r8
 	mulxq	%r11, %rbx, %r10
@@ -3012,6 +3049,7 @@ Lcurve25519_mulx$1:
 	leaq	(%rdi,%rax), %rdx
 	decq	328(%rsp)
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%r9, %rsi, %r11
 	mulxq	%r8, %rbx, %rbp
@@ -3073,6 +3111,7 @@ Lcurve25519_mulx$1:
 	decq	328(%rsp)
 	jne 	Lcurve25519_mulx$1
 	xorl	%eax, %eax
+	xorq	%rax, %rax
 	mulxq	%rdx, %rdi, %rcx
 	mulxq	%rsi, %r9, %r8
 	mulxq	%r11, %rbx, %r10
@@ -3132,6 +3171,7 @@ Lcurve25519_mulx$1:
 	andq	$38, %rax
 	leaq	(%rdi,%rax), %rax
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	160(%rsp), %rdx
 	mulxq	%rax, %rdi, %rsi
 	mulxq	%r9, %rbp, %r11
@@ -3206,6 +3246,7 @@ Lcurve25519_mulx$1:
 	andq	$38, %rcx
 	leaq	(%rdi,%rcx), %rax
 	xorl	%ecx, %ecx
+	xorq	%rcx, %rcx
 	movq	256(%rsp), %rdx
 	mulxq	%rax, %r8, %rdi
 	mulxq	%rsi, %r10, %r9
@@ -3303,8 +3344,6 @@ Lcurve25519_mulx$1:
 	movq	%r9, 16(%rcx)
 	movq	%rdx, 24(%rcx)
 	addq	$344, %rsp
-	popq	%r15
-	popq	%r14
 	popq	%r13
 	popq	%r12
 	popq	%rbx
