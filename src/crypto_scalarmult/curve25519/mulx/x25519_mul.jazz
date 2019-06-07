@@ -464,6 +464,17 @@ fn _fe64_mul_rsr
   return h;
 }
 
+fn _fe64_mul_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
+{
+  stack u64[4] hs;
+  reg u64[4] h;
+
+  h = _fe64_mul_rsr(fs, g);
+  hs = h;
+
+  return hs;
+}
+
 fn _fe64_mul_sss(stack u64[4] fs gs) -> stack u64[4]
 {
   stack u64[4] hs;

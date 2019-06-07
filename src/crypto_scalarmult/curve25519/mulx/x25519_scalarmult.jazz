@@ -55,8 +55,8 @@ fn _x25519_scalarmult(
 )
 {
   inline int i;
-  stack u64[4] x1 x2 z2 x3 z3 tmp0 tmp1;
-  reg u64[4] x2r z2r;
+  stack u64[4] x1 x2 z2 x3 z3 tmp0 tmp1 tmp2;
+  reg u64[4] x2r z2r z3r tmp1r;
   stack u8[32] e;
   reg u64 t swap pos b;
   stack u64 outs swaps poss;
@@ -92,24 +92,24 @@ fn _x25519_scalarmult(
                                                z2 = z2r;
     tmp0  = _fe64_sub_ssr(x2, z2r);
     x2    = _fe64_add_ssr(x2, z2r);
-                                             
+
     tmp1  = _fe64_sub_sss(x3, z3);
     z2    = _fe64_add_sss(x3, z3);
 
     z3    = _fe64_mul_sss(x2, tmp1);
     z2    = _fe64_mul_sss(z2, tmp0);
 
-    tmp1  = _fe64_sqr_ss(tmp0);
-    tmp0  = _fe64_sqr_ss(x2);
-
+    tmp2  = _fe64_sqr_ss(x2);
+    tmp1r = _fe64_sqr_ss(tmp0);
+                                               tmp1 = tmp1r;
     x3    = _fe64_add_sss(z3, z2);
     z2    = _fe64_sub_sss(z3, z2);
 
-    x2    = _fe64_mul_sss(tmp0, tmp1);
-    tmp0  = _fe64_sub_sss(tmp0, tmp1);
+    x2    = _fe64_mul_ssr(tmp2, tmp1r);
+    tmp0  = _fe64_sub_ssr(tmp2, tmp1r);
 
     z2    = _fe64_sqr_ss(z2);
-    z3    = _fe64_mul121666_s(tmp0);
+    z3    = _fe64_mul121666_ss(tmp0);
     x3    = _fe64_sqr_ss(x3);
 
     tmp1  = _fe64_add_sss(tmp1, z3);

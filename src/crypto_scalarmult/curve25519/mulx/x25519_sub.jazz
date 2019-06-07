@@ -49,11 +49,23 @@ fn _fe64_sub_sss(stack u64[4] fs gs) -> stack u64[4]
   return hs;
 }
 
-fn _fe64_sub_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
+fn _fe64_sub_rss(stack u64[4] fs gs) -> reg u64[4]
+{
+  stack u64[4] hs;
+  reg u64[4] h f;
+  reg u64 z;
+
+  z = #set0();
+  f = fs;
+  h = _fe64_sub_rrs(f, gs, z);
+
+  return h;
+}
+
+fn _fe64_sub_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
 {
   inline int i;
   reg bool cf;
-  stack u64[4] hs;
   reg u64[4] h;
   reg u64 z;
 
@@ -75,7 +87,17 @@ fn _fe64_sub_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
   z &= 38;
   h[0] -= z;
 
+  return h;
+}
+
+fn _fe64_sub_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
+{
+  stack u64[4] hs;
+  reg u64[4] h;
+
+  h = _fe64_sub_rsr(fs, g);
   hs = h;
+
   return hs;
 }
 
