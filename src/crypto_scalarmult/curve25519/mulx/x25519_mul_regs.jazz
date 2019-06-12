@@ -199,3 +199,30 @@ fn _fe64_mul_regs(stack u64[4] xs, reg u64[4] y) -> reg u64[4] {
 }
 
 #endif
+
+#if 0
+export fn x25519_fe64_mul(reg u64 f g) {
+ stack u64[4] bs;
+ reg u64[4] __R12 c;
+ reg u64 t;
+ stack u64 fs gs;
+ inline int i;
+ for i = 0 to 4 {
+  t = [f + 8*i];
+  bs[i] = t; 
+  t = [g + 8*i];
+  c[i] = t; 
+ }
+ fs = f;
+ gs = g;
+ __R12 = mul25519(bs,c);
+ f = fs;
+ g = gs;
+ for i = 0 to 4 {
+  t = __R12[i];
+  [f + 8*i] = t;
+  t = c[i];
+  [g + 8*i] = t;
+ } 
+}
+#endif
