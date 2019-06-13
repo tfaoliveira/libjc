@@ -62,4 +62,15 @@ fn _fe64_add_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
   return hs;
 }
 
+fn _fe64_add_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
+{
+  reg u64[4] h f;
+  reg u64 z;
+
+  z = #set0();
+  h = _fe64_add_rrs(g, fs, z);
+
+  return h;
+}
+
 #endif

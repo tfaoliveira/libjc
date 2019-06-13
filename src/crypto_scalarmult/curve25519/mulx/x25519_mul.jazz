@@ -464,6 +464,37 @@ fn _fe64_mul_rsr
   return h;
 }
 
+fn _fe64_mul_rmr
+( reg u64    fs,
+  reg u64[4] g
+) -> reg u64[4]
+{
+  reg bool cf of;
+  reg u64[4] h r;
+  reg u64 _38 f z;
+
+  z = #set0();
+  of, cf, _, _, _, z = #x86_XOR(z, z);
+
+  f = [fs + 8*0];
+  h, r, cf, of = fe64_mul_c0(      f, g, z, cf, of);
+
+  f = [fs + 8*1];
+  h, r, cf, of = fe64_mul_c1(h, r, f, g, z, cf, of);
+
+  f = [fs + 8*2];
+  h, r, cf, of = fe64_mul_c2(h, r, f, g, z, cf, of);
+
+  f = [fs + 8*3];
+  h, r, cf, of = fe64_mul_c3(h, r, f, g, z, cf, of);
+
+  _38 = 38;
+  h = _fe64_reduce(h, r, _38, z, cf, of);
+
+  return h;
+}
+
+
 fn _fe64_mul_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
 {
   stack u64[4] hs;
@@ -473,6 +504,16 @@ fn _fe64_mul_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
   hs = h;
 
   return hs;
+}
+
+fn _fe64_mul_rms(reg u64 fs, stack u64[4] gs) -> reg u64[4]
+{
+  reg u64[4] h g;
+
+  g = gs;
+  h = _fe64_mul_rmr(fs, g);
+
+  return h;
 }
 
 fn _fe64_mul_sss(stack u64[4] fs gs) -> stack u64[4]

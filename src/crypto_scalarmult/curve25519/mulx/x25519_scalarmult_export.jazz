@@ -4,3 +4,8 @@ export fn curve25519_mulx(reg u64 out scalar point)
 {
   _x25519_scalarmult(out, scalar, point);
 }
+
+export fn curve25519_mulx_base(reg u64 out scalar table)
+{
+  _x25519_scalarmult_base(out, scalar, table);
+}

@@ -16,7 +16,7 @@ export fn fe64_sub(reg u64 _h _f _g)
   }
 
   z = 0;
-  h = _fe64_sub(f, g, z);
+  h = _fe64_sub_rrs(f, g, z);
 
   for i=0 to 4
   { [_h + 8*i] = h[i]; }

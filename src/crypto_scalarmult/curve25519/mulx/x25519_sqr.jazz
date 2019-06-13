@@ -277,4 +277,25 @@ fn _fe64_sqr_ss(stack u64[4] fs) -> stack u64[4]
   return hs;
 }
 
+fn _fe64_sqr_sr(reg u64[4] f) -> stack u64[4]
+{
+  stack u64[4] hs;
+  reg u64[4] h;
+
+  h = _fe64_sqr_rr(f);
+  hs = h;
+
+  return hs;
+}
+
+fn _fe64_sqr_rs(stack u64[4] fs) -> reg u64[4]
+{
+  reg u64[4] f h;
+
+  f = fs;
+  h = _fe64_sqr_rr(f);
+
+  return h;
+}
+
 #endif
