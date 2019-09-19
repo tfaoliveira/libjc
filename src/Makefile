@@ -31,8 +31,16 @@ crypto_stream/chacha20/avx2/
 # --------------------------------------------------------------------
 .PHONY: default clean
 
+# TODO write something better for this task and prob. work the file names
+libjc.a:
+	(mkdir -p build/ && cd build/ && find ../crypto_* -type f -name "*.s" -o -name "*.c" | while read f; do nf=`echo -n "$$f" | sed -e 's/^\.\.\///g' -e 's/\//_/g'`; cp $$f $$nf; gcc -Wall -Ofast -c $$nf; done)
+	ar rc $@ build/*.o
+	ranlib $@
+	rm -fr build/
+
 default:
 	@for i in $(SUBDIRS); do $(MAKE) -C $$i; done
 
 clean:
 	@for i in $(SUBDIRS); do $(MAKE) -C $$i clean; done
+	@rm -fr libjc.a

@@ -466,6 +466,7 @@ do
 	    [ "$ok" = 1 ] || continue
 	    okar-$abi crT "$op.a" *.o `(find . -maxdepth 1 -type f -name "*.a")` || continue
 	    ranlib "$op.a"
+###
 
 	    killafter 300 \
 	    $compiler -DSUPERCOP -DSMALL \

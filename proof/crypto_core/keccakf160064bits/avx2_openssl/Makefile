@@ -3,7 +3,7 @@
 .PHONY: default
 
 ROOT=../../../..
-IDIR=$(ROOT)/src/crypto_core/keccakf160064bits/avx2-openssl
+IDIR=$(ROOT)/src/crypto_core/keccakf160064bits/avx2_openssl
 IFIL=$(IDIR)/keccak_f1600_export.japp
 
 default: keccak_f1600_avx2_openssl.ec

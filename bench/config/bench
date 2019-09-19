@@ -1,1 +1,3 @@
-crypto_hash shake256 evercrypt/compact_gcc
+crypto_onetimeauth poly1305 jazz/ref3
+crypto_onetimeauth poly1305 jazz/avx
+crypto_onetimeauth poly1305 jazz/avx2

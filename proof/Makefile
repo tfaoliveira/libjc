@@ -6,7 +6,8 @@ ECCHECK  ?=
 ECARGS   ?=
 ECCONF   := tests.config 
 XUNITOUT ?= xunit.xml
-CHECKS   ?= chacha20 poly1305 crypto_core crypto_hash
+#CHECKS   ?= chacha20 poly1305 crypto_core crypto_hash
+CHECKS   ?= chacha20 poly1305
 
 ifeq ($(ECCHECK),)
 ifeq ($(ECROOT),)

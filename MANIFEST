@@ -24,7 +24,7 @@ find:proof/eclib:*.ec
 
 src/crypto_core/keccakf160064bits/ref/keccak_f1600.jazz
 src/crypto_core/keccakf160064bits/scalar/keccak_f1600.jazz
-src/crypto_core/keccakf160064bits/avx2-openssl/keccak_f1600.jazz
+src/crypto_core/keccakf160064bits/avx2_openssl/keccak_f1600.jazz
 src/crypto_core/keccakf160064bits/avx2/keccak_f1600.jazz
 src/crypto_hash/keccak1600/ref/keccak_1600.jazz
 src/crypto_hash/keccak1600/scalar/keccak_1600.jazz
@@ -52,9 +52,9 @@ proof/crypto_core/keccakf160064bits/scalar/WArray200.ec
 proof/crypto_core/keccakf160064bits/scalar/WArray40.ec
 proof/crypto_core/keccakf160064bits/scalar/Array25.ec
 proof/crypto_core/keccakf160064bits/scalar/Array5.ec
-proof/crypto_core/keccakf160064bits/avx2-openssl/Array9.ec
-proof/crypto_core/keccakf160064bits/avx2-openssl/keccak_f1600_avx2_openssl.ec
-proof/crypto_core/keccakf160064bits/avx2-openssl/WArray288.ec
+proof/crypto_core/keccakf160064bits/avx2_openssl/Array9.ec
+proof/crypto_core/keccakf160064bits/avx2_openssl/keccak_f1600_avx2_openssl.ec
+proof/crypto_core/keccakf160064bits/avx2_openssl/WArray288.ec
 proof/crypto_core/keccakf160064bits/avx2/Array9.ec
 proof/crypto_core/keccakf160064bits/avx2/WArray288.ec
 proof/crypto_core/keccakf160064bits/avx2/WArray224.ec
