@@ -1,4 +1,4 @@
-#include "crypto_core/keccakf160064bits/avx2-openssl/keccak_f1600.jazz"
+#include "crypto_core/keccakf160064bits/avx2_openssl/keccak_f1600.jazz"
 
 //
 // TODO : rewrite to match crypto_core

@@ -4,12 +4,15 @@
 	.globl	keccak_1600
 _keccak_1600:
 keccak_1600:
-	pushq	%rbp
 	pushq	%rbx
+	pushq	%rbp
 	pushq	%r12
 	pushq	%r13
 	pushq	%r14
+	pushq	%r15
+	movq	%rsp, %r15
 	subq	$256, %rsp
+	andq	$-32, %rsp
 	movb	(%r8), %al
 	movq	8(%r8), %r8
 	movq	(%r9), %r10
@@ -509,12 +512,13 @@ Lkeccak_1600$2:
 Lkeccak_1600$1:
 	cmpq	%rsi, %rcx
 	jb  	Lkeccak_1600$2
-	addq	$256, %rsp
+	movq	%r15, %rsp
+	popq	%r15
 	popq	%r14
 	popq	%r13
 	popq	%r12
-	popq	%rbx
 	popq	%rbp
+	popq	%rbx
 	ret 
 	.data
 	.globl	_g_zero

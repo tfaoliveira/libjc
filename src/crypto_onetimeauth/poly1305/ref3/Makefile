@@ -1,16 +1,6 @@
-# -*- Makefile -*-
 
-# --------------------------------------------------------------------
--include ../Makefile.common
-
-# --------------------------------------------------------------------
-.PHONY: default clean
-
-default: poly1305.japp poly1305.s
+default: poly1305_export.japp poly1305_export.s
 	@true
 
-clean:
-	rm -f poly1305.japp poly1305.s
+include ../../../Makefile.common
 
-poly1305.japp: poly1305_export.jazz
-		gpp -o $@ $<

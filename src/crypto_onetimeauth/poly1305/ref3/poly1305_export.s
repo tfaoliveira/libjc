@@ -4,13 +4,16 @@
 	.globl	poly1305_ref3
 _poly1305_ref3:
 poly1305_ref3:
-	pushq	%rbp
 	pushq	%rbx
+	pushq	%rbp
 	pushq	%r12
 	pushq	%r13
 	pushq	%r14
 	pushq	%r15
-	subq	$16, %rsp
+	movq	%rsp, %rbp
+	subq	$24, %rsp
+	andq	$-32, %rsp
+	movq	%rbp, (%rsp)
 	movq	$0, %r8
 	movq	$0, %r9
 	movq	$0, %r10
@@ -26,7 +29,6 @@ poly1305_ref3:
 	addq	$16, %rcx
 	movq	%rdx, %r12
 	jmp 	Lpoly1305_ref3$4
-.p2align 5,,
 Lpoly1305_ref3$5:
 	addq	(%rsi), %r8
 	adcq	8(%rsi), %r9
@@ -68,20 +70,20 @@ Lpoly1305_ref3$4:
 	jnb 	Lpoly1305_ref3$5
 	cmpq	$0, %r12
 	jbe 	Lpoly1305_ref3$1
-	movq	$0, (%rsp)
 	movq	$0, 8(%rsp)
+	movq	$0, 16(%rsp)
 	movq	$0, %rax
 	jmp 	Lpoly1305_ref3$2
 Lpoly1305_ref3$3:
 	movb	(%rsi,%rax), %dl
-	movb	%dl, (%rsp,%rax)
+	movb	%dl, 8(%rsp,%rax)
 	incq	%rax
 Lpoly1305_ref3$2:
 	cmpq	%r12, %rax
 	jb  	Lpoly1305_ref3$3
-	movb	$1, (%rsp,%rax)
-	addq	(%rsp), %r8
-	adcq	8(%rsp), %r9
+	movb	$1, 8(%rsp,%rax)
+	addq	8(%rsp), %r8
+	adcq	16(%rsp), %r9
 	adcq	$0, %r10
 	movq	%rbx, %rsi
 	imulq	%r10, %rsi
@@ -134,11 +136,11 @@ Lpoly1305_ref3$1:
 	adcq	%rcx, %rdx
 	movq	%rax, (%rdi)
 	movq	%rdx, 8(%rdi)
-	addq	$16, %rsp
+	movq	(%rsp), %rsp
 	popq	%r15
 	popq	%r14
 	popq	%r13
 	popq	%r12
-	popq	%rbx
 	popq	%rbp
+	popq	%rbx
 	ret 

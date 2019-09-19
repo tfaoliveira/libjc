@@ -1,9 +1,5 @@
-#include "crypto_hash.h"
-#include "impl.h"
-#include "api.h"
 #include <string.h>
 #include <stdint.h>
-
 
 extern void keccak_1600(
          uint8_t *out,
@@ -13,7 +9,6 @@ extern void keccak_1600(
         uint64_t *c,
         uint64_t **g
 );
-
 
 uint64_t rhotates_left[6*4] __attribute__((aligned(32))) =
 {
@@ -25,7 +20,6 @@ uint64_t rhotates_left[6*4] __attribute__((aligned(32))) =
   44, 43, 21, 14
 };
 
-
 uint64_t rhotates_right[6*4] __attribute__((aligned(32))) =
 {
     64-3,  64-18, 64-36, 64-41,
@@ -35,7 +29,6 @@ uint64_t rhotates_right[6*4] __attribute__((aligned(32))) =
     64-2,  64-15, 64-25, 64-20,
     64-44, 64-43, 64-21, 64-14
 };
-
 
 uint64_t iotas[24*4] __attribute__((aligned(32))) =
 {
@@ -65,7 +58,6 @@ uint64_t iotas[24*4] __attribute__((aligned(32))) =
   0x8000000080008008UL, 0x8000000080008008UL, 0x8000000080008008UL, 0x8000000080008008UL
 };
 
-
 uint64_t a_jagged[25] __attribute__((aligned(32))) =
 {
    0,  4,  5,  6,  7,
@@ -75,7 +67,6 @@ uint64_t a_jagged[25] __attribute__((aligned(32))) =
    9, 20, 17, 14, 27
 };
 
-
 int sha3256_avx2(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
   uint64_t *g[] = {rhotates_left, rhotates_right, iotas, a_jagged};
@@ -83,3 +74,4 @@ int sha3256_avx2(unsigned char *out,const unsigned char *in,unsigned long long i
   keccak_1600(out, 32, in, inlen, c, g);
   return 0;
 }
+

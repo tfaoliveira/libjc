@@ -1,9 +1,5 @@
-#include "crypto_hash.h"
-#include "impl.h"
-#include "api.h"
 #include <string.h>
 #include <stdint.h>
-
 
 extern void keccak_1600(
          uint8_t *out,
@@ -13,7 +9,6 @@ extern void keccak_1600(
         uint64_t *c,
         uint64_t *iotas
 );
-
 
 uint64_t iotas[32] __attribute__((aligned(256))) = 
 {
@@ -43,7 +38,6 @@ uint64_t iotas[32] __attribute__((aligned(256))) =
    , 0x0000000080000001
    , 0x8000000080008008
 };
-
 
 int sha3256_scalar(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {

@@ -4,13 +4,9 @@
 	.globl	chacha20_avx2
 _chacha20_avx2:
 chacha20_avx2:
-	pushq	%rbp
-#
-	pushq	%r15
-	subq	$1156,	%rsp
-	movq	%rsp,	%r15
-	andq	$-32,	%rsp
-#
+	movq	%rsp, %r11
+	subq	$1156, %rsp
+	andq	$-32, %rsp
 	cmpl	$257, %edx
 	jb  	Lchacha20_avx2$1
 	vmovdqu	g_r16(%rip), %ymm0
@@ -957,14 +953,7 @@ Lchacha20_avx2$5:
 	jb  	Lchacha20_avx2$6
 Lchacha20_avx2$4:
 Lchacha20_avx2$2:
-#
-	movq	%r15,	%rsp
-#
-	addq	$1156,	%rsp
-#
-	popq	%r15
-#
-	popq	%rbp
+	movq	%r11, %rsp
 	ret 
 	.data
 	.globl	_g_p0

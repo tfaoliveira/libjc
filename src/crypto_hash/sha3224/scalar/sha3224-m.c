@@ -1,9 +1,5 @@
-#include "crypto_hash.h"
-#include "impl.h"
-#include "api.h"
 #include <string.h>
 #include <stdint.h>
-
 
 extern void keccak_1600(
          uint8_t *out,
@@ -13,7 +9,6 @@ extern void keccak_1600(
         uint64_t *c,
         uint64_t *iotas
 );
-
 
 uint64_t iotas[32] __attribute__((aligned(256))) = 
 {

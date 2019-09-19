@@ -1,12 +1,6 @@
-# -*- Makefile -*-
 
-.PHONY: default clean
-
-default: keccak_1600.japp
+default: keccak_1600.japp keccak_1600.s
 	@true
 
-clean:
-	rm -f keccak_1600.japp
+include ../../../Makefile.common
 
-%.japp: %.jazz
-	gpp -I../../../ -o $@ $<

@@ -4,16 +4,16 @@
 	.globl	poly1305_avx
 _poly1305_avx:
 poly1305_avx:
-	pushq	%rbp
 	pushq	%rbx
+	pushq	%rbp
 	pushq	%r12
 	pushq	%r13
 	pushq	%r14
 	pushq	%r15
-	subq	$560, %rsp
-	movq  %rsp, %r15
-	andq  $-32, %rsp
-	movq  %r15, -8(%rsp)
+	movq	%rsp, %rbp
+	subq	$568, %rsp
+	andq	$-32, %rsp
+	movq	%rbp, 544(%rsp)
 	cmpq	$1024, %rdx
 	jb  	Lpoly1305_avx$1
 	movq	%rdx, %r8
@@ -229,7 +229,6 @@ poly1305_avx:
 	vpbroadcastq	bit25_u64(%rip), %xmm5
 	vmovdqu	%xmm5, 240(%rsp)
 	jmp 	Lpoly1305_avx$13
-.p2align 5,,
 Lpoly1305_avx$14:
 	vmovdqu	464(%rsp), %xmm5
 	vmovdqu	480(%rsp), %xmm6
@@ -567,20 +566,20 @@ Lpoly1305_avx$11:
 	jnb 	Lpoly1305_avx$12
 	cmpq	$0, %r8
 	jbe 	Lpoly1305_avx$8
-	movq	$0, 544(%rsp)
 	movq	$0, 552(%rsp)
+	movq	$0, 560(%rsp)
 	movq	$0, %rax
 	jmp 	Lpoly1305_avx$9
 Lpoly1305_avx$10:
 	movb	(%rsi,%rax), %dl
-	movb	%dl, 544(%rsp,%rax)
+	movb	%dl, 552(%rsp,%rax)
 	incq	%rax
 Lpoly1305_avx$9:
 	cmpq	%r8, %rax
 	jb  	Lpoly1305_avx$10
-	movb	$1, 544(%rsp,%rax)
-	addq	544(%rsp), %rbx
-	adcq	552(%rsp), %r12
+	movb	$1, 552(%rsp,%rax)
+	addq	552(%rsp), %rbx
+	adcq	560(%rsp), %r12
 	adcq	$0, %r13
 	movq	%r11, %rsi
 	imulq	%r13, %rsi
@@ -691,20 +690,20 @@ Lpoly1305_avx$6:
 	jnb 	Lpoly1305_avx$7
 	cmpq	$0, %r12
 	jbe 	Lpoly1305_avx$3
-	movq	$0, 544(%rsp)
 	movq	$0, 552(%rsp)
+	movq	$0, 560(%rsp)
 	movq	$0, %rax
 	jmp 	Lpoly1305_avx$4
 Lpoly1305_avx$5:
 	movb	(%rsi,%rax), %dl
-	movb	%dl, 544(%rsp,%rax)
+	movb	%dl, 552(%rsp,%rax)
 	incq	%rax
 Lpoly1305_avx$4:
 	cmpq	%r12, %rax
 	jb  	Lpoly1305_avx$5
-	movb	$1, 544(%rsp,%rax)
-	addq	544(%rsp), %r8
-	adcq	552(%rsp), %r9
+	movb	$1, 552(%rsp,%rax)
+	addq	552(%rsp), %r8
+	adcq	560(%rsp), %r9
 	adcq	$0, %r10
 	movq	%rbx, %rsi
 	imulq	%r10, %rsi
@@ -758,14 +757,13 @@ Lpoly1305_avx$3:
 	movq	%rax, (%rdi)
 	movq	%rdx, 8(%rdi)
 Lpoly1305_avx$2:
-	movq -8(%rsp), %rsp
-	addq	$560, %rsp
+	movq	544(%rsp), %rsp
 	popq	%r15
 	popq	%r14
 	popq	%r13
 	popq	%r12
-	popq	%rbx
 	popq	%rbp
+	popq	%rbx
 	ret 
 	.data
 	.globl	_bit25_u64
