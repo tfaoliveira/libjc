@@ -55,6 +55,12 @@ if [ "$#" -eq 0 ]; then
   )
   rename_lib libsodium_static_disable_asm;
 
+  # libsodium static_disable_asm_ccomp
+  (cd third_party/libsodium/ && \
+    make distclean && env CC=ccomp CFLAGS="-O2 -fstruct-passing -Usize_t" ./configure --disable-shared --enable-static --disable-asm && make && \
+    cp src/libsodium/.libs/libsodium.a ../../$idir/libsodium_static_disable_asm_ccomp.a
+  )
+  rename_lib libsodium_static_disable_asm_ccomp;
 
   # openssl static
   (cd third_party/openssl/ && \
