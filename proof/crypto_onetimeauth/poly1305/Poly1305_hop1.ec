@@ -149,24 +149,16 @@ async while
            in_0{1} + W64.of_int 16 = in_00{2})
       )).
  (* inv3 => c1 \/ c2 => inv1 => c1 /\ c2 /\ f p /\ g q *)
- + progress. 
-   - elim H2.
-   - smt.
-   - rewrite uleE; smt.
-   - elim: H1; progress; left; last smt.
-     elim: H2; rewrite uleE; smt.
-   - elim: H1; progress; smt.
-   - smt.
-   - smt.
+ + by rewrite !ultE !uleE /#. 
  (* inv3 => c1 \/ c2 => !inv1 => inv2 => c1 *)
- + progress; smt.
+ + by rewrite !ultE !uleE /#. 
  (* inv3 => c1 \/ c2 => !inv1 => !inv2 => c2 *)
- + progress; smt.  
+ + by rewrite !ultE !uleE /#. 
  (* {inv3 /\ c1 /\ !inv1 /\ inv2} Body1 {inv3} *)
- + move => *; auto => /> *; smt.
+ + move => *; wp; skip; rewrite !ultE !uleE => /> *.
+   by rewrite to_uintB ?uleE //= /#.
  (* { inv3 /\ c2 /\ !inv1 /\ !inv2} Body2 {inv3} *)
- + move => *; exfalso. 
-   move => //= *; smt.
+ + move => *; exfalso; smt().
  + move => *. 
    while 
      (#{/~inlen0{2}}
@@ -191,44 +183,22 @@ async while
            in_0{1} + W64.of_int (3*16) = in_00{2} /\
           v1_ = (to_uint inlen0{2})%r + 64%r /\ v2_ = (to_uint inlen0{1})%r + 16%r) 
         )).
-    inline *; auto => /> *; progress.
-    - smt.
-    - move : H2 H4; rewrite uleE //=.
-      elim H1; progress.
-       elim: H3; last smt.
-       rewrite to_uintB //; first by move: H6; rewrite !uleE /#.
-       move: H6; rewrite uleE; progress; right; split.
-        rewrite to_uintB; first by rewrite uleE /#.
-        smt.
-       rewrite !to_uintB; first by rewrite uleE /#.
-       smt.
-      smt.
-    - smt.
-    - smt.
-    - smt.
-    - smt.
-    - smt.
-    - skip; auto => /> *; progress.
-       smt. smt. smt().
-       elim H2; rewrite uleE //=; smt.
-       elim H2; rewrite uleE //=; smt.
-       smt.         
-    - smt.
+    inline *; wp; skip; rewrite !ultE !uleE => /> ????; elim; progress;
+    [ 1,2,8,9: by rewrite ?uleE !to_uintB ?uleE /#
+    | 3,4,10,11: by move: H7 H9; rewrite ?uleE !to_uintB ?uleE /#
+    | 5..7,12..: by move: H7 H8; rewrite ?uleE !to_uintB ?uleE /#
+    ].
+    - skip; rewrite !ultE !uleE => /> ????; elim; progress; smt().
  (* inv3 ==> islossless while(c1 /\ !inv1 /\ inv2) Body1 *)
  + while true (W64.to_uint inlen0).
-    move => *; wp; skip; progress => //=; rewrite to_uintB; first smt().
-    smt.
-   skip; progress; smt.
+    by move => *; wp; skip; progress => //=; rewrite to_uintB /#. 
+   by skip; progress; rewrite uleE /#.
  (* inv3 ==> islossless while(c1 /\ !inv1 /\ !inv2) Body2 *)
  + while (#pre) (W64.to_uint inlen0).
-    move => *; wp; skip; progress => //=.
-      rewrite to_uintB; first by rewrite uleE /#.
-      elim H3; first smt().
-      smt.
-     smt.
-    smt.
-   skip; progress; smt. 
+    by move => *; wp; skip; rewrite !ultE !uleE => ? /> ??; elim; smt().
+   by skip; rewrite !ultE !uleE => ? /> ??; elim; smt().
  (* !c1 => !c2 => inv3 => #post *)
- + skip; progress; smt.
+ + skip; rewrite !ultE => /> ????????.
+   rewrite !uleE of_uintK /= negb_and; move => [?|?] /> ??; elim; smt(@W64).
 qed.
 

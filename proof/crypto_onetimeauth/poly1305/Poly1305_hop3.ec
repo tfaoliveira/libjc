@@ -175,7 +175,8 @@ equiv update_eq :
    to_uint res{2}.`2 < 16 /\ to_uint res{2}.`1 + to_uint res{2}.`2 < W64.modulus.
 proof.
 proc => /=.
-while (#pre); last by skip; progress; smt.
+while (#pre); last first.
+ by skip => /> ???????????; rewrite !uleE /#.
 seq 2 1: (#[/1:5,6:]pre /\ ubW64 6 h{2}.[2]).
  exists* Glob.mem{2}, h{2}, in_0{2}; elim* => mem hh inp.
  call{2} (load_add_spec mem hh inp); wp; skip; progress.
@@ -187,9 +188,9 @@ call{2} (Rep3Limb.mulmod_spec hh rr); skip; progress.
 move: {H1} H2; rewrite uleE of_uintK modz_small // => *.
 rewrite to_uintD modz_small of_uintK modz_small //.
  apply bound_abs; split; first smt(W64.to_uint_cmp).
- smt.
+ smt().
 rewrite to_uintB; first by rewrite uleE of_uintK modz_small.
-rewrite of_uintK modz_small //; smt.
+rewrite of_uintK modz_small // /#.
 qed.
 
 equiv finish_eq :
@@ -270,7 +271,7 @@ unroll for 3.
 inline Mhop3.Rep5Impl.x5; wp.
 seq 7 : (#pre /\ repres3 rt = repres3r rr /\ ubW64 4 rt.[2]) => //=.
  auto => />. progress. rewrite repres3E /valRep3 /valRep3r.
- by rewrite  /val_digits /to_list /mkseq repres3rE /= smt.
+ by rewrite  /val_digits /to_list /mkseq repres3rE /=.
 seq 2 : (#{/~rt}pre /\ repres5 rpow1 = repres3r rr /\ bRep5 28 rpow1 /\
               repres3 rt = repres3r rr * repres3r rr /\ ubW64 4 rt.[2]) => //=.
  exists* rt; elim* => rtt.
@@ -291,9 +292,11 @@ seq 2 : (#{/~rt}pre /\ repres5 rpow3 = repres3r rr * repres3r rr * repres3r rr /
  auto => />; progress; smt().
 exists* rt; elim* => rtt.
 call (unpack_spec_h rtt).
-skip; rewrite /mul5Rep54 /=; auto => />; progress; 
-[ 1: smt() 
-| 2..: by rewrite -Array4.ext_eq_all /all_eq; progress; ring ].
+skip; rewrite /mul5Rep54 /=; auto => />; progress;
+[ 1: smt()
+| 2..: move: H5 H7 H9 H13; rewrite !bRep5E; progress;
+       (rewrite -Array4.ext_eq_all /all_eq !mulu64E /=; first 8 smt(@BW64'));
+       progress; ring ].
 qed.
 
 lemma precompute_Rep5_spec_ll : islossless Mhop3.precompute_Rep5.
@@ -332,7 +335,7 @@ move=> X ?[??]; clear X; split; first done.
 split; last done.
 rewrite H0 /load_block /load_lblock repres2E /= -inzpD; congr.
 rewrite -(W16u8.Pack.init_ext (fun i => mem.[to_uint ptr + i])) 1:/#.
-rewrite to_uintD_small of_uintK modz_small //; first smt.
+rewrite to_uintD_small of_uintK modz_small //; first by move: H; smt().
 rewrite !load8u8' /val_digits /mkseq /=.
 rewrite !(to_uint_unpack8u8 (W8u8.pack8 _)) /=.
 rewrite (to_uint_unpack16u8 (W16u8.pack16_t _)) /=.
@@ -359,7 +362,7 @@ wp; ecall (load_1x_Rep5_spec_h mem (ptr + (of_int 48)%W64)).
 wp; ecall (load_1x_Rep5_spec_h mem (ptr + (of_int 32)%W64)).
 wp; ecall (load_1x_Rep5_spec_h mem (ptr + (of_int 16)%W64)).
 wp; ecall (load_1x_Rep5_spec_h mem ptr).
-skip; progress; smt.
+skip; progress; rewrite ?to_uintD_small ?of_uintK /=; smt().
 qed.
 
 lemma load4x_spec_ll: islossless Mhop3.load_4x_Rep5 by islossless.
@@ -562,19 +565,23 @@ wp; seq 13 11: (256 < to_uint inlen0{2} /\ ={Glob.mem, out0, in_00, inlen0} /\
  ecall {2} (precompute_Rep5_spec r{2}).
  inline Mhop2.load_4x Mhop3.Rep5Impl.zero Mhop2.poly1305_setup; wp.
  ecall {2} (clamp_spec Glob.mem{2} k0{2}).
- wp; skip; rewrite /inv_ptr; progress;
- [ 1,4,6..10,19..22: smt()
- | 2,5: smt 
+ wp; skip; rewrite /inv_ptr ultE /=; progress;
+ [ 1..4,6..10,19..22: smt()
+ | 5: rewrite H28 to_uintD_small of_uintK /#
  | 11,13,15,17: rewrite repres5E valRep5E ; smt()
- | 12,14,16,18: rewrite bRep5E /=; smt
+ | 12,14,16,18: rewrite bRep5E; progress; smt(@BW64 bW64_0)
  ].
- by move: H2; rewrite ultE; smt().
 while (#[2:]pre /\ 64 <= to_uint inlen0{2}).
  inline Mhop2.load_4x; wp. 
  ecall {2} (load4x_spec Glob.mem{2} in_00{2}).
  ecall {2} (add_mulmod_x4_Rep5_spec h1{2} h2{2} h3{2} h4{2} x1{2} x2{2} x3{2} x4{2} rpow4{2}).
- skip; progress; [1: smt | 3: rewrite !to_uintB; smt | 2,4..11: smt() ].
- by move: H17; rewrite uleE of_uintK modz_small // => *; rewrite to_uintB; smt.
-by skip; progress; [ 1,2: smt() | 3: rewrite !to_uintB; smt | 4: smt ].
+ skip; rewrite !uleE; progress;
+ [1,2,4..11: smt()
+ |3,5 : rewrite to_uintB ?uleE ?of_uintK /= 1:/# H45 to_uintD_small of_uintK /#
+ |12: rewrite to_uintB ?uleE ?of_uintK /= /#
+ ].
+skip; progress; first 2 smt().
+ by move: H17 H18; rewrite to_uintB !uleE of_uintK /#.
+by rewrite to_uintD_small of_uintK /#.
 qed.
 

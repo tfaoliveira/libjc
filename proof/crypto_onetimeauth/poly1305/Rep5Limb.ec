@@ -9,6 +9,13 @@ require ZModP.
 import Zp.
 
 
+
+
+lemma mulu64E (x y: W64.t): bW64 32 x => bW64 32 y => mulu64 x y = x * y.
+proof.
+by rewrite /mulu64 !W2u32.zeroext_truncateu32_and !bW64andmaskE // => <- <-.
+qed.
+
 (* *)
 axiom x86_SHRD_64_spec r1 r2 k:
  0 <= k <= 64 =>
@@ -292,59 +299,59 @@ module Mrep5 = {
 
   proc x5 (r:Rep5) : W64.t Array4.t = {
     var r5 : W64.t Array4.t;
-    r5.[0] <- u64_5 * r.[1];
-    r5.[1] <- u64_5 * r.[2];
-    r5.[2] <- u64_5 * r.[3];
-    r5.[3] <- u64_5 * r.[4];
+    r5.[0] <- mulu64 u64_5 r.[1];
+    r5.[1] <- mulu64 u64_5 r.[2];
+    r5.[2] <- mulu64 u64_5 r.[3];
+    r5.[3] <- mulu64 u64_5 r.[4];
     return r5;
   }
 
   proc mulmod(h r: Rep5, rx5 : W64.t Array4.t) = {
     var t:W64.t Array5.t;
     var u:W64.t Array4.t;
-    t.[0] <- h.[0] * r.[0];
-    t.[1] <- h.[1] * r.[0];
-    t.[2] <- h.[2] * r.[0];
-    t.[3] <- h.[3] * r.[0];
-    t.[4] <- h.[4] * r.[0];
-    u.[0] <- h.[0] * r.[1];
-    u.[1] <- h.[1] * r.[1];
-    u.[2] <- h.[2] * r.[1];
-    u.[3] <- h.[3] * r.[1];
+    t.[0] <- mulu64 h.[0] r.[0];
+    t.[1] <- mulu64 h.[1] r.[0];
+    t.[2] <- mulu64 h.[2] r.[0];
+    t.[3] <- mulu64 h.[3] r.[0];
+    t.[4] <- mulu64 h.[4] r.[0];
+    u.[0] <- mulu64 h.[0] r.[1];
+    u.[1] <- mulu64 h.[1] r.[1];
+    u.[2] <- mulu64 h.[2] r.[1];
+    u.[3] <- mulu64 h.[3] r.[1];
     t.[1] <- t.[1] + u.[0];
     t.[2] <- t.[2] + u.[1];
     t.[3] <- t.[3] + u.[2];
     t.[4] <- t.[4] + u.[3];
-    u.[0] <- h.[1] * rx5.[3];
-    u.[1] <- h.[2] * rx5.[3];
-    u.[2] <- h.[3] * rx5.[3];
-    u.[3] <- h.[4] * rx5.[3];
+    u.[0] <- mulu64 h.[1] rx5.[3];
+    u.[1] <- mulu64 h.[2] rx5.[3];
+    u.[2] <- mulu64 h.[3] rx5.[3];
+    u.[3] <- mulu64 h.[4] rx5.[3];
     t.[0] <- t.[0] + u.[0];
     t.[1] <- t.[1] + u.[1];
     t.[2] <- t.[2] + u.[2];
     t.[3] <- t.[3] + u.[3];
-    u.[0] <- h.[0] * r.[2];
-    u.[1] <- h.[1] * r.[2];
-    u.[2] <- h.[2] * r.[2];
+    u.[0] <- mulu64 h.[0] r.[2];
+    u.[1] <- mulu64 h.[1] r.[2];
+    u.[2] <- mulu64 h.[2] r.[2];
     t.[2] <- t.[2] + u.[0];
     t.[3] <- t.[3] + u.[1];
     t.[4] <- t.[4] + u.[2];
-    u.[0] <- h.[2] * rx5.[2];
-    u.[1] <- h.[3] * rx5.[2];
-    h.[2] <- h.[4] * rx5.[2];
+    u.[0] <- mulu64 h.[2] rx5.[2];
+    u.[1] <- mulu64 h.[3] rx5.[2];
+    h.[2] <- mulu64 h.[4] rx5.[2];
     t.[0] <- t.[0] + u.[0];
     t.[1] <- t.[1] + u.[1];
     h.[2] <- h.[2] + t.[2];
-    u.[0] <- h.[0] * r.[3];
-    u.[1] <- h.[1] * r.[3];
+    u.[0] <- mulu64 h.[0] r.[3];
+    u.[1] <- mulu64 h.[1] r.[3];
     t.[3] <- t.[3] + u.[0];
     t.[4] <- t.[4] + u.[1];
-    u.[0] <- h.[3] * rx5.[1];
-    h.[1] <- h.[4] * rx5.[1];
+    u.[0] <- mulu64 h.[3] rx5.[1];
+    h.[1] <- mulu64 h.[4] rx5.[1];
     t.[0] <- t.[0] + u.[0];
     h.[1] <- h.[1] + t.[1];
-    u.[0] <- h.[4] * rx5.[0];
-    u.[1] <- h.[0] * r.[4];
+    u.[0] <- mulu64 h.[4] rx5.[0];
+    u.[1] <- mulu64 h.[0] r.[4];
     h.[0] <- t.[0] + u.[0];
     h.[3] <- t.[3];
     h.[4] <- t.[4] + u.[1];
@@ -454,10 +461,11 @@ lemma zero_spec:
 proof. by conseq zero_spec_ll zero_spec_h. qed.
           
 lemma x5_spec_h rr:
-  hoare [ Mrep5.x5 : r = rr ==> res = mul5Rep54 rr ].
+  hoare [ Mrep5.x5 : r = rr /\ bRep5 32 r ==> res = mul5Rep54 rr ].
 proof.
-proc; wp; skip; progress.
-rewrite -Array4.ext_eq_all /mul5Rep54 /Array4.all_eq /=.
+have ?: bW64 32 u64_5 by smt (@BW64').
+proc; wp; skip; rewrite bRep5E; progress.
+rewrite -Array4.ext_eq_all /mul5Rep54 /Array4.all_eq /= !mulu64E //.
 by do (split; first by ring); ring.
 qed.
 
@@ -465,7 +473,7 @@ lemma x5_spec_ll: islossless Mrep5.x5.
 proof. by islossless. qed.
 
 lemma x5_spec rr:
-  phoare [ Mrep5.x5 : r = rr ==> res = mul5Rep54 rr ] = 1%r.
+  phoare [ Mrep5.x5 : r = rr /\ bRep5 32 r ==> res = mul5Rep54 rr ] = 1%r.
 proof. by conseq x5_spec_ll (x5_spec_h rr). qed.
 
 lemma add_spec_h b_hh b_mm hh mm:
@@ -507,9 +515,10 @@ lemma mulmod_spec_h hh rr:
              repres5 res = repres5 hh * repres5 rr ].
 proof.
 proc; wp; skip; progress.
- move: H H0; rewrite !bRep5E /mul5Rep54 /=; progress; smt(@BW64').
+ move: H H0; rewrite !bRep5E /mul5Rep54 /=; progress; rewrite !mulu64E; smt(@BW64').
 rewrite -mulmodRep5P //; congr.
-by rewrite /mulmodRep5 eqRep5 /=; progress; ring.
+move: H H0; rewrite !bRep5E; progress.
+rewrite /mulmodRep5 eqRep5 /=; progress; rewrite !mulu64E /mul5Rep54; try (by ring); smt(@BW64').
 qed.
 
 lemma mulmod_spec_ll: islossless Mrep5.mulmod.
@@ -554,13 +563,17 @@ have ->: valRep2 t{hr}
  rewrite to_uint_shl //= !modz_small //.
   apply bound_abs.
   have := W64.to_uint_ule_andw (of_int 16383)%W64 t{hr}.[1].
-  by rewrite andwC of_uintK modz_small // smt(W64.to_uint_cmp).
+  by rewrite andwC of_uintK modz_small; smt(W64.to_uint_cmp).
  by ring.
 congr; congr; rewrite /to_list /mkseq !W64.shl_shlw //= !W64.shr_shrw //; progress.
  apply/W64.wordP => i Hi /=. 
- rewrite (W64.masklsbE 26); smt.
+ rewrite (W64.masklsbE 26) Hi /min /=.
+ case: (0 <= i < 26) => //= ?; first smt().
+ by rewrite W64.get_out /#.
 apply/W64.wordP => i Hi /=.
-rewrite (W64.masklsbE 26); smt.
+rewrite (W64.masklsbE 26) Hi /min /=.
+case: (0 <= i < 26) => //= ?.
+by rewrite W64.get_out /#.
 qed.
 
 lemma unpack2_spec_ll: islossless Mrep5.unpack2.
@@ -591,8 +604,8 @@ progress; last first.
  move: H0; rewrite !bRep5E /=; progress.
  move: H1; rewrite !bW64ub /ubW64 // => *.
  rewrite to_uint_orw_disjoint //.
- rewrite of_uintK modz_small; first smt.
- move: H1; rewrite /=; smt.
+ rewrite of_uintK modz_small; first by apply bound_abs; smt(). 
+ by move: H1; rewrite /= /#. 
 rewrite -H !repres5E -inzpD; congr.
 by rewrite !valRep5E /= to_uint_orw_disjoint //=; ring.
 qed.
@@ -632,7 +645,8 @@ have ->: valRep3 rt{hr}
  rewrite (W64.splitwE 26 (rt{hr}.[1] `>>>` 14)) // shrw_add //=.
  ring.
  rewrite to_uint_orw_disjoint.
-  apply/W64.wordP => i Hi /=; smt.
+  apply/W64.wordP => i Hi /=; rewrite Hi /=.
+  smt(W64.get_out).
  rewrite to_uint_orw_disjoint.
   rewrite andwA eq_sym -(W64.and0w mask26); congr.
   by rewrite shrw_shlw_disjoint.
@@ -651,7 +665,7 @@ congr; congr; rewrite /to_list /mkseq /= !W64.shl_shlw // !W64.shr_shrw //.
 progress.
   rewrite -W64.orw_disjoint.
    apply/W64.wordP => i Hi /=.
-   smt.
+   smt(W64.get_out).
   rewrite andw_orwDl; congr.
   by rewrite (W64.shrw_andmaskK 52 26).
  rewrite -W64.orw_disjoint.
@@ -742,8 +756,9 @@ have <-: u64_5 * (x{hr}.[4] + (x{hr}.[3] `>>>` 26) `>>>` 26)
  rewrite (bW64_to_uintM 3 38) //; first smt(@BW64').
  rewrite to_uint_shl //= modz_small.
   apply bound_abs.
-  move: H4; rewrite bW64ub //=; smt.
- smt.
+  move: H4; rewrite bW64ub //=.
+  rewrite /ubW64; smt(W64.to_uint_cmp).
+ smt().
 by progress.
 qed.
 
@@ -814,7 +829,7 @@ seq 11: (#pre /\
  have P: forall (w: W64.t), bW64 27 w =>
             to_uint w * twoPow26 %% W64.modulus = to_uint w * twoPow26.
   move=> w; rewrite bW64ub /ubW64 -(StdOrder.IntOrder.ler_pmul2r twoPow26) //= => Hw.
-  rewrite modz_small //; smt.
+  rewrite modz_small  //=; apply bound_abs; smt(W64.to_uint_cmp).
  by rewrite !P //; ring.
 seq 7: (#[/:9]pre /\
          valRep5 h1 + valRep5 h2 + valRep5 h3 + valRep5 h4
@@ -862,7 +877,7 @@ wp; skip; rewrite !bRep5E; progress.
  rewrite !W64.addcE /= /ubW64.
  have ?: to_uint (r{hr}.[2] `&` (of_int 3)%W64) <= 3.
   by rewrite andwC; apply W64.to_uint_ule_andw.
- case: (W64.carry_add _ _ _); rewrite ?b2i0 ?b2i1; smt.
+ by case: (W64.carry_add _ _ _); rewrite ?b2i0 ?b2i1 to_uintD_small //= /#.
 rewrite repres3E !repres5E.
 have ->: inzp (valRep5 h1{hr}) + inzp (valRep5 h2{hr})
            + inzp (valRep5 h3{hr}) + inzp (valRep5 h4{hr})
@@ -880,9 +895,9 @@ have ->: ((r{hr}.[2] `>>` (of_int 2)%W8) +
  rewrite bW64_to_uintD; first 2 by smt(@BW64').
  rewrite (bW64_to_uintM 3 4); first 3 by smt(@BW64').
  rewrite of_uintK modz_small // to_uint_shl // modz_small //=.
-  apply bound_abs; split; first smt.
+  apply bound_abs; split; first smt(W64.to_uint_cmp).
   have : bW64 4 (r{hr}.[2] `>>>` 2) by smt(@BW64).
-  by rewrite bW64ub // /ubW64 /= => *; smt.
+  rewrite bW64ub // /ubW64 /= => *; smt().
  have ->: to_uint (r{hr}.[2] `>>>` 2) + to_uint (r{hr}.[2] `>>>` 2) * 4
           = 5 * to_uint (r{hr}.[2] `>>>` 2) by ring.
  done.
@@ -910,4 +925,3 @@ lemma add_pack_spec hh1 hh2 hh3 hh4 :
            ubW64 4 res.[2] /\
            repres3 res = repres5 hh1 + repres5 hh2 + repres5 hh3 + repres5 hh4] = 1%r.
 proof. by conseq add_pack_spec_ll (add_pack_spec_h hh1 hh2 hh3 hh4). qed.
-

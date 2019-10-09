@@ -181,8 +181,7 @@ rewrite /valRep3 /valRep3r -mul_limbs64P eq_inzp /to_list /mkseq => /> *.
 apply (add_digits64_redp (to_uint r.[1]) (to_uint r.[2]) [ to_uint h.[1]; to_uint h.[2] ]
   [ to_uint h.[0] * to_uint r.[0];
     to_uint h.[0] * to_uint r.[1] + to_uint h.[1] * to_uint r.[0];
-    to_uint h.[2] * to_uint r.[0] ]) => //.
- smt().
+    to_uint h.[2] * to_uint r.[0] ]) => //. by rewrite /mul1_digits => /#. (*TO*)
 rewrite /= /mulmod3_pass0 -!mulhiP !val_digits_cons; ring.
 by rewrite (ubW64_mulhi0 6 1152921504606846975) // (ubW64_mulhi0 6 1441151880758558715).
 qed.
@@ -384,11 +383,14 @@ split; progress; rewrite /r0 /r1 //=.
    by rewrite to_uint0 W64.to_uint_and_mod //.
   by rewrite andw0.
 + rewrite to_uintD.
-   by have ?:= ubW64shr 2 1152921504606846972 _ _ H1 => //; smt.
-  smt.
+   have /= ?:= ubW64shr 2 1152921504606846972 _ _ H1 => //=.
+   rewrite to_uint_shr //= modz_small.
+    apply bound_abs; smt(W64.to_uint_cmp).
+   smt().
+  smt().
 + rewrite repres3rE /load_clamp /=; congr.
   rewrite -load2u64 /= -(of_int2u64 1152921487695413247 1152921487695413244) // andb2u64E /=.
-  rewrite to_uintD_small of_uintK modz_small //; first smt.
+  rewrite to_uintD_small of_uintK modz_small //; first smt().
   by rewrite to_uint2u64; ring.
 qed.
 
@@ -414,11 +416,11 @@ rewrite !repres3E {1}/valRep3 valRep3E /= E /load_block /load_lblock /= inzpD; c
  by congr; rewrite /val_digits /= !mulzDr; ring.
 rewrite -(W16u8.Pack.init_ext (fun i => Glob.mem{hr}.[to_uint inp + i])) 1:/#.
 congr.
-rewrite to_uintD_small of_uintK modz_small //; first smt.
+rewrite to_uintD_small of_uintK modz_small //; first by move: Hptr; smt().
 rewrite !load8u8' /val_digits /mkseq /=.
 rewrite !(to_uint_unpack8u8 (W8u8.pack8 _)) /=.
 rewrite (to_uint_unpack16u8 (W16u8.pack16_t _)) /=.
-rewrite /val_digits /=; ring.
+by rewrite /val_digits /=; ring.
 qed.
 
 op load_lblock' (mem : global_mem_t) (l ptr : W64.t) = 
@@ -526,12 +528,15 @@ lemma load_last_add_spec_ll: islossless Mrep3.load_last_add.
 proof.
 proc; wp.
 while (j \ule len) (to_uint (len-j)).
- move=> *; wp; skip; progress.
-  move: H H0; rewrite uleE ultE; smt.
- smt.
-wp; skip; progress.
- rewrite uleE; smt(W64.to_uint_cmp).
-move: H; rewrite uleE ultE; smt.
+ move=> *; wp; skip; rewrite !ultE !uleE; progress.
+  by rewrite uleE to_uintD_small /=; move: (W64.to_uint_cmp len{hr}) => /#.
+ rewrite to_uintB ?uleE //.
+  by rewrite to_uintD_small /=; move: (W64.to_uint_cmp len{hr}) => /#.
+ rewrite to_uintB ?uleE //.
+ by rewrite to_uintD_small /=; move: (W64.to_uint_cmp len{hr}) => /#.
+wp; skip; rewrite !uleE; progress; first smt(W64.to_uint_cmp).
+move: H; rewrite uleE ultE => *.
+by move: H0; rewrite to_uintB ?uleE // /#.
 qed.
 
 lemma load_last_add_spec mem hh inp inlen:
@@ -614,9 +619,9 @@ lemma freeze_spec_h hh:
 proof.
 have X: ubW64 4 hh.[2] => valRep3 hh < 2*p.
  rewrite /ubW64 /= pE.
- have ??:= W64.to_uint_cmp hh.[0].
- have ?:= W64.to_uint_cmp hh.[1].
- smt.
+ have /= ??:= W64.to_uint_cmp hh.[0].
+ have /= ?:= W64.to_uint_cmp hh.[1].
+ smt().
 proc.
 seq 11: (#pre /\ val_limbs64 [g.[0]; g.[1]; g2] = valRep3 hh + 5) => //.
  wp; skip => ?[<-?]*.
@@ -647,8 +652,7 @@ seq 2: (#[/1:3]pre /\
    by rewrite /val_digits /=; smt(W64.to_uint_cmp).
   move: E; pose x:=val_limbs64 [g{hr}.[0]; g{hr}.[1]; g2{hr}]; move => E.
   move: (X H); rewrite -(ltz_add2r 5) pE -E. 
-  rewrite -(val_limbs64_div2130 g{hr}.[0] g{hr}.[1]) -/x.
-  smt.
+  by rewrite -(val_limbs64_div2130 g{hr}.[0] g{hr}.[1]) -/x /#.
  case: (valRep3 hh < p) => ??.
   have ->: g2{hr} `>>` (of_int 2)%W8 = W64.zerow.
    apply W64.word_modeqP; rewrite to_uint_shr //.
@@ -665,9 +669,10 @@ wp; skip => ?[[<-?]].
 case: (valRep3 hh < p).
  move => |> *.
  rewrite !andw0 !xor0w repres3E inzpK (modz_small (valRep3 hh)).
-  apply bound_abs => /=; smt.
+  apply bound_abs => /=; smt(W64.to_uint_cmp).
  by rewrite /valRep3 (val_limbs64_mod2128 hh.[0] hh.[1] hh.[2]) /val_digits.
-move => ?; have -> /= [? ->/=]: p <= valRep3 hh by smt.
+move => ?; have -> /= [? ->/=]: p <= valRep3 hh. 
+ by rewrite lezNgt.
 by rewrite -!xorwA !xorwK !xorw0 H1 !repres3E !inzpK.
 qed.
 
@@ -705,9 +710,9 @@ apply W128.word_modeqP; congr.
 rewrite to_uint2u64 of_uintK modz_small //.
 apply bound_abs; split; first smt(W64.to_uint_cmp).
 move=> *. 
-have ?:= W64.to_uint_cmp x{hr}.[0].
-have ?:= W64.to_uint_cmp x{hr}.[1].
-smt.
+have /= ? := W64.to_uint_cmp x{hr}.[0].
+have /= ? := W64.to_uint_cmp x{hr}.[1].
+smt().
 qed.
 
 lemma add2_spec (hh ss: W64.t Array2.t):
@@ -725,9 +730,9 @@ rewrite -E /= => <-.
 rewrite /val_digits /=.
 rewrite -modzDmr modzMr /= modz_small.
  apply bound_abs.
- have ? := W64.to_uint_cmp tpl.`2.
- have ? := W64.to_uint_cmp tpl0.`2.
- smt.
+ have /= ? := W64.to_uint_cmp tpl.`2.
+ have /= ? := W64.to_uint_cmp tpl0.`2.
+ smt().
 by rewrite /h0 /tpl.
 qed.
 

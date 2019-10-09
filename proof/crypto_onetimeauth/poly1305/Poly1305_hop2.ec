@@ -94,27 +94,28 @@ seq 1 7: (#pre /\
           h{1}*rpow4{2} = h1{2}*rpow4{2}+h2{2}*rpow3{2}+h3{2}*rpow2{2}+h4{2}*r{2} /\ 
           rpow4{2} = r{2}*r{2}*r{2}*r{2} /\ 
           rpow3{2} = r{2}*r{2}*r{2} /\ 
-          rpow2{2} = r{2}*r{2}); first by inline *; wp; skip; progress; smt.
+          rpow2{2} = r{2}*r{2}); first by inline *; wp; skip; progress; ring.
 seq 0 1: (#{/~ ={in_00}}pre /\ 
           x1{2} = load_block Glob.mem{2} in_00{1} /\
           x2{2} = load_block Glob.mem{2} (in_00{1} + W64.of_int 16) /\
           x3{2} = load_block Glob.mem{2} (in_00{1} + W64.of_int 32) /\
           x4{2} = load_block Glob.mem{2} (in_00{1} + W64.of_int 48) /\
-          in_00{2} = in_00{1} + W64.of_int 64); first by inline*; wp; skip; progress.
+          in_00{2} = in_00{1} + W64.of_int 64);
+first by inline*; wp; skip; progress.
 simplify; splitwhile {1} 1: ((of_int 128)%W64 \ule inlen0).
 seq 1 1: (#[/1:6,7:]pre /\ (of_int 64)%W64 \ule inlen0{1} /\ inlen0{1} \ult (of_int 128)%W64).
  while (#[/1:6,7:]pre /\ (of_int 64)%W64 \ule inlen0{1}).
-  inline *; wp; skip; progress; first by ring H.
-   move: H3; rewrite !uleE; smt.
-  move: H4; rewrite !uleE; smt.
+  inline *; wp; skip; rewrite !uleE; progress;
+  last 2 by rewrite uleE //= to_uintB ?uleE /#.
+  by ring H.  
  skip; progress.
-   by move: H; rewrite !ultE !uleE; smt.
-  by move: H1; rewrite !uleE; smt.
- by move: H2; rewrite !uleE; smt.
+   by move: H; rewrite !ultE !uleE /#.
+  by move: H1; rewrite !uleE /#.
+ by move: H2; rewrite !uleE ultE /#.
 unroll {1} 1; rcondt {1} 1; first by auto.
 rcondf {1} 18.
  progress; wp; skip; progress.
- move: H1; rewrite !ultE !uleE; smt.
+ by move: H0 H1; rewrite !ultE !uleE /= => ??; rewrite to_uintB ?uleE /#.
 wp; skip; progress.
 by ring H.
 qed.

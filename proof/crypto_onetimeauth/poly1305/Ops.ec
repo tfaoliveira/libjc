@@ -32,10 +32,10 @@ module Ops = {
   
   proc iVPMULU_256 (x y:t4u64) : t4u64 = {
     var r : t4u64;
-    r.[0] <- x.[0] * y.[0];
-    r.[1] <- x.[1] * y.[1];
-    r.[2] <- x.[2] * y.[2];
-    r.[3] <- x.[3] * y.[3];
+    r.[0] <- mulu64 x.[0] y.[0];
+    r.[1] <- mulu64 x.[1] y.[1];
+    r.[2] <- mulu64 x.[2] y.[2];
+    r.[3] <- mulu64 x.[3] y.[3];
     return r; 
   }
 
@@ -281,7 +281,7 @@ proof.
   congr; apply W128.wordP => i hi.
   rewrite W128.of_intwE hi W2u64.pack2wE 1:// /=.
   rewrite /int_bit /= modz_mod.
-  have /= -> := modz_pow2_div 128 i; 1,2: smt(W256.to_uint_cmp).
+  have /= -> := modz_pow2_div 128 i. smt().
   rewrite (modz_dvd_pow 1 (128 - i) _ 2) 1:/# /=.
   have -> : (to_uint (pack4 [t{1}.[0]; t{1}.[1]; t{1}.[2]; t{1}.[3]]) %/ (IntExtra.(^) 2 i) %% 2 <> 0) = 
             (pack4 [t{1}.[0]; t{1}.[1]; t{1}.[2]; t{1}.[3]]).[i].
@@ -372,7 +372,12 @@ equiv eq_iVPBROADCAST_4u64 : Ops.iVPBROADCAST_4u64 ~ OpsV.iVPBROADCAST_4u64 : ={
 proof. by proc => /=;wp;skip;rewrite /is4u64. qed.
 
 equiv eq_iVPMULU_256 : Ops.iVPMULU_256 ~ OpsV.iVPMULU_256 : is4u64 x{1} x{2} /\ is4u64 y{1} y{2} ==> is4u64 res{1} res{2}.
-proof. by proc;wp;skip;rewrite /is4u64 => /> &1; rewrite /x86_VPMULU_256. qed.
+proof.
+  proc.
+  by wp; skip; rewrite /is4u64 => /> &1; rewrite /x86_VPMULU_256.
+qed.
+(** TODO **)
+(* proof. by proc;wp;skip;rewrite /is4u64 => /> &1; rewrite /x86_VPMULU_256. qed. *)
 
 equiv eq_ivadd64u256: Ops.ivadd64u256 ~ OpsV.ivadd64u256 : is4u64 x{1} x{2} /\ is4u64 y{1} y{2} ==> is4u64 res{1} res{2}.
 proof. by proc;wp;skip;rewrite /is4u64 /x86_VPADD_4u64. qed.
@@ -399,11 +404,13 @@ proof. by apply W256.all_eq_eq;cbv W256.all_eq (%/) (%%). qed.
 
 lemma W4u64_bits128_0 (w:W4u64.Pack.pack_t) :
   pack4_t w \bits128 0 = pack2 [w.[0]; w.[1]].
-proof. by rewrite -{1}(W4u64.Pack.to_listK w) /= -pack2_2u64_4u64. qed.
+proof. by simplify. qed.
+(** by rewrite -{1}(W4u64.Pack.to_listK w) /= -pack2_2u64_4u64. qed.**)
 
 lemma W4u64_bits128_1 (w:W4u64.Pack.pack_t) :
   pack4_t w \bits128 1 = pack2 [w.[2]; w.[3]].
-proof. by rewrite -{1}(W4u64.Pack.to_listK w) /= -pack2_2u64_4u64. qed.
+proof. by simplify. qed.
+(** by rewrite -{1}(W4u64.Pack.to_listK w) /= -pack2_2u64_4u64. qed. **)
 
 hint simplify (W4u64_bits128_0, W4u64_bits128_1).
 
@@ -411,14 +418,14 @@ lemma x86_VPERM2I128_4u64_spec_32 (v0 v1 v2 v3 : W64.t) (w0 w1 w2 w3: W64.t):
   x86_VPERM2I128 (W4u64.pack4 [v0; v1; v2; v3]) (W4u64.pack4 [w0; w1; w2; w3]) (W8.of_int 32) =
   W4u64.pack4 [v0; v1; w0; w1].
 proof.
-  by cbv delta; rewrite !of_intwE; cbv delta; rewrite pack2_2u64_4u64.
+  by cbv delta; rewrite !of_intwE; cbv delta. (** rewrite pack2_2u64_4u64. **)
 qed.
 
 lemma x86_VPERM2I128_4u64_spec_49 (v0 v1 v2 v3 : W64.t) (w0 w1 w2 w3 : W64.t):
   x86_VPERM2I128 (W4u64.pack4 [v0; v1; v2; v3]) (W4u64.pack4 [w0; w1; w2; w3]) (W8.of_int 49) =
   W4u64.pack4 [v2; v3; w2; w3].
 proof.
-  by cbv delta; rewrite !of_intwE; cbv delta; rewrite pack2_2u64_4u64.
+  by cbv delta; rewrite !of_intwE; cbv delta. (** rewrite pack2_2u64_4u64. **)
 qed.
 
 hint simplify (x86_VPERM2I128_4u64_spec_32, x86_VPERM2I128_4u64_spec_49).
@@ -465,13 +472,15 @@ qed.
 equiv eq_iVPUNPCKH_4u64: Ops.iVPUNPCKH_4u64 ~ OpsV.iVPUNPCKH_4u64 : is4u64 x{1} x{2} /\ is4u64 y{1} y{2} ==> is4u64 res{1} res{2}.
 proof.
   proc; wp; skip; rewrite /is4u64 => /> &1.
-  by rewrite /x86_VPUNPCKH_4u64 /x86_VPUNPCKH_2u64 -!pack2_2u64_4u64 /=.
+  rewrite /x86_VPUNPCKH_4u64; rewrite /x86_VPUNPCKH_2u64; rewrite -!pack2_2u64_4u64 /=.
+  by rewrite /interleave_gen /get_hi_2u64.
 qed.
 
 equiv eq_iVPUNPCKL_4u64: Ops.iVPUNPCKL_4u64 ~ OpsV.iVPUNPCKL_4u64 : is4u64 x{1} x{2} /\ is4u64 y{1} y{2} ==> is4u64 res{1} res{2}.
 proof.
   proc; wp; skip; rewrite /is4u64 => /> &1.
-  by rewrite /x86_VPUNPCKL_4u64 /x86_VPUNPCKL_2u64 -!pack2_2u64_4u64 /=.
+  rewrite /x86_VPUNPCKL_4u64 /x86_VPUNPCKL_2u64 -!pack2_2u64_4u64 /=. 
+  by rewrite /interleave_gen /get_hi_2u64.
 qed.
 
 equiv eq_iVEXTRACTI128: Ops.iVEXTRACTI128 ~ OpsV.iVEXTRACTI128 : is4u64 x{1} x{2} /\ ={p} /\ (p{1} = W8.of_int 0 \/ p{2} = W8.of_int 1) ==> is2u64 res{1} res{2}.
