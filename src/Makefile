@@ -2,6 +2,16 @@
 
 # --------------------------------------------------------------------
 SUBDIRS := \
+\
+crypto_core/keccakf160064bits/ref/ \
+crypto_core/keccakf160064bits/scalar/ \
+crypto_core/keccakf160064bits/avx2/ \
+crypto_core/keccakf160064bits/avx2_openssl/ \
+\
+crypto_hash/keccak1600/ref/ \
+crypto_hash/keccak1600/scalar/ \
+crypto_hash/keccak1600/avx2/ \
+\
 crypto_hash/sha3224/scalar/ \
 crypto_hash/sha3224/avx2/ \
 \
