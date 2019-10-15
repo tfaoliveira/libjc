@@ -7,7 +7,19 @@
 focus="$1"
 pfocus="$2"
 opfocus=${focus}_${pfocus}
-# begin patch
+
+### begin patch
+
+# do-part in the original form can be ran with 2 args,
+# for instance: ./do-part crypto_stream chacha20
+# - the following modification allows to specify
+#   which implementation we want to run (sfocus).
+#
+# - libpath and liblink are being used to allow
+#   different versions of shared libraries to be
+#   loaded: check libjc/bench/config/keccak-openssl-no-asm
+#   for examples
+#
 sfocus=""
 if [ "$#" -eq 3 ]; then
   sfocus="/$3";
@@ -21,13 +33,13 @@ if [ "$#" -eq 5 ]; then
   liblink="$5";
 fi
 
-echo $focus
-echo $pfocus
-echo $opfocus
-echo $sfocus
-echo $libpath
-echo $liblink
-# end patch
+echo ">>>>$focus"
+echo ">>>>$pfocus"
+echo ">>>>$opfocus"
+echo ">>>>$sfocus"
+echo ">>>>$libpath"
+echo ">>>>$liblink"
+### end patch
 
 
 
@@ -352,7 +364,8 @@ do
       mkdir -p "$work/bestc"
 
       # for each operation primitive abi, loop over implementations
-      # begin patch
+      ### patch
+      ### original: find "$o/$p" -follow -name "api.h" \
       find "$o/${p}${sfocus}" -follow -name "api.h" \
       | sort \
       | while read doth
@@ -474,7 +487,11 @@ do
 	    [ "$ok" = 1 ] || continue
 	    okar-$abi crT "$op.a" *.o `(find . -maxdepth 1 -type f -name "*.a")` || continue
 	    ranlib "$op.a"
-###
+### to log what's being executed uncomment
+#	    echo "$compiler -DSUPERCOP -DSMALL \
+#	      -I. -I"$include" -I"$include/$abi" \
+#	      -o try try.$language try-anything.$language \
+#	      "$op.a" $trylibs"
 
 	    killafter 300 \
 	    $compiler -DSUPERCOP -DSMALL \
@@ -505,9 +522,8 @@ do
 	      continue
 	    fi
 
-      # patch
+      ### patch: backup try for debug
       cp try try.small
-      # end patch
 
 	    [ x"$expectedchecksumsmall" != x ] \
 	    && [ x"$expectedchecksumsmall" != "x$checksumsmall" ] \
@@ -543,9 +559,8 @@ do
 	      continue
 	    fi
 
-      # patch
+      ### patch: backup try for debug
       cp try try.big
-      # end patch
 
 	    [ x"$expectedchecksumbig" != x ] \
 	    && [ x"$expectedchecksumbig" != "x$checksumbig" ] \

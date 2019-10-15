@@ -1,3 +1,17 @@
-crypto_onetimeauth poly1305 jazz/ref3
-crypto_onetimeauth poly1305 jazz/avx
-crypto_onetimeauth poly1305 jazz/avx2
+crypto_hash sha3224 jazz/scalar
+crypto_hash sha3224 jazz/avx2
+
+crypto_hash sha3256 jazz/scalar
+crypto_hash sha3256 jazz/avx2
+
+crypto_hash sha3384 jazz/scalar
+crypto_hash sha3384 jazz/avx2
+
+crypto_hash sha3512 jazz/scalar
+crypto_hash sha3512 jazz/avx2
+
+crypto_hash shake128 jazz/scalar
+crypto_hash shake128 jazz/avx2
+
+crypto_hash shake256 jazz/scalar
+crypto_hash shake256 jazz/avx2

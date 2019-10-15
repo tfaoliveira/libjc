@@ -27,6 +27,7 @@ crypto_hash/sha3512/avx2/ \
 crypto_hash/shake128/scalar/ \
 crypto_hash/shake128/avx2/ \
 \
+crypto_hash/shake256/ref/ \
 crypto_hash/shake256/scalar/ \
 crypto_hash/shake256/avx2/ \
 \

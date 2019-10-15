@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdint.h>
 
-extern void keccak_1600(
+extern void keccak1600_scalar(
          uint8_t *out,
         uint64_t outlen,
    const uint8_t *in,
@@ -42,7 +42,7 @@ uint64_t iotas[32] __attribute__((aligned(256))) =
 int sha3384_scalar(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
   uint64_t c[] = {0x06, (832/8)};
-  keccak_1600(out, 48, in, inlen, c, &(iotas[8]));
+  keccak1600_scalar(out, 48, in, inlen, c, &(iotas[8]));
   return 0;
 }
 
