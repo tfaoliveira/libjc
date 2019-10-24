@@ -1,2 +1,16 @@
 Array[0-9]*.ec
 WArray[0-9]*.ec
+
+Poly1305_s*.ec
+!Poly1305*_proof.ec
+
+ChaCha20_s*.ec
+!ChaCha20_*_proof.ec
+
+Keccakf1600_s*.ec
+!Keccakf1600_*_proof.ec
+
+Keccak1600_s*.ec
+!Keccak1600_*_proof.ec
+
+

@@ -70,7 +70,7 @@ generate: $(ECSRC)
 clean:
 	rm -f $(ECSRC)
 	for i in $(sort $(dir $(ECSRC))); do \
-		rm -f $$i/WArray*.ec; rm -f $$i/Array*.ec; \
+		find $$i -name "*Array*.ec" | grep -v "p\.ec" | while read f; do rm -f $$f; done \
 	done
 
 # ChaCha20
