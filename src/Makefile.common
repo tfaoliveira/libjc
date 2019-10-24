@@ -9,7 +9,4 @@ JASMINC ?= jasminc
 	$(JASMINC) $(JFLAGS) -pasm $< > $@ || rm -f $@
 
 clean:
-	rm -f *.japp
-
-full-clean: clean
-	rm -f *.s
+	rm -f *.japp *.s
