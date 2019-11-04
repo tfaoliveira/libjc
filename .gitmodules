@@ -41,3 +41,14 @@
 	url = https://github.com/project-everest/hacl-star.git
 	branch = evercrypt-v0.1+
 	ignore = dirty
+[submodule "env/third_party/jasmin"]
+	path = env/third_party/jasmin
+	url = git@github.com:jasmin-lang/jasmin.git
+	branch = array_cast
+[submodule "env/third_party/easycrypt"]
+	path = env/third_party/easycrypt
+	url = git@github.com:EasyCrypt/easycrypt.git
+	branch = 1.0
+[submodule "compcert_v3.6"]
+	path = env/third_party/compcert_v3.6
+	url = git@github.com:AbsInt/CompCert.git
