@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+version=`cat config/version`
+
+# remove the comment from the following line if you want to download
+wget https://bench.cr.yp.to/supercop/supercop-$version.tar.xz
+
+unxz < supercop-$version.tar.xz | tar -xf -
+
+cp ./patch/$version/okcompilers/* supercop-$version/okcompilers/
+
+(cd supercop-$version/ && ./do-part used)
+
