@@ -1,6 +1,6 @@
 #include "crypto_scalarmult.h"
 
-extern int hacl_star_compcert_Curve25519_crypto_scalarmult(
+extern int hacl_star_ccomp_Curve25519_crypto_scalarmult(
   unsigned char *q,
   const unsigned char *n,
   const unsigned char *p
@@ -15,7 +15,7 @@ int crypto_scalarmult(
 )
 {
   int r;
-  r = hacl_star_compcert_Curve25519_crypto_scalarmult(q,n,p);
+  r = hacl_star_ccomp_Curve25519_crypto_scalarmult(q,n,p);
   return 0;
 }
 

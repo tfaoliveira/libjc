@@ -1,5 +1,4 @@
 #include "crypto_stream.h"
-#include <sodium/crypto_stream_chacha20.h>
 #include <string.h>
 
 int crypto_stream(

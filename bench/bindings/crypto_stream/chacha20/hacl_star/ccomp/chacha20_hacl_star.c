@@ -12,7 +12,7 @@ int crypto_stream(
   memset(out, 0, outlen);
   memset(nonce, 0, 4);
   memcpy(nonce+4, n, 8);
-  hacl_star_compcert_Chacha20_chacha20(out, out, outlen, k, nonce, 0);
+  hacl_star_ccomp_Chacha20_chacha20(out, out, outlen, k, nonce, 0);
 	return 0;
 }
 
@@ -27,6 +27,6 @@ int crypto_stream_xor(
   unsigned char nonce[12];
   memset(nonce, 0, 4);
   memcpy(nonce+4, n, 8);
-  hacl_star_compcert_Chacha20_chacha20(out, in, inlen, k, nonce, 0);
+  hacl_star_ccomp_Chacha20_chacha20(out, in, inlen, k, nonce, 0);
 	return 0;
 }

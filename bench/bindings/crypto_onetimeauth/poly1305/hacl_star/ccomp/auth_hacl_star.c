@@ -7,8 +7,6 @@ int crypto_onetimeauth(
   const unsigned char *k
 )
 {
-  hacl_star_compcert_Poly1305_64_crypto_onetimeauth(out, in, inlen, k);
+  hacl_star_ccomp_Poly1305_64_crypto_onetimeauth(out, in, inlen, k);
   return 0;
 }
-
-
