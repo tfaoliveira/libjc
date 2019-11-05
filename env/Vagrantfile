@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision "install", type: "shell", binary: true, inline: <<-SHELL
     echo "running install as: `whoami`"
     sudo apt-get update
-    sudo apt-get install -y build-essential m4 libssl-dev
+    sudo apt-get install -y build-essential m4 libssl-dev gpp gnuplot
   SHELL
 
   config.vm.provision "nix", type: "shell", binary: true, privileged: false, inline: <<-SHELL
@@ -75,14 +75,30 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "compcert", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running compcert as: `whoami`"
-    
+    (cd /home/vagrant/libjc/env/third_party/compcert/compcert_v3.6 && 
+     nix-shell --command "./configure x86_64-linux && make && sudo make install" ../compcert_v3.6.nix
+    )
+  SHELL
+
+  config.vm.provision "thirdparty", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running thirdparty-libs as: `whoami`"
+    sudo apt install cmake libunwind-dev golang-go -y
+    (cd /home/vagrant/libjc/bench && ./build)
+  SHELL
+
+  config.vm.provision "src", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running src as: `whoami`"
+    (cd /home/vagrant/libjc/src && make)
   SHELL
 
   config.vm.provision "supercop", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running supercop as: `whoami`"
-    (cd /home/vagrant/libjc/bench && ./setup1)
+    (cd /home/vagrant/libjc/bench && ./setup1 && ./setup2)
   SHELL
 
-  
+  config.vm.provision "bench", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running bench as: `whoami`"
+    (cd /home/vagrant/libjc/bench && ./chacha20 && ./poly1305 && ./keccak && ./curve25519)
+  SHELL
 
 end

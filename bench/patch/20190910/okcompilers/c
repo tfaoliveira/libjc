@@ -1,1 +1,1 @@
-gcc -march=native -mtune=native -O3 -fomit-frame-pointer -fwrapv
+gcc -march=native -mtune=native -O3 -fomit-frame-pointer -fwrapv -no-pie
