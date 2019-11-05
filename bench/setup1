@@ -2,12 +2,18 @@
 
 version=`cat config/version`
 
-# remove the comment from the following line if you want to download
+# download and extract supercop
 wget https://bench.cr.yp.to/supercop/supercop-$version.tar.xz
-
 unxz < supercop-$version.tar.xz | tar -xf -
 
+# patch okcompilers
 cp ./patch/$version/okcompilers/* supercop-$version/okcompilers/
 
+# remove some 'used' files -- do-part used faster
+cat ./patch/$version/remove | while read f; do \
+  rm -f supercop-$version/$f; \
+done
+
+# run ./do-part used inside supercop
 (cd supercop-$version/ && ./do-part used)
 

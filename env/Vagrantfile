@@ -1,0 +1,88 @@
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "ubuntu/bionic64"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "8192"
+  end
+
+  config.vm.synced_folder "../", "/home/vagrant/libjc"
+  config.vm.synced_folder "../../", "/home/vagrant/root"
+
+  config.vm.provision "install", type: "shell", binary: true, inline: <<-SHELL
+    echo "running install as: `whoami`"
+    sudo apt-get update
+    sudo apt-get install -y build-essential m4 libssl-dev
+  SHELL
+
+  config.vm.provision "nix", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running nix as: `whoami`"
+    curl https://nixos.org/nix/install | sh
+  SHELL
+
+  config.vm.provision "jasmin", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running jasmin as: `whoami`"
+    (cd /home/vagrant/libjc/env/third_party/jasmin/ && 
+     nix-shell --command make &&
+     sudo install -b -D `pwd`/compiler/jasminc /usr/local/bin/)
+  SHELL
+
+  config.vm.provision "opam", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running opam as: `whoami`"
+    sudo apt install unzip bubblewrap -y
+    wget https://github.com/ocaml/opam/releases/download/2.0.5/opam-2.0.5-x86_64-linux
+    sudo cp opam-2.0.5-x86_64-linux /usr/local/bin/opam
+    sudo chmod a+x /usr/local/bin/opam
+    opam init -y
+    echo "#opam configuration" >> ~/.profile
+    echo "test -r /home/vagrant/.opam/opam-init/init.sh && . /home/vagrant/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" >> ~/.profile
+    source ~/.profile
+    opam update
+    opam install opam-depext
+  SHELL
+
+  config.vm.provision "alt-ergo", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running alt-ergo as: `whoami`"
+    sudo apt install autoconf pkg-config libgmp-dev zlib1g-dev -y
+    opam install alt-ergo.2.3.0 -y
+  SHELL
+
+  config.vm.provision "z3", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running z3 as: `whoami`"
+    sudo apt install python -y
+    (cd /home/vagrant/libjc/env/third_party/z3 && 
+     ./configure &&
+     cd build &&
+     make &&
+     sudo make install)
+  SHELL
+
+  config.vm.provision "easycrypt", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running easycrypt as: `whoami`"
+    mkdir -p /home/vagrant/.config/easycrypt/
+    (cd /home/vagrant/libjc/env/third_party/easycrypt && 
+     nix-shell --command make &&
+     sudo env "PATH=$PATH" make install &&
+     (nix-shell --command "easycrypt why3config" || true)
+     )
+  SHELL
+
+  config.vm.provision "emacs", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running emacs as: `whoami`"
+    sudo apt install emacs -y
+    cat /home/vagrant/libjc/env/third_party/.emacs > ~/.emacs
+  SHELL
+
+  config.vm.provision "compcert", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running compcert as: `whoami`"
+    
+  SHELL
+
+  config.vm.provision "supercop", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running supercop as: `whoami`"
+    (cd /home/vagrant/libjc/bench && ./setup1)
+  SHELL
+
+  
+
+end

@@ -38,3 +38,4 @@
 [submodule "env/third_party/z3"]
 	path = env/third_party/z3
 	url = git@github.com:Z3Prover/z3.git
+	ignore = dirty
