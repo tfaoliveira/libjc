@@ -1,0 +1,20 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+build_dir="$1/build"
+libs_dir="$2"
+
+# - export CC=/usr/local/bin/gcc &&  \
+# - export CXX=/usr/local/bin/g++ && \
+
+(mkdir -p $build_dir && \
+  cd $build_dir && \
+  rm -fr * && \
+  (make distclean || true) && \
+  cmake -DCMAKE_BUILD_TYPE=Release .. && \
+  make crypto && \
+  cp crypto/libcrypto.a $libs_dir/$myname.a && \
+  cd $libs_dir && \
+  $whereami/rename_lib $myname $libs_dir
+)

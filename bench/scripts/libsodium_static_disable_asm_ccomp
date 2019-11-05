@@ -1,0 +1,16 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+dir="$1"
+libs_dir="$2"
+
+(cd $dir && \
+  (make distclean || true) && \
+  env CC=ccomp CFLAGS="-O2 -fstruct-passing -Usize_t" ./configure --disable-shared --enable-static --disable-asm && \
+  make && \
+  cp src/libsodium/.libs/libsodium.a $libs_dir/$myname.a && \
+  cd $libs_dir && \
+  $whereami/rename_lib $myname $libs_dir
+)
+

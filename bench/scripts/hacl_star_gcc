@@ -1,0 +1,17 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+dir="$1"
+libs_dir="$2"
+
+(cd $dir && \
+  export CFLAGS="-Ofast -march=native -mtune=native -m64 -fwrapv -fomit-frame-pointer -funroll-loops" && \
+  make clean-build && \
+  make build && \
+  cp build/libhacl.a $libs_dir/$myname.a && \
+  cp build/libhacl.a $libs_dir/${myname}_vec.a && \
+  cd $libs_dir && \
+  $whereami/rename_lib $myname $libs_dir && \
+  $whereami/rename_lib ${myname}_vec $libs_dir
+)
