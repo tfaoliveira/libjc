@@ -27,13 +27,16 @@ do
  echo -n "${filef}, " >> $csv
  egrep -o " $type - [0-9]+" "$file" |
  awk '{print $3}' |
- sort | head -n1  >> $csv
+ sort -g | head -n1  >> $csv
 done
 
 sort -t, -g -k2 -o $csv $csv
 
+upper=`cat $csv | tail -n1 | cut -d, -f2`
+
 echo "" > $gnu
 echo "set term svg enhanced background rgb 'white'" >> $gnu
+echo "set yrange [0:$upper]" >> $gnu
 echo "set title \"curve25519\"" >> $gnu
 echo "set output \"$svg\"" >> $gnu
 echo "set boxwidth 0.5 relative" >> $gnu

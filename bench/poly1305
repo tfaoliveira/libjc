@@ -27,7 +27,7 @@ mv data/crypto_onetimeauth_poly1305_openssl_static.data data/crypto_onetimeauth_
 # plot
 ./plot poly1305 cycles 32 16384 "(jazz|openssl)"
 ./plot poly1305 cycles 32 16384 "(jazz|hacl_star_gcc)"
-./plot poly1305 cycles 32 16384 "(jazz|hacl_star_compcert)"
+./plot poly1305 cycles 32 16384 "(jazz|hacl_star_ccomp)"
 ./plot poly1305 cycles 32 16384 "(jazz|libsodium)"
 ./plot poly1305 cycles 32 16384 "(jazz|moon)"
 ./plot poly1305 cycles 32 16384 "(jazz|vale)"

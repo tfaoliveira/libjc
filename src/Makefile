@@ -37,7 +37,10 @@ crypto_onetimeauth/poly1305/avx2/ \
 \
 crypto_stream/chacha20/ref/ \
 crypto_stream/chacha20/avx/ \
-crypto_stream/chacha20/avx2/
+crypto_stream/chacha20/avx2/ \
+\
+crypto_scalarmult/curve25519/ref4 \
+crypto_scalarmult/curve25519/mulx
 
 # --------------------------------------------------------------------
 .PHONY: default clean

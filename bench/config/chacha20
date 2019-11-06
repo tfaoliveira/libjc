@@ -4,7 +4,7 @@ crypto_stream chacha20 jazz/avx2
 
 crypto_stream chacha20 hacl_star/gcc
 crypto_stream chacha20 hacl_star/gcc_vec
-crypto_stream chacha20 hacl_star/compcert
+crypto_stream chacha20 hacl_star/ccomp
 
 crypto_stream chacha20 openssl/static
 crypto_stream chacha20 openssl/static_no_asm
@@ -26,8 +26,8 @@ crypto_stream chacha20 goll_gueron
 crypto_stream chacha20 krovetz/vec128
 crypto_stream chacha20 krovetz/avx2
 
-crypto_stream chacha20 moon/avx/64
-crypto_stream chacha20 moon/avx2/64
+#crypto_stream chacha20 moon/avx/64
+#crypto_stream chacha20 moon/avx2/64
 crypto_stream chacha20 e/ref
 crypto_stream chacha20 e/amd64-3
 

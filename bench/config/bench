@@ -1,1 +1,1 @@
-crypto_stream chacha20 jazz/ref
+crypto_scalarmult curve25519 boringssl/static -lpthread

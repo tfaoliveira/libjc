@@ -36,32 +36,38 @@
 // this function returns the input array but only the first 4 limbs should be
 // considered
 
-
-fn fe64_reduce
-( reg u64[8] h,
+fn _fe64_reduce
+( reg u64[4] h,
+  reg u64[4] r,
   reg u64 _38,
   reg u64 z, // zero
   reg bool cf of // cf = 0 and of = 0
-) -> reg u64[8]
+) -> reg u64[4]
 {
   inline int i;
   reg u64 hi lo;
 
   //
-  for i=0 to 3
-  { ( hi, lo ) = #x86_MULX ( _38, h[4+i] );
-    of, h[i]   = #x86_ADOX ( h[i],   lo, of );
-    cf, h[i+1] = #x86_ADCX ( h[i+1], hi, cf );
-  }
+  ( hi, lo )   = #x86_MULX ( _38,  r[0] );
+  of, h[0]     = #x86_ADOX ( h[0], lo, of );
+  cf, h[1]     = #x86_ADCX ( h[1], hi, cf );
 
-  ( h[4], lo ) = #x86_MULX ( _38, h[7] );
+  ( hi, lo )   = #x86_MULX ( _38,  r[1] );
+  of, h[1]     = #x86_ADOX ( h[1], lo, of );
+  cf, h[2]     = #x86_ADCX ( h[2], hi, cf );
+
+  ( hi, lo )   = #x86_MULX ( _38,  r[2] );
+  of, h[2]     = #x86_ADOX ( h[2], lo, of );
+  cf, h[3]     = #x86_ADCX ( h[3], hi, cf );
+
+  ( r[0], lo ) = #x86_MULX ( _38, r[3] );
   of, h[3]     = #x86_ADOX ( h[3], lo, of );
 
-  cf, h[4]     = #x86_ADCX ( h[4], z, cf ); 
-  of, h[4]     = #x86_ADOX ( h[4], z, of );
+  cf, r[0]     = #x86_ADCX ( r[0], z, cf ); 
+  of, r[0]     = #x86_ADOX ( r[0], z, of );
 
   //
-  _,_,_,_,_,lo = #x86_IMULtimm ( h[4], 38 );
+  _,_,_,_,_,lo = #x86_IMULtimm ( r[0], 38 );
 
   cf, h[0] += lo;
   cf, h[1] += z + cf;
@@ -69,10 +75,11 @@ fn fe64_reduce
   cf, h[3] += z + cf;
 
   // h[0] += (z - cf) & 38;
-  _,_,_,_,_,z = #x86_SBB(z, z, cf);
-  z &= 38;
-  h[0] += z;
+  _, z -= z - cf; // if cf = 1 then z = 0xFF..FF else z = 0
+  z &= 38; // if cf = 1 then z = 38 else z = 0
+  h[0] += z; // 
 
   return h;
 }
+
 #endif

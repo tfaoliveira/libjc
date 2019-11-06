@@ -20,17 +20,32 @@ opfocus=${focus}_${pfocus}
 #   loaded: check libjc/bench/config/keccak-openssl-no-asm
 #   for examples
 #
+# TODO: refactor me with getopts or something similar
 sfocus=""
+libpath=""
+liblink=""
+lstlink=""
+
 if [ "$#" -eq 3 ]; then
   sfocus="/$3";
 fi
 
-libpath=""
-liblink=""
+if [ "$#" -eq 4 ]; then
+  sfocus="/$3";
+  lstlink="$4";
+fi
+
 if [ "$#" -eq 5 ]; then
   sfocus="/$3";
   libpath="$4";
   liblink="$5";
+fi
+
+if [ "$#" -eq 6 ]; then
+  sfocus="/$3";
+  libpath="$4";
+  liblink="$5";
+  lstlink="$6";
 fi
 
 echo ">>>>$focus"
@@ -39,6 +54,7 @@ echo ">>>>$opfocus"
 echo ">>>>$sfocus"
 echo ">>>>$libpath"
 echo ">>>>$liblink"
+echo ">>>>$lstlink"
 ### end patch
 
 
@@ -497,7 +513,7 @@ do
 	    $compiler -DSUPERCOP -DSMALL \
 	      -I. -I"$include" -I"$include/$abi" \
 	      -o try try.$language try-anything.$language \
-	      "$op.a" $trylibs >../errors 2>&1 || ok=0
+	      "$op.a" $libpath $liblink $trylibs $lstlink >../errors 2>&1 || ok=0
 	    cat ../errors \
 	    | while read err
 	    do
@@ -534,7 +550,7 @@ do
 	    $compiler -DSUPERCOP \
 	      -I. -I"$include" -I"$include/$abi" \
 	      -o try try.$language try-anything.$language \
-	      "$op.a" $trylibs >../errors 2>&1 || ok=0
+	      "$op.a" $libpath $liblink $trylibs $lstlink >../errors 2>&1 || ok=0
 	    cat ../errors \
 	    | while read err
 	    do
@@ -581,7 +597,7 @@ do
 	      -DSUPERCOP -DLOOPS=3 \
 	      -I. -I"$include" -I"$include/$abi" \
 	      -o measure measure.$language measure-anything.$language \
-	      "$op.a" $libpath $liblink $measurelibs >../errors 2>&1 || ok=0
+	      "$op.a" $libpath $liblink $measurelibs $lstlink >../errors 2>&1 || ok=0
 	    cat ../errors \
 	    | while read err
 	    do

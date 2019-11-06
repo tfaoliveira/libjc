@@ -21,6 +21,7 @@ mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_
 
 # plot
 ./plot-fixed curve25519 cycles
+./plot-fixed curve25519 base_cycles
 
 today=`date "+%Y%m%d"`
 mkdir -p data/curve25519-$today

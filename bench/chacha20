@@ -25,7 +25,7 @@ mv data/crypto_stream_chacha20_openssl_static.data data/crypto_stream_chacha20_o
 # plot
 ./plot chacha20 xor_cycles 32 16384 "(jazz|openssl)"
 ./plot chacha20 xor_cycles 32 16384 "(jazz|hacl_star_gcc)"
-./plot chacha20 xor_cycles 32 16384 "(jazz|hacl_star_compcert)"
+./plot chacha20 xor_cycles 32 16384 "(jazz|hacl_star_ccomp)"
 ./plot chacha20 xor_cycles 32 16384 "(jazz|libsodium)"
 ./plot chacha20 xor_cycles 32 16384 "(jazz|usuba)"
 ./plot chacha20 xor_cycles 32 16384 "(jazz|moon)"
