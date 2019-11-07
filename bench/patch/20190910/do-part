@@ -507,7 +507,7 @@ do
 #	    echo "$compiler -DSUPERCOP -DSMALL \
 #	      -I. -I"$include" -I"$include/$abi" \
 #	      -o try try.$language try-anything.$language \
-#	      "$op.a" $trylibs"
+#	      "$op.a" $libpath $liblink $trylibs $lstlink"
 
 	    killafter 300 \
 	    $compiler -DSUPERCOP -DSMALL \

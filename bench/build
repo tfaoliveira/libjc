@@ -41,6 +41,8 @@ hacl_star_dir="$src_libs_dir/hacl-star"
 
 hacl_star_evercrypt_dir="$src_libs_dir/hacl-star-evercrypt/hacl-star/dist/compact-gcc"
 ./scripts/evercrypt_compact_gcc $hacl_star_evercrypt_dir $static_libs_dir $shared_libs_dir
+hacl_star_kremlib_dir="$src_libs_dir/hacl-star-evercrypt/hacl-star/dist/kremlin/kremlib/dist/generic"
+./scripts/kremlib $hacl_star_kremlib_dir $static_libs_dir
 
 hacl_star_ccomp_dir="$src_libs_dir/hacl-star/snapshots/hacl-c-compcert"
 hacl_star_ccomp_makefile="$root/patch/hacl-star/Makefile"

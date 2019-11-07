@@ -1,0 +1,12 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+dir="$1"
+static_libs_dir="$2"
+
+(cd $dir && \
+  make clean && \
+  make && \
+  cp libkremlib.a $static_libs_dir/
+)

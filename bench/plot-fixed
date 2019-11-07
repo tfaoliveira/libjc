@@ -18,7 +18,7 @@ idx=0
 
 echo -n "" > $csv
 
-for file in $( ls data/*${operation}*.data | egrep "${filter}" )
+for file in $( ls data/*${operation}*.data | egrep "${filter}")
 do
  filef=${file//data\//}
  filef=${filef//\.data/}
@@ -33,11 +33,12 @@ done
 sort -t, -g -k2 -o $csv $csv
 
 upper=`cat $csv | tail -n1 | cut -d, -f2`
+upper=`echo "($upper * 1.1) / 1" | bc`
 
 echo "" > $gnu
 echo "set term svg enhanced background rgb 'white'" >> $gnu
 echo "set yrange [0:$upper]" >> $gnu
-echo "set title \"curve25519\"" >> $gnu
+echo "set title \"curve25519 $type\"" >> $gnu
 echo "set output \"$svg\"" >> $gnu
 echo "set boxwidth 0.5 relative" >> $gnu
 echo "set style fill solid 0.5" >> $gnu

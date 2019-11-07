@@ -7,7 +7,6 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.synced_folder "../", "/home/vagrant/libjc"
-  config.vm.synced_folder "../../", "/home/vagrant/root"
 
   config.vm.provision "install", type: "shell", binary: true, inline: <<-SHELL
     echo "running install as: `whoami`"
@@ -64,7 +63,8 @@ Vagrant.configure(2) do |config|
      nix-shell --command make &&
      sudo env "PATH=$PATH" make install &&
      (nix-shell --command "easycrypt why3config" || true)
-     )
+     cp /home/vagrant/libjc/env/easycrypt.conf /home/vagrant/.config/easycrypt/
+    )
   SHELL
 
   config.vm.provision "emacs", type: "shell", binary: true, privileged: false, inline: <<-SHELL
@@ -99,6 +99,11 @@ Vagrant.configure(2) do |config|
   config.vm.provision "bench", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running bench as: `whoami`"
     (cd /home/vagrant/libjc/bench && ./chacha20 && ./poly1305 && ./keccak && ./curve25519)
+  SHELL
+
+  config.vm.provision "proof", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+    echo "running proof as: `whoami`"
+    (cd /home/vagrant/libjc/proof && make generate && make check)
   SHELL
 
 end
