@@ -3,8 +3,8 @@
 version=`cat config/version`
 
 # download and extract supercop
-#wget https://bench.cr.yp.to/supercop/supercop-$version.tar.xz
-#unxz < supercop-$version.tar.xz | tar -xf -
+wget https://bench.cr.yp.to/supercop/supercop-$version.tar.xz
+unxz < supercop-$version.tar.xz | tar -xf -
 
 # patch okcompilers
 cp ./patch/$version/okcompilers/* supercop-$version/okcompilers/
