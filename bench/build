@@ -8,6 +8,9 @@ src_libs_dir="$root/third_party"
 static_libs_dir="$root/third_party_static_libs"
 shared_libs_dir="$root/third_party_shared_libs"
 
+mkdir -p $static_libs_dir
+mkdir -p $shared_libs_dir
+
 ### libsodium
 libsodium_dir="$src_libs_dir/libsodium"
 ./scripts/libsodium_static $libsodium_dir $static_libs_dir
