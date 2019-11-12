@@ -25,6 +25,9 @@ mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_
 ./plot-fixed curve25519 cycles
 ./plot-fixed curve25519 base_cycles
 
+./plot-fixed curve25519 cycles "(jazz)"
+./plot-fixed curve25519 base_cycles "(jazz)"
+
 ./plot-fixed curve25519 cycles "(amd64|boring|donna|fiat|hacl_star_gcc|jazz|openssl|sandy|ever)"
 ./plot-fixed curve25519 base_cycles "(amd64|boring|donna|fiat|hacl_star_gcc|jazz|openssl|sandy|ever)"
 
