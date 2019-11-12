@@ -173,6 +173,7 @@ rewrite /mkseq /= /loadW64; congr.
 by rewrite W8u8.Pack.init_of_list.
 qed.
 
+(*
 require import Array2 WArray16.
 lemma WArray16_init64K (f:int -> W8.t):
   WArray16.init64 ("_.[_]" (Array2.init (WArray16.get64 (WArray16.init f)))) = WArray16.init f.
@@ -187,3 +188,4 @@ have ->/=: 0 <= x %% 8 < 8 by smt().
 rewrite WArray16.initiE; smt().
 qed.
 
+*)
