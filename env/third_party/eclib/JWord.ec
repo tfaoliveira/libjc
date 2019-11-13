@@ -26,10 +26,8 @@ clone include MonoArray with
 (* -------------------------------------------------------------------- *)
 abbrev modulus = 2 ^ size.
 
-(* @JBA: added abbrev [max_uint] *)
 abbrev max_uint = modulus - 1.
 lemma max_uintS: max_uint + 1 = modulus by done.
-(* end @JBA *)
 
 lemma ge2_modulus : 2 <= modulus.
 proof.
@@ -403,8 +401,6 @@ proof. move=> ->;apply andwK. qed.
 lemma orwK_s w1 w2 : w1 = w2 => orw w1 w2 = w1.
 proof. move=> ->;apply orwK. qed.
 
-(* @JBA: some more boolean word equalities *)
-
 lemma andw_invw w: andw w (invw w) = zerow.
 proof. by rewrite -xorw1; ring. qed.
 
@@ -447,8 +443,6 @@ qed.
 
 lemma orw_invw w: orw w (invw w) = onew.
 proof. by rewrite orw_xorw andw_invw -xorwA xorw0_s xorw_invw. qed.
-
-(* end @JBA *)
 
 hint simplify (xor0w, xorw0_s, xorw1, xor1w,
                and0w, andw0, and1w, andw1_s,
@@ -725,8 +719,6 @@ op addc : t -> t -> bool -> bool * t.
 op mulu : t -> t -> t * t.
 *)
 
-(* @JBA: added definitions *)
-
 op borrow_sub x y b = to_uint x < to_uint y + b2i b.
 
 op subc (x y:t) (b: bool): bool * t = (borrow_sub x y b, x-(y+of_int (b2i b)))
@@ -821,8 +813,6 @@ split=> //; smt (to_uint_cmp).
 qed.
 
 op mulu (x y: t): t * t = (mulhi x y, x*y) axiomatized by muluE.
-
-(* end @JBA *)
 
 (* --------------------------------------------------------------------- *)
 (* Bitwize operations                                                    *)
@@ -1044,8 +1034,6 @@ proof.
   apply bound_abs; smt (le_modz to_uint_cmp gt0_pow2 modz_cmp).
 qed.
 
-(* @JBA: ...some more... *)
-
 lemma nosmt to_uintNE w:
  to_uint (-w) = (modulus - to_uint w) %% modulus.
 proof.
@@ -1215,8 +1203,6 @@ rewrite -to_uint_onew -to_uintB.
 by congr; rewrite -(ones_compl w); ring.
 qed.
 
-(* @JBA: masks for word-spliting at given positions *)
-
 abbrev masklsb k = of_int (2^k - 1).
 
 lemma masklsbNeg k:
@@ -1309,8 +1295,6 @@ lemma mask_and_mask k1 k2:
  0 <= k1 => 0 <= k2 =>
  (masklsb k1 `&` masklsb k2) = masklsb (min k1 k2).
 proof. by move=> *; apply/wordP => i Hi /= /#. qed.
-
-(* @JBA: reasoning about "moving bits around..." *)
 
 lemma nosmt shrw_shlw_shlw k1 k2 x:
  0 <= k1 < k2 =>
@@ -1847,7 +1831,6 @@ abstract theory BitWordSH.
     by rewrite rol_xor 1:/#.
   qed.
 
-  (* @JBA: *)
   lemma shl_shlw k w:
    0 <= k < size =>
    w `<<` W8.of_int k = w `<<<` k.
@@ -1865,7 +1848,6 @@ abstract theory BitWordSH.
     smt(modz_cmp).
    by rewrite modz_small //; smt(size_le_256).
   qed.
-  (* end @JBA *)
 
 end BitWordSH.
 

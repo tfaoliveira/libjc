@@ -281,11 +281,7 @@ proof. done. qed.
 
 hint simplify (is_init_Some, in_bound_simplify).
 
-
-
-(**********************************************************************)
-(* @JBA: miscellaneous extra stuff (?to be moved elsewhere?)            *)
-
+(* -------------------------------------------------------------------- *)
 
 lemma powm1_mod k n:
  (0 <= n <= k)%Int =>

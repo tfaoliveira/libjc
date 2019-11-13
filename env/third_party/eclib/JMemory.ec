@@ -107,7 +107,6 @@ proof.
   by rewrite modzMDl divzMDl // -addzA. 
 qed.
 
-(** new **)
 lemma loadW128_bits64 m p i : 0 <= i < 2 =>
   loadW128 m p \bits64 i = loadW64 m (p + i * 8).
 proof. 
@@ -154,7 +153,6 @@ proof.
   by rewrite pack4K initiE //=  get_unpack32 // loadW128_bits32.
 qed.
 
-(** new **)
 lemma load2u64 mem p:
    pack2 [loadW64 mem p; loadW64 mem (p + 8)]
    = loadW128 mem p.
@@ -203,7 +201,6 @@ proof.
   congr; rewrite {1}(divz_eq i 4); ring.
 qed.
 
-(** new **)
 lemma pack2u64_bits8_nth i (ws:W64.t list) : 0 <= i < 16 => 
   W2u64.pack2 ws \bits8 i = nth W64.zero ws (i %/ 8) \bits8 (i%%8).
 proof.
@@ -229,7 +226,6 @@ proof.
   by rewrite /W4u8.Pack.to_list /mkseq /= /stores.
 qed.
 
-(** new **)
 lemma store2u64 mem ptr w0 w1: 
   storeW128 mem ptr (W2u64.pack2 [w0; w1]) =
   storeW64 (storeW64 mem ptr w0) (ptr + 8) w1.
@@ -237,10 +233,6 @@ proof.
   rewrite storeW128E !storeW64E.
   by rewrite /W2u16.Pack.to_list /mkseq /= /stores /=.
 qed.
-(*
-    by rewrite !pack2u64_bits8_nth //.
-qed.
-*)
 
 lemma store4u8 mem ptr w0 w1 w2 w3 :
   storeW32 mem ptr (W4u8.pack4 [w0; w1; w2; w3]) =
