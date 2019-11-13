@@ -1,3 +1,9 @@
+# Setup Benchmarks
+```
+cd env
+vagrant up
+```
+
 # Benchmarks
 
 ## ChaCha20
