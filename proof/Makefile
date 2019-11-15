@@ -47,7 +47,10 @@ ECSRC := \
  crypto_hash/keccak1600/Keccak1600_savx2.ec \
  crypto_hash/keccak1600/Keccak1600_sref_CT.ec \
  crypto_hash/keccak1600/Keccak1600_sscalar_CT.ec \
- crypto_hash/keccak1600/Keccak1600_savx2_CT.ec
+ crypto_hash/keccak1600/Keccak1600_savx2_CT.ec \
+\
+ crypto_scalarmult/curve25519/Curve25519_smulx.ec \
+ crypto_scalarmult/curve25519/Curve25519_smulx_CT.ec
 
 # --------------------------------------------------------------------
 .PHONY: default usage check check-xunit generate clean
@@ -102,9 +105,9 @@ crypto_hash/keccak1600/Keccak1600_s%_CT.ec: $(TOP)/src/crypto_hash/keccak1600/%/
 	cd $$(dirname $@) && jasminc -ec __keccak1600_$* -oec $$(basename $@) -CT $<
 
 # Curve25519
-crypto_scalarmult/curve25519/X25519_s%.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
+crypto_scalarmult/curve25519/Curve25519_s%.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
 	cd $$(dirname $@) && jasminc -ec curve25519_$* -oec $$(basename $@) $<
 
-crypto_scalarmult/curve25519/X25519_s%_CT.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
+crypto_scalarmult/curve25519/Curve25519_s%_CT.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
 	cd $$(dirname $@) && jasminc -ec curve25519_$* -oec $$(basename $@) -CT $<
 
