@@ -6,13 +6,19 @@ Vagrant.configure(2) do |config|
     vb.memory = "8192"
   end
 
-  config.vm.synced_folder "../", "/home/vagrant/libjc"
+  config.vm.synced_folder "../", "/home/vagrant/workspace/libjc"
 
   config.vm.provision "install", type: "shell", binary: true, inline: <<-SHELL
     echo "running install as: `whoami`"
     sudo apt-get update
-    sudo apt-get install -y build-essential m4 libssl-dev gpp gnuplot
+    sudo apt-get install -y git build-essential m4 libssl-dev gpp gnuplot
   SHELL
+
+  #config.vm.provision "libjc", type: "shell", binary: true, privileged: false, inline: <<-SHELL
+  #  echo "running libjc as: `whoami`"
+  #  (cd /home/vagrant/workspace/ && git clone https://github.com/tfaoliveira/libjc.git)
+  #  (cd /home/vagrant/workspace/libjc && git submodule init && git submodule update)
+  #SHELL
 
   config.vm.provision "nix", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running nix as: `whoami`"
@@ -21,7 +27,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "jasmin", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running jasmin as: `whoami`"
-    (cd /home/vagrant/libjc/env/third_party/jasmin/ && 
+    (cd /home/vagrant/workspace/libjc/env/third_party/jasmin/ && 
      nix-shell --command make &&
      sudo install -b -D `pwd`/compiler/jasminc /usr/local/bin/)
   SHELL
@@ -49,7 +55,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision "z3", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running z3 as: `whoami`"
     sudo apt install python -y
-    (cd /home/vagrant/libjc/env/third_party/z3 && 
+    (cd /home/vagrant/workspace/libjc/env/third_party/z3 && 
      ./configure &&
      cd build &&
      make &&
@@ -59,23 +65,23 @@ Vagrant.configure(2) do |config|
   config.vm.provision "easycrypt", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running easycrypt as: `whoami`"
     mkdir -p /home/vagrant/.config/easycrypt/
-    (cd /home/vagrant/libjc/env/third_party/easycrypt && 
+    (cd /home/vagrant/workspace/libjc/env/third_party/easycrypt && 
      nix-shell --command make &&
      sudo env "PATH=$PATH" make install &&
      (nix-shell --command "easycrypt why3config" || true)
-     cp /home/vagrant/libjc/env/easycrypt.conf /home/vagrant/.config/easycrypt/
+     cp /home/vagrant/workspace/libjc/env/easycrypt.conf /home/vagrant/.config/easycrypt/
     )
   SHELL
 
   config.vm.provision "emacs", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running emacs as: `whoami`"
     sudo apt install emacs -y
-    cat /home/vagrant/libjc/env/third_party/.emacs > ~/.emacs
+    cat /home/vagrant/workspace/libjc/env/third_party/.emacs > ~/.emacs
   SHELL
 
   config.vm.provision "compcert", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running compcert as: `whoami`"
-    (cd /home/vagrant/libjc/env/third_party/compcert/compcert_v3.6 && 
+    (cd /home/vagrant/workspace/libjc/env/third_party/compcert/compcert_v3.6 && 
      nix-shell --command "./configure x86_64-linux && make && sudo make install" ../compcert_v3.6.nix
     )
   SHELL
@@ -83,27 +89,27 @@ Vagrant.configure(2) do |config|
   config.vm.provision "thirdparty", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running thirdparty-libs as: `whoami`"
     sudo apt install cmake libunwind-dev golang-go -y
-    (cd /home/vagrant/libjc/bench && ./build)
+    (cd /home/vagrant/workspace/libjc/bench && ./build)
   SHELL
 
   config.vm.provision "src", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running src as: `whoami`"
-    (cd /home/vagrant/libjc/src && make)
+    (cd /home/vagrant/workspace/libjc/src && make)
   SHELL
 
   config.vm.provision "supercop", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running supercop as: `whoami`"
-    (cd /home/vagrant/libjc/bench && ./setup1 && ./setup2)
+    (cd /home/vagrant/workspace/libjc/bench && ./setup1 && ./setup2)
   SHELL
 
   config.vm.provision "bench", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running bench as: `whoami`"
-    (cd /home/vagrant/libjc/bench && ./chacha20 && ./poly1305 && ./keccak && ./curve25519)
+    (cd /home/vagrant/workspace/libjc/bench && ./chacha20 && ./poly1305 && ./keccak && ./curve25519)
   SHELL
 
   config.vm.provision "proof", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running proof as: `whoami`"
-    (cd /home/vagrant/libjc/proof && make generate && make check)
+    (cd /home/vagrant/workspace/libjc/proof && make generate && make check)
   SHELL
 
 end
