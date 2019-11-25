@@ -9,39 +9,33 @@
 	path = bench/third_party/hacl-star
 	url = https://github.com/project-everest/hacl-star.git
   ignore = dirty
-[submodule "bench/third_party/compcert/CompCert"]
-	path = bench/third_party/compcert/CompCert
-	url = https://github.com/AbsInt/CompCert.git
-[submodule "bench/third_party/jasmin/coqword"]
-	path = bench/third_party/jasmin/coqword
-	url = git@github.com:jasmin-lang/coqword.git
-[submodule "proof/third_party/easycrypt"]
-	path = proof/third_party/easycrypt/easycrypt
-	url = https://github.com/EasyCrypt/easycrypt.git
-	branch = deploy-kms
 [submodule "bench/third_party/boringssl"]
 	path = bench/third_party/boringssl
-	url = git@github.com:google/boringssl.git
+	url = https://github.com/google/boringssl.git
 [submodule "bench/third_party/usuba"]
 	path = bench/third_party/usuba
 	url = https://github.com/DadaIsCrazy/usuba.git
-[submodule "bench/third_party/jasmin/jasmin"]
-	path = bench/third_party/jasmin/jasmin
-	url = git@github.com:jasmin-lang/jasmin.git
-	branch = array_cast
 [submodule "bench/third_party/fiat-crypto"]
 	path = bench/third_party/fiat-crypto
 	url = https://github.com/mit-plv/fiat-crypto
   ignore = dirty
-[submodule "bench/third_party/jasmin-glob-array/jasmin"]
-	path = bench/third_party/jasmin-glob-array/jasmin
-	url = git@github.com:jasmin-lang/jasmin.git
-  ignore = dirty
-[submodule "bench/third_party/jasmin-glob-array/coqword"]
-	path = bench/third_party/jasmin-glob-array/coqword
-	url = git@github.com:jasmin-lang/coqword.git
 [submodule "bench/third_party/hacl-star-evercrypt/hacl-star"]
 	path = bench/third_party/hacl-star-evercrypt/hacl-star
 	url = https://github.com/project-everest/hacl-star.git
 	branch = evercrypt-v0.1+
+	ignore = dirty
+[submodule "env/third_party/jasmin"]
+	path = env/third_party/jasmin
+	url = https://github.com/jasmin-lang/jasmin.git
+	branch = array_cast
+[submodule "env/third_party/easycrypt"]
+	path = env/third_party/easycrypt
+	url = https://github.com/EasyCrypt/easycrypt.git
+	branch = 1.0
+[submodule "compcert_v3.6"]
+	path = env/third_party/compcert/compcert_v3.6
+	url = https://github.com/AbsInt/CompCert.git
+[submodule "env/third_party/z3"]
+	path = env/third_party/z3
+	url = https://github.com/Z3Prover/z3.git
 	ignore = dirty

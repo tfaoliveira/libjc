@@ -1,0 +1,15 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+dir="$1"
+lib_dir="$2/$myname"
+
+mkdir -p $lib_dir
+
+(cd $dir && \
+  (make distclean || true) && \
+  ./Configure no-asm --prefix=$lib_dir linux-x86_64 && \
+  make && \
+  make install_runtime_libs
+)

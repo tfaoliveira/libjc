@@ -1,15 +1,7 @@
-# -*- Makefile -*-
+JFLAGS:= -lea
 
-.PHONY: default clean
-
-default: keccak_f1600_export.japp keccak_f1600_export.s
+default: keccakf1600_export.japp keccakf1600_export.s
 	@true
 
-clean:
-	rm -f keccak_f1600_export.japp keccak_f1600_export.s
+include ../../../Makefile.common
 
-%.s: %.japp
-	jasminc -lea -pasm $< > $@ || rm -f $@
-
-%.japp: %.jazz
-	gpp -I../../../ -o $@ $<

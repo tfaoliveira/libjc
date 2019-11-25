@@ -1,0 +1,16 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+dir="$1"
+libs_dir="$2"
+
+(cd $dir && \
+  (make distclean || true) && \
+  ./Configure no-shared linux-x86_64 && \
+  make && \
+  cp libcrypto.a $libs_dir/$myname.a && \
+  cd $libs_dir && \
+  $whereami/rename_lib $myname $libs_dir
+)
+

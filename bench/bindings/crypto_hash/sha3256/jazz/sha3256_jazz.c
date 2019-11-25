@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "crypto_hash.h"
 #include "impl.h"
 #include "api.h"

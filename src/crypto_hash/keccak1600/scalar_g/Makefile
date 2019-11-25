@@ -1,12 +1,8 @@
-# -*- Makefile -*-
+JFLAGS:= -lea
+JASMINC ?= jasminc-glob-array
 
-.PHONY: default clean
-
-default: keccak_1600.japp
+default: keccak1600.japp keccak1600.s
 	@true
 
-clean:
-	rm -f keccak_1600.japp
+include ../../../Makefile.common
 
-%.japp: %.jazz
-	gpp -I../../../ -o $@ $<

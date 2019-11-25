@@ -1,8 +1,12 @@
-# -*- Makefile -*-
-
-# --------------------------------------------------------------------
-%.s: %.japp
-	jasminc -pasm $< > $@ || rm -f $@
+GFLAGS ?=
+JFLAGS ?=
+JASMINC ?= jasminc
 
 %.japp: %.jazz
-	gpp -o $@ $<
+	gpp -I../../../ $(GFLAGS) -o $@ $<
+
+%.s: %.japp
+	$(JASMINC) $(JFLAGS) -pasm $< > $@ || rm -f $@
+
+clean:
+	rm -f *.japp *.s

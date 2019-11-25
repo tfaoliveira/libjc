@@ -1,0 +1,68 @@
+(** A primitive: the building block we assume ideal **)
+type p.
+
+module type PRIMITIVE = {
+  proc init(): unit
+  proc f(x : p): p
+  proc fi(x : p): p
+}.
+
+module type DPRIMITIVE = {
+  proc f(x : p): p
+  proc fi(x : p): p
+}.
+
+(** A functionality: the target construction **)
+type f_in, f_out.
+
+module type FUNCTIONALITY = {
+  proc init(): unit
+  proc f(x : f_in): f_out
+}.
+
+module type DFUNCTIONALITY = {
+  proc f(x : f_in): f_out
+}.
+
+(** A construction takes a primitive and builds a functionality.
+    A simulator takes a functionality and simulates the primitive.
+    A distinguisher gets oracle access to a primitive and a
+      functionality and returns a boolean (its guess as to whether it
+      is playing with constructed functionality and ideal primitive or
+      with ideal functionality and simulated primitive). **)
+module type CONSTRUCTION (P : DPRIMITIVE) = {
+  proc init() : unit {}
+  proc f(x : f_in): f_out { P.f }
+}.
+
+module type SIMULATOR (F : DFUNCTIONALITY) = {
+  proc init() : unit { }
+  proc f(x : p) : p { F.f }
+  proc fi(x : p) : p { F.f }
+}.
+
+module type DISTINGUISHER (F : DFUNCTIONALITY, P : DPRIMITIVE) = {
+  proc distinguish(): bool 
+}.
+
+module Indif (F : FUNCTIONALITY, P : PRIMITIVE, D : DISTINGUISHER) = {
+  proc main(): bool = {
+    var b;
+
+         P.init();
+         F.init();
+    b <@ D(F,P).distinguish();
+    return b;
+  }
+}.
+
+(* Using the name Real can be a bad idea, since it can clash with the theory Real *)
+module GReal(C : CONSTRUCTION, P : PRIMITIVE) = Indif(C(P),P).
+module GIdeal(F : FUNCTIONALITY, S : SIMULATOR) = Indif(F,S(F)).
+
+(* (C <: CONSTRUCTION) applied to (P <: PRIMITIVE) is indifferentiable
+   from (F <: FUNCTIONALITY) if there exists (S <: SIMULATOR) such
+   that, for all (D <: DISTINGUISHER),
+      | Pr[Real(P,C,D): res] - Pr[Ideal(F,S,D): res] | is small.
+   We avoid the existential by providing a concrete construction for S
+   and the `small` by providing a concrete bound. *)

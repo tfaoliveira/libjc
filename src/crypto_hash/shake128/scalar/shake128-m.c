@@ -1,11 +1,7 @@
-#include "crypto_hash.h"
-#include "impl.h"
-#include "api.h"
 #include <string.h>
 #include <stdint.h>
 
-
-extern void keccak_1600(
+extern void keccak1600_scalar(
          uint8_t *out,
         uint64_t outlen,
    const uint8_t *in,
@@ -13,7 +9,6 @@ extern void keccak_1600(
         uint64_t *c,
         uint64_t *iotas
 );
-
 
 uint64_t iotas[32] __attribute__((aligned(256))) = 
 {
@@ -44,12 +39,10 @@ uint64_t iotas[32] __attribute__((aligned(256))) =
    , 0x8000000080008008
 };
 
-
 int shake128_scalar(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
   uint64_t c[] = {0x1F, (1344/8)};
-  keccak_1600(out, 168, in, inlen, c, &(iotas[8]));
+  keccak1600_scalar(out, 168, in, inlen, c, &(iotas[8]));
   return 0;
 }
-
 

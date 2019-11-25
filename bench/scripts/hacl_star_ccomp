@@ -1,0 +1,16 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+dir="$1"
+libs_dir="$2"
+makefile="$3"
+
+(cd $dir && \
+  cp $makefile . && \
+  make clean && \
+  make libhacl.a && \
+  cp libhacl.a $libs_dir/$myname.a && \
+  cd $libs_dir && \
+  $whereami/rename_lib $myname $libs_dir
+)

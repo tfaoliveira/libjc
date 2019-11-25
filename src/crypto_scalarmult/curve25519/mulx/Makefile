@@ -1,9 +1,6 @@
-.PHONY: clean
+JFLAGS:= -lea
 
-x25519_scalarmult_export.s: *.jazz
-	gpp -o x25519_scalarmult_export.japp x25519_scalarmult_export.jazz
-	jasminc -lea -pasm x25519_scalarmult_export.japp > $@
+default: x25519_scalarmult_export.japp x25519_scalarmult_export.s
+	@true
 
-clean:
-	rm -f *.s *.japp
-
+include ../../../Makefile.common

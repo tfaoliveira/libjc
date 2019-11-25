@@ -7,16 +7,16 @@ NAME := libjc
 
 # --------------------------------------------------------------------
 generate:
-	$(MAKE) -C src/crypto_onetimeauth/poly1305
+	$(MAKE) -C src
 	$(MAKE) -C proof generate
 
 # --------------------------------------------------------------------
-check:
+check: generate
 	$(MAKE) -C proof check
 
 # --------------------------------------------------------------------
 clean:
-	$(MAKE) -C src/crypto_onetimeauth/poly1305 clean
+	$(MAKE) -C src clean
 	$(MAKE) -C proof clean
 
 # --------------------------------------------------------------------

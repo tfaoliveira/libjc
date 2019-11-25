@@ -4,7 +4,10 @@ crypto_scalarmult curve25519 donna_c64
 crypto_scalarmult curve25519 sandy2x
 crypto_scalarmult curve25519 openssl/static
 crypto_scalarmult curve25519 openssl/static_no_asm
-crypto_scalarmult curve25519 boringssl/static
+crypto_scalarmult curve25519 boringssl/static -lpthread
 crypto_scalarmult curve25519 hacl_star/gcc
-#crypto_scalarmult curve25519 hacl_star/compcert
+crypto_scalarmult curve25519 hacl_star/ccomp
+crypto_scalarmult curve25519 fiat-crypto/C64
 crypto_scalarmult curve25519 jazz/ref4
+crypto_scalarmult curve25519 jazz/mulx
+crypto_scalarmult curve25519 evercrypt/compact_gcc `pwd`/third_party_static_libs/libkremlib.a

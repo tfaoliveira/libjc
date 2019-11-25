@@ -55,12 +55,16 @@ rewrite /val_digits /=.
 have := (divz_eq (to_uint x2) 4).
 rewrite addzC mulzC => {1}->.
 rewrite !mulzDr -!mulzA /=.
-have ? := W64.to_uint_cmp x0.
-have ? := W64.to_uint_cmp x1.
-have ? := W64.to_uint_cmp x2.
+have /= ? := W64.to_uint_cmp x0.
+have /= ? := W64.to_uint_cmp x1.
+have /= ? := W64.to_uint_cmp x2.
 have ? : 0 <= to_uint x2 %% 4 < 4 by smt(W64.to_uint_cmp modz_cmp).
 rewrite !addzA (mulzC 1361129467683753853853498429727072845824) divzMDr //.
-smt. (*smt(divz_eq0 ...)*)  
+have ->: (to_uint x0 + 18446744073709551616 * to_uint x1 +
+         340282366920938463463374607431768211456 * (to_uint x2 %% 4)) %/
+         1361129467683753853853498429727072845824 = 0.
+ by rewrite -divz_eq0 /#.
+by ring.
 qed.
 
 lemma val_limbs64_mod2128 x0 x1 x2:
@@ -68,9 +72,7 @@ lemma val_limbs64_mod2128 x0 x1 x2:
 proof.
 rewrite /val_digits /= !mulzDr -!mulzA /= !addzA -modzDmr modzMr /= modz_small //.
 apply bound_abs.
-have ? := W64.to_uint_cmp x0.
-have ? := W64.to_uint_cmp x1.
-split.
- smt(addz_ge0 StdOrder.IntOrder.pmulr_lge0).
-smt. 
+have /= ? := W64.to_uint_cmp x0.
+have /= ? := W64.to_uint_cmp x1.
+by split; smt(addz_ge0 StdOrder.IntOrder.pmulr_lge0).
 qed.

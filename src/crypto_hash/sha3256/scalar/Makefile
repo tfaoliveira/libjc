@@ -1,15 +1,7 @@
-# -*- Makefile -*-
-
-.PHONY: default clean
+JFLAGS:= -lea
 
 default: sha3256.japp sha3256.s
 	@true
 
-clean:
-	rm -f sha3256.japp sha3256.s
+include ../../../Makefile.common
 
-%.s: %.japp
-	jasminc -lea -pasm $< > $@ || rm -f $@
-
-%.japp: %.jazz
-	gpp -I../../../ -o $@ $<

@@ -13,19 +13,6 @@ rm -f data/crypto_hash_shake*
 
 PREVIOUS_LD_LIBRARY_PATH=`echo -n $LD_LIBRARY_PATH`
 
-## run keccak implementations that include with non-generic code (this part should be refactored)
-  ## TODO write a script to swap specific implementations automatically (probably a 'bench-specific' or something...)
-  mv supercop-$VERSION/crypto_hash/shake256/jazz/avx2/shake256.s supercop-$VERSION/crypto_hash/shake256/jazz/avx2/shake256.s.original 
-  mv supercop-$VERSION/crypto_hash/shake256/jazz/avx2/shake256.s.specific supercop-$VERSION/crypto_hash/shake256/jazz/avx2/shake256.s
-
-  ./bench keccak-specific
-
-  mv supercop-$VERSION/crypto_hash/shake256/jazz/avx2/shake256.s supercop-$VERSION/crypto_hash/shake256/jazz/avx2/shake256.s.specific 
-  mv supercop-$VERSION/crypto_hash/shake256/jazz/avx2/shake256.s.original supercop-$VERSION/crypto_hash/shake256/jazz/avx2/shake256.s
-
-  ## TODO...
-  mv data/crypto_hash_shake256_jazz_avx2.data data/crypto_hash_shake256_jazz_avx2_specific.data
-
 ## run libjc
 ./bench keccak
 

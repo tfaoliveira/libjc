@@ -21,14 +21,14 @@ fn _fe64_add_rrs
   for i=1 to 4
   { cf, h[i] += g[i] + cf; }
 
-  _,_,_,_,_, z = #x86_SBB(z, z, cf);
+  _, z -= z - cf;
   z &= 38;
 
   cf, h[0] += z;
   for i=1 to 4
   { cf, h[i] += 0 + cf; }
 
-  _,_,_,_,_, z = #x86_SBB(z, z, cf);
+  _, z -= z - cf;
   z &= 38;
   h[0] += z;
 

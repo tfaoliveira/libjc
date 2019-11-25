@@ -11,16 +11,24 @@ if [ "$#" -eq 0 ]; then
   do
     dir=`echo $implementationdir | sed -e 's/^\.\.\/src\///'`
     dirname=`dirname $dir`
-    basename=`basename $dir`;
+    basename=`basename $dir`
 
-    #    echo ""
-    #    echo $implementationdir
-    #    echo $dir
-    #    echo $dirname
-    #    echo $basename
+#        echo ""
+#        echo "implementationdir $implementationdir"
+#        echo "dir $dir"
+#        echo "dirname $dirname"
+#        echo "basename $basename"
 
-    supercopdir=supercop-$version/$dirname/jazz/$basename/;
-    bindingdir=bindings/$dirname/jazz/;
+    supercopdir=supercop-$version/$dirname/jazz/$basename/
+    bindingdir=bindings/$dirname/jazz/$basename/
+
+    # if a specific binding doesn't exist use the generic one
+    if [ ! -d $bindingdir ]
+    then
+      bindingdir=bindings/$dirname/jazz/
+    fi
+
+#        echo "bindingdir $bindingdir"
 
     mkdir -p $supercopdir
     rm -fr $supercopdir/*

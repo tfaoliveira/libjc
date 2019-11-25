@@ -75,7 +75,7 @@ fn _fe64_reduce
   cf, h[3] += z + cf;
 
   // h[0] += (z - cf) & 38;
-  _,_,_,_,_,z = #x86_SBB(z, z, cf); // if cf = 1 then z = 0xFF..FF else z = 0
+  _, z -= z - cf; // if cf = 1 then z = 0xFF..FF else z = 0
   z &= 38; // if cf = 1 then z = 38 else z = 0
   h[0] += z; // 
 

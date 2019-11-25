@@ -1,0 +1,26 @@
+#!/bin/sh -e
+
+version=`cat config/version`
+
+cp ./patch/$version/do-part supercop-$version/do-part
+cp ./patch/$version/measure-anything.c supercop-$version/measure-anything.c
+cp ./patch/$version/crypto_stream/measure.c supercop-$version/crypto_stream/measure.c
+cp ./patch/$version/crypto_onetimeauth/measure.c supercop-$version/crypto_onetimeauth/measure.c
+cp ./patch/$version/crypto_hash/measure.c supercop-$version/crypto_hash/measure.c
+
+cp ./patch/$version/crypto_hash/shake128/checksumbig supercop-$version/crypto_hash/shake128/checksumbig
+cp ./patch/$version/crypto_hash/shake128/checksumsmall supercop-$version/crypto_hash/shake128/checksumsmall
+cp ./patch/$version/crypto_hash/sha3512/checksumbig supercop-$version/crypto_hash/sha3512/checksumbig
+cp ./patch/$version/crypto_hash/sha3512/checksumsmall supercop-$version/crypto_hash/sha3512/checksumsmall
+cp ./patch/$version/crypto_hash/sha3384/checksumbig supercop-$version/crypto_hash/sha3384/checksumbig
+cp ./patch/$version/crypto_hash/sha3384/checksumsmall supercop-$version/crypto_hash/sha3384/checksumsmall
+cp ./patch/$version/crypto_hash/sha3256/checksumbig supercop-$version/crypto_hash/sha3256/checksumbig
+cp ./patch/$version/crypto_hash/sha3256/checksumsmall supercop-$version/crypto_hash/sha3256/checksumsmall
+cp ./patch/$version/crypto_hash/sha3256/checksumbig supercop-$version/crypto_hash/sha3256/checksumbig
+cp ./patch/$version/crypto_hash/sha3256/checksumsmall supercop-$version/crypto_hash/sha3256/checksumsmall
+cp ./patch/$version/crypto_hash/sha3224/checksumbig supercop-$version/crypto_hash/sha3224/checksumbig
+cp ./patch/$version/crypto_hash/sha3224/checksumsmall supercop-$version/crypto_hash/sha3224/checksumsmall
+
+echo "bench" > config/work
+mkdir -p data/
+

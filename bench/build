@@ -1,129 +1,61 @@
 #!/bin/bash
 
-idir="third_party_static_libs"
-ilib="third_party_shared_libs"
-mkdir -p $idir/
-mkdir -p $ilib/openssl
-mkdir -p $ilib/openssl-no-asm
-mkdir -p $ilib/openssl-keccak-avx2
-mkdir -p $ilib/evercrypt-compact-gcc
+# TODO: implement: ./build all && ./build libsodium && etc
 
-# libsodium :
-# - 2 versions will be benchmarked: static and static with assembly disabled
-# - from the help of libsodium configure regarding --disable-asm option:
-#   "Do not compile assembly code -- As a side effect,
-#    this disables CPU-specific implementations on
-#    non-Windows platforms."
-# - symbols in libsodium.a will be renamed to avoid conflicts with supercop
+### some common folder names 
+root="`pwd`"
+src_libs_dir="$root/third_party"
+static_libs_dir="$root/third_party_static_libs"
+shared_libs_dir="$root/third_party_shared_libs"
 
-rename_lib()
-{
-  libname=$1
-  (cd $idir/ && \
-    nm $libname.a | grep " T " | awk -v name="$libname" '{print $3" "name"_"$3}' > symbols_to_rename && \
-    objcopy --redefine-syms=symbols_to_rename $libname.a && \
-    rm symbols_to_rename
-  )
-}
+mkdir -p $static_libs_dir
+mkdir -p $shared_libs_dir
 
-if [ "$#" -eq 0 ]; then
+### libsodium
+libsodium_dir="$src_libs_dir/libsodium"
+./scripts/libsodium_static $libsodium_dir $static_libs_dir
+./scripts/libsodium_static_disable_asm $libsodium_dir $static_libs_dir
+./scripts/libsodium_static_disable_asm_ccomp $libsodium_dir $static_libs_dir
 
-  # boring ssl # (building in release mode;gcc 8.1.0;libunwind 1.1.0(~?); breaks the build; #CHECKME)
-  (mkdir -p third_party/boringssl/build/ && \
-   cd third_party/boringssl/build/ && \
-   export CC=/usr/local/bin/gcc &&  \
-   export CXX=/usr/local/bin/g++ && \
-   cmake -DCMAKE_BUILD_TYPE=Release .. && \
-   make -k && \
-   cp crypto/libcrypto.a ../../../$idir/boringssl_static.a
-  )
-  rename_lib boringssl_static;
+### openssl
+openssl_dir="$src_libs_dir/openssl"
+openssl_build_info="$root/patch/openssl/crypto/sha/build-keccak-avx2.info"
 
-  # libsodium static
-  (cd third_party/libsodium/ && \
-    make distclean && ./configure --enable-static && make && make check && \
-    cp src/libsodium/.libs/libsodium.a ../../$idir/libsodium_static.a
-  )
-  rename_lib libsodium_static;
+### openssl static
+./scripts/openssl_static $openssl_dir $static_libs_dir
+./scripts/openssl_static_no_asm $openssl_dir $static_libs_dir
 
+### openssl shared (necessary to benchmark keccak; but can also be used for any other primitive):
+###  - openssl_shared: keccak asm implementation
+###  - openssl_shared_no_asm : keccak c implementation
+###  - openssl_shared_keccak_avx2 : keccak asm avx2 implementation
+./scripts/openssl_shared $openssl_dir $shared_libs_dir
+./scripts/openssl_shared_no_asm $openssl_dir $shared_libs_dir
+./scripts/openssl_shared_keccak_avx2 $openssl_dir $shared_libs_dir $openssl_build_info
 
-  # libsodium static_disable_asm
-  (cd third_party/libsodium/ && \
-    make distclean && ./configure --enable-static --disable-asm && make && make check && \
-    cp src/libsodium/.libs/libsodium.a ../../$idir/libsodium_static_disable_asm.a
-  )
-  rename_lib libsodium_static_disable_asm;
+### boringssl
+boringssl_dir="$src_libs_dir/boringssl"
+./scripts/boringssl_static $boringssl_dir $static_libs_dir
 
+### hacl-star
+###  - gcc and gcc_vec are the same lib: this is just an hack to fit with the binding infrastructure
+hacl_star_dir="$src_libs_dir/hacl-star"
+./scripts/hacl_star_gcc $hacl_star_dir $static_libs_dir
 
-  # openssl static
-  (cd third_party/openssl/ && \
-    make distclean && ./Configure no-shared linux-x86_64 && make && \
-    cp libcrypto.a ../../$idir/openssl_static.a
-  )
-  rename_lib openssl_static;
+hacl_star_evercrypt_dir="$src_libs_dir/hacl-star-evercrypt/hacl-star/dist/compact-gcc"
+./scripts/evercrypt_compact_gcc $hacl_star_evercrypt_dir $static_libs_dir $shared_libs_dir
+hacl_star_kremlib_dir="$src_libs_dir/hacl-star-evercrypt/hacl-star/dist/kremlin/kremlib/dist/generic"
+./scripts/kremlib $hacl_star_kremlib_dir $static_libs_dir
 
+hacl_star_ccomp_dir="$src_libs_dir/hacl-star/snapshots/hacl-c-compcert"
+hacl_star_ccomp_makefile="$root/patch/hacl-star/Makefile"
+./scripts/hacl_star_ccomp $hacl_star_ccomp_dir $static_libs_dir $hacl_star_ccomp_makefile
 
-  # openssl static no asm
-  (cd third_party/openssl/ && \
-    make distclean && ./Configure no-shared no-asm linux-x86_64 && make && \
-    cp libcrypto.a ../../$idir/openssl_static_no_asm.a
-  )
-  rename_lib openssl_static_no_asm;
+### usuba
+usuba_dir="$src_libs_dir/usuba/supercop/crypto_stream/chacha20"
+./scripts/usuba_copy $usuba_dir $root
 
-  # openssl shared - no-asm - keccak x86
-  (cd third_party/openssl/ && \
-    (make distclean || true) && ./Configure no-asm --prefix=`pwd`/../../$ilib/openssl-no-asm linux-x86_64 && make && \
-    make install_runtime_libs
-  )
-
-  # openssl shared - keccak x86
-  (cd third_party/openssl/ && \
-    (make distclean || true) && ./Configure --prefix=`pwd`/../../$ilib/openssl linux-x86_64 && make && \
-    make install_runtime_libs
-  )
-
-  # openssl shared - keccak avx2
-  (cd third_party/openssl/ && \
-    (make distclean || true) && \
-    cp ../../patch/openssl/crypto/sha/build-keccak-avx2.info crypto/sha/build.info && \
-    ./Configure --prefix=`pwd`/../../$ilib/openssl-keccak-avx2 linux-x86_64 && make && \
-    make install_runtime_libs && \
-    git checkout crypto/sha/build.info
-  )
-
-  # hacl-star : gcc and gcc_vec
-  (cd third_party/hacl-star/ && \
-    make clean-build && make build && \
-    cp build/libhacl.a ../../$idir/hacl_star_gcc.a && \
-    cp build/libhacl.a ../../$idir/hacl_star_gcc_vec.a
-  )
-  rename_lib hacl_star_gcc;
-  rename_lib hacl_star_gcc_vec;
-
-  # hacl-star : evercrypt branch : compact gcc
-  (cd third_party/hacl-star-evercrypt/hacl-star/dist/compact-gcc && \
-    make clean && make && \
-    cp libevercrypt.so ../../../../../$ilib/evercrypt-compact-gcc && \
-    cp libevercrypt.a ../../../../../$idir/evercrypt_compact_gcc.a
-  )
-
-  # usuba : not really a build... its just a copy
-  find third_party/usuba/supercop/crypto_stream/chacha20 -name "usuba*" -exec cp -r {} supercop-`cat config/version`/crypto_stream/chacha20/ \;
-
-  # vale :
-  mkdir -p supercop-`cat config/version`/crypto_onetimeauth/poly1305/vale/ && cp third_party/vale/poly1305/* supercop-`cat config/version`/crypto_onetimeauth/poly1305/vale/
-
-  exit
-fi
-
-# hacl-star : compcert (this should be run in a machine with ccomp, for instance by using third_party/compcert/Vagrantfile)
-# to exec this part of the code call the script with an argument, for example: ./build 1
-(cd third_party/hacl-star/snapshots/hacl-c-compcert && \
-  cp ../../../../patch/hacl-star/Makefile . && \
-  make clean && make libhacl.a && \ 
-  cp libhacl.a ../../../../$idir/hacl_star_compcert.a
-)
-rename_lib hacl_star_compcert;
-
-exit
+### vale
+vale_dir="$src_libs_dir/vale/poly1305/"
+./scripts/vale_copy $vale_dir $root
 

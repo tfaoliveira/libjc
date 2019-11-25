@@ -1,10 +1,9 @@
 #include "x25519_add.jazz"
 #include "x25519_sub.jazz"
-#include "x25519_mul121666.jazz"
+#include "x25519_mul_a24.jazz"
 #include "x25519_mul.jazz"
 #include "x25519_sqr.jazz"
 #include "x25519_invert.jazz"
-#include "x25519_invert_regs.jazz"
 #include "x25519_tobytes.jazz"
 #include "x25519_frombytes.jazz"
 #include "x25519_cswap.jazz"
@@ -131,12 +130,15 @@ fn _x25519_scalarmult(
     t0  = _fe64_sub_ssr(t2, t1r);
 
     z2  = _fe64_sqr_ss(z2);
-    z3  = _fe64_mul121666_ss(t0);
+    //z3  = _fe64_mul121666_ss(t0);
+    z3  = _fe64_mul_a24_ss(t0, 121665);
     x3  = _fe64_sqr_ss(x3);
 
-    t1  = _fe64_add_sss(t1, z3);
+    //t1  = _fe64_add_sss(t1, z3); // 121666
+    t2  = _fe64_add_sss(t2, z3); // 121665
     z3  = _fe64_mul_sss(x1, z2);
-    z2r = _fe64_mul_rss(t0, t1);
+    //z2r = _fe64_mul_rss(t0, t1); // 121666
+    z2r = _fe64_mul_rss(t0, t2); // 121665
 
     pos = poss;
     pos -= 1;
@@ -239,7 +241,8 @@ fn _x25519_scalarmult_base(
 
     t2 = _fe64_sub_ssr(t1, t2r);
 
-    t4 = _fe64_mul121666_ss(t2);
+    //t4 = _fe64_mul121666_ss(t2);
+    t4 = _fe64_mul_a24_ss(t2, 121666);
 
     t4 = _fe64_add_sss(t4, t3);
 

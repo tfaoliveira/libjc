@@ -443,8 +443,7 @@ fn _fe64_mul_rsr
   reg u64[4] h r;
   reg u64 _38 f z;
 
-  z = #set0();
-  of, cf, _, _, _, z = #x86_XOR(z, z);
+  of, cf, _, _, _, z = #set0();
 
   f = fs[0];
   h, r, cf, of = fe64_mul_c0(      f, g, z, cf, of);
@@ -473,8 +472,7 @@ fn _fe64_mul_rmr
   reg u64[4] h r;
   reg u64 _38 f z;
 
-  z = #set0();
-  of, cf, _, _, _, z = #x86_XOR(z, z);
+  of, cf, _, _, _, z = #set0();
 
   f = [fs + 8*0];
   h, r, cf, of = fe64_mul_c0(      f, g, z, cf, of);

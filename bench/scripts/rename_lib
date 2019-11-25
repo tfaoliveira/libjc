@@ -1,0 +1,11 @@
+#!/bin/bash
+
+libname=$1
+static_libs_dir=$2
+
+(cd $static_libs_dir && \
+  nm $libname.a | grep " T " | awk -v name="$libname" '{print $3" "name"_"$3}' > symbols_to_rename && \
+  objcopy --redefine-syms=symbols_to_rename $libname.a && \
+  rm symbols_to_rename
+)
+

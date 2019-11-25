@@ -8,6 +8,8 @@ ls data/crypto_scalarmult_curve25519_* | xargs rm
 ./sync openssl
 ./sync boringssl
 ./sync hacl_star
+./sync fiat-crypto
+./sync evercrypt
 
 # run benchmarks... this can take some time
 ./bench curve25519
@@ -21,6 +23,13 @@ mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_
 
 # plot
 ./plot-fixed curve25519 cycles
+./plot-fixed curve25519 base_cycles
+
+./plot-fixed curve25519 cycles "(jazz)"
+./plot-fixed curve25519 base_cycles "(jazz)"
+
+./plot-fixed curve25519 cycles "(amd64|boring|donna|fiat|hacl_star_gcc|jazz|openssl|sandy|ever)"
+./plot-fixed curve25519 base_cycles "(amd64|boring|donna|fiat|hacl_star_gcc|jazz|openssl|sandy|ever)"
 
 today=`date "+%Y%m%d"`
 mkdir -p data/curve25519-$today

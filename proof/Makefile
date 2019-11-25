@@ -6,7 +6,7 @@ ECCHECK  ?=
 ECARGS   ?=
 ECCONF   := tests.config 
 XUNITOUT ?= xunit.xml
-CHECKS   ?= chacha20 poly1305 crypto_core crypto_hash
+CHECKS   ?= keccakf160064bits keccak1600 chacha20 poly1305
 
 ifeq ($(ECCHECK),)
 ifeq ($(ECROOT),)
@@ -22,26 +22,35 @@ endif
 TOP := $(dir $(abspath $(lastword $(MAKEFILE_LIST))/..))
 
 ECSRC := \
-	crypto_hash/keccak1600/avx2/keccak_1600_avx2.ec \
-	crypto_hash/keccak1600/ref/keccak_1600_ref.ec \
-	crypto_hash/keccak1600/scalar/keccak_1600_scalar.ec \
-	crypto_hash/keccak1600/avx2/keccak_1600_avx2_CT.ec \
-	crypto_hash/keccak1600/ref/keccak_1600_ref_CT.ec \
-	crypto_hash/keccak1600/scalar/keccak_1600_scalar_CT.ec \
-	crypto_core/keccakf160064bits/avx2/keccak_f1600_avx2.ec \
-	crypto_core/keccakf160064bits/ref/keccak_f1600_ref.ec \
-	crypto_core/keccakf160064bits/avx2_openssl/keccak_f1600_avx2_openssl.ec \
-	crypto_core/keccakf160064bits/scalar/keccak_f1600_scalar.ec
-	#crypto_stream/chacha20/ChaCha20_sref.ec \
-	#crypto_stream/chacha20/ChaCha20_savx.ec \
-	#crypto_stream/chacha20/ChaCha20_savx2.ec \
-	#crypto_stream/chacha20/ChaCha20_sref_CT.ec \
-	#crypto_stream/chacha20/ChaCha20_savx_CT.ec \
-	#crypto_stream/chacha20/ChaCha20_savx2_CT.ec \
-	#crypto_onetimeauth/poly1305/Poly1305_sref3.ec \
-	#crypto_onetimeauth/poly1305/Poly1305_savx.ec \
-	#crypto_onetimeauth/poly1305/Poly1305_savx2.ec \
-	#crypto_onetimeauth/poly1305/Poly1305_savx2_CT.ec \
+\
+ crypto_stream/chacha20/ChaCha20_sref.ec \
+ crypto_stream/chacha20/ChaCha20_savx.ec \
+ crypto_stream/chacha20/ChaCha20_savx2.ec \
+ crypto_stream/chacha20/ChaCha20_sref_CT.ec \
+ crypto_stream/chacha20/ChaCha20_savx_CT.ec \
+ crypto_stream/chacha20/ChaCha20_savx2_CT.ec \
+\
+ crypto_onetimeauth/poly1305/Poly1305_savx2.ec \
+ crypto_onetimeauth/poly1305/Poly1305_savx2_CT.ec \
+\
+ crypto_core/keccakf160064bits/Keccakf1600_sref.ec \
+ crypto_core/keccakf160064bits/Keccakf1600_sscalar.ec \
+ crypto_core/keccakf160064bits/Keccakf1600_savx2.ec \
+ crypto_core/keccakf160064bits/Keccakf1600_savx2_openssl.ec \
+ crypto_core/keccakf160064bits/Keccakf1600_sref_CT.ec \
+ crypto_core/keccakf160064bits/Keccakf1600_sscalar_CT.ec \
+ crypto_core/keccakf160064bits/Keccakf1600_savx2_CT.ec \
+ crypto_core/keccakf160064bits/Keccakf1600_savx2_openssl_CT.ec \
+\
+ crypto_hash/keccak1600/Keccak1600_sref.ec \
+ crypto_hash/keccak1600/Keccak1600_sscalar.ec \
+ crypto_hash/keccak1600/Keccak1600_savx2.ec \
+ crypto_hash/keccak1600/Keccak1600_sref_CT.ec \
+ crypto_hash/keccak1600/Keccak1600_sscalar_CT.ec \
+ crypto_hash/keccak1600/Keccak1600_savx2_CT.ec \
+\
+ crypto_scalarmult/curve25519/Curve25519_smulx.ec \
+ crypto_scalarmult/curve25519/Curve25519_smulx_CT.ec
 
 # --------------------------------------------------------------------
 .PHONY: default usage check check-xunit generate clean
@@ -60,51 +69,45 @@ check-xunit: generate
 generate: $(ECSRC)
 	@true
 
+# $(sort also removes duplicates
 clean:
 	rm -f $(ECSRC)
-	#for i in crypto_stream/chacha20 crypto_onetimeauth/poly1305; do \
-	#  rm -f $$i/WArray*.ec; rm -f $$i/Array*.ec; \
-	#done
+	for i in $(sort $(dir $(ECSRC))); do \
+		find $$i -name "*Array*.ec" | grep -v "p\.ec" | while read f; do rm -f $$f; done \
+	done
 
+# ChaCha20
 crypto_stream/chacha20/ChaCha20_s%.ec: $(TOP)/src/crypto_stream/chacha20/%/chacha20.jazz
 	cd $$(dirname $@) && jasminc -ec chacha20_$* -oec $$(basename $@) $<
 
 crypto_stream/chacha20/ChaCha20_s%_CT.ec: $(TOP)/src/crypto_stream/chacha20/%/chacha20.jazz
 	cd $$(dirname $@) && jasminc -ec chacha20_$* -oec $$(basename $@) -CT $<
 
+# Poly1305
 crypto_onetimeauth/poly1305/Poly1305_s%.ec: $(TOP)/src/crypto_onetimeauth/poly1305/%/poly1305.japp
 	cd $$(dirname $@) && jasminc -ec poly1305_$* -oec $$(basename $@) $<
 
 crypto_onetimeauth/poly1305/Poly1305_s%_CT.ec: $(TOP)/src/crypto_onetimeauth/poly1305/%/poly1305.japp
 	cd $$(dirname $@) && jasminc -ec poly1305_$* -oec $$(basename $@) -CT $<
 
-crypto_hash/keccak1600/avx2/keccak_1600_avx2.ec: $(TOP)/src/crypto_hash/keccak1600/avx2/keccak_1600.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_1600 -oec $$(basename $@) $<
+# Keccakf1600
+crypto_core/keccakf160064bits/Keccakf1600_s%.ec: $(TOP)/src/crypto_core/keccakf160064bits/%/keccakf1600_export.japp
+	cd $$(dirname $@) && jasminc -ec __keccakf1600_$* -oec $$(basename $@) $<
 
-crypto_hash/keccak1600/ref/keccak_1600_ref.ec: $(TOP)/src/crypto_hash/keccak1600/ref/keccak_1600.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_1600 -oec $$(basename $@) $<
+crypto_core/keccakf160064bits/Keccakf1600_s%_CT.ec: $(TOP)/src/crypto_core/keccakf160064bits/%/keccakf1600_export.japp
+	cd $$(dirname $@) && jasminc -ec __keccakf1600_$* -oec $$(basename $@) -CT $<
 
-crypto_hash/keccak1600/scalar/keccak_1600_scalar.ec: $(TOP)/src/crypto_hash/keccak1600/scalar/keccak_1600.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_1600 -oec $$(basename $@) $<
+# Keccak1600
+crypto_hash/keccak1600/Keccak1600_s%.ec: $(TOP)/src/crypto_hash/keccak1600/%/keccak1600.japp
+	cd $$(dirname $@) && jasminc -ec __keccak1600_$* -oec $$(basename $@) $<
 
-crypto_hash/keccak1600/avx2/keccak_1600_avx2_CT.ec: $(TOP)/src/crypto_hash/keccak1600/avx2/keccak_1600.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_1600 -oec $$(basename $@) -CT $<
+crypto_hash/keccak1600/Keccak1600_s%_CT.ec: $(TOP)/src/crypto_hash/keccak1600/%/keccak1600.japp
+	cd $$(dirname $@) && jasminc -ec __keccak1600_$* -oec $$(basename $@) -CT $<
 
-crypto_hash/keccak1600/ref/keccak_1600_ref_CT.ec: $(TOP)/src/crypto_hash/keccak1600/ref/keccak_1600.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_1600 -oec $$(basename $@) -CT $<
+# Curve25519
+crypto_scalarmult/curve25519/Curve25519_s%.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
+	cd $$(dirname $@) && jasminc -ec curve25519_$* -oec $$(basename $@) $<
 
-crypto_hash/keccak1600/scalar/keccak_1600_scalar_CT.ec: $(TOP)/src/crypto_hash/keccak1600/scalar/keccak_1600.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_1600 -oec $$(basename $@) -CT $<
-
-crypto_core/keccakf160064bits/avx2/keccak_f1600_avx2.ec: $(TOP)/src/crypto_core/keccakf160064bits/avx2/keccak_f1600_export.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_f1600_avx2 -oec $$(basename $@) $<
-
-crypto_core/keccakf160064bits/ref/keccak_f1600_ref.ec: $(TOP)/src/crypto_core/keccakf160064bits/ref/keccak_f1600_export.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_f1600_ref -oec $$(basename $@) $<
-
-crypto_core/keccakf160064bits/avx2_openssl/keccak_f1600_avx2_openssl.ec: $(TOP)/src/crypto_core/keccakf160064bits/avx2_openssl/keccak_f1600_export.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_f1600_avx2_openssl -oec $$(basename $@) $<
-
-crypto_core/keccakf160064bits/scalar/keccak_f1600_scalar.ec: $(TOP)/src/crypto_core/keccakf160064bits/scalar/keccak_f1600_export.japp
-	cd $$(dirname $@) && jasminc -ec __keccak_f1600_scalar -oec $$(basename $@) $<
+crypto_scalarmult/curve25519/Curve25519_s%_CT.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
+	cd $$(dirname $@) && jasminc -ec curve25519_$* -oec $$(basename $@) -CT $<
 

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+dir="$1"
+static_libs_dir="$2"
+shared_libs_dir="$3/$myname"
+
+mkdir -p $shared_libs_dir
+
+(cd $dir && \
+  make clean && \
+  make && \
+  cp libevercrypt.a $static_libs_dir/$myname.a && \
+  cp libevercrypt.so $shared_libs_dir/$myname.so && \
+  cd $static_libs_dir && \
+  $whereami/rename_lib $myname $static_libs_dir
+)

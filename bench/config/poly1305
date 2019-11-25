@@ -3,13 +3,14 @@ crypto_onetimeauth poly1305 jazz/avx
 crypto_onetimeauth poly1305 jazz/avx2
 
 crypto_onetimeauth poly1305 hacl_star/gcc
-crypto_onetimeauth poly1305 hacl_star/compcert
+crypto_onetimeauth poly1305 hacl_star/ccomp
 
 crypto_onetimeauth poly1305 openssl/static
 crypto_onetimeauth poly1305 openssl/static_no_asm
 
 crypto_onetimeauth poly1305 libsodium/static
 crypto_onetimeauth poly1305 libsodium/static_disable_asm
+crypto_onetimeauth poly1305 libsodium/static_disable_asm_ccomp
 
 crypto_onetimeauth poly1305 vale
 
@@ -18,5 +19,5 @@ crypto_onetimeauth poly1305 ref
 crypto_onetimeauth poly1305 53
 crypto_onetimeauth poly1305 amd64
 crypto_onetimeauth poly1305 avx
-crypto_onetimeauth poly1305 moon/avx/64
-crypto_onetimeauth poly1305 moon/avx2/64
+#crypto_onetimeauth poly1305 moon/avx/64
+#crypto_onetimeauth poly1305 moon/avx2/64
