@@ -1,7 +1,7 @@
 require import List Int IntDiv IntExtra CoreMap.
 require import EClib.
 
-require import JModel. (*here*)
+from Jasmin require import JModel.
 
 (* modular operations modulo P *)
 op p = 2^255 - 19 axiomatized by pE.

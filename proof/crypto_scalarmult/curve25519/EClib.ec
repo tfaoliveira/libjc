@@ -1,6 +1,9 @@
+(* TODO: same file as proof/crypto_onetimeauth/poly1305/EClib.ec *)
+(*       merge these files: find a common place for these *)
+
 require import List Int IntDiv IntExtra CoreMap.
 
-require import JModel. (*here*)
+from Jasmin require import JModel.
 
 lemma ltr_pmul2 x1 x2 y1 y2:
  0 <= x1 => 0 <= x2 => x1 < y1 => x2 < y2 => x1 * x2 < y1 * y2.
