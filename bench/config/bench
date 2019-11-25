@@ -1,1 +1,1 @@
-crypto_scalarmult curve25519 evercrypt/compact_gcc `pwd`/third_party_static_libs/libkremlib.a
+crypto_scalarmult curve25519 jazz/mulx
