@@ -121,8 +121,8 @@ fn _x25519_scalarmult(
     z2  = _fe64_mul_sss(z2, t0);
 
     t2  = _fe64_sqr_ss(x2);
-    t1r = _fe64_sqr_ss(t0);
-                                               t1 = t1r;
+    t1r = _fe64_sqr_rs(t0);
+
     x3  = _fe64_add_sss(z3, z2);
     z2  = _fe64_sub_sss(z3, z2);
 
@@ -130,15 +130,12 @@ fn _x25519_scalarmult(
     t0  = _fe64_sub_ssr(t2, t1r);
 
     z2  = _fe64_sqr_ss(z2);
-    //z3  = _fe64_mul121666_ss(t0);
     z3  = _fe64_mul_a24_ss(t0, 121665);
     x3  = _fe64_sqr_ss(x3);
 
-    //t1  = _fe64_add_sss(t1, z3); // 121666
-    t2  = _fe64_add_sss(t2, z3); // 121665
+    t2  = _fe64_add_sss(t2, z3);
     z3  = _fe64_mul_sss(x1, z2);
-    //z2r = _fe64_mul_rss(t0, t1); // 121666
-    z2r = _fe64_mul_rss(t0, t2); // 121665
+    z2r = _fe64_mul_rss(t0, t2);
 
     pos = poss;
     pos -= 1;

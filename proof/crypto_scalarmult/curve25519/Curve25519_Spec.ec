@@ -5,11 +5,11 @@ import Zp.
 from Jasmin require import JModel.
 
 op decodeScalar25519 (k:W256.t) =
-  let k = k.[0 <- false] in
-  let k = k.[1 <- false] in
-  let k = k.[2 <- false] in
+  let k = k.[0   <- false] in
+  let k = k.[1   <- false] in
+  let k = k.[2   <- false] in
   let k = k.[255 <- false] in
-  let k = k.[254 <- true] in
+  let k = k.[254 <- true ] in
       k.
 
 op decodePoint (u:W256.t) = inzp (to_uint u).
@@ -33,19 +33,20 @@ op add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)) =
   let z_2 = e * (aa + (inzp 121665 * e)) in
       ((x_2,z_2), (x_3,z_3)).
 
+op swap_( nqs : (zp * zp) * (zp * zp) ) = (nqs.`2, nqs.`1).
+
 op montgomery_ladder(init : zp, k : W256.t) =
   let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one)) in
   foldl (fun (nqs : (zp * zp) * (zp * zp)) ctr => 
              if ctr = 0 
              then nqs
              else if k.[255-ctr]
-                  then let nqs' = add_and_double init nqs in 
-                           (nqs'.`2,nqs'.`1) 
+                  then swap_ (add_and_double init (swap_(nqs)))
                   else add_and_double init nqs) nqs0 (iota_ 0 256).
 
-op encodePoint (pt: zp * zp) : W256.t =
-  let pt = pt.`1 * (ZModpRing.exp pt.`2 (p - 2)) in
-      W256.of_int (asint pt).
+op encodePoint (q: zp * zp) : W256.t =
+  let q = q.`1 * (ZModpRing.exp q.`2 (p - 2)) in
+      W256.of_int (asint q).
 
 op scalarmult (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in
