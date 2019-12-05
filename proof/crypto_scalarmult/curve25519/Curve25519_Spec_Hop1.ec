@@ -1,4 +1,4 @@
-require import List Int IntExtra IntDiv CoreMap Real.
+require import Bool List Int IntExtra IntDiv CoreMap Real.
 require import Zp.
 import Zp.
 
@@ -28,8 +28,8 @@ op add_and_double1 (qx : zp) (nqs : (zp * zp) * (zp * zp)) =
   let x3 = x3 * x3 in
   let t2 = t2 + z3 in
   let z3 = x1 * z2 in
-  let z2 = t0 * t2 in
-  ((x2,z2), (x3,z3)).
+  let z2 = t0 * t2
+  in  ((x2,z2), (x3,z3)).
 
 lemma eq_add_and_double1 (qx : zp) (nqs : (zp * zp) * (zp * zp)) :
   forall qx nqs, add_and_double qx nqs = add_and_double1 qx nqs.
@@ -38,40 +38,78 @@ rewrite /add_and_double /add_and_double1.
 simplify => /#.
 qed.
 
-(** removing the first if ctr = 0 - to get closer to the implementation **)
+(** move ith_bit outside : montgomery_ladder1 **)
 op montgomery_ladder1(init : zp, k : W256.t) =
   let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one)) in
-  foldl (fun (nqs : (zp * zp) * (zp * zp)) ctr => 
-             if k.[254-ctr]
-             then swap_ (add_and_double init (swap_(nqs)))
-             else add_and_double init nqs) nqs0 (iota_ 0 255).
+  let nqs = foldl (fun (nqs : (zp * zp) * (zp * zp)) bit => 
+                   if bit
+                   then swap_ (add_and_double init (swap_(nqs)))
+                   else add_and_double init nqs) nqs0 (map (fun i => ith_bit k i) (rev (iota_ 0 255)))
+  in nqs.`1.
 
 lemma eq_montgomery_ladder1 (init : zp) (k : W256.t) :
   forall init k, montgomery_ladder init k = montgomery_ladder1 init k.
 proof.
-admit. (**still need to check how the math works for this**)
+rewrite /montgomery_ladder /montgomery_ladder1.
+by simplify rev.
 qed.
-    
-(** define a conditional swap and redefine ladder
-     - since montgomery ladder is defined using a fold
-       we need to have the swap bit in a state
-**)
-op cswap_( nqs_b : (zp * zp) * (zp * zp) * bool ) =
-  if nqs_b.`3
-  then (nqs_b.`2, nqs_b.`1)
-  else (nqs_b.`1, nqs_b.`2). 
+
+(** isolate foldl function : montgomery_ladder2 **)
+op montgomery_ladder2_step(init, nqs : (zp * zp) * (zp * zp), bit) =
+  if bit
+  then swap_ (add_and_double init (swap_(nqs)))
+  else add_and_double init nqs.
 
 op montgomery_ladder2(init : zp, k : W256.t) =
-  let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one),false) in
-  let nqs = foldl (fun (nqs : (zp * zp) * (zp * zp) * bool) ctr => 
-                       let bit = k.[254-ctr] in
-                       let nqs = cswap_ (nqs.`1, nqs.`2, nqs.`3 ^ bit) in
-                       let nqs' = add_and_double1 init nqs in
-                       (nqs'.`1, nqs'.`2, bit)) nqs0 (iota_ 0 255)
-  in (nqs.`1, nqs.`2). 
+  let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one)) in
+  let nqs = foldl (montgomery_ladder2_step init) nqs0
+                  (map (fun i => ith_bit k i) (rev (iota_ 0 255)))
+  in nqs.`1.
 
 lemma eq_montgomery_ladder2 (init : zp) (k : W256.t) :
   forall init k, montgomery_ladder1 init k = montgomery_ladder2 init k.
 proof.
+rewrite /montgomery_ladder1 /montgomery_ladder2.
+rewrite /montgomery_ladder2_step.
+by simplify rev.
+qed.
+
+(** extend nqs to contain an additional bit stating if the state is swapped **)
+op montgomery_ladder3_step(init, nqs : (zp * zp) * (zp * zp) * bool, bit : bool) =
+  let nqs = if nqs.`3 ^^ bit
+            then add_and_double init (nqs.`2, nqs.`1)
+            else add_and_double init (nqs.`1, nqs.`2)
+  in (nqs.`1, nqs.`2, bit). 
+
+op select_tuple_12 (t : 'a * 'b * 'c) = (t.`1, t.`2).
+
+op reconstruct_nqs (nqs : (zp * zp) * (zp * zp) * bool) =
+  if nqs.`3
+  then swap_ (select_tuple_12 nqs)
+  else select_tuple_12 nqs.
+
+lemma eq_montgomery_ladder3_step (init : zp) (nqs : (zp * zp) * (zp * zp) * bool) (bit : bool) :
+    forall init nqs bit,
+    reconstruct_nqs (montgomery_ladder3_step init nqs bit) =
+    montgomery_ladder2_step init (select_tuple_12 nqs) bit.
+proof.
+rewrite /reconstruct_nqs /montgomery_ladder3_step /montgomery_ladder2_step.
+rewrite /swap_ /select_tuple_12 /(^^).
+simplify.
+admit.
+qed.
+
+op montgomery_ladder3(init : zp, k : W256.t) =
+  let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one),false) in
+  let nqs = foldl (montgomery_ladder3_step init) nqs0
+                  (map (fun i => ith_bit k i) (rev (iota_ 0 255))) in
+     nqs.`1.
+
+lemma eq_montgomery_ladder3 (init : zp) (k : W256.t) :
+  (* k1 contains first bits at 0 which means that it will be swapped *)
+  let k1 = decodeScalar25519 k in
+  forall init, montgomery_ladder2 init k1 = montgomery_ladder3 init k1.
+proof.
+rewrite /montgomery_ladder2 /montgomery_ladder3.
 admit.
 qed.

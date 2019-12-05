@@ -12,7 +12,7 @@ op decodeScalar25519 (k:W256.t) =
   let k = k.[254 <- true ] in
       k.
 
-op decodePoint (u:W256.t) = inzp (to_uint u).
+op decodeUCoordinate (u:W256.t) = inzp (to_uint u).
 
 op add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)) =
   let x_1 = qx in
@@ -35,14 +35,15 @@ op add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)) =
 
 op swap_( nqs : (zp * zp) * (zp * zp) ) = (nqs.`2, nqs.`1).
 
+op ith_bit(k : W256.t, i : int) = k.[i].
+
 op montgomery_ladder(init : zp, k : W256.t) =
   let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one)) in
-  foldl (fun (nqs : (zp * zp) * (zp * zp)) ctr => 
-             if ctr = 0 
-             then nqs
-             else if k.[255-ctr]
-                  then swap_ (add_and_double init (swap_(nqs)))
-                  else add_and_double init nqs) nqs0 (iota_ 0 256).
+  let nqs = foldl (fun (nqs : (zp * zp) * (zp * zp)) ctr => 
+                   if ith_bit k ctr
+                   then swap_ (add_and_double init (swap_(nqs)))
+                   else add_and_double init nqs) nqs0 (rev (iota_ 0 255)) in
+  nqs.`1.
 
 op encodePoint (q: zp * zp) : W256.t =
   let q = q.`1 * (ZModpRing.exp q.`2 (p - 2)) in
@@ -50,6 +51,6 @@ op encodePoint (q: zp * zp) : W256.t =
 
 op scalarmult (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in
-  let u = decodePoint u in
+  let u = decodeUCoordinate u in
   let r = montgomery_ladder u k in
-      encodePoint (r.`1).
+      encodePoint (r).
