@@ -49,11 +49,11 @@ lemma eq_montgomery_ladder0 (init : zp) (k : W256.t) :
   montgomery_ladder init k = montgomery_ladder0 init k.
 proof.
   rewrite /montgomery_ladder /montgomery_ladder0 /=.
-  have aad : forall (nqs : (zp * zp) * (zp * zp)),
-               add_and_double init nqs =
-               add_and_double1 init nqs.
-    apply eq_add_and_double1.
-  admit.
+  apply foldl_in_eq.
+  move => nqs ctr inlist => /=.
+  case (ith_bit k ctr).
+    by move => ?; rewrite /swap_tuple /#.
+    by move => ?; rewrite /swap_tuple /#.
 qed.
 
 (** move ith_bit outside : introduce add_and_double1 : montgomery_ladder1 **)
@@ -116,8 +116,8 @@ lemma foldl_in_eq_r (f1 : 'a1 -> 'b -> 'a1) (f2 :'a2 -> 'b -> 'a2)
                     (r  : 'a2 -> 'a1) :
   (forall a2 b, b \in s => f1 (r a2) b = r (f2 a2 b)) => foldl f1 (r a2) s = r (foldl f2 a2 s).
 proof.
-elim: s a2 => [ | b s hrec] a //= hin.
-by rewrite hin // hrec // => ?? h;apply hin;rewrite h.
+  elim: s a2 => [ | b s hrec] a //= hin.
+  by rewrite hin // hrec // => ?? h;apply hin;rewrite h.
 qed.
 
 lemma eq_montgomery_ladder3_reconstruct (init : zp) (k: W256.t) :
