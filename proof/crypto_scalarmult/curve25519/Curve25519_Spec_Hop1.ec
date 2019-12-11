@@ -26,7 +26,7 @@ proof.
   by move => ? /#.
 qed.
 
-(* similar to foldl_in_eq -- the proof is the same -- defined in JMemory           *)
+(* similar to foldl_in_eq -- the proof is basically the same -- defined in JMemory *)
 (* - foldl_in_eq states that any 2 foldl's are the same if the functions are equiv *)
 (* - we will need to prove that + that the state a2 have a relational invariant r  *)
 lemma foldl_in_eq_r (f1 : 'a1 -> 'b -> 'a1)
@@ -36,8 +36,13 @@ lemma foldl_in_eq_r (f1 : 'a1 -> 'b -> 'a1)
                     (r  : 'a2 -> 'a1) :
 (forall a2 b, b \in s => f1 (r a2) b = r (f2 a2 b)) => foldl f1 (r a2) s = r (foldl f2 a2 s).
 proof.
-  elim: s a2 => [ | b s hrec] a //= hin.
-  by rewrite hin // hrec // => ?? h;apply hin;rewrite h.
+  move: s a2. elim.
+  by move => a2.
+  move => x l hrec a2 /= hin. rewrite hin.
+  by left.
+  rewrite hrec //; move => ? ? h; rewrite hin.
+  by right.
+  by trivial.
 qed.
 
 (** step1: add_and_double = add_and_double1 : reordered to match implementation **)
@@ -155,13 +160,7 @@ lemma eq_montgomery_ladder123 (init : zp) (k: W256.t) :
   montgomery_ladder init k = select_tuple_12 (montgomery_ladder3 init k).
 proof.
   move => hkf.
-  have ml01 : montgomery_ladder init k = montgomery_ladder1 init k. (*montgomery_ladder 0 -> 1*)
-    by apply eq_montgomery_ladder1.
-  have ml12 : montgomery_ladder1 init k = montgomery_ladder2 init k.
-    by apply eq_montgomery_ladder2.
-  have ml23 : montgomery_ladder2 init k = select_tuple_12 (montgomery_ladder3 init k).
-    by apply eq_montgomery_ladder3.
-  rewrite ml01 ml12 ml23 //.
+  by rewrite eq_montgomery_ladder1 eq_montgomery_ladder2 eq_montgomery_ladder3.
 qed.
 
 (** step 5: scalarmult with updated montgomery_ladder3 **)
@@ -175,8 +174,7 @@ op scalarmult1 (k:W256.t) (u:W256.t) : W256.t =
 lemma eq_scalarmult1 (k:W256.t) (u:W256.t) :
   scalarmult k u = scalarmult1 k u.
 proof.
-  rewrite /scalarmult /scalarmult1.
-  simplify.
+  rewrite /scalarmult /scalarmult1 /=.
   congr.
   have kb0f : (decodeScalar25519 k).[0] = false. (*k bit 0 false*) 
     by rewrite /decodeScalar25519 /=.
