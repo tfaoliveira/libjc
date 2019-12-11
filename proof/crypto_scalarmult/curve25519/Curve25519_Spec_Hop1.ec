@@ -6,7 +6,41 @@ from Jasmin require import JModel.
 
 require import Curve25519_Spec.
 
-(** equiv between add_and_double with add_and_double1 - reordered **)
+(** generic stuff **)
+
+(* returns the first 2 elements of the input triple *)
+op select_tuple_12 (t : 'a * 'a * 'c) = (t.`1, t.`2).
+
+(* if the third element is true then the first 2 elements are swapped *)
+(*  - this op returns the first 2 elements in the correct order       *)
+op reconstruct_tuple (t : 'a * 'a * bool) =
+  if t.`3
+  then swap_tuple (select_tuple_12 t)
+  else select_tuple_12 t.
+
+lemma eq_reconstruct_select_tuple (t : ('a * 'a * bool)) :
+  t.`3 = false => 
+  select_tuple_12 t = reconstruct_tuple t.
+proof.
+  rewrite /reconstruct_tuple /select_tuple_12.
+  by move => ? /#.
+qed.
+
+(* similar to foldl_in_eq -- the proof is the same -- defined in JMemory           *)
+(* - foldl_in_eq states that any 2 foldl's are the same if the functions are equiv *)
+(* - we will need to prove that + that the state a2 have a relational invariant r  *)
+lemma foldl_in_eq_r (f1 : 'a1 -> 'b -> 'a1)
+                    (f2 : 'a2 -> 'b -> 'a2)
+                    (s  : 'b list)
+                    (a2 : 'a2)
+                    (r  : 'a2 -> 'a1) :
+(forall a2 b, b \in s => f1 (r a2) b = r (f2 a2 b)) => foldl f1 (r a2) s = r (foldl f2 a2 s).
+proof.
+  elim: s a2 => [ | b s hrec] a //= hin.
+  by rewrite hin // hrec // => ?? h;apply hin;rewrite h.
+qed.
+
+(** step1: add_and_double = add_and_double1 : reordered to match implementation **)
 op add_and_double1 (qx : zp) (nqs : (zp * zp) * (zp * zp)) =
   let x1 = qx in
   let (x2, z2) = nqs.`1 in
@@ -38,17 +72,18 @@ proof.
   simplify => /#.
 qed.
 
-op montgomery_ladder0(init : zp, k : W256.t) =
+op montgomery_ladder1(init : zp, k : W256.t) =
   let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one)) in
   foldl (fun (nqs : (zp * zp) * (zp * zp)) ctr => 
          if ith_bit k ctr
          then swap_tuple (add_and_double1 init (swap_tuple(nqs)))
          else add_and_double1 init nqs) nqs0 (rev (iota_ 0 255)).
 
-lemma eq_montgomery_ladder0 (init : zp) (k : W256.t) :
-  montgomery_ladder init k = montgomery_ladder0 init k.
+(* lemma: montgomery_ladder = montgomery_ladder1 *)
+lemma eq_montgomery_ladder1 (init : zp) (k : W256.t) :
+  montgomery_ladder init k = montgomery_ladder1 init k.
 proof.
-  rewrite /montgomery_ladder /montgomery_ladder0 /=.
+  rewrite /montgomery_ladder /montgomery_ladder1 /=.
   apply foldl_in_eq.
   move => nqs ctr inlist => /=.
   case (ith_bit k ctr).
@@ -56,40 +91,17 @@ proof.
     by move => ?; rewrite /swap_tuple /#.
 qed.
 
-(** move ith_bit outside : introduce add_and_double1 : montgomery_ladder1 **)
-op montgomery_ladder1(init : zp, k : W256.t) =
-  let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one)) in
-  foldl (fun (nqs : (zp * zp) * (zp * zp)) bit => 
-         if bit
-         then swap_tuple (add_and_double1 init (swap_tuple(nqs)))
-         else add_and_double1 init nqs) nqs0 (map (fun i => ith_bit k i) (rev (iota_ 0 255))).
-
-lemma eq_montgomery_ladder1 (init : zp) (k : W256.t) :
-  montgomery_ladder0 init k = montgomery_ladder1 init k.
-proof.
-  rewrite /montgomery_ladder0 /montgomery_ladder1.
-  by simplify rev.
-qed.
-
-(** some helper op's **)
-op select_tuple_12 (t : 'a * 'a * 'c) = (t.`1, t.`2).
-
-op reconstruct_tuple (t : 'a * 'a * bool) =
-  if t.`3
-  then swap_tuple (select_tuple_12 t)
-  else select_tuple_12 t.
-
-(** isolate foldl function and introduce reconstruct tuple : montgomery_ladder2 **)
-op montgomery_ladder2_step(init, nqs : (zp * zp) * (zp * zp), bit) =
-  if bit
+(** step 2: isolate foldl function and introduce reconstruct tuple **)
+op montgomery_ladder2_step(k : W256.t, init : zp, nqs : (zp * zp) * (zp * zp), ctr : int) =
+  if ith_bit k ctr
   then swap_tuple(add_and_double1 init (swap_tuple(nqs)))
   else add_and_double1 init nqs.
 
 op montgomery_ladder2(init : zp, k : W256.t) =
   let nqs0 = reconstruct_tuple ((Zp.one,Zp.zero),(init,Zp.one),false) in
-  foldl (montgomery_ladder2_step init) nqs0
-        (map (fun i => ith_bit k i) (rev (iota_ 0 255))).
+  foldl (montgomery_ladder2_step k init) nqs0 (rev (iota_ 0 255)).
 
+(* lemma: montgomery_ladder1 = montgomery_ladder2 *)
 lemma eq_montgomery_ladder2 (init : zp) (k : W256.t) :
   montgomery_ladder1 init k = montgomery_ladder2 init k.
 proof.
@@ -98,27 +110,16 @@ proof.
   by simplify.
 qed.
 
-(** extend nqs to contain an additional bit stating if the state is swapped **)
-op montgomery_ladder3_step(init, nqs : (zp * zp) * (zp * zp) * bool, bit : bool) =
-  let nqs = if nqs.`3 ^^ bit
+(** step 3: extend the state to contain an additional bit stating if the state is swapped **)
+op montgomery_ladder3_step(k : W256.t, init : zp, nqs : (zp * zp) * (zp * zp) * bool, ctr : int) =
+  let nqs = if nqs.`3 ^^ (ith_bit k ctr)
             then add_and_double1 init (nqs.`2, nqs.`1)
             else add_and_double1 init (nqs.`1, nqs.`2)
-  in (nqs.`1, nqs.`2, bit).
+  in (nqs.`1, nqs.`2, (ith_bit k ctr)).
 
 op montgomery_ladder3(init : zp, k : W256.t) =
   let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one),false) in
-  foldl (montgomery_ladder3_step init) nqs0
-        (map (fun i => ith_bit k i) (rev (iota_ 0 255))).
-
-lemma foldl_in_eq_r (f1 : 'a1 -> 'b -> 'a1) (f2 :'a2 -> 'b -> 'a2)
-                    (s  : 'b list)
-                    (a2 : 'a2)
-                    (r  : 'a2 -> 'a1) :
-  (forall a2 b, b \in s => f1 (r a2) b = r (f2 a2 b)) => foldl f1 (r a2) s = r (foldl f2 a2 s).
-proof.
-  elim: s a2 => [ | b s hrec] a //= hin.
-  by rewrite hin // hrec // => ?? h;apply hin;rewrite h.
-qed.
+  foldl (montgomery_ladder3_step k init) nqs0 (rev (iota_ 0 255)).
 
 lemma eq_montgomery_ladder3_reconstruct (init : zp) (k: W256.t) :
   montgomery_ladder2 init k = reconstruct_tuple (montgomery_ladder3 init k).
@@ -126,19 +127,13 @@ proof.
   rewrite /montgomery_ladder2 /montgomery_ladder3 //=.
   apply foldl_in_eq_r.
   move => ? ? ?.
-  rewrite /reconstruct_tuple /montgomery_ladder3_step /montgomery_ladder2_step.
+  rewrite /reconstruct_tuple /montgomery_ladder2_step /montgomery_ladder3_step.
   rewrite /swap_tuple /select_tuple_12 /(^^).
   simplify => /#.
 qed.
 
-lemma eq_reconstruct_select_tuple (t : ('a * 'a * bool)) :
-  t.`3 = false => 
-  select_tuple_12 t = reconstruct_tuple t.
-proof.
-  rewrite /reconstruct_tuple /select_tuple_12.
-  by move => ? /#.
-qed.
-
+(* lemma: if the first bit of k is 0, which will be because of decodeScalar25519, *)
+(*  then montgomery_ladder2 = select_tuple_12 montgomery_ladder3 *)
 lemma eq_montgomery_ladder3 (init : zp) (k: W256.t) :
   k.[0] = false =>
   montgomery_ladder2 init k = select_tuple_12 (montgomery_ladder3 init k).
@@ -154,30 +149,30 @@ proof.
     by apply eq_montgomery_ladder3_reconstruct.
 qed.
 
-lemma eq_montgomery_ladder0123 (init : zp) (k: W256.t) :
+(** step 4: montgomery_ladder = select_tuple_12 montgomery_ladder3 **)
+lemma eq_montgomery_ladder123 (init : zp) (k: W256.t) :
   k.[0] = false =>
   montgomery_ladder init k = select_tuple_12 (montgomery_ladder3 init k).
 proof.
   move => hkf.
-  have ml00 : montgomery_ladder init k = montgomery_ladder0 init k.
-    by apply eq_montgomery_ladder0.
-  have ml01 : montgomery_ladder0 init k = montgomery_ladder1 init k.
+  have ml01 : montgomery_ladder init k = montgomery_ladder1 init k. (*montgomery_ladder 0 -> 1*)
     by apply eq_montgomery_ladder1.
   have ml12 : montgomery_ladder1 init k = montgomery_ladder2 init k.
     by apply eq_montgomery_ladder2.
   have ml23 : montgomery_ladder2 init k = select_tuple_12 (montgomery_ladder3 init k).
     by apply eq_montgomery_ladder3.
-  rewrite ml00 ml01 ml12 ml23 //.
+  rewrite ml01 ml12 ml23 //.
 qed.
 
-(* scalarmult with updated montgomery_ladder *)
+(** step 5: scalarmult with updated montgomery_ladder3 **)
 op scalarmult1 (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in
   let u = decodeUCoordinate u in
   let r = montgomery_ladder3 u k in
       encodePoint (r.`1).
 
-lemma eq_scalarmult (k:W256.t) (u:W256.t) :
+(* lemma scalarmult = scalarmult1 *)
+lemma eq_scalarmult1 (k:W256.t) (u:W256.t) :
   scalarmult k u = scalarmult1 k u.
 proof.
   rewrite /scalarmult /scalarmult1.
@@ -187,6 +182,6 @@ proof.
     by rewrite /decodeScalar25519 /=.
   have ml123 : montgomery_ladder (decodeUCoordinate u) (decodeScalar25519 k) =
                select_tuple_12 (montgomery_ladder3 (decodeUCoordinate u) (decodeScalar25519 k)).
-    by move : kb0f; apply eq_montgomery_ladder0123.
+    by move : kb0f; apply eq_montgomery_ladder123.
   move : ml123 => /#.
 qed.
