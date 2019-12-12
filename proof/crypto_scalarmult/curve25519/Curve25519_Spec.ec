@@ -52,4 +52,6 @@ op scalarmult (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in
   let u = decodeUCoordinate u in
   let r = montgomery_ladder u k in
-      encodePoint (r.`1).
+      encodePoint (r.`1) axiomatized by scalarmultE.
+
+hint simplify scalarmultE.

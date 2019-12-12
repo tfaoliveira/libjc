@@ -168,13 +168,15 @@ op scalarmult1 (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in
   let u = decodeUCoordinate u in
   let r = montgomery_ladder3 u k in
-      encodePoint (r.`1).
+      encodePoint (r.`1) axiomatized by scalarmult1E.
+
+hint simplify scalarmult1E.
 
 (* lemma scalarmult = scalarmult1 *)
 lemma eq_scalarmult1 (k:W256.t) (u:W256.t) :
   scalarmult k u = scalarmult1 k u.
 proof.
-  rewrite /scalarmult /scalarmult1 /=.
+  simplify.
   congr.
   have kb0f : (decodeScalar25519 k).[0] = false. (*k bit 0 false*) 
     by rewrite /decodeScalar25519 /=.
