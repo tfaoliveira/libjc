@@ -1,1 +1,2 @@
-crypto_scalarmult curve25519 jazz/mulx
+crypto_onetimeauth poly1305 jazz/ref3
+crypto_onetimeauth poly1305 jazz/ref3_state

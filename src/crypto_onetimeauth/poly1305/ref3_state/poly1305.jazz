@@ -120,7 +120,7 @@ export fn poly1305_ref3_state(reg u64 out, reg u64 state, reg u64 in, reg u64 in
   bs_s = bs;
 
   rs = inlen;
-  rs = 0xF;
+  rs &= 0xF;
   rs_s = rs;
 
   off = inlen;
