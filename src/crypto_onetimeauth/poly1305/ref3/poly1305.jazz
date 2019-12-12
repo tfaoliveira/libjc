@@ -191,9 +191,6 @@ fn poly1305_ref3_setup(reg u64 k) -> reg u64[3], reg u64[3], reg u64
 
 fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -> reg u64, reg u64, reg u64[3]
 {
-  reg bool cf;
-  reg u64[2] m;
-
   while(inlen >= 16)
   {
     h = load_add(h, in);
@@ -207,10 +204,33 @@ fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -
 
 
 
+fn poly1305_ref3_update_last(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -> reg u64, reg u64, reg u64[3]
+{
+  if(inlen > 0)
+  { h = load_last_add(h, in, inlen);
+    h = mulmod(h, r);
+  }
+
+  return in, inlen, h;
+}
+
+fn poly1305_ref3_finish(reg u64[3] h, reg u64 k) -> reg u64[2]
+{
+  reg u64[2] h2 s;
+
+  h2 = freeze(h);
+  s = load2(k);
+  h2 = add2(h2, s);
+
+  return h2;
+}
+
+
+
 fn poly1305_ref3_last(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[3] h, reg u64[3] r)
 {
-  reg u64[2] m, s;
-  reg u64[2] h2;
+  // TODO : call update_last and finish?
+  reg u64[2] h2 s;
 
   if(inlen > 0)
   { h = load_last_add(h, in, inlen);
@@ -237,6 +257,4 @@ fn poly1305_ref3_local(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
   in, len, h = poly1305_ref3_update(in, len, h, r);
   poly1305_ref3_last(out, in, len, k, h, r);
 }
-
-
 
