@@ -116,11 +116,15 @@ proof.
 qed.
 
 (** step 3: extend the state to contain an additional bit stating if the state is swapped **)
+op cswap( t : 'a * 'a, b : bool ) = 
+  if b
+  then swap_tuple t
+  else t.
+
 op montgomery_ladder3_step(k : W256.t, init : zp, nqs : (zp * zp) * (zp * zp) * bool, ctr : int) =
-  let nqs = if nqs.`3 ^^ (ith_bit k ctr)
-            then add_and_double1 init (nqs.`2, nqs.`1)
-            else add_and_double1 init (nqs.`1, nqs.`2)
-  in (nqs.`1, nqs.`2, (ith_bit k ctr)).
+  let nqs = cswap (select_tuple_12 nqs) (nqs.`3 ^^ (ith_bit k ctr)) in
+  let nqs = add_and_double1 init nqs in
+  (nqs.`1, nqs.`2, (ith_bit k ctr)).
 
 op montgomery_ladder3(init : zp, k : W256.t) =
   let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one),false) in
@@ -133,7 +137,7 @@ proof.
   apply foldl_in_eq_r.
   move => ? ? ?.
   rewrite /reconstruct_tuple /montgomery_ladder2_step /montgomery_ladder3_step.
-  rewrite /swap_tuple /select_tuple_12 /(^^).
+  rewrite /swap_tuple /select_tuple_12 /cswap.
   simplify => /#.
 qed.
 
@@ -145,8 +149,8 @@ lemma eq_montgomery_ladder3 (init : zp) (k: W256.t) :
 proof.
   move => hkf.
   have tbf : (montgomery_ladder3 init k).`3 = false. (*third bit false*)
-    rewrite /montgomery_ladder3 /montgomery_ladder3_step.
-    by simplify rev; rewrite /ith_bit.
+    rewrite /montgomery_ladder3 /montgomery_ladder3_step /select_tuple_12 /cswap /ith_bit.
+    by simplify rev.
   have seqr : select_tuple_12 (montgomery_ladder3 init k) = (*select eq reconstruct*)
               reconstruct_tuple (montgomery_ladder3 init k).
     by apply /eq_reconstruct_select_tuple /tbf.
