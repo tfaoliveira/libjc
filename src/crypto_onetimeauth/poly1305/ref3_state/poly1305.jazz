@@ -1,0 +1,152 @@
+#include "crypto_onetimeauth/poly1305/ref3/poly1305.jazz"
+
+fn poly1305_ref3_state_load(reg u64 state) -> reg u64[3], reg u64[3]
+{
+  inline int i;
+  reg u64[3] r h;
+  reg u64 rp hp;
+
+  rp = [state + 0];
+  hp = [state + 8];
+  for i=0 to 3
+  { r[i] = [rp + i*8];
+    h[i] = [hp + i*8]; }
+  return r, h;
+}
+
+
+
+fn poly1305_ref3_state_load_o(reg u64 state, inline int o) -> reg u64[3]
+{
+  inline int i;
+  reg u64[3] rh;
+  reg u64 p;
+
+  p = [state + o];
+  for i=0 to 3
+  { rh[i] = [p + i*8]; }
+
+  return rh;
+}
+
+
+
+// receives an offset o that when added to state gives the pointer of r or h
+fn poly1305_ref3_state_write_o(reg u64 state, inline int o, reg u64[3] rh)
+{
+  inline int i;
+  reg u64 p;
+
+  p = [state + o];
+  for i=0 to 3
+  { [p + i*8] = rh[i]; }
+}
+
+
+
+export fn poly1305_ref3_state_init(reg u64 state, reg u64 k)
+{
+  reg u64[3] r h;
+  h, r, k = poly1305_ref3_setup(k);
+  poly1305_ref3_state_write_o(state, 0, r);
+  poly1305_ref3_state_write_o(state, 8, h);
+}
+
+
+
+// state points to *r and *h
+export fn poly1305_ref3_state_update(reg u64 state, reg u64 m, reg u64 num_blocks)
+{
+  stack u64 state_s;
+  reg u64[3] h r;
+  reg u64 mlen;
+
+  state_s = state;
+
+  r, h = poly1305_ref3_state_load(state);
+
+  mlen = num_blocks;
+  mlen <<= 4; // *16 -- check for max inlen or change *_update to work with block sizes
+  m, mlen, h = poly1305_ref3_update(m, mlen, h, r);
+
+  state = state_s;
+  poly1305_ref3_state_write_o(state, 8, h);
+}
+
+
+
+// TODO CHECKME : this introduced function "poly1305_ref3_update_last" in poly1305.jazz
+//                probably refactor "poly1305_ref3_last" to call "poly1305_ref3_update_last" and
+//                "poly1305_ref3_finish"
+export fn poly1305_ref3_state_update_last(reg u64 state, reg u64 m, reg u64 mlen)
+{
+  stack u64 state_s;
+  reg u64[3] h r;
+
+  state_s = state;
+  r, h = poly1305_ref3_state_load(state);
+  m, mlen, h = poly1305_ref3_update_last(m, mlen, h, r); // h isn't 'freezed' yet
+  state = state_s;
+  poly1305_ref3_state_write_o(state, 8, h);
+}
+
+
+
+export fn poly1305_ref3_state_finish(reg u64 state, reg u64 mac, reg u64 k)
+{
+  reg u64[3] h;
+  reg u64[2] h2;
+
+  h  = poly1305_ref3_state_load_o(state, 8);
+  h2 = poly1305_ref3_finish(h, k);
+  store2(mac, h2);
+}
+
+
+
+export fn poly1305_ref3_state(reg u64 out, reg u64 state, reg u64 in, reg u64 inlen, reg u64 k)
+{
+  stack u64 out_s, state_s, in_s, inlen_s, k_s, bs_s, rs_s, inlast_s;
+  reg u64 bs rs off inlast;
+
+  out_s = out;
+  state_s = state;
+  in_s = in;
+  inlen_s = inlen;
+  k_s = k;
+  
+  bs = inlen;
+  bs >>= 4;
+  bs_s = bs;
+
+  rs = inlen;
+  rs = 0xF;
+  rs_s = rs;
+
+  off = inlen;
+  off >>= 4;
+  off <<= 4;
+
+  inlast = in;
+  inlast += off;
+  inlast_s = inlast;
+
+  poly1305_ref3_state_init(state, k);
+
+  state = state_s;
+  in = in_s;
+  bs = bs_s;
+  poly1305_ref3_state_update(state, in, bs);
+
+  state = state_s;
+  inlast = inlast_s;
+  rs = rs_s;
+  poly1305_ref3_state_update_last(state, inlast, rs);
+
+  state = state_s;
+  out = out_s;
+  k = k_s;
+  k += 16;
+  poly1305_ref3_state_finish(state, out, k);
+}
+
