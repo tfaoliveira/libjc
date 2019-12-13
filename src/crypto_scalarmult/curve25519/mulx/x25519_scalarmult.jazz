@@ -5,30 +5,202 @@
 #include "x25519_sqr.jazz"
 #include "x25519_invert.jazz"
 #include "x25519_tobytes.jazz"
-#include "x25519_frombytes.jazz"
 #include "x25519_cswap.jazz"
 
-fn _fe64_0_1_x2() -> reg u64[4], stack u64[4], stack u64[4]
+fn ith_bit(stack u8[32] k, reg u64 ctr) -> reg u64
+{
+  reg u64 p bit;
+
+  p = ctr;
+  p >>= 3;
+  bit = (64u) k[(int) p];
+
+  p = ctr;
+  p &= 7;
+  bit >>= p;
+
+  bit &= 1;
+
+  return bit;
+}
+
+fn decode_scalar_25519(reg u64 kp) -> stack u8[32]
 {
   inline int i;
-  reg   u64[4] f1s;
-  stack u64[4] f2s f3s;
+  stack u8[32] k;
+  reg u64 t;
+
+  for i=0 to 4
+  { t = [kp + 8*i];
+    k[u64 i] = t; }
+
+  k[0]  &= 0xf8;
+  k[31] &= 0x7f;
+  k[31] |= 0x40;
+
+  return k;
+}
+
+fn decode_u_coordinate(reg u64 up) -> reg u64[4]
+{
+  inline int i;
+  reg u64[4] u;
+
+  for i=0 to 4
+  { u[i] = [up + 8*i]; }
+  u[3] &= 0x7fffffffffffffff;
+
+  return u;
+}
+
+fn init_points(reg u64[4] initr) -> stack u64[4], reg u64[4], stack u64[4], stack u64[4]
+{
+  inline int i;
+  stack u64[4] x2 x3 z3;
+  reg u64[4] z2r;
   reg u64 z;
 
   z = #set0();
 
-  f1s[0] = z;
-  f2s[0] = 1;
-  f3s[0] = 1;
+  x2[0] = 1;
+  z2r[0] = 0;
+  x3 = initr;
+  z3[0] = 1;
 
   for i=1 to 4
-  { f1s[i] = z;
-    f2s[i] = z;
-    f3s[i] = z;
-  }
+  { x2[i] = z;
+    z2r[i] = z;
+    z3[i] = z; }
 
-  return f1s, f2s, f3s;
+  //     (1,   0, init, 1)
+  return x2, z2r, x3,  z3;
 }
+
+fn montgomery_ladder_step(stack u8[32] k,
+                          stack u64[4] init,
+                          stack u64[4] x2,
+                          reg   u64[4] z2r,
+                          stack u64[4] x3,
+                          stack u64[4] z3,
+                          stack u64    swapped,
+                          reg   u64    ctr) -> stack u64[4],
+                                               reg   u64[4],
+                                               stack u64[4],
+                                               stack u64[4],
+                                               stack u64
+{
+  stack u64[4] z2 t0 t1 t2;
+  reg u64[4] t1r;
+  reg u64 toswap bit;
+
+  bit = ith_bit(k, ctr);
+
+  toswap  = swapped;
+  toswap ^= bit;
+
+  x2, z2r, x3, z3 = _fe64_cswap(x2, z2r, x3, z3, toswap);
+
+  swapped = bit;
+                                             z2 = z2r;
+  t0  = _fe64_sub_ssr(x2, z2r);
+  x2  = _fe64_add_ssr(x2, z2r);
+
+  t1  = _fe64_sub_sss(x3, z3);
+  z2  = _fe64_add_sss(x3, z3);
+
+  z3  = _fe64_mul_sss(x2, t1);
+  z2  = _fe64_mul_sss(z2, t0);
+
+  t2  = _fe64_sqr_ss(x2);
+  t1r = _fe64_sqr_rs(t0);
+
+  x3  = _fe64_add_sss(z3, z2);
+  z2  = _fe64_sub_sss(z3, z2);
+
+  x2  = _fe64_mul_ssr(t2, t1r);
+  t0  = _fe64_sub_ssr(t2, t1r);
+
+  z2  = _fe64_sqr_ss(z2);
+  z3  = _fe64_mul_a24_ss(t0, 121665);
+  x3  = _fe64_sqr_ss(x3);
+
+  t2  = _fe64_add_sss(t2, z3);
+  z3  = _fe64_mul_sss(init, z2);
+  z2r = _fe64_mul_rss(t0, t2);
+
+  return x2, z2r, x3, z3, swapped;
+}
+
+
+fn montgomery_ladder(reg u64[4] initr, stack u8[32] k) -> stack u64[4],
+                                                          reg u64[4],
+                                                          stack u64[4],
+                                                          stack u64[4]
+{
+  stack u64[4] init x2 x3 z3;
+  reg u64[4] z2r;
+  stack u64 ctrs swapped;
+  reg u64 ctr bit;
+
+  (x2,z2r,x3,z3) = init_points(initr); 
+  init = initr;
+
+  ctr = 254;
+  swapped = 0;
+
+  while
+  {
+    ctrs = ctr;
+
+    (x2, z2r, x3, z3, swapped) = montgomery_ladder_step(k, init, x2, z2r, x3, z3, swapped, ctr);
+
+    ctr = ctrs;
+    ctr -= 1;
+  } (ctr >=s 0)
+
+  return x2, z2r, x3, z3;
+}
+
+fn encode_point(stack u64[4] x2, reg u64[4] z2r) -> reg u64[4]
+{
+  reg u64[4] r;
+
+  z2r = _fe64_invert(z2r);
+  r = _fe64_mul_rsr(x2, z2r);
+  r = _fe64_tobytes(r);
+
+  return r;
+}
+
+
+fn _x25519_scalarmult(
+  reg u64 rp,
+  reg u64 kp,
+  reg u64 up
+)
+{
+  inline int i;
+  stack u8[32] k;
+  stack u64[4] x2 x3 z3;
+  reg u64[4] u z2r r;
+  reg u64 swap pos b;
+  stack u64 rps swaps poss;
+
+  rps = rp; // rp dead
+
+  k = decode_scalar_25519(kp); // kp dead
+  u = decode_u_coordinate(up); // up dead
+  (x2,z2r,x3,z3) = montgomery_ladder(u, k);
+  r = encode_point(x2,z2r);
+
+  rp = rps;
+  for i=0 to 4
+  { [rp + 8*i] = r[i]; }
+}
+
+
+
+//////
 
 fn _fe64_1_x3() -> stack u64[4], reg u64[4], stack u64[4]
 {
@@ -51,108 +223,6 @@ fn _fe64_1_x3() -> stack u64[4], reg u64[4], stack u64[4]
 
   return f1s, f2, f3s;
 }
-
-fn _bit_select(stack u8[32] e, reg u64 pos) -> reg u64
-{
-  reg u64 b p;
-
-  p = pos;
-  p >>= 3;
-  b = (64u) e[(int) p];
-
-  p = pos;
-  p &= 7;
-  b >>= p;
-
-  b &= 1;
-
-  return b;
-}
-
-fn _x25519_scalarmult(
-  reg u64 out,
-  reg u64 scalar,
-  reg u64 point
-)
-{
-  inline int i;
-  stack u64[4] x1 x2 z2 x3 z3 t0 t1 t2;
-  reg u64[4] x2r z2r z3r t1r;
-  stack u8[32] e;
-  reg u64 t swap pos b;
-  stack u64 outs swaps poss;
-
-  outs = out; // out dead
-
-  for i=0 to 4
-  { t = [scalar + 8*i];
-    e[u64 i] = t; } // scalar dead
-
-  e[0]  &= 0xf8;
-  e[31] &= 0x7f;
-  e[31] |= 0x40;
-
-  x3, x1 = _fe64_frombytes(point); // point dead
-  z2r, z3, x2 = _fe64_0_1_x2();
-
-  pos = 254;
-  swaps = 0;
-  while
-  {
-    poss = pos;
-    swap = swaps;
-
-    b = _bit_select(e, pos);
-
-    swap ^= b;
-
-    x2,  x3 = _fe64_cswap_ssss(x2,  x3, swap);
-    z2r, z3 = _fe64_cswap_rsrs(z2r, z3, swap);
-
-    swaps = b;
-                                               z2 = z2r;
-    t0  = _fe64_sub_ssr(x2, z2r);
-    x2  = _fe64_add_ssr(x2, z2r);
-
-    t1  = _fe64_sub_sss(x3, z3);
-    z2  = _fe64_add_sss(x3, z3);
-
-    z3  = _fe64_mul_sss(x2, t1);
-    z2  = _fe64_mul_sss(z2, t0);
-
-    t2  = _fe64_sqr_ss(x2);
-    t1r = _fe64_sqr_ss(t0);
-                                               t1 = t1r;
-    x3  = _fe64_add_sss(z3, z2);
-    z2  = _fe64_sub_sss(z3, z2);
-
-    x2  = _fe64_mul_ssr(t2, t1r);
-    t0  = _fe64_sub_ssr(t2, t1r);
-
-    z2  = _fe64_sqr_ss(z2);
-    //z3  = _fe64_mul121666_ss(t0);
-    z3  = _fe64_mul_a24_ss(t0, 121665);
-    x3  = _fe64_sqr_ss(x3);
-
-    //t1  = _fe64_add_sss(t1, z3); // 121666
-    t2  = _fe64_add_sss(t2, z3); // 121665
-    z3  = _fe64_mul_sss(x1, z2);
-    //z2r = _fe64_mul_rss(t0, t1); // 121666
-    z2r = _fe64_mul_rss(t0, t2); // 121665
-
-    pos = poss;
-    pos -= 1;
-  } (pos >=s 0)
-
-  z2r = _fe64_invert(z2r);
-  x2r = _fe64_mul_rsr(x2, z2r);
-  x2r = _fe64_tobytes(x2r);
-
-  out = outs;
-  for i=0 to 4
-  { [out + 8*i] = x2r[i]; }
-}
-
 
 // "How to (pre-)compute a ladder"
 // implementation in C of the paper: https://github.com/armfazh/rfc7748_precomputed
@@ -196,7 +266,7 @@ fn _x25519_scalarmult_base(
     poss = pos;
     swap = swaps;
 
-    b = _bit_select(e, pos);
+    b = ith_bit(e, pos);
 
     swap ^= b;
 
