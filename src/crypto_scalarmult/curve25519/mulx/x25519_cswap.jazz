@@ -1,6 +1,47 @@
 #ifndef X25519_CSWAP
 #define X25519_CSWAP
 
+fn _fe64_cswap(stack u64[4] x2,
+               reg   u64[4] z2r,
+               stack u64[4] x3,
+               stack u64[4] z3,
+               reg   u64    toswap) -> stack u64[4],
+                                       reg   u64[4],
+                                       stack u64[4],
+                                       stack u64[4]
+{
+  inline int i;
+  reg u64[4] t4 x2r, x3r, z3r;
+  reg u64 t mask;
+
+  mask = #set0();
+  mask -= toswap; // if toswap == 1 mask = -1 or all bits at 1, 0 otherwise
+
+  // swap between z2r and z3
+  z3r = z3;
+  t4  = z2r;
+
+  for i=0 to 4 { t4[i]  ^= z3r[i]; }
+  for i=0 to 4 { t4[i]  &= mask;   }
+  for i=0 to 4 { z2r[i] ^= t4[i];
+                 z3r[i] ^= t4[i];
+                 z3[i]   = z3r[i]; }
+
+  // swap between z2r and z3
+  x3r = x3;
+
+  for i=0 to 4 { x2r[i]  = x2[i];
+                 t       = x3r[i];
+                 t      ^= x2r[i];
+                 t      &= mask;
+                 x2r[i] ^= t;
+                 x3r[i] ^= t;
+                 x2[i]   = x2r[i];
+                 x3[i]   = x3r[i]; }
+
+  return x2, z2r, x3, z3;
+}
+
 fn _fe64_cswap_ssss(
   stack u64[4] xs,
   stack u64[4] ys,
