@@ -5,8 +5,23 @@ import Zp.
 from Jasmin require import JModel.
 
 require import Curve25519_Spec.
+import ZModpRing.
 
 (** generic stuff **)
+
+(* exp exp *)
+lemma expE (z : zp) (e1 e2 : int) : 0 <= e1 /\ 0 <= e2 =>
+  ZModpRing.exp (ZModpRing.exp z e1) e2 =
+  ZModpRing.exp z (e1*e2).
+admit.
+qed.
+
+(* exp add *)
+lemma expA (z : zp) (e1 : int) : 0 <= e1 =>
+  z * (ZModpRing.exp z e1) =
+  ZModpRing.exp z (e1+1).
+admit.
+qed.
 
 (* returns the first 2 elements of the input triple *)
 op select_tuple_12 (t : 'a * 'a * 'c) = (t.`1, t.`2).
@@ -167,12 +182,131 @@ proof.
   by rewrite eq_montgomery_ladder1 eq_montgomery_ladder2 eq_montgomery_ladder3.
 qed.
 
+(** step 5: introduce reordering in encode point **)
+(*  - we split invert in 3 parts to make the proof easier *)
+op invert_p_p1(z1 : zp) : (zp*zp) =
+  let z2 = exp z1 2 in
+  let z8 = exp z2 (2*2) in
+  let z9 = z1 * z8 in
+  let z11 = z2 * z9 in
+  let z22 = exp z11 2 in
+  let z_5_0 = z9 * z22 in
+  (z_5_0, z11).
+
+op invert_p_p2(z_5_0 : zp) : zp = 
+  let z_10_5 = ZModpRing.exp z_5_0 (2^5) in
+  let z_10_0 = z_10_5 * z_5_0 in
+  let z_20_10 = ZModpRing.exp z_10_0 (2^10) in
+  let z_20_0 = z_20_10 * z_10_0 in
+  let z_40_20 = ZModpRing.exp z_20_0 (2^20) in
+  let z_40_0 = z_40_20 * z_20_0 in
+  let z_50_10 = ZModpRing.exp z_40_0 (2^10) in
+  let z_50_0 = z_50_10 * z_10_0 in
+  z_50_0.
+
+op invert_p_p3(z_50_0 z11 : zp) : zp =
+  let z_100_50 = ZModpRing.exp z_50_0 (2^50) in
+  let z_100_0 = z_100_50 * z_50_0 in
+  let z_200_100 = ZModpRing.exp z_100_0 (2^100) in
+  let z_200_0 = z_200_100 * z_100_0 in
+  let z_250_50 = ZModpRing.exp z_200_0 (2^50) in
+  let z_250_0 = z_250_50 * z_50_0 in
+  let z_255_5 = ZModpRing.exp z_250_0 (2^5) in
+  let z_255_21 = z_255_5 * z11 in
+  z_255_21.
+
+op invert_p(z1 : zp) : zp =
+  let (z_5_0, z11) = invert_p_p1 z1 in
+  let z_50_0 = invert_p_p2 z_5_0 in
+  let z_255_21 = invert_p_p3 z_50_0 z11 in
+  z_255_21.
+
+lemma eq_invert_p (z1: zp) :
+  invert_p z1 = ZModpRing.exp z1 (p-2).
+proof.
+rewrite /invert_p.
+(*invert_p1*)
+rewrite /invert_p_p1 /= expE //=.
+  cut -> : invert_p_p3 (invert_p_p2 (z1 * exp z1 8 * 
+                exp (exp z1 2 * (z1 * exp z1 8)) 2))
+                    (exp z1 2 * (z1 * exp z1 8)) =
+           invert_p_p3 (invert_p_p2 (exp z1 (2^5 - 2^0))) (exp z1 11).
+           smt(expE expA exprD).
+(*invert_p2*)
+rewrite /invert_p_p2 //=.
+  cut -> : invert_p_p3 (exp (exp (exp 
+                     (exp (exp z1 31) 32 * exp z1 31) 1024 *
+                     (exp (exp z1 31) 32 * exp z1 31)) 1048576 *
+                (exp (exp (exp z1 31) 32 * exp z1 31) 1024 *
+                     (exp (exp z1 31) 32 * exp z1 31))) 1024 *
+                     (exp (exp z1 31) 32 * exp z1 31)) (exp z1 11) =
+           invert_p_p3 (exp z1 (2^50 - 2^0)) (exp z1 11).
+           smt(expE expA exprD).
+(*invert_p3*)
+rewrite /invert_p_p3 //= pE //=.
+smt(expE expA exprD).
+qed.
+
+(* now we define invert as one op and prove it equiv to exp z1 (p-2) *)
+op invert(z1 : zp) : zp =
+  let z2 = ZModpRing.exp z1 2 in
+  let z8 = ZModpRing.exp z2 (2*2) in
+  let z9 = z1 * z8 in
+  let z11 = z2 * z9 in
+  let z22 = ZModpRing.exp z11 2 in
+  let z_5_0 = z9 * z22 in
+  let z_10_5 = ZModpRing.exp z_5_0 (2^5) in
+  let z_10_0 = z_10_5 * z_5_0 in
+  let z_20_10 = ZModpRing.exp z_10_0 (2^10) in
+  let z_20_0 = z_20_10 * z_10_0 in
+  let z_40_20 = ZModpRing.exp z_20_0 (2^20) in
+  let z_40_0 = z_40_20 * z_20_0 in
+  let z_50_10 = ZModpRing.exp z_40_0 (2^10) in
+  let z_50_0 = z_50_10 * z_10_0 in
+  let z_100_50 = ZModpRing.exp z_50_0 (2^50) in
+  let z_100_0 = z_100_50 * z_50_0 in
+  let z_200_100 = ZModpRing.exp z_100_0 (2^100) in
+  let z_200_0 = z_200_100 * z_100_0 in
+  let z_250_50 = ZModpRing.exp z_200_0 (2^50) in
+  let z_250_0 = z_250_50 * z_50_0 in
+  let z_255_5 = ZModpRing.exp z_250_0 (2^5) in
+  let z_255_21 = z_255_5 * z11 in
+  z_255_21.
+
+lemma eq_invert_invert_p (z1 : zp) : 
+  invert z1 = invert_p z1.
+proof.
+rewrite /invert /invert_p /invert_p_p1 /invert_p_p2 /invert_p_p3 //=.
+qed.
+
+lemma eq_invert (z1: zp) :
+  invert z1 = ZModpRing.exp z1 (p-2).
+proof.
+rewrite /eq_invert_invert_p.
+apply eq_invert_p.
+qed.
+
+(* now we define an alternative version of encodePoint *)
+op encodePoint1 (q: zp * zp) : W256.t =
+  let q = q.`1 * (invert q.`2) in
+      W256.of_int (asint q) axiomatized by encodePoint1E.
+
+hint simplify encodePoint1E.
+
+lemma eq_encodePoint1 (q: zp * zp) :
+  encodePoint1 q = encodePoint q.
+proof.
+simplify.
+congr.
+rewrite eq_invert //=.
+qed.
+
 (** step 5: scalarmult with updated montgomery_ladder3 **)
 op scalarmult1 (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in
   let u = decodeUCoordinate u in
   let r = montgomery_ladder3 u k in
-      encodePoint (r.`1) axiomatized by scalarmult1E.
+      encodePoint1 (r.`1) axiomatized by scalarmult1E.
 
 hint simplify scalarmult1E.
 
@@ -187,5 +321,9 @@ proof.
   have ml123 : montgomery_ladder (decodeUCoordinate u) (decodeScalar25519 k) =
                select_tuple_12 (montgomery_ladder3 (decodeUCoordinate u) (decodeScalar25519 k)).
     by move : kb0f; apply eq_montgomery_ladder123.
-  move : ml123 => /#.
+  congr.
+  rewrite ml123.
+  pose q := (montgomery_ladder3 (decodeUCoordinate u) (decodeScalar25519 k)).`1.
+  congr.
+  rewrite -eq_invert //=.
 qed.

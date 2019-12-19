@@ -46,7 +46,9 @@ op montgomery_ladder(init : zp, k : W256.t) =
 
 op encodePoint (q: zp * zp) : W256.t =
   let q = q.`1 * (ZModpRing.exp q.`2 (p - 2)) in
-      W256.of_int (asint q).
+      W256.of_int (asint q) axiomatized by encodePointE.
+
+hint simplify encodePointE.
 
 op scalarmult (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in
