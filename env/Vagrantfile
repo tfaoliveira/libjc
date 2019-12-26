@@ -14,12 +14,6 @@ Vagrant.configure(2) do |config|
     sudo apt-get install -y git build-essential m4 libssl-dev gpp gnuplot
   SHELL
 
-  #config.vm.provision "libjc", type: "shell", binary: true, privileged: false, inline: <<-SHELL
-  #  echo "running libjc as: `whoami`"
-  #  (cd /home/vagrant/workspace/ && git clone https://github.com/tfaoliveira/libjc.git)
-  #  (cd /home/vagrant/workspace/libjc && git submodule init && git submodule update)
-  #SHELL
-
   config.vm.provision "nix", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running nix as: `whoami`"
     curl https://nixos.org/nix/install | sh
@@ -27,7 +21,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "jasmin", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running jasmin as: `whoami`"
-    (cd /home/vagrant/workspace/libjc/env/third_party/jasmin/ && 
+    (cd /home/vagrant/workspace/libjc/env/third_party/jasmin/ &&
      nix-shell --command make &&
      sudo install -b -D `pwd`/compiler/jasminc /usr/local/bin/)
   SHELL
@@ -55,7 +49,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision "z3", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running z3 as: `whoami`"
     sudo apt install python -y
-    (cd /home/vagrant/workspace/libjc/env/third_party/z3 && 
+    (cd /home/vagrant/workspace/libjc/env/third_party/z3 &&
      ./configure &&
      cd build &&
      make &&
@@ -65,7 +59,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision "easycrypt", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running easycrypt as: `whoami`"
     mkdir -p /home/vagrant/.config/easycrypt/
-    (cd /home/vagrant/workspace/libjc/env/third_party/easycrypt && 
+    (cd /home/vagrant/workspace/libjc/env/third_party/easycrypt &&
      nix-shell --command make &&
      sudo env "PATH=$PATH" make install &&
      (nix-shell --command "easycrypt why3config" || true)
@@ -76,12 +70,12 @@ Vagrant.configure(2) do |config|
   config.vm.provision "emacs", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running emacs as: `whoami`"
     sudo apt install emacs -y
-    cat /home/vagrant/workspace/libjc/env/third_party/.emacs > ~/.emacs
+    cat /home/vagrant/workspace/libjc/env/third_party/.emacs >> ~/.emacs
   SHELL
 
   config.vm.provision "compcert", type: "shell", binary: true, privileged: false, inline: <<-SHELL
     echo "running compcert as: `whoami`"
-    (cd /home/vagrant/workspace/libjc/env/third_party/compcert/compcert_v3.6 && 
+    (cd /home/vagrant/workspace/libjc/env/third_party/compcert/compcert_v3.6 &&
      nix-shell --command "./configure x86_64-linux && make && sudo make install" ../compcert_v3.6.nix
     )
   SHELL
