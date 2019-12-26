@@ -13,4 +13,5 @@ Keccakf1600_s*.ec
 Keccak1600_s*.ec
 !Keccak1600_*_proof.ec
 
-
+Curve25519_s*.ec
+!Curve25519_*_proof.ec

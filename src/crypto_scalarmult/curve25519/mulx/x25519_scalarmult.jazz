@@ -76,32 +76,18 @@ fn init_points(reg u64[4] initr) -> stack u64[4], reg u64[4], stack u64[4], stac
   return x2, z2r, x3,  z3;
 }
 
-fn montgomery_ladder_step(stack u8[32] k,
-                          stack u64[4] init,
-                          stack u64[4] x2,
-                          reg   u64[4] z2r,
-                          stack u64[4] x3,
-                          stack u64[4] z3,
-                          stack u64    swapped,
-                          reg   u64    ctr) -> stack u64[4],
-                                               reg   u64[4],
-                                               stack u64[4],
-                                               stack u64[4],
-                                               stack u64
+fn add_and_double(stack u64[4] init,
+                  stack u64[4] x2,
+                  reg   u64[4] z2r,
+                  stack u64[4] x3,
+                  stack u64[4] z3) -> stack u64[4],
+                                      reg   u64[4],
+                                      stack u64[4],
+                                      stack u64[4]
 {
   stack u64[4] z2 t0 t1 t2;
   reg u64[4] t1r;
-  reg u64 toswap bit;
 
-  bit = ith_bit(k, ctr);
-
-  toswap  = swapped;
-  toswap ^= bit;
-
-  x2, z2r, x3, z3 = _fe64_cswap(x2, z2r, x3, z3, toswap);
-
-  swapped = bit;
-                                             z2 = z2r;
   t0  = _fe64_sub_ssr(x2, z2r);
   x2  = _fe64_add_ssr(x2, z2r);
 
@@ -127,6 +113,34 @@ fn montgomery_ladder_step(stack u8[32] k,
   t2  = _fe64_add_sss(t2, z3);
   z3  = _fe64_mul_sss(init, z2);
   z2r = _fe64_mul_rss(t0, t2);
+
+  return x2, z2r, x3, z3;
+}
+
+fn montgomery_ladder_step(stack u8[32] k,
+                          stack u64[4] init,
+                          stack u64[4] x2,
+                          reg   u64[4] z2r,
+                          stack u64[4] x3,
+                          stack u64[4] z3,
+                          stack u64    swapped,
+                          reg   u64    ctr) -> stack u64[4],
+                                               reg   u64[4],
+                                               stack u64[4],
+                                               stack u64[4],
+                                               stack u64
+{
+  reg u64 toswap bit;
+
+  bit = ith_bit(k, ctr);
+
+  toswap  = swapped;
+  toswap ^= bit;
+
+  x2, z2r, x3, z3 = _fe64_cswap(x2, z2r, x3, z3, toswap);
+  swapped = bit;
+
+  x2, z2r, x3, z3 = add_and_double(init, x2, z2r, x3, z3);
 
   return x2, z2r, x3, z3, swapped;
 }
