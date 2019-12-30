@@ -1,7 +1,18 @@
-# Setup Benchmarks
+# Setup
 ```
-cd env
+git clone --recurse-submodules https://github.com/tfaoliveira/libjc.git
+cd libjc/env
 vagrant up
+```
+You should now have an Ubuntu machine with [Jasmin](https://github.com/jasmin-lang/jasmin) compiler and [EasyCrypt](https://github.com/EasyCrypt/easycrypt) installed. If you also want to install [Proof General](https://proofgeneral.github.io/) -- check PG page for details:
+```
+M-x package-refresh-contents RET
+M-x package-install RET
+proof-general RET
+```
+You can read the following page if you encounter any gpg related error: https://elpa.gnu.org/packages/gnu-elpa-keyring-update.html. If the public key isn't found, probably the following command will fix the issue:
+```
+gpg --homedir ~/.emacs.d/elpa/gnupg --receive-keys 066DAFCB81E42C40
 ```
 
 # Benchmarks
