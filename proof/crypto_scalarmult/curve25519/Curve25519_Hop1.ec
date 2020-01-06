@@ -1,13 +1,11 @@
-require import Bool List Int IntExtra IntDiv CoreMap Real.
-require import Zp.
-import Zp.
-
+require import Bool List Int IntExtra IntDiv CoreMap Real Zp.
 from Jasmin require import JModel.
-
 require import Curve25519_Spec.
-import ZModpRing.
+import Zp ZModpRing.
 
 (** generic stuff **)
+
+search ZModpRing.exp.
 
 (* exp exp *)
 lemma expE (z : zp) (e1 e2 : int) : 0 <= e1 /\ 0 <= e2 =>
