@@ -33,7 +33,7 @@ op add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)) =
   let z_2 = e * (aa + (inzp 121665 * e)) in
       ((x_2,z_2), (x_3,z_3)).
 
-op swap_tuple( t : 'a * 'a ) = (t.`2, t.`1).
+op swap_tuple( t : ('a * 'a) * ('a * 'a) ) = (t.`2, t.`1).
 
 op ith_bit(k : W256.t, i : int) = k.[i].
 
@@ -57,3 +57,4 @@ op scalarmult (k:W256.t) (u:W256.t) : W256.t =
       encodePoint (r.`1) axiomatized by scalarmultE.
 
 hint simplify scalarmultE.
+

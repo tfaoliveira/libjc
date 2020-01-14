@@ -1,8 +1,10 @@
 require import Bool List Int IntExtra IntDiv CoreMap Real Zp.
 from Jasmin require import JModel.
-import ZModpRing Zp.
+require import Curve25519_Spec.
+require import Curve25519_Hop1.
+import Zp ZModpRing.
 
-module MSpec2 = {
+module MHop2 = {
 
   (* h = f + g *)
   proc add(f g : zp) : zp = 
@@ -114,9 +116,9 @@ module MSpec2 = {
     return (x2,z2,x3,z3);
   }
 
-  proc ith_bit (k : W256.t, ctr : int) : bool =
+  proc ith_bit (k' : W256.t, ctr : int) : bool =
   {
-    return k.[ctr];
+    return k'.[ctr];
   }
 
   proc decode_scalar_25519 (kp : W64.t) : W256.t = 
@@ -188,23 +190,23 @@ module MSpec2 = {
     return (x2, z2, x3, z3);
   }
 
-  proc montgomery_ladder_step (k : W256.t, 
-                               init x2 z2 x3 z3 : zp,
+  proc montgomery_ladder_step (k' : W256.t, 
+                               init' x2 z2 x3 z3 : zp,
                                swapped : bool,
-                               ctr : int) : zp * zp * zp * zp * bool =
+                               ctr' : int) : zp * zp * zp * zp * bool =
   { 
     var bit : bool;
     var toswap : bool;
-    bit <@ ith_bit (k, ctr);
+    bit <@ ith_bit (k', ctr');
     toswap <- swapped;
     toswap <- (toswap ^^ bit);
     (x2, z2, x3, z3) <@ cswap (x2, z2, x3, z3, toswap);
     swapped <- bit;
-    (x2, z2, x3, z3) <@ add_and_double (init, x2, z2, x3, z3);
+    (x2, z2, x3, z3) <@ add_and_double (init', x2, z2, x3, z3);
     return (x2, z2, x3, z3, swapped);
   }
 
-  proc montgomery_ladder (init : zp, k : W256.t) : zp * zp * zp * zp = 
+  proc montgomery_ladder (init' : zp, k' : W256.t) : zp * zp * zp * zp = 
   {
     var x2 : zp;
     var z2 : zp;
@@ -216,17 +218,16 @@ module MSpec2 = {
     x3 <- witness;
     z2 <- witness;
     z3 <- witness;
-    (x2, z2, x3, z3) <@ init_points (init);
+    (x2, z2, x3, z3) <@ init_points (init');
     ctr <- 254;
     swapped <- false;
-    (x2, z2, x3, z3, swapped) <@ montgomery_ladder_step (k, init, x2, z2, x3, z3, swapped, ctr);
-    ctr <- ctr - 1;
     while (0 <= ctr)
-    { (x2, z2, x3, z3, swapped) <@ montgomery_ladder_step (k, init, x2, z2, x3, z3, swapped, ctr);
+    { (x2, z2, x3, z3, swapped) <@ montgomery_ladder_step (k', init', x2, z2, x3, z3, swapped, ctr);
       ctr <- ctr - 1;
     }
     return (x2, z2, x3, z3);
   }
+
 
   proc encode_point (x2 z2 : zp) : W256.t =
   {
@@ -238,7 +239,7 @@ module MSpec2 = {
     return (W256.of_int (asint r));
   }
 
-  proc x25519_scalarmult (rp kp up : W64.t) : unit =
+  proc scalarmult (rp kp up : W64.t) : unit =
   {    
     var k : W256.t;
     var u : zp;
@@ -264,3 +265,271 @@ module MSpec2 = {
     return ();
   }
 }.
+
+(** step 1 : decode_scalar_25519 **)
+lemma eq_decode_scalar_25519 k:
+  hoare [ MHop2.decode_scalar_25519 : k = loadW256 Glob.mem (W64.to_uint kp)
+          ==> res = decodeScalar25519 k].
+proof.
+  proc; wp; rewrite /decodeScalar25519 /=; skip.
+  move => _ hk; rewrite hk //.
+qed.
+
+(** step 2 : decode_u_coordinate **)
+lemma eq_decode_u_coordinate u:
+  hoare [ MHop2.decode_u_coordinate : u = loadW256 Glob.mem (W64.to_uint up)
+          ==> res = decodeUCoordinate u].
+proof.
+  proc; wp; rewrite /decode_u_coordinate /=; skip.
+  move => _ hu; rewrite hu //.
+qed.
+
+(** step 3 : ith_bit **)
+lemma eq_ith_bit (k : W256.t) i:
+  hoare [MHop2.ith_bit : k' = k /\ ctr = i ==> res = ith_bit k i].
+proof.
+  proc. rewrite /ith_bit. skip => />.
+qed.
+
+(** step 4 : cswap **)
+lemma eq_cswap (t : (zp * zp) * (zp * zp) )  b:
+  hoare [MHop2.cswap : x2 = (t.`1).`1 /\
+                       z2 = (t.`1).`2 /\
+                       x3 = (t.`2).`1 /\
+                       z3 = (t.`2).`2 /\
+                       toswap = b 
+         ==> ((res.`1, res.`2),(res.`3, res.`4)) = cswap t b].
+proof.
+  by proc; wp; skip; simplify => /#.
+qed.
+
+(** step 5 : add_and_double **)
+lemma eq_add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)):
+  hoare [MHop2.add_and_double : init = qx /\ 
+                                x2 = nqs.`1.`1 /\
+                                z2 = nqs.`1.`2 /\
+                                x3 = nqs.`2.`1 /\
+                                z3 = nqs.`2.`2
+         ==> ((res.`1, res.`2),(res.`3, res.`4)) = add_and_double1 qx nqs].
+proof.
+  proc; inline *; wp; skip.
+  by rewrite /add_and_double1 => /#.
+qed.
+
+(** step 6 : montgomery_ladder_step **)
+lemma eq_montgomery_ladder_step (k : W256.t) 
+                                (init : zp)
+                                (nqs : (zp * zp) * (zp * zp) * bool) 
+                                (ctr : int) :
+  hoare [MHop2.montgomery_ladder_step : k' = k /\ 
+                                        init' = init /\
+                                        x2 = nqs.`1.`1 /\
+                                        z2 = nqs.`1.`2 /\
+                                        x3 = nqs.`2.`1 /\
+                                        z3 = nqs.`2.`2 /\
+                                        swapped = nqs.`3 /\
+                                        ctr' = ctr
+         ==> ((res.`1, res.`2),(res.`3, res.`4),res.`5) =
+             montgomery_ladder3_step k init nqs ctr].
+proof.
+  proc => /=.
+  ecall (eq_add_and_double init (cswap (select_tuple_12 nqs) (nqs.`3 ^^ (ith_bit k ctr)))).
+  wp.
+  ecall (eq_cswap (select_tuple_12 nqs) (nqs.`3 ^^ (ith_bit k ctr))).
+  wp.
+  ecall (eq_ith_bit k ctr). auto.
+  rewrite /montgomery_ladder3_step => /#.
+qed.
+
+(** step 7 : montgomery_ladder **)
+lemma unroll_ml3s  k init nqs (ctr : int) : (** unroll montgomery ladder 3 step **)
+  0 <= ctr =>
+    foldl (montgomery_ladder3_step k init)
+          nqs
+          (rev (iota_ 0 (ctr+1)))
+    =
+    foldl (montgomery_ladder3_step k init)
+          (montgomery_ladder3_step k init nqs ctr)
+          (rev (iota_ 0 (ctr))).
+proof.
+move => ctrge0.
+rewrite 2!foldl_rev iotaSr //= -cats1 foldr_cat => /#.
+qed.
+
+lemma eq_montgomery_ladder (init : zp)
+                           (k : W256.t) :
+  hoare [MHop2.montgomery_ladder : init' = init /\
+                                   k.[0] = false /\
+                                   k' = k
+         ==> ((res.`1, res.`2),(res.`3,res.`4)) =
+             select_tuple_12 (montgomery_ladder3 init k)].
+proof.
+proc.
+  inline MHop2.init_points. sp. simplify.
+  rewrite /montgomery_ladder3.
+
+  while (foldl (montgomery_ladder3_step k' init')
+               ((Zp.one, Zp.zero), (init, Zp.one), false)
+               (rev (iota_ 0 255))
+         =
+         foldl (montgomery_ladder3_step k' init')
+               ((x2,z2), (x3,z3), swapped)
+               (rev (iota_ 0 (ctr+1)))
+         ).
+  wp.
+  ecall (eq_montgomery_ladder_step k' init' ((x2,z2),(x3,z3),swapped) ctr).
+  skip. simplify.
+  move => &hr [?] ? ? ?. smt(unroll_ml3s).
+  skip. move => &hr [?] [?] [?] [?] [?] [?] [?] [?] [?] [?] [?] [?] [?] ?. subst.
+  split; first by done.
+  move => ? ? ? ? ? ? ?.
+  have _ : rev (iota_ 0 (ctr0 + 1)) = []; smt(iota0).
+qed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+lemma eq_montgomery_ladder (init : zp)
+                           (k : W256.t) :
+  hoare [MHop2.montgomery_ladder1 : init' = init /\
+                                    k.[0] = false /\
+                                    k' = k
+         ==> ((res.`1, res.`2),(res.`3,res.`4)) =
+             select_tuple_12 (montgomery_ladder3 init k)].
+proof.
+proc.
+  inline MHop2.init_points. sp. simplify.
+  rewrite /montgomery_ladder3.
+  while (foldl (montgomery_ladder3_step k' init')
+               ((Zp.one, Zp.zero), (init, Zp.one), false)
+               (rev (iota_ 0 255))
+         =
+         foldl (montgomery_ladder3_step k' init')
+               ((x2,z2), (x3,z3), swapped)
+               (rev (iota_ 0 (ctr+1)))
+         ).
+  wp.
+  ecall (eq_montgomery_ladder_step k init ((x2,z2),(x3,z3),swapped) ctr).
+  simplify.
+  skip. move => _.  smt(unroll_ml3s).
+  skip. move => &hr hinit. split.
+  + rewrite (_ : x2{hr} = Zp.one).     smt().
+    rewrite (_ : z2{hr} = Zp.zero).    smt().
+    rewrite (_ : x3{hr} = init).       smt().
+    rewrite (_ : z3{hr} = Zp.one).     smt().
+    rewrite (_ : swapped{hr} = false). smt().
+    rewrite (_ : ctr{hr} = 254).       smt(). smt().
+  
+  + move => hctr hswapped hx2 hx3 hz2 hz3 hctrl0.
+    have lstL : rev (iota_ 0 (hctr + 1)) = []. smt(iota0 rev_nil). (*last list*)
+    rewrite lstL.
+    have lstSt : ((hx2, hz2), (hx3, hz3), hswapped) (*last state*)
+                 =
+                 foldl (montgomery_ladder3_step k'{hr} init'{hr})
+                       ((hx2, hz2), (hx3, hz3), hswapped)
+                       []. smt().
+    rewrite -lstSt.
+    rewrite (_ : k'{hr} = k). smt().
+    rewrite (_ : init'{hr} = init). smt().
+    move => ->. rewrite /select_tuple_12 //.
+qed.
+
+
+
+
+
+
+
+
+(** step 8 : montgomery_ladder to montgomery_ladder1 **)
+
+
+
+
+
+
+(** step 7 : montgomery_ladder **)
+
+lemma unroll_ml3s  k init nqs (ctr : int) : (** unroll montgomery ladder 3 step **)
+  0 <= ctr =>
+    foldl (montgomery_ladder3_step k init)
+          nqs
+          (rev (iota_ 0 (ctr+1)))
+    =
+    foldl (montgomery_ladder3_step k init)
+          (montgomery_ladder3_step k init nqs ctr)
+          (rev (iota_ 0 (ctr))).
+proof.
+move => ctrge0.
+rewrite 2!foldl_rev iotaSr //= -cats1 foldr_cat => /#.
+qed.
+
+lemma eq_montgomery_ladder (init : zp)
+                           (k : W256.t) :
+  hoare [MHop2.montgomery_ladder : init' = init /\
+                                   k.[0] = false /\
+                                   k' = k
+         ==> ((res.`1, res.`2),(res.`3,res.`4)) =
+             select_tuple_12 (montgomery_ladder3 init k)].
+proof.
+proc.
+  inline MHop2.init_points. sp. simplify.
+  rewrite /montgomery_ladder3.
+
+  while (foldl (montgomery_ladder3_step k' init')
+               ((Zp.one, Zp.zero), (init, Zp.one), false)
+               (rev (iota_ 0 255))
+         =
+         foldl (montgomery_ladder3_step k' init')
+               ((x2,z2), (x3,z3), swapped)
+               (rev (iota_ 0 (ctr+1)))
+         ).
+  sp. skip. move => _. smt(unroll_ml3s).
+  skip. move => &hr hinit. split.
+  + rewrite (_ : x2{hr} = Zp.one).     smt().
+    rewrite (_ : z2{hr} = Zp.zero).    smt().
+    rewrite (_ : x3{hr} = init).       smt().
+    rewrite (_ : z3{hr} = Zp.one).     smt().
+    rewrite (_ : swapped{hr} = false). smt().
+    rewrite (_ : ctr{hr} = 254).       smt(). smt().
+  
+  + move => hctr hswapped hx2 hx3 hz2 hz3 hctrl0.
+    have lstL : rev (iota_ 0 (hctr + 1)) = []. smt(iota0 rev_nil). (*last list*)
+    rewrite lstL.
+    have lstSt : ((hx2, hz2), (hx3, hz3), hswapped) (*last state*)
+                 =
+                 foldl (montgomery_ladder3_step k'{hr} init'{hr})
+                       ((hx2, hz2), (hx3, hz3), hswapped)
+                       []. smt().
+    rewrite -lstSt.
+    rewrite (_ : k'{hr} = k). smt().
+    rewrite (_ : init'{hr} = init). smt().
+    move => ->. rewrite /select_tuple_12 //.
+qed.

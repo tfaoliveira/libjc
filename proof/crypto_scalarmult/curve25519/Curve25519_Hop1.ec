@@ -16,16 +16,16 @@ admit.
 qed.
 
 (* returns the first 2 elements of the input triple *)
-op select_tuple_12 (t : 'a * 'a * 'c) = (t.`1, t.`2).
+op select_tuple_12 (t : ('a * 'a) * ('a * 'a) * 'c) = (t.`1, t.`2).
 
 (* if the third element is true then the first 2 elements are swapped *)
 (*  - this op returns the first 2 elements in the correct order       *)
-op reconstruct_tuple (t : 'a * 'a * bool) =
+op reconstruct_tuple (t : ('a * 'a) * ('a * 'a) * bool) =
   if t.`3
   then swap_tuple (select_tuple_12 t)
   else select_tuple_12 t.
 
-lemma eq_reconstruct_select_tuple (t : ('a * 'a * bool)) :
+lemma eq_reconstruct_select_tuple (t : (('a * 'a) * ('a * 'a) * bool)) :
   t.`3 = false => 
   select_tuple_12 t = reconstruct_tuple t.
 proof.
@@ -123,7 +123,7 @@ proof.
 qed.
 
 (** step 3: extend the state to contain an additional bit stating if the state is swapped **)
-op cswap( t : 'a * 'a, b : bool ) = 
+op cswap( t : ('a * 'a) * ('a * 'a), b : bool ) = 
   if b
   then swap_tuple t
   else t.
