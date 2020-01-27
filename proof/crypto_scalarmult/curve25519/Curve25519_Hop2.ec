@@ -46,28 +46,21 @@ module MHop2 = {
     return h;
   }
 
-  (* iterated sqr : i must be pair and >= 2 *)
+  (* iterated sqr *)
   proc it_sqr (i : int, f : zp) : zp =
   {
     var h : zp;
-    h <- witness;
+    h <- f;
 
-    h <@ sqr(f);
-    i <- i - 1;
-    f <@ sqr(h);
-    i <- i - 1;
-
-    while (0 <= i) {
-      h <@ sqr(f);
-      i <- i - 1;
-      f <@ sqr(h);
+    while (0 < i) {
+      h <@ sqr(h);
       i <- i - 1;
     }
-    return f;
+    return h;
   }
 
   (* f ** 2**255-19-2 *)
-  proc invert (z1 : zp) : zp =
+  proc invert (z1' : zp) : zp =
   {
     var t0 : zp;
     var t1 : zp;
@@ -79,10 +72,10 @@ module MHop2 = {
     t2 <- witness;
     t3 <- witness;
 
-    t0 <@ sqr (z1);
+    t0 <@ sqr (z1');
     t1 <@ sqr (t0);
     t1 <@ sqr (t1);
-    t1 <- z1 * t1;
+    t1 <- z1' * t1;
     t0 <- t0 * t1;
     t2 <@ sqr (t0);
     t1 <- t1 * t2;
@@ -121,24 +114,22 @@ module MHop2 = {
     return k'.[ctr];
   }
 
-  proc decode_scalar_25519 (kp : W64.t) : W256.t = 
+  proc decode_scalar_25519 (k' : W256.t) : W256.t =
   {
-    var k : W256.t;
-    k <- loadW256 Glob.mem (W64.to_uint kp);
-    k.[0] <- false;
-    k.[1] <- false;
-    k.[2] <- false;
-    k.[255] <- false;
-    k.[254] <- true;
-    return k;
+    k'.[0] <- false;
+    k'.[1] <- false;
+    k'.[2] <- false;
+    k'.[255] <- false;
+    k'.[254] <- true;
+    return k';
   }
 
-  proc decode_u_coordinate (up : W64.t) : zp =
+  proc decode_u_coordinate (u' : W256.t) : zp =
   {
-    var u : zp;
+    var u'' : zp;
     (* last bit of u is cleared but that can be introduced at the same time as arrays *)
-    u <- inzp ( to_uint ( loadW256 Glob.mem (W64.to_uint up) ) );
-    return u;
+    u'' <- inzp ( to_uint u' );
+    return u'';
   }
 
   proc init_points (init : zp) : zp * zp * zp * zp = 
@@ -222,7 +213,8 @@ module MHop2 = {
     ctr <- 254;
     swapped <- false;
     while (0 <= ctr)
-    { (x2, z2, x3, z3, swapped) <@ montgomery_ladder_step (k', init', x2, z2, x3, z3, swapped, ctr);
+    { (x2, z2, x3, z3, swapped) <@
+        montgomery_ladder_step (k', init', x2, z2, x3, z3, swapped, ctr);
       ctr <- ctr - 1;
     }
     return (x2, z2, x3, z3);
@@ -239,36 +231,32 @@ module MHop2 = {
     return (W256.of_int (asint r));
   }
 
-  proc scalarmult (rp kp up : W64.t) : unit =
-  {    
-    var k : W256.t;
-    var u : zp;
+  proc scalarmult (k' u' : W256.t) : W256.t =
+  {
+    var u'' : zp;
     var x2 : zp;
     var z2 : zp;
     var x3 : zp;
     var z3 : zp;
     var r : W256.t;
    
-    k <- witness;
     r <- witness;
-    u <- witness;
     x2 <- witness;
     x3 <- witness;
     z2 <- witness;
     z3 <- witness;
 
-    k <@ decode_scalar_25519 (kp);
-    u <@ decode_u_coordinate (up);
-    (x2, z2, x3, z3) <@ montgomery_ladder (u, k);
+    k'  <@ decode_scalar_25519 (k');
+    u'' <@ decode_u_coordinate (u');
+    (x2, z2, x3, z3) <@ montgomery_ladder (u'', k');
     r <@ encode_point (x2, z2);
-    Glob.mem <- storeW256 Glob.mem (W64.to_uint rp) r;
-    return ();
+    return r;
   }
 }.
 
 (** step 1 : decode_scalar_25519 **)
 lemma eq_decode_scalar_25519 k:
-  hoare [ MHop2.decode_scalar_25519 : k = loadW256 Glob.mem (W64.to_uint kp)
+  hoare [ MHop2.decode_scalar_25519 : k' = k
           ==> res = decodeScalar25519 k].
 proof.
   proc; wp; rewrite /decodeScalar25519 /=; skip.
@@ -277,7 +265,7 @@ qed.
 
 (** step 2 : decode_u_coordinate **)
 lemma eq_decode_u_coordinate u:
-  hoare [ MHop2.decode_u_coordinate : u = loadW256 Glob.mem (W64.to_uint up)
+  hoare [ MHop2.decode_u_coordinate : u' = u
           ==> res = decodeUCoordinate u].
 proof.
   proc; wp; rewrite /decode_u_coordinate /=; skip.
@@ -384,4 +372,35 @@ proc.
   split; first by done.
   move => ? ? ? ? ? ? ?.
   have _ : rev (iota_ 0 (ctr0 + 1)) = []; smt(iota0).
+qed.
+
+(** step 8 : iterated square **)
+lemma eq_it_sqr (e : int)
+                (z : zp) : 
+  hoare[MHop2.it_sqr : i = e /\
+                       f = z 
+       ==> res = it_sqr1 e z].
+proof.
+  proc. inline MHop2.sqr. sp. simplify.
+  rewrite /it_sqr1.
+  
+  while (foldl (fun (z': zp) (_ : int) => exp z' 2) z (iota_ 0 e)
+         =
+         foldl (fun (z': zp) (_ : int) => exp z' 2) h (iota_ 1 (i+1))
+         ).
+  wp. skip. move => &hr [?] ?. rewrite H /= -expr2.
+  iotaSr. smt(). admit.
+  skip. move => &hr. move => [?] [?] ?. subst.
+  split. first by done.
+  move => ? ? ? ?. rewrite H0.
+  have _ : iota_ 0 i0 = []; smt(iota0).
+qed.
+
+(** step 9 : invert **)
+lemma eq_invert (z1 : zp) :
+  hoare [MHop2.invert : z1' = z1
+         ==> res = invert1 z1].
+proof.
+proc.
+admit.
 qed.

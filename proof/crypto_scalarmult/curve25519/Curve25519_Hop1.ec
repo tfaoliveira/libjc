@@ -12,7 +12,7 @@ lemma expE (z : zp) (e1 e2 : int) : 0 <= e1 /\ 0 <= e2 =>
   ZModpRing.exp (ZModpRing.exp z e1) e2 =
   ZModpRing.exp z (e1*e2).
 proof.
-admit.
+admit. (**TODO**)
 qed.
 
 (* returns the first 2 elements of the input triple *)
@@ -175,7 +175,7 @@ proof.
 qed.
 
 (** step 5: introduce reordering in encode point **)
-(*  - we split invert in 3 parts to make the proof easier *)
+(*  - we split invert in 3 parts to make the proof faster *)
 op invert_p_p1(z1 : zp) : (zp*zp) =
   let z2 = exp z1 2 in
   let z8 = exp z2 (2*2) in
@@ -265,17 +265,10 @@ op invert(z1 : zp) : zp =
   let z_255_21 = z_255_5 * z11 in
   z_255_21.
 
-lemma eq_invert_invert_p (z1 : zp) : 
-  invert z1 = invert_p z1.
-proof.
-rewrite /invert /invert_p /invert_p_p1 /invert_p_p2 /invert_p_p3 //=.
-qed.
-
-lemma eq_invert (z1: zp) :
+lemma eq_invert (z1 : zp) :
   invert z1 = ZModpRing.exp z1 (p-2).
 proof.
-rewrite /eq_invert_invert_p.
-apply eq_invert_p.
+  by rewrite eq_invert_p //.
 qed.
 
 op sqr(z : zp) : zp =
@@ -285,32 +278,44 @@ op it_sqr(e : int, z : zp) : zp =
   ZModpRing.exp z (2^e).
 
 op it_sqr1(e : int, z : zp) : zp =
-  foldl (fun (z' : zp) (c : int) => z' * z') z (iota_ 0 e).
+  foldl (fun (z' : zp) (c : int) => exp z' 2) z (iota_ 0 e).
+
+lemma eq_it_sqr1 (e : int, z : zp) :
+  0 <= e  =>
+  it_sqr1 e z = it_sqr e z.
+proof.
+  move : e.
+  rewrite /it_sqr1 /it_sqr. elim. by simplify; smt(expr1).
+  move => i ige0 hin.
+  rewrite iotaSr // -cats1 foldl_cat hin /= expE /=. smt(gt0_pow2).
+  congr. clear hin.
+  rewrite powS // mulzC //.
+qed.
 
 op invert1(z1 : zp) : zp =
-  let t0 = sqr z1  in       (* z1^2  *)
-  let t1 = sqr t0  in       (* z1^4  *)
-  let t1 = sqr t1  in       (* z1^8  *)
-  let t1 = z1 * t1 in       (* z1^9  *)
-  let t0 = t0 * t1 in       (* z1^11 *)
-  let t2 = sqr t0  in       (* z1^22 *)
-  let t1 = t1 * t2 in       (* z_5_0  *)
-  let t2 = sqr t1  in       (* z_10_5 *) 
+  let t0 = sqr z1  in        (* z1^2  *)
+  let t1 = sqr t0  in        (* z1^4  *)
+  let t1 = sqr t1  in        (* z1^8  *)
+  let t1 = z1 * t1 in        (* z1^9  *)
+  let t0 = t0 * t1 in        (* z1^11 *)
+  let t2 = sqr t0  in        (* z1^22 *)
+  let t1 = t1 * t2 in        (* z_5_0  *)
+  let t2 = sqr t1  in        (* z_10_5 *) 
   let t2 = it_sqr 4 t2  in
-  let t1 = t1 * t2 in       (* z_10_0 *)
-  let t2 = it_sqr 10 t1 in  (* z_20_10 *)
-  let t2 = t1 * t2 in       (* z_20_0 *)
-  let t3 = it_sqr 20 t2 in  (* z_40_20 *)
-  let t2 = t2 * t3 in       (* z_40_0 *)
-  let t2 = it_sqr 10 t2 in  (* z_50_10 *)
-  let t1 = t1 * t2 in       (* z_50_0 *)
-  let t2 = it_sqr 50 t1 in  (* z_100_50 *)
-  let t2 = t1 * t2 in       (* z_100_0 *)
-  let t3 = it_sqr 100 t2 in (* z_200_100 *)
-  let t2 = t2 * t3 in       (* z_200_0 *)
-  let t2 = it_sqr 50 t2 in  (* z_250_50 *)
-  let t1 = t1 * t2 in       (* z_250_0 *)
-  let t1 = it_sqr 4 t1 in   (* z_255_5 *) 
+  let t1 = t1 * t2 in        (* z_10_0 *)
+  let t2 = it_sqr 10 t1 in   (* z_20_10 *)
+  let t2 = t1 * t2 in        (* z_20_0 *)
+  let t3 = it_sqr 20 t2 in   (* z_40_20 *)
+  let t2 = t2 * t3 in        (* z_40_0 *)
+  let t2 = it_sqr 10 t2 in   (* z_50_10 *)
+  let t1 = t1 * t2 in        (* z_50_0 *)
+  let t2 = it_sqr 50 t1 in   (* z_100_50 *)
+  let t2 = t1 * t2 in        (* z_100_0 *)
+  let t3 = it_sqr 100 t2 in  (* z_200_100 *)
+  let t2 = t2 * t3 in        (* z_200_0 *)
+  let t2 = it_sqr 50 t2 in   (* z_250_50 *)
+  let t1 = t1 * t2 in        (* z_250_0 *)
+  let t1 = it_sqr 4 t1 in    (* z_255_5 *) 
   let t1 = sqr t1 in
   let t1 = t0 * t1 in
   t1.
@@ -318,13 +323,49 @@ op invert1(z1 : zp) : zp =
 lemma eq_invert1 (z1: zp) :
   invert1 z1 = invert z1.
 proof.
-rewrite /invert1 /invert /= /sqr /it_sqr /=.
+rewrite /invert1 /invert /= /it_sqr /sqr /=.
 smt(exprS exprD expE).
+qed.
+
+(** split invert2 in 3 parts : jump from it_sqr to it_sqr1 **)
+
+op invert2(z1 : zp) : zp =
+  let t0 = sqr z1  in        (* z1^2  *)
+  let t1 = sqr t0  in        (* z1^4  *)
+  let t1 = sqr t1  in        (* z1^8  *)
+  let t1 = z1 * t1 in        (* z1^9  *)
+  let t0 = t0 * t1 in        (* z1^11 *)
+  let t2 = sqr t0  in        (* z1^22 *)
+  let t1 = t1 * t2 in        (* z_5_0  *)
+  let t2 = sqr t1  in        (* z_10_5 *) 
+  let t2 = it_sqr1 4 t2  in
+  let t1 = t1 * t2 in        (* z_10_0 *)
+  let t2 = it_sqr1 10 t1 in  (* z_20_10 *)
+  let t2 = t1 * t2 in        (* z_20_0 *)
+  let t3 = it_sqr1 20 t2 in  (* z_40_20 *)
+  let t2 = t2 * t3 in        (* z_40_0 *)
+  let t2 = it_sqr1 10 t2 in  (* z_50_10 *)
+  let t1 = t1 * t2 in        (* z_50_0 *)
+  let t2 = it_sqr1 50 t1 in  (* z_100_50 *)
+  let t2 = t1 * t2 in        (* z_100_0 *)
+  let t3 = it_sqr1 100 t2 in (* z_200_100 *)
+  let t2 = t2 * t3 in        (* z_200_0 *)
+  let t2 = it_sqr1 50 t2 in  (* z_250_50 *)
+  let t1 = t1 * t2 in        (* z_250_0 *)
+  let t1 = it_sqr1 4 t1 in   (* z_255_5 *) 
+  let t1 = sqr t1 in
+  let t1 = t0 * t1 in
+  t1.
+
+lemma eq_invert2 (z1: zp) :
+  invert2 z1 = invert z1.
+proof.
+rewrite -eq_invert1 /invert2 /invert1. smt(eq_it_sqr1).
 qed.
 
 (* now we define an alternative version of encodePoint *)
 op encodePoint1 (q: zp * zp) : W256.t =
-  let q = q.`1 * (invert1 q.`2) in
+  let q = q.`1 * (invert2 q.`2) in
       W256.of_int (asint q) axiomatized by encodePoint1E.
 
 hint simplify encodePoint1E.
@@ -334,7 +375,7 @@ lemma eq_encodePoint1 (q: zp * zp) :
 proof.
 simplify.
 congr.
-rewrite eq_invert1 eq_invert //=.
+rewrite eq_invert2 eq_invert //=.
 qed.
 
 (** step 6: scalarmult with updated montgomery_ladder3 **)
@@ -361,5 +402,5 @@ proof.
   rewrite ml123.
   pose q := (montgomery_ladder3 (decodeUCoordinate u) (decodeScalar25519 k)).`1.
   congr.
-  rewrite eq_invert1 -eq_invert //=.
+  rewrite eq_invert2 -eq_invert //=.
 qed.
