@@ -278,7 +278,7 @@ op it_sqr(e : int, z : zp) : zp =
   ZModpRing.exp z (2^e).
 
 op it_sqr1(e : int, z : zp) : zp =
-  foldl (fun (z' : zp) (c : int) => exp z' 2) z (iota_ 0 e).
+  foldl (fun (z' : zp) _ => exp z' 2) z (iota_ 0 e).
 
 lemma eq_it_sqr1 (e : int, z : zp) :
   0 <= e  =>
@@ -323,8 +323,8 @@ op invert1(z1 : zp) : zp =
 lemma eq_invert1 (z1: zp) :
   invert1 z1 = invert z1.
 proof.
-rewrite /invert1 /invert /= /it_sqr /sqr /=.
-smt(exprS exprD expE).
+ rewrite /invert1 /invert /= /it_sqr /sqr /=.
+ smt(exprS exprD expE).
 qed.
 
 (** split invert2 in 3 parts : jump from it_sqr to it_sqr1 **)

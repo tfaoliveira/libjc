@@ -2,7 +2,7 @@ require import Bool List Int IntExtra IntDiv CoreMap Real Zp.
 from Jasmin require import JModel.
 require import Curve25519_Spec.
 require import Curve25519_Hop1.
-import Zp ZModpRing.
+import Zp ZModpRing Curve25519_Spec Curve25519_Hop1.
 
 module MHop2 = {
 
@@ -375,32 +375,31 @@ proc.
 qed.
 
 (** step 8 : iterated square **)
+
+lemma unroll_it_sqr1 (e : int, z : zp) : (** unroll iterated square 1 -- version with foldl **)
+  0 <= e =>
+    it_sqr1 (e+1) z =
+    it_sqr1 e (exp z 2).
+proof.
+   move => ege0.
+   rewrite !eq_it_sqr1. smt(). trivial. rewrite /it_sqr //=.
+   rewrite expE. split. trivial. smt(gt0_pow2). rewrite powS //.
+qed.
+
 lemma eq_it_sqr (e : int)
-                (z : zp) : 
-  hoare[MHop2.it_sqr : i = e /\
-                       f = z 
+                 (z : zp) : 
+  hoare[MHop2.it_sqr : i =  e /\
+                       f =  z 
        ==> res = it_sqr1 e z].
 proof.
   proc. inline MHop2.sqr. sp. simplify.
   rewrite /it_sqr1.
-  
-  while (foldl (fun (z': zp) (_ : int) => exp z' 2) z (iota_ 0 e)
-         =
-         foldl (fun (z': zp) (_ : int) => exp z' 2) h (iota_ 1 (i+1))
-         ).
-  wp. skip. move => &hr [?] ?. rewrite H /= -expr2.
-  iotaSr. smt(). admit.
-  skip. move => &hr. move => [?] [?] ?. subst.
-  split. first by done.
+  while (foldl (fun (z': zp) _ => exp z' 2) z (iota_ 0 e) =
+         foldl (fun (z': zp) _ => exp z' 2) h (iota_ 0 i)
+        ).
+  wp. skip. move => &hr [hin] ?.
+  rewrite hin. rewrite -expr2. smt(unroll_it_sqr1).
+  skip. move => &hr [?] [?] ?. subst. split. trivial.
   move => ? ? ? ?. rewrite H0.
-  have _ : iota_ 0 i0 = []; smt(iota0).
-qed.
-
-(** step 9 : invert **)
-lemma eq_invert (z1 : zp) :
-  hoare [MHop2.invert : z1' = z1
-         ==> res = invert1 z1].
-proof.
-proc.
-admit.
+  have emptyl : (iota_ 0 i0) = []. smt(iota0). smt().
 qed.
