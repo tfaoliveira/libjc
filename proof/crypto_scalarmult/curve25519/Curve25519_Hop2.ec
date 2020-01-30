@@ -42,7 +42,8 @@ module MHop2 = {
   proc sqr (f : zp) : zp =
   {
     var h : zp;
-    h <- f * f;
+    (*h <- f * f;*)
+    h <- exp f 2;
     return h;
   }
 
@@ -301,7 +302,7 @@ lemma eq_add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)):
          ==> ((res.`1, res.`2),(res.`3, res.`4)) = add_and_double1 qx nqs].
 proof.
   proc; inline *; wp; skip.
-  by rewrite /add_and_double1 => /#.
+  rewrite /add_and_double1 /=. smt(expr2).
 qed.
 
 (** step 6 : montgomery_ladder_step **)
@@ -387,7 +388,7 @@ proof.
 qed.
 
 lemma eq_it_sqr (e : int)
-                 (z : zp) : 
+                (z : zp) : 
   hoare[MHop2.it_sqr : i =  e /\
                        f =  z 
        ==> res = it_sqr1 e z].
@@ -398,8 +399,83 @@ proof.
          foldl (fun (z': zp) _ => exp z' 2) h (iota_ 0 i)
         ).
   wp. skip. move => &hr [hin] ?.
-  rewrite hin. rewrite -expr2. smt(unroll_it_sqr1).
+  rewrite hin. smt(unroll_it_sqr1).
   skip. move => &hr [?] [?] ?. subst. split. trivial.
   move => ? ? ? ?. rewrite H0.
   have emptyl : (iota_ 0 i0) = []. smt(iota0). smt().
 qed.
+
+
+(** step 9 : invert **)
+lemma eq_it_invert (z : zp) : 
+  hoare[MHop2.invert : z1' =  z ==> res = invert2 z].
+proof.
+  proc. inline MHop2.sqr.   wp.
+  ecall (eq_it_sqr 4 t1).   wp.
+  ecall (eq_it_sqr 50 t2).  wp.
+  ecall (eq_it_sqr 100 t2). wp.
+  ecall (eq_it_sqr 50 t1).  wp.
+  ecall (eq_it_sqr 10 t2).  wp.
+  ecall (eq_it_sqr 20 t2).  wp.
+  ecall (eq_it_sqr 10 t1).  wp.
+  ecall (eq_it_sqr 4 t2).   wp.
+  skip. simplify.
+  move => &hr ?. 
+  move=> ? ->. move=> ? ->. 
+  move=> ? ->. move=> ? ->.
+  move=> ? ->. move=> ? ->.
+  move=> ? ->. move=> ? ->.
+  rewrite /invert2 /sqr /= H.
+  smt(eq_it_sqr).
+qed.
+
+  
+  
+
+  rewrite /invert1 /=.
+  smt().
+  
+
+
+op invert1(z1 : zp) : zp =
+  let t0 = sqr z1  in        (* z1^2  *)
+
+  proc invert (z1' : zp) : zp =
+  {
+    var t0 : zp;
+    var t1 : zp;
+    var t2 : zp;
+    var t3 : zp;
+
+    t0 <- witness;
+    t1 <- witness;
+    t2 <- witness;
+    t3 <- witness;
+
+    t0 <@ sqr (z1');
+    t1 <@ sqr (t0);
+    t1 <@ sqr (t1);
+    t1 <- z1' * t1;
+    t0 <- t0 * t1;
+    t2 <@ sqr (t0);
+    t1 <- t1 * t2;
+    t2 <@ sqr (t1);
+    t2 <@ it_sqr (4, t2);
+    t1 <- t1 * t2;
+    t2 <@ it_sqr (10, t1);
+    t2 <- t1 * t2;
+    t3 <@ it_sqr (20, t2);
+    t2 <- t2 * t3;
+    t2 <@ it_sqr (10, t2);
+    t1 <- t1 * t2;
+    t2 <@ it_sqr (50, t1);
+    t2 <- t1 * t2;
+    t3 <@ it_sqr (100, t2);
+    t2 <- t2 * t3;
+    t2 <@ it_sqr (50, t2);
+    t1 <- t1 * t2;
+    t1 <@ it_sqr (4, t1);
+    t1 <@ sqr (t1);
+    t1 <- t0 * t1;
+    return t1;
+  }
