@@ -221,7 +221,6 @@ module MHop2 = {
     return (x2, z2, x3, z3);
   }
 
-
   proc encode_point (x2 z2 : zp) : W256.t =
   {
     var r : zp;
@@ -387,7 +386,7 @@ proof.
    rewrite powS //. pose ee := 2 ^ e. smt(expE gt0_pow2).
 qed.
 
-lemma eq_it_sqr (e : int)
+lemma eq_h2_it_sqr (e : int)
                 (z : zp) : 
   hoare[MHop2.it_sqr : i =  e /\
                        f =  z 
@@ -405,77 +404,37 @@ proof.
   have emptyl : (iota_ 0 i0) = []. smt(iota0). smt().
 qed.
 
-
 (** step 9 : invert **)
-lemma eq_it_invert (z : zp) : 
+lemma eq_h2_invert (z : zp) : 
   hoare[MHop2.invert : z1' =  z ==> res = invert2 z].
 proof.
   proc. inline MHop2.sqr.   wp.
-  ecall (eq_it_sqr 4 t1).   wp.
-  ecall (eq_it_sqr 50 t2).  wp.
-  ecall (eq_it_sqr 100 t2). wp.
-  ecall (eq_it_sqr 50 t1).  wp.
-  ecall (eq_it_sqr 10 t2).  wp.
-  ecall (eq_it_sqr 20 t2).  wp.
-  ecall (eq_it_sqr 10 t1).  wp.
-  ecall (eq_it_sqr 4 t2).   wp.
+  ecall (eq_h2_it_sqr 4 t1).   wp.
+  ecall (eq_h2_it_sqr 50 t2).  wp.
+  ecall (eq_h2_it_sqr 100 t2). wp.
+  ecall (eq_h2_it_sqr 50 t1).  wp.
+  ecall (eq_h2_it_sqr 10 t2).  wp.
+  ecall (eq_h2_it_sqr 20 t2).  wp.
+  ecall (eq_h2_it_sqr 10 t1).  wp.
+  ecall (eq_h2_it_sqr 4 t2).   wp.
   skip. simplify.
   move => &hr ?. 
   move=> ? ->. move=> ? ->. 
   move=> ? ->. move=> ? ->.
   move=> ? ->. move=> ? ->.
   move=> ? ->. move=> ? ->.
-  rewrite /invert2 /sqr /= H.
-  smt(eq_it_sqr).
+  rewrite /invert2 /sqr /= H /#.
 qed.
 
-  
-  
+(** step 10 : encode point **)
+lemma eq_h2_encode_point (q : zp * zp) : 
+  hoare[MHop2.encode_point : x2 =  q.`1 /\ z2 = q.`2 ==> res = encodePoint1 q].
+proof.
+  proc. inline MHop2.mul. wp. sp. simplify.
+  (** **)
+  (** ecall (eq_h2_invert z2). **)
+  (** **)
+  admit.
+qed.
 
-  rewrite /invert1 /=.
-  smt().
-  
-
-
-op invert1(z1 : zp) : zp =
-  let t0 = sqr z1  in        (* z1^2  *)
-
-  proc invert (z1' : zp) : zp =
-  {
-    var t0 : zp;
-    var t1 : zp;
-    var t2 : zp;
-    var t3 : zp;
-
-    t0 <- witness;
-    t1 <- witness;
-    t2 <- witness;
-    t3 <- witness;
-
-    t0 <@ sqr (z1');
-    t1 <@ sqr (t0);
-    t1 <@ sqr (t1);
-    t1 <- z1' * t1;
-    t0 <- t0 * t1;
-    t2 <@ sqr (t0);
-    t1 <- t1 * t2;
-    t2 <@ sqr (t1);
-    t2 <@ it_sqr (4, t2);
-    t1 <- t1 * t2;
-    t2 <@ it_sqr (10, t1);
-    t2 <- t1 * t2;
-    t3 <@ it_sqr (20, t2);
-    t2 <- t2 * t3;
-    t2 <@ it_sqr (10, t2);
-    t1 <- t1 * t2;
-    t2 <@ it_sqr (50, t1);
-    t2 <- t1 * t2;
-    t3 <@ it_sqr (100, t2);
-    t2 <- t2 * t3;
-    t2 <@ it_sqr (50, t2);
-    t1 <- t1 * t2;
-    t1 <@ it_sqr (4, t1);
-    t1 <@ sqr (t1);
-    t1 <- t0 * t1;
-    return t1;
-  }
+(** final step: scalarmult **)
