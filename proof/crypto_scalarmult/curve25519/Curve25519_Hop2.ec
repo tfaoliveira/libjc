@@ -383,7 +383,7 @@ lemma unroll_it_sqr1 (e : int, z : zp) : (** unroll iterated square 1 -- version
 proof.
    move => ege0.
    rewrite !eq_it_sqr1. smt(). trivial. rewrite /it_sqr //=.
-   rewrite expE. split. trivial. smt(gt0_pow2). rewrite powS //.
+   rewrite powS //. pose ee := 2 ^ e. smt(expE gt0_pow2).
 qed.
 
 lemma eq_it_sqr (e : int)
