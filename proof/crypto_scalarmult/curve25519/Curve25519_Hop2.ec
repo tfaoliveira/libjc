@@ -255,7 +255,7 @@ module MHop2 = {
 }.
 
 (** step 1 : decode_scalar_25519 **)
-lemma eq_decode_scalar_25519 k:
+lemma eq_h2_decode_scalar_25519 k:
   hoare [ MHop2.decode_scalar_25519 : k' = k
           ==> res = decodeScalar25519 k].
 proof.
@@ -264,7 +264,7 @@ proof.
 qed.
 
 (** step 2 : decode_u_coordinate **)
-lemma eq_decode_u_coordinate u:
+lemma eq_h2_decode_u_coordinate u:
   hoare [ MHop2.decode_u_coordinate : u' = u
           ==> res = decodeUCoordinate u].
 proof.
@@ -273,14 +273,14 @@ proof.
 qed.
 
 (** step 3 : ith_bit **)
-lemma eq_ith_bit (k : W256.t) i:
+lemma eq_h2_ith_bit (k : W256.t) i:
   hoare [MHop2.ith_bit : k' = k /\ ctr = i ==> res = ith_bit k i].
 proof.
   proc. rewrite /ith_bit. skip => />.
 qed.
 
 (** step 4 : cswap **)
-lemma eq_cswap (t : (zp * zp) * (zp * zp) )  b:
+lemma eq_h2_cswap (t : (zp * zp) * (zp * zp) )  b:
   hoare [MHop2.cswap : x2 = (t.`1).`1 /\
                        z2 = (t.`1).`2 /\
                        x3 = (t.`2).`1 /\
@@ -292,7 +292,7 @@ proof.
 qed.
 
 (** step 5 : add_and_double **)
-lemma eq_add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)):
+lemma eq_h2_add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)):
   hoare [MHop2.add_and_double : init = qx /\ 
                                 x2 = nqs.`1.`1 /\
                                 z2 = nqs.`1.`2 /\
@@ -305,10 +305,10 @@ proof.
 qed.
 
 (** step 6 : montgomery_ladder_step **)
-lemma eq_montgomery_ladder_step (k : W256.t) 
-                                (init : zp)
-                                (nqs : (zp * zp) * (zp * zp) * bool) 
-                                (ctr : int) :
+lemma eq_h2_montgomery_ladder_step (k : W256.t) 
+                                   (init : zp)
+                                   (nqs : (zp * zp) * (zp * zp) * bool) 
+                                   (ctr : int) :
   hoare [MHop2.montgomery_ladder_step : k' = k /\ 
                                         init' = init /\
                                         x2 = nqs.`1.`1 /\
@@ -321,11 +321,11 @@ lemma eq_montgomery_ladder_step (k : W256.t)
              montgomery_ladder3_step k init nqs ctr].
 proof.
   proc => /=.
-  ecall (eq_add_and_double init (cswap (select_tuple_12 nqs) (nqs.`3 ^^ (ith_bit k ctr)))).
+  ecall (eq_h2_add_and_double init (cswap (select_tuple_12 nqs) (nqs.`3 ^^ (ith_bit k ctr)))).
   wp.
-  ecall (eq_cswap (select_tuple_12 nqs) (nqs.`3 ^^ (ith_bit k ctr))).
+  ecall (eq_h2_cswap (select_tuple_12 nqs) (nqs.`3 ^^ (ith_bit k ctr))).
   wp.
-  ecall (eq_ith_bit k ctr). auto.
+  ecall (eq_h2_ith_bit k ctr). auto.
   rewrite /montgomery_ladder3_step => /#.
 qed.
 
@@ -344,7 +344,7 @@ move => ctrge0.
 rewrite 2!foldl_rev iotaSr //= -cats1 foldr_cat => /#.
 qed.
 
-lemma eq_montgomery_ladder (init : zp)
+lemma eq_h2_montgomery_ladder (init : zp)
                            (k : W256.t) :
   hoare [MHop2.montgomery_ladder : init' = init /\
                                    k.[0] = false /\
@@ -365,7 +365,7 @@ proc.
                (rev (iota_ 0 (ctr+1)))
          ).
   wp.
-  ecall (eq_montgomery_ladder_step k' init' ((x2,z2),(x3,z3),swapped) ctr).
+  ecall (eq_h2_montgomery_ladder_step k' init' ((x2,z2),(x3,z3),swapped) ctr).
   skip. simplify.
   move => &hr [?] ? ? ?. smt(unroll_ml3s).
   skip. move => &hr [?] [?] [?] [?] [?] [?] [?] [?] [?] [?] [?] [?] [?] ?. subst.
@@ -375,7 +375,6 @@ proc.
 qed.
 
 (** step 8 : iterated square **)
-
 lemma unroll_it_sqr1 (e : int, z : zp) : (** unroll iterated square 1 -- version with foldl **)
   0 <= e =>
     it_sqr1 (e+1) z =
@@ -408,7 +407,7 @@ qed.
 lemma eq_h2_invert (z : zp) : 
   hoare[MHop2.invert : z1' =  z ==> res = invert2 z].
 proof.
-  proc. inline MHop2.sqr.   wp.
+  proc. inline MHop2.sqr.      wp.
   ecall (eq_h2_it_sqr 4 t1).   wp.
   ecall (eq_h2_it_sqr 50 t2).  wp.
   ecall (eq_h2_it_sqr 100 t2). wp.
@@ -423,18 +422,33 @@ proof.
   move=> ? ->. move=> ? ->.
   move=> ? ->. move=> ? ->.
   move=> ? ->. move=> ? ->.
-  rewrite /invert2 /sqr /= H /#.
+  rewrite invert2E /sqr /= H /#.
 qed.
 
 (** step 10 : encode point **)
 lemma eq_h2_encode_point (q : zp * zp) : 
   hoare[MHop2.encode_point : x2 =  q.`1 /\ z2 = q.`2 ==> res = encodePoint1 q].
 proof.
-  proc. inline MHop2.mul. wp. sp. simplify.
-  (** **)
-  (** ecall (eq_h2_invert z2). **)
-  (** **)
-  admit.
+  proc. inline MHop2.mul. wp. sp.
+  ecall (eq_h2_invert z2).
+  skip. simplify.
+  move => &hr [?] [?] ? ?. move=> ->.
+  rewrite encodePoint1E /= H0 H1 //.
 qed.
 
-(** final step: scalarmult **)
+(** step 11 : scalarmult **)
+lemma eq_h2_scalarmult (k u : W256.t) : 
+  hoare[MHop2.scalarmult : k' = k /\ u' = u ==> res = scalarmult k u].
+proof.
+  rewrite -eq_scalarmult1.
+  proc. sp.
+  ecall (eq_h2_encode_point (x2,z2)).     simplify.
+  ecall (eq_h2_montgomery_ladder u'' k'). simplify.
+  ecall (eq_h2_decode_u_coordinate u').   simplify.
+  ecall (eq_h2_decode_scalar_25519 k').   simplify.
+  skip.
+  move => &hr [?] [?] [?] [?] [?] [?] ?.
+  move=> ? -> ? ->. split.
+    by rewrite /decodeScalar25519 /=.
+  move=> ? ? ? ? -> => /#.
+qed.

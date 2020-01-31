@@ -48,8 +48,6 @@ op encodePoint (q: zp * zp) : W256.t =
   let q = q.`1 * (ZModpRing.exp q.`2 (p - 2)) in
       W256.of_int (asint q) axiomatized by encodePointE.
 
-hint simplify encodePointE.
-
 op scalarmult (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in
   let u = decodeUCoordinate u in
@@ -57,4 +55,3 @@ op scalarmult (k:W256.t) (u:W256.t) : W256.t =
       encodePoint (r.`1) axiomatized by scalarmultE.
 
 hint simplify scalarmultE.
-
