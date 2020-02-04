@@ -39,7 +39,7 @@ fn _fe64_mul_a24(stack u64[4] f, inline u64 a24) -> reg u64[4]
 
      _, r0 += 0 + cf;
 
-  _, _, _, _, _, r0 = #IMUL (r0, 38);
+  _, _, _, _, _, r0 = #IMULri (r0, 38);
 
   cf, h[0] += r0;
   cf, h[1] += 0 + cf;
