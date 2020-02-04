@@ -24,22 +24,22 @@ fn _fe64_mul_a24(stack u64[4] f, inline u64 a24) -> reg u64[4]
 
   c = a24;
 
-  (h[1], h[0]) = #x86_MULX(c, f[0]);
-  (h[2], lo)   = #x86_MULX(c, f[1]);
+  (h[1], h[0]) = #MULX(c, f[0]);
+  (h[2], lo)   = #MULX(c, f[1]);
 
   cf, h[1] += lo;
 
-  (h[3], lo)   = #x86_MULX(c, f[2]);
+  (h[3], lo)   = #MULX(c, f[2]);
 
   cf, h[2] += lo + cf;
 
-  (r0,   lo)   = #x86_MULX(c, f[3]);
+  (r0,   lo)   = #MULX(c, f[3]);
 
   cf, h[3] += lo + cf;
 
      _, r0 += 0 + cf;
 
-  _, _, _, _, _, r0 = #x86_IMULtimm(r0, 38);
+  _, _, _, _, _, r0 = #IMUL (r0, 38);
 
   cf, h[0] += r0;
   cf, h[1] += 0 + cf;

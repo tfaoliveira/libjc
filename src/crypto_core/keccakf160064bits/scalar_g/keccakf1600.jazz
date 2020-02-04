@@ -71,7 +71,7 @@ fn ROL64(reg u64 x, inline int c) -> reg u64
   if (c == 0)
   { y = x; }
   else
-  { _, _, y = #x86_ROL_64(x, c); }
+  { _, _, y = #ROL_64(x, c); }
   return y;
 }
 
@@ -200,9 +200,9 @@ fn __keccakf1600_scalar_g(
   align while
   {
     A, R = round2x(A, R, s_iotas, r);
-    r = #x86_DEC(r);
+    r = #DEC(r);
     R, A = round2x(R, A, s_iotas, r);
-    (_, _, _, zf, r) = #x86_DEC(r);
+    (_, _, _, zf, r) = #DEC(r);
   } (!zf)
 
   restore(A,R)

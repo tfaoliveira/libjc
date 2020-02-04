@@ -58,9 +58,9 @@ fn init_x1(reg u64 key nonce, reg u32 counter) -> reg u128[4]
   st[1] = (u128)[key + 0];
   st[2] = (u128)[key + 16];
   st[3] = g_p0;
-  st[3] = #x86_VPINSR_4u32(st[3], counter, 0);
-  st[3] = #x86_VPINSR_4u32(st[3], (u32)[nonce + 0], 1);
-  st[3] = #x86_VPINSR_2u64(st[3], (u64)[nonce + 4], 1);
+  st[3] = #VPINSR_4u32(st[3], counter, 0);
+  st[3] = #VPINSR_4u32(st[3], (u32)[nonce + 0], 1);
+  st[3] = #VPINSR_2u64(st[3], (u64)[nonce + 4], 1);
 
   // st
   // 0 { sigma      }
@@ -87,13 +87,13 @@ fn init_x4(reg u64 k n1, reg u32 ctr) -> stack u128[16]
   s[3] =  g_sigma3;
 
   for i=0 to 8
-  { s[4+i] = #x86_VPBROADCAST_4u32((u32)[k + 4*i]); }
+  { s[4+i] = #VPBROADCAST_4u32((u32)[k + 4*i]); }
 
-  s[12] = #x86_VPBROADCAST_4u32(s_ctr);
+  s[12] = #VPBROADCAST_4u32(s_ctr);
   s[12] +4u32= g_cnt;
 
   for i=0 to 3
-  { s[13+i] = #x86_VPBROADCAST_4u32((u32)[n1 + 4*i]); }
+  { s[13+i] = #VPBROADCAST_4u32((u32)[n1 + 4*i]); }
 
   st = s;
 
@@ -193,15 +193,15 @@ fn sub_rotate(reg u128[8] t) -> reg u128[8]
   inline int i;
   reg u128[8] x;
 
-  x[0] = #x86_VPUNPCKL_2u64(t[0], t[1]);
-  x[1] = #x86_VPUNPCKL_2u64(t[2], t[3]);
-  x[2] = #x86_VPUNPCKH_2u64(t[0], t[1]);
-  x[3] = #x86_VPUNPCKH_2u64(t[2], t[3]);
+  x[0] = #VPUNPCKL_2u64(t[0], t[1]);
+  x[1] = #VPUNPCKL_2u64(t[2], t[3]);
+  x[2] = #VPUNPCKH_2u64(t[0], t[1]);
+  x[3] = #VPUNPCKH_2u64(t[2], t[3]);
 
-  x[4] = #x86_VPUNPCKL_2u64(t[4], t[5]);
-  x[5] = #x86_VPUNPCKL_2u64(t[6], t[7]);
-  x[6] = #x86_VPUNPCKH_2u64(t[4], t[5]);
-  x[7] = #x86_VPUNPCKH_2u64(t[6], t[7]);
+  x[4] = #VPUNPCKL_2u64(t[4], t[5]);
+  x[5] = #VPUNPCKL_2u64(t[6], t[7]);
+  x[6] = #VPUNPCKH_2u64(t[4], t[5]);
+  x[7] = #VPUNPCKH_2u64(t[6], t[7]);
 
   // x[0] = [3,   2,  1,  0] +0
   // x[1] = [7,   6,  5,  4] +16
@@ -230,8 +230,8 @@ fn rotate(reg u128[8] x) -> reg u128[8]
   reg u128[8] t;
 
   for i=0 to 4
-  { t[  i] = #x86_VPUNPCKL_4u32(x[2*i+0], x[2*i+1]);
-    t[4+i] = #x86_VPUNPCKH_4u32(x[2*i+0], x[2*i+1]); }
+  { t[  i] = #VPUNPCKL_4u32(x[2*i+0], x[2*i+1]);
+    t[4+i] = #VPUNPCKH_4u32(x[2*i+0], x[2*i+1]); }
 
   x = sub_rotate(t);
 
@@ -249,8 +249,8 @@ fn rotate_stack(stack u128[8] s) -> reg u128[8]
   { x[i] = s[2*i+0]; }
 
   for i=0 to 4
-  { t[  i] = #x86_VPUNPCKL_4u32(x[i], s[2*i+1]);
-    t[4+i] = #x86_VPUNPCKH_4u32(x[i], s[2*i+1]);
+  { t[  i] = #VPUNPCKL_4u32(x[i], s[2*i+1]);
+    t[4+i] = #VPUNPCKH_4u32(x[i], s[2*i+1]);
   }
 
   x = sub_rotate(t);
@@ -349,14 +349,14 @@ fn store_last(reg u64 output plain, reg u32 len, reg u128[2] k)
     r1 = k[1];
   }
 
-  r2 = #x86_VPEXTR_64(r1, 0);
+  r2 = #VPEXTR_64(r1, 0);
 
   if(len >= 8)
   {
     r2 ^= (u64)[plain + 0];
     (u64)[output + 0] = r2;
     output, plain, len = update_ptr(output, plain, len, 8);
-    r2 = #x86_VPEXTR_64(r1, 1);
+    r2 = #VPEXTR_64(r1, 1);
   }
 
   while(len > 0)
@@ -515,10 +515,10 @@ fn rotate_x4(reg u128[4] k, inline int i r, reg u128 r16 r8) -> reg u128[4]
   reg u128 t;
 
   if(r==16){ 
-    k[i] = #x86_VPSHUFB_128(k[i], r16);
+    k[i] = #VPSHUFB_128(k[i], r16);
 
   } else { if (r==8) {
-    k[i] = #x86_VPSHUFB_128(k[i], r8);
+    k[i] = #VPSHUFB_128(k[i], r8);
 
   } else {
     t = k[i] <<4u32 r;
@@ -555,9 +555,9 @@ fn round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
 
 fn shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 {
-  k[1] = #x86_VPSHUFD_128(k[1], (4u2)[0,3,2,1]);
-  k[2] = #x86_VPSHUFD_128(k[2], (4u2)[1,0,3,2]);
-  k[3] = #x86_VPSHUFD_128(k[3], (4u2)[2,1,0,3]);
+  k[1] = #VPSHUFD_128(k[1], (4u2)[0,3,2,1]);
+  k[2] = #VPSHUFD_128(k[2], (4u2)[1,0,3,2]);
+  k[3] = #VPSHUFD_128(k[3], (4u2)[2,1,0,3]);
   return k;
 }
 
@@ -565,9 +565,9 @@ fn shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 
 fn reverse_shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 {
-  k[1] = #x86_VPSHUFD_128(k[1], (4u2)[2,1,0,3]);
-  k[2] = #x86_VPSHUFD_128(k[2], (4u2)[1,0,3,2]);
-  k[3] = #x86_VPSHUFD_128(k[3], (4u2)[0,3,2,1]);
+  k[1] = #VPSHUFD_128(k[1], (4u2)[2,1,0,3]);
+  k[2] = #VPSHUFD_128(k[2], (4u2)[1,0,3,2]);
+  k[3] = #VPSHUFD_128(k[3], (4u2)[0,3,2,1]);
   return k;
 }
 
@@ -728,10 +728,10 @@ fn rotate_x4_s(reg u128[16] k, inline int i r, stack u128 r16 r8) -> reg u128[16
   reg u128 t;
 
   if(r==16){ 
-    k[i] = #x86_VPSHUFB_128(k[i], r16);
+    k[i] = #VPSHUFB_128(k[i], r16);
 
   } else { if (r==8) {
-    k[i] = #x86_VPSHUFB_128(k[i], r8);
+    k[i] = #VPSHUFB_128(k[i], r8);
 
   } else {
     t = k[i] <<4u32 r;
@@ -822,7 +822,7 @@ fn rounds_x4(reg u128[16] k, stack u128 s_r16 s_r8) -> reg u128[16]
   align while {
     k, k14 = column_round_x4(k, k15, s_r16, s_r8);
     k, k15 = diagonal_round_x4(k, k14, s_r16, s_r8);
-    (_,_,_,zf,c) = #x86_DEC(c);
+    (_,_,_,zf,c) = #DEC(c);
   } (!zf)
 
   //c += 1;
