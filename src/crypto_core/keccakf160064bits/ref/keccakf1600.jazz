@@ -9,7 +9,7 @@ fn index(inline int x, inline int y) -> inline int {
 inline
 fn ROL64(reg u64 x, inline int c) -> reg u64 {
   reg u64 y;
-  _, _, y = #x86_ROL_64(x, c);
+  _, _, y = #ROL_64(x, c);
   return y;
 }
 
@@ -29,12 +29,12 @@ fn theta(stack u64[25] a) -> stack u64[25] {
     /* d[x] = ROL64(c[(x + 1) % 5], 1); */
     /* extraction fails */
 
-    /*    _, _, d[x] = #x86_ROL_64(c[(x + 1) % 5], 1);*/
+    /*    _, _, d[x] = #ROL_64(c[(x + 1) % 5], 1);*/
     /*    d[x] ^= c[(x + 4) % 5];*/
     /* does not compile */
 
     d[x] = c[(x + 1) % 5];
-    _, _, d[x] = #x86_ROL_64(d[x], 1);
+    _, _, d[x] = #ROL_64(d[x], 1);
     d[x] ^= c[(x + 4) % 5];
   }
 
@@ -75,7 +75,7 @@ fn rho(stack u64[25] a) -> stack u64[25] {
     for y = 0 to 5 {
       i = index(x, y);
       z = keccakRhoOffsets(i);
-      _, _, a[i] = #x86_ROL_64(a[i], z);
+      _, _, a[i] = #ROL_64(a[i], z);
     }
   }
 

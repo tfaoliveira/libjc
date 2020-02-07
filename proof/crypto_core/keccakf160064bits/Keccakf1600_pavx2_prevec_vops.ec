@@ -185,7 +185,7 @@ module Mavx2_prevec_vops = {
     a00 <@ OpsV.ilxor4u64(a00, 
             (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int 0)))));
     iotas <- (iotas + (W64.of_int 32));
-    ( _0,  _1,  _2, zf, i) <- x86_DEC_32 i;
+    ( _0,  _1,  _2, zf, i) <- DEC_32 i;
     while ((! zf)) {
       c00 <@ OpsV.iVPSHUFD_256(a20,(W8.of_int 78));
       c14 <@ OpsV.ilxor4u64(a41,a31);
@@ -340,7 +340,7 @@ module Mavx2_prevec_vops = {
         a00 <@ OpsV.ilxor4u64(a00, 
                 (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int 0)))));
         iotas <- (iotas + (W64.of_int 32));
-      ( _0,  _1,  _2, zf, i) <- x86_DEC_32 i;
+      ( _0,  _1,  _2, zf, i) <- DEC_32 i;
     }
     return (a00, a01, a20, a31, a21, a41, a11);
   }

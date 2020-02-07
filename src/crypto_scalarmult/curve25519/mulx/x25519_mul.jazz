@@ -318,18 +318,18 @@ fn fe64_mul_c0
   reg u64 hi lo;
   reg u64[4] h r;
 
-  (h[1], h[0]) = #x86_MULX ( f0, g[0] );
+  (h[1], h[0]) = #MULX ( f0, g[0] );
 
-  ( h[2], lo ) = #x86_MULX ( f0, g[1] );
-    cf, h[1]   = #x86_ADCX ( h[1], lo, cf );
+  ( h[2], lo ) = #MULX ( f0, g[1] );
+    cf, h[1]   = #ADCX ( h[1], lo, cf );
 
-  ( h[3], lo ) = #x86_MULX ( f0, g[2] );
-    cf, h[2]   = #x86_ADCX ( h[2], lo, cf );
+  ( h[3], lo ) = #MULX ( f0, g[2] );
+    cf, h[2]   = #ADCX ( h[2], lo, cf );
 
-  ( r[0], lo ) = #x86_MULX ( f0, g[3] );
-    cf, h[3]   = #x86_ADCX ( h[3], lo, cf );
+  ( r[0], lo ) = #MULX ( f0, g[3] );
+    cf, h[3]   = #ADCX ( h[3], lo, cf );
 
-  cf, r[0] = #x86_ADCX ( r[0], z, cf ); // cf = 0
+  cf, r[0] = #ADCX ( r[0], z, cf ); // cf = 0
 
   return h, r, cf, of;
 }
@@ -346,23 +346,23 @@ fn fe64_mul_c1
   inline int i;
   reg u64 hi lo;
 
-  ( hi, lo )   = #x86_MULX ( f, g[0] );
-  of, h[1]     = #x86_ADOX ( h[1], lo, of );
-  cf, h[2]     = #x86_ADCX ( h[2], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[0] );
+  of, h[1]     = #ADOX ( h[1], lo, of );
+  cf, h[2]     = #ADCX ( h[2], hi, cf );
 
-  ( hi, lo )   = #x86_MULX ( f, g[1] );
-  of, h[2]     = #x86_ADOX ( h[2], lo, of );
-  cf, h[3]     = #x86_ADCX ( h[3], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[1] );
+  of, h[2]     = #ADOX ( h[2], lo, of );
+  cf, h[3]     = #ADCX ( h[3], hi, cf );
 
-  ( hi, lo )   = #x86_MULX ( f, g[2] );
-  of, h[3]     = #x86_ADOX ( h[3], lo, of );
-  cf, r[0]     = #x86_ADCX ( r[0], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[2] );
+  of, h[3]     = #ADOX ( h[3], lo, of );
+  cf, r[0]     = #ADCX ( r[0], hi, cf );
 
-  ( r[1], lo ) = #x86_MULX ( f, g[3] );
-  of, r[0]     = #x86_ADOX ( r[0], lo, of);
+  ( r[1], lo ) = #MULX ( f, g[3] );
+  of, r[0]     = #ADOX ( r[0], lo, of);
 
-  cf, r[1]     = #x86_ADCX ( r[1], z, cf);
-  of, r[1]     = #x86_ADOX ( r[1], z, of);
+  cf, r[1]     = #ADCX ( r[1], z, cf);
+  of, r[1]     = #ADOX ( r[1], z, of);
 
   return h, r, cf, of;
 }
@@ -379,23 +379,23 @@ fn fe64_mul_c2
   inline int i;
   reg u64 hi lo;
 
-  ( hi, lo )   = #x86_MULX ( f, g[0] );
-  of, h[2]     = #x86_ADOX ( h[2], lo, of );
-  cf, h[3]     = #x86_ADCX ( h[3], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[0] );
+  of, h[2]     = #ADOX ( h[2], lo, of );
+  cf, h[3]     = #ADCX ( h[3], hi, cf );
 
-  ( hi, lo )   = #x86_MULX ( f, g[1] );
-  of, h[3]     = #x86_ADOX ( h[3], lo, of );
-  cf, r[0]     = #x86_ADCX ( r[0], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[1] );
+  of, h[3]     = #ADOX ( h[3], lo, of );
+  cf, r[0]     = #ADCX ( r[0], hi, cf );
 
-  ( hi, lo )   = #x86_MULX ( f, g[2] );
-  of, r[0]     = #x86_ADOX ( r[0], lo, of );
-  cf, r[1]     = #x86_ADCX ( r[1], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[2] );
+  of, r[0]     = #ADOX ( r[0], lo, of );
+  cf, r[1]     = #ADCX ( r[1], hi, cf );
 
-  ( r[2], lo ) = #x86_MULX ( f, g[3] );
-  of, r[1]     = #x86_ADOX ( r[1], lo, of);
+  ( r[2], lo ) = #MULX ( f, g[3] );
+  of, r[1]     = #ADOX ( r[1], lo, of);
 
-  cf, r[2]     = #x86_ADCX ( r[2], z, cf);
-  of, r[2]     = #x86_ADOX ( r[2], z, of);
+  cf, r[2]     = #ADCX ( r[2], z, cf);
+  of, r[2]     = #ADOX ( r[2], z, of);
 
   return h, r, cf, of;
 }
@@ -412,23 +412,23 @@ fn fe64_mul_c3
   inline int i;
   reg u64 hi lo;
 
-  ( hi, lo )   = #x86_MULX ( f, g[0] );
-  of, h[3]     = #x86_ADOX ( h[3], lo, of );
-  cf, r[0]     = #x86_ADCX ( r[0], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[0] );
+  of, h[3]     = #ADOX ( h[3], lo, of );
+  cf, r[0]     = #ADCX ( r[0], hi, cf );
 
-  ( hi, lo )   = #x86_MULX ( f, g[1] );
-  of, r[0]     = #x86_ADOX ( r[0], lo, of );
-  cf, r[1]     = #x86_ADCX ( r[1], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[1] );
+  of, r[0]     = #ADOX ( r[0], lo, of );
+  cf, r[1]     = #ADCX ( r[1], hi, cf );
 
-  ( hi, lo )   = #x86_MULX ( f, g[2] );
-  of, r[1]     = #x86_ADOX ( r[1], lo, of );
-  cf, r[2]     = #x86_ADCX ( r[2], hi, cf );
+  ( hi, lo )   = #MULX ( f, g[2] );
+  of, r[1]     = #ADOX ( r[1], lo, of );
+  cf, r[2]     = #ADCX ( r[2], hi, cf );
 
-  ( r[3], lo ) = #x86_MULX ( f, g[3] );
-  of, r[2]     = #x86_ADOX ( r[2], lo, of);
+  ( r[3], lo ) = #MULX ( f, g[3] );
+  of, r[2]     = #ADOX ( r[2], lo, of);
 
-  cf, r[3]     = #x86_ADCX ( r[3], z, cf);
-  of, r[3]     = #x86_ADOX ( r[3], z, of);
+  cf, r[3]     = #ADCX ( r[3], z, cf);
+  of, r[3]     = #ADOX ( r[3], z, of);
 
   return h, r, cf, of;
 }

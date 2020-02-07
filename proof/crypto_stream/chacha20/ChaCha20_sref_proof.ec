@@ -444,7 +444,7 @@ module AUX = {
   }
 }.
 
-hint simplify x86_ROL_32_E.
+hint simplify ROL_32_E.
 
 equiv eq_quarter_round : ChaCha20_pref.M.quarter_round ~ ChaCha20_pref.M.quarter_round : ={k, a, b, c, d} ==> ={res}.
 proof. sim. qed.

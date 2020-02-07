@@ -82,13 +82,13 @@ module Mscalarrho = {
     (_A, _R) <@ round2x (_A, _R, iotas, 0);
     (_R, _A) <@ round2x (_R, _A, iotas, 8);
     iotas <- (iotas + (W64.of_int 16));
-    ( _0,  _1,  _2,  _3, zf) <- x86_TEST_8 (truncateu8 iotas)
+    ( _0,  _1,  _2,  _3, zf) <- TEST_8 (truncateu8 iotas)
     (W8.of_int 255);
     while ((! zf)) {
       (_A, _R) <@ round2x (_A, _R, iotas, 0);
       (_R, _A) <@ round2x (_R, _A, iotas, 8);
       iotas <- (iotas + (W64.of_int 16));
-      ( _0,  _1,  _2,  _3, zf) <- x86_TEST_8 (truncateu8 iotas)
+      ( _0,  _1,  _2,  _3, zf) <- TEST_8 (truncateu8 iotas)
       (W8.of_int 255);
     }
     iotas <- (iotas - (W64.of_int 192));
@@ -173,13 +173,13 @@ module Mscalartable = {
     (_A, _R) <@ round2x (_A, _R, iotas, 0);
     (_R, _A) <@ round2x (_R, _A, iotas, 8);
     iotas <- (iotas + (W64.of_int 16));
-    ( _0,  _1,  _2,  _3, zf) <- x86_TEST_8 (truncateu8 iotas)
+    ( _0,  _1,  _2,  _3, zf) <- TEST_8 (truncateu8 iotas)
     (W8.of_int 255);
     while ((! zf)) {
       (_A, _R) <@ round2x (_A, _R, iotas, 0);
       (_R, _A) <@ round2x (_R, _A, iotas, 8);
       iotas <- (iotas + (W64.of_int 16));
-      ( _0,  _1,  _2,  _3, zf) <- x86_TEST_8 (truncateu8 iotas)
+      ( _0,  _1,  _2,  _3, zf) <- TEST_8 (truncateu8 iotas)
       (W8.of_int 255);
     }
     iotas <- (iotas - (W64.of_int 192));
@@ -227,24 +227,24 @@ op good_iotas (mem : global_mem_t, _iotas : int) =
     forall off, 0 <= off < 24 => 
       loadW64 mem (_iotas + (off * 8)) = iotas.[off].
 
-lemma testsem : (forall (x : W64.t), (x86_TEST_8 (truncateu8 x) (W8.of_int 255)).`5 <=> (W64.to_uint x %% 256 = 0)).
+lemma testsem : (forall (x : W64.t), (TEST_8 (truncateu8 x) (W8.of_int 255)).`5 <=> (W64.to_uint x %% 256 = 0)).
 move => *.
-rewrite /x86_TEST_8 /rflags_of_bwop8 /truncateu8 /ZF_of_w8 /=.
+rewrite /TEST_8 /rflags_of_bwop8 /truncateu8 /ZF_of_w8 /=.
 have -> : W8.of_int 255 = W8.onew by rewrite oneE.
 rewrite W8.andw1; split => h.
 + by rewrite (_ : 0 = to_uint W8.zero) 1:// -h W8.of_uintK.
 by apply W8.to_uintRL; rewrite -h W8.of_uintK.
 qed.
 
-lemma rol0 : (forall x , (x86_ROL_64 x (W8.of_int (rhotates 0))).`3 = x).
+lemma rol0 : (forall x , (ROL_64 x (W8.of_int (rhotates 0))).`3 = x).
 move => *.
-rewrite x86_ROL_64_E /rhotates rol_xor =>/>.
+rewrite ROL_64_E /rhotates rol_xor =>/>.
 exact/Ops.lsr_0.
 qed.
 
-lemma rol00 : (forall x , (x86_ROL_64 x (W8.zero)).`3 = x).
+lemma rol00 : (forall x , (ROL_64 x (W8.zero)).`3 = x).
 move => *.
-rewrite x86_ROL_64_E /rhotates rol_xor =>/>. 
+rewrite ROL_64_E /rhotates rol_xor =>/>. 
 exact/Ops.lsr_0.
 qed.
 
@@ -367,7 +367,7 @@ by smt(@W64).
 (* Main loop *)
 
 seq 0 1 : (#{/~round{1} = 2}pre /\ 0 < round{1} <= 24 /\ round{1} %% 2 = 0 /\
-           zf{2} = (x86_TEST_8 (truncateu8 iotas{2}) ((of_int 255))%W8).`5); first by auto => />.
+           zf{2} = (TEST_8 (truncateu8 iotas{2}) ((of_int 255))%W8).`5); first by auto => />.
 wp.
 while (#pre).
 wp.

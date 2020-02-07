@@ -9,7 +9,7 @@ fn keccak_init() -> reg u256[7]
   inline int i;
   reg u256[7] state;
 
-  state[0] = #x86_VPBROADCAST_4u64(g_zero);
+  state[0] = #VPBROADCAST_4u64(g_zero);
 
   for i=1 to 7
   { state[i] = state[0]; }
@@ -24,7 +24,7 @@ fn init_s_state() -> stack u64[28]
   stack u64[28] s_state;
   reg u256 zero;
 
-  zero = #x86_VPBROADCAST_4u64(g_zero);
+  zero = #VPBROADCAST_4u64(g_zero);
   for i=0 to 7
   { s_state[u256 i] = zero; }
 

@@ -521,13 +521,13 @@ proof.
     + wp; ecall (eq_update_ptr output0{1} plain0{1} len0{1} 16).
       ecall{1} (store16_spec output0{1} plain0{1} k10{1} Glob.mem{1}); wp; skip => 
         /> &1 &2 hinv h1 h2 h3 h4 h5 mem h6 res_L res_R *.
-      rewrite /x86_VEXTRACTI128 b2i_get 1:// /=; split; 2:smt().
+      rewrite /VEXTRACTI128 b2i_get 1:// /=; split; 2:smt().
       apply mem_eq_ext => j; rewrite h6 get_storeW128E /in_range.
       case: (to_uint output{2} <= j < to_uint output{2} + 16) => [h | //].
       have hh : 0 <= j - to_uint output{2} < 16 by smt().
       rewrite /init32 /loadW128 /= initiE 1:// /b2i /=.
       rewrite pack16bE 1:// initiE 1:// /= initiE 1:/# bits8_W4u32_red 1:// get_of_list /#.
-    skip => /> *; rewrite /x86_VEXTRACTI128 /= /#.
+    skip => /> *; rewrite /VEXTRACTI128 /= /#.
   inline Store.store16; exlim Glob.mem{1} => mem0.
   while (i{1} = to_uint j{2} /\ 0 <= len1{1} <= 16 /\ 0 <= i{1} /\
         len1{1} = to_uint len{2} /\ output1{1} = to_uint output{2} /\ plain1{1} = to_uint plain{2} /\
@@ -616,7 +616,7 @@ proof.
   + by move=> *; apply Array4.all_eq_eq.
   rewrite /x2 /Array4.all_eq.
   inline *; do 2! unroll for{1} ^while; unroll for{2} ^while.
-  by wp; skip => />; rewrite /x86_VPADD_8u32 /=.
+  by wp; skip => />; rewrite /VPADD_8u32 /=.
 qed.
 
 equiv eq_sum_states_x4 : ChaCha20_pavx2.M.sum_states_x4 ~ M.sum_states_x4 :
@@ -627,7 +627,7 @@ equiv eq_sum_states_x4 : ChaCha20_pavx2.M.sum_states_x4 ~ M.sum_states_x4 :
 proof.
   proc => /=; wp.
   do 2!call eq_sum_states_x2; wp; skip => />.
-  by move=> [k3 k4]; apply Array4.all_eq_eq; rewrite /x2 /Array4.all_eq /x86_VPADD_8u32 /= g_p2_pack.
+  by move=> [k3 k4]; apply Array4.all_eq_eq; rewrite /x2 /Array4.all_eq /VPADD_8u32 /= g_p2_pack.
 qed.
 
 module M' = {
@@ -806,7 +806,7 @@ proof.
     call eq_sum_states_x4; call eq_rounds_x4 => /=.
     inline ChaCha20_pavx2.M.copy_state_x4 M.copy_state_x4; wp; skip => /> * /=.
     split; 2: smt(). 
-    by apply Array4.all_eq_eq; rewrite /x86_VPADD_8u32 /Array4.all_eq /x2 /= g_p2_pack.
+    by apply Array4.all_eq_eq; rewrite /VPADD_8u32 /Array4.all_eq /x2 /= g_p2_pack.
   call eq_store_x2_last => /=.  
   ecall{2} (perm_x2_spec k1_1{1} k1_2{1}).
   call eq_sum_states_x2.
@@ -889,7 +889,7 @@ proof.
   seq 16 1 : (#{/~k{2}}pre /\ k{2} = (x8 k k0 k9 k10 k11 k12 k13 k14){1} /\
                 forall i, 0 <= i < 16 => i <> a_ => i <> c_ => k{2}.[i] = k_.[i]).
   + wp;skip => /> &1 &2 ha1 ha2 hb1 hb2 hc1 hc2 hr1 hr2.
-    split; 1: by rewrite /x86_VPADD_8u32 !get_x8 1,2:// -set_x8.
+    split; 1: by rewrite /VPADD_8u32 !get_x8 1,2:// -set_x8.
     by move=> ??? h ?;rewrite Array16.get_setE // h.
   seq 8 1 : (#pre). 
   + wp;skip => /> &1 &2 ha1 ha2 hb1 hb2 hc1 hc2 hr1 hr2 hi.
@@ -919,11 +919,11 @@ proof.
   seq 16 1 : (#{/~k{2}}pre /\ k{2} = (x8 k k0 k9 k10 k11 k12 k13 k14){1} /\
      forall i, 0 <= i < 16 => i <> a0_ => i <> c0_ => i <> a1_ => i <> c1_ => k{2}.[i] = k_.[i]).
   + wp;skip => /> &1 &2 ha1 ha2 hb1 hb2 hc1 hc2 hd1 hd2 ha1' ha2' hb1' hb2' hc1' hc2' hd1' hd2'.
-    split; 1: by rewrite /x86_VPADD_8u32 !get_x8 1,2:// -set_x8.
+    split; 1: by rewrite /VPADD_8u32 !get_x8 1,2:// -set_x8.
     by move=> ??? h *;rewrite Array16.get_setE // h.
   seq 8 1 : (#pre).
   + wp;skip => /> &1 &2 ha1 ha2 hb1 hb2 hc1 hc2 hd1 hd2 ha1' ha2' hb1' hb2' hc1' hc2' hd1' hd2' hi.
-    split; 1: by rewrite /x86_VPADD_8u32 !get_x8 1,2:// -set_x8. 
+    split; 1: by rewrite /VPADD_8u32 !get_x8 1,2:// -set_x8. 
     by move=> ????? h *;rewrite Array16.get_setE // h /= hi.
   seq 8 1 : (#pre). 
   + wp;skip => /> &1 &2 ha1 ha2 hb1 hb2 hc1 hc2 hd1 hd2 ha1' ha2' hb1' hb2' hc1' hc2' hd1' hd2' hi.
@@ -1052,7 +1052,7 @@ equiv eq_increment_counter_x8 : ChaCha20_pavx2.M.increment_counter_x8 ~ M.increm
 proof.
   proc => /=; wp; skip => /> &1.
   rewrite -set_x8 1:// get_x8 1://; congr.
-  rewrite /x86_VPADD_8u32 /= /unpack32 /map2 /=; apply W8u32.allP => /=;cbv delta.
+  rewrite /VPADD_8u32 /= /unpack32 /map2 /=; apply W8u32.allP => /=;cbv delta.
   do !(split;1:ring); ring.
 qed.
 
@@ -1320,53 +1320,53 @@ qed.*)
 hint simplify (W8u32_bits128_0, W8u32_bits128_1, W4u32_bits64_0, W4u32_bits64_1).
 *)
 (*
-lemma x86_VPUNPCKH_8u32_spec (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) 
+lemma VPUNPCKH_8u32_spec (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) 
                              (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t): 
-  x86_VPUNPCKH_8u32 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7])
+  VPUNPCKH_8u32 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7])
                     (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
   W8u32.pack8 [v2; w2; v3; w3; v6; w6; v7; w7].
 proof. by cbv delta. qed.
 qed.
 
-lemma x86_VPUNPCKL_8u32_spec (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) 
+lemma VPUNPCKL_8u32_spec (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) 
                              (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t): 
-  x86_VPUNPCKL_8u32 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7])
+  VPUNPCKL_8u32 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7])
                     (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
   W8u32.pack8 [v0; w0; v1; w1; v4; w4; v5; w5].
 proof.
   by cbv delta; rewrite -(pack2_4u32_8u32 v0 w0); congr; apply W2u128.Pack.all_eq_eq; rewrite /all_eq.
 qed.
 
-lemma x86_VPERM2I128_8u32_spec_32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
-  x86_VPERM2I128 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) (W8.of_int 32) =
+lemma VPERM2I128_8u32_spec_32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
+  VPERM2I128 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) (W8.of_int 32) =
   W8u32.pack8 [v0; v1; v2; v3; w0; w1; w2; w3].
 proof.
   by cbv delta; rewrite !of_intwE; cbv delta; rewrite pack2_4u32_8u32.
 qed.
 
-lemma x86_VPERM2I128_8u32_spec_49 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
-  x86_VPERM2I128 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) (W8.of_int 49) =
+lemma VPERM2I128_8u32_spec_49 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
+  VPERM2I128 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) (W8.of_int 49) =
   W8u32.pack8 [v4; v5; v6; v7; w4; w5; w6; w7].
 proof.
   by cbv delta; rewrite !of_intwE; cbv delta; rewrite pack2_4u32_8u32.
 qed.
 
-lemma x86_VPUNPCKL_4u64_8u32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
-  x86_VPUNPCKL_4u64 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
+lemma VPUNPCKL_4u64_8u32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
+  VPUNPCKL_4u64 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
   W8u32.pack8 [v0;v1;w0;w1;v4;v5;w4;w5].
 proof.
   by cbv delta; rewrite W2u128.Pack.init_of_list /= !pack2_2u32_4u32 pack2_4u32_8u32 .
 qed.
 
-lemma x86_VPUNPCKH_4u64_8u32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
-  x86_VPUNPCKH_4u64 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
+lemma VPUNPCKH_4u64_8u32 (v0 v1 v2 v3 v4 v5 v6 v7 : W32.t) (w0 w1 w2 w3 w4 w5 w6 w7 : W32.t):
+  VPUNPCKH_4u64 (W8u32.pack8 [v0; v1; v2; v3; v4; v5; v6; v7]) (W8u32.pack8 [w0; w1; w2; w3; w4; w5; w6; w7]) =
   W8u32.pack8 [v2;v3;w2;w3;v6;v7;w6;w7].
 proof.
   by cbv delta; rewrite W2u128.Pack.init_of_list /= !pack2_2u32_4u32 pack2_4u32_8u32 .
 qed.
 
-hint simplify (x86_VPUNPCKH_8u32_spec, x86_VPUNPCKL_8u32_spec, x86_VPERM2I128_8u32_spec_32, x86_VPERM2I128_8u32_spec_49,
-               x86_VPUNPCKL_4u64_8u32, x86_VPUNPCKH_4u64_8u32).
+hint simplify (VPUNPCKH_8u32_spec, VPUNPCKL_8u32_spec, VPERM2I128_8u32_spec_32, VPERM2I128_8u32_spec_49,
+               VPUNPCKL_4u64_8u32, VPUNPCKH_4u64_8u32).
 *)
 hoare rotate_spec k1 k2 k3 k4 k5 k6 k7 k8 : ChaCha20_savx2.M.rotate :
    x = half_x8 k1 k2 k3 k4 k5 k6 k7 k8 ==>
@@ -1962,7 +1962,7 @@ proof.
   + by do 8! unroll for{1} ^while; unroll for{2} ^while; wp; skip => />.
   while (={i} /\ #pre /\ 0 <= i{1}); 2: by auto.
   wp; skip => /> &1 &2 ??; split; 2:smt().
-  by rewrite !get_x8 1,2:// -set_x8 1:// /x86_VPADD_8u32.
+  by rewrite !get_x8 1,2:// -set_x8 1:// /VPADD_8u32.
 qed.
 
 equiv eq_chacha20_more_than_256 : 

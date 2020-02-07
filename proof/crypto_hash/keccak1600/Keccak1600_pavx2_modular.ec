@@ -18,7 +18,7 @@ module Mmod = {
     var state:W256.t Array7.t;
     var i:int;
     state <- witness;
-    state.[0] <- x86_VPBROADCAST_4u64 g_zero;
+    state.[0] <- VPBROADCAST_4u64 g_zero;
     i <- 1;
     while (i < 7) {
       state.[i] <- state.[0];
@@ -34,7 +34,7 @@ module Mmod = {
     var zero:W256.t;
     var i:int;
     s_state <- witness;
-    zero <- x86_VPBROADCAST_4u64 g_zero;
+    zero <- VPBROADCAST_4u64 g_zero;
     i <- 0;
     while (i < 7) {
       s_state =
@@ -610,7 +610,7 @@ proof.
   proc => /=.
   unroll for ^while; wp; skip => /> ofs h1 h2.
   do 7!(rewrite Array28.initiE 1:// set_get_def 1,2://).
-  rewrite /x86_VPBROADCAST_4u64 /= pack4bE 1:/# /= W4u64.Pack.get_of_list 1:/# /= /#.
+  rewrite /VPBROADCAST_4u64 /= pack4bE 1:/# /= W4u64.Pack.get_of_list 1:/# /= /#.
 qed.
 
 lemma get64_set8 (t: W64.t Array28.t) i k w : 
@@ -1321,7 +1321,7 @@ proof.
   seq 2 2 : (#pre /\ em_states state{2} state{1}). 
   + inline *. unroll for {1} 4. unroll for {2} 5.
      wp;skip;auto => />.
-     move => *; rewrite /x86_VPBROADCAST_4u64 /is4u6 /is4u64 => />.
+     move => *; rewrite /VPBROADCAST_4u64 /is4u6 /is4u64 => />.
      by rewrite /em_states; apply Array7.all_eq_eq.
   inline Mmod.absorb.
   swap {2} [6..7] -5.
@@ -1332,7 +1332,7 @@ proof.
     unroll for {2} 5.
     wp; skip => /> *.
     do 7! (rewrite initiE // set_get_def //).
-    rewrite /x86_VPBROADCAST_4u64 /= W4u64.pack4bE 1:/#.
+    rewrite /VPBROADCAST_4u64 /= W4u64.pack4bE 1:/#.
     by rewrite W4u64.Pack.get_of_list 1:/# /= /#.
   seq 1 1 : (#{/~em_states state{2} state{1}}{~in_0{1} = in_0{2}}{~inlen{1} = inlen{2}}
              {~s_state{2}}

@@ -42,7 +42,7 @@ fn ROL64(reg u64 x, inline int c) -> reg u64
   if (c == 0)
   { y = x; }
   else
-  { _, _, y = #x86_ROL_64(x, c); }
+  { _, _, y = #ROL_64(x, c); }
   return y;
 }
 
@@ -72,7 +72,7 @@ fn theta_rol(reg u64[5] c) -> reg u64[5]
 
   for i = 0 to 5
   { d[i] = c[(i+1)%5];
-    _, _, d[i] = #x86_ROL_64(d[i], 1);
+    _, _, d[i] = #ROL_64(d[i], 1);
     d[i] ^= c[(i+4)%5];
   }
 
@@ -169,7 +169,7 @@ fn __keccakf1600_scalar(
     a, r = round2x(a, r, iotas, 0);
     r, a = round2x(r, a, iotas, 8);
     iotas += 16;
-    _, _, _, _, zf = #x86_TEST_8(iotas,255);
+    _, _, _, _, zf = #TEST_8(iotas,255);
   } (!zf)
 
   iotas -= 192;
