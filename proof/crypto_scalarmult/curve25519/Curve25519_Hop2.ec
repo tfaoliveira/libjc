@@ -60,6 +60,27 @@ module MHop2 = {
     return h;
   }
 
+  (* iterated sqr *)
+  proc it_sqr_unroll (i : int, f : zp) : zp =
+  {
+    var h : zp;
+    h <- f;
+
+    h <@ sqr(f);
+    i <- i - 1;
+    f <@ sqr(h);
+    i <- i - 1;
+
+    while (0 < i) {
+      h <@ sqr(f);
+      i <- i - 1;
+      f <@ sqr(h);
+      i <- i - 1;
+    }
+
+    return f;
+  }
+
   (* f ** 2**255-19-2 *)
   proc invert (z1' : zp) : zp =
   {
@@ -386,7 +407,7 @@ proof.
 qed.
 
 lemma eq_h2_it_sqr (e : int)
-                (z : zp) : 
+                   (z : zp) : 
   hoare[MHop2.it_sqr : i =  e /\
                        f =  z 
        ==> res = it_sqr1 e z].
@@ -401,6 +422,17 @@ proof.
   skip. move => &hr [?] [?] ?. subst. split. trivial.
   move => ? ? ? ?. rewrite H0.
   have emptyl : (iota_ 0 i0) = []. smt(iota0). smt().
+qed.
+
+lemma eq_h2_it_sqr_unroll :
+  equiv [MHop2.it_sqr_unroll ~ MHop2.it_sqr :
+         ={i} /\ ={f} /\ 2 <= i{1} /\ i{1} %% 2 = 0 ==> ={res}].
+proof.
+  proc. inline MHop2.sqr. sp 1 1.
+  unroll{2} 1. rcondt{2} 1. auto => /#. simplify.
+  unroll{2} 5. rcondt{2} 5. auto => /#.
+  (* async while *)
+  admit.
 qed.
 
 (** step 9 : invert **)
