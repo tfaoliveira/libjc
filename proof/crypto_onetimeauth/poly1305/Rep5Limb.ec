@@ -17,9 +17,9 @@ by rewrite /mulu64 !W2u32.zeroext_truncateu32_and !bW64andmaskE // => <- <-.
 qed.
 
 (* *)
-axiom x86_SHRD_64_spec r1 r2 k:
+axiom SHRD_64_spec r1 r2 k:
  0 <= k <= 64 =>
- (x86_SHRD_64 r1 r2 (W8.of_int k)).`6
+ (SHRD_64 r1 r2 (W8.of_int k)).`6
  = (r1 `>>` (W8.of_int k)) + (r2 `<<` W8.of_int (64-k)).
 (* *)
 
@@ -265,7 +265,7 @@ module Mrep5 = {
     l <- (l `>>` (W8.of_int 26));
     ro.[1] <- l `&` mask26;
     l <- rt.[0];
-    ( _0, _1, _2, _3, _4,l) <- x86_SHRD_64 l rt.[1] (W8.of_int 52);
+    ( _0, _1, _2, _3, _4,l) <- SHRD_64 l rt.[1] (W8.of_int 52);
     h <- l;
     ro.[2] <- l `&` mask26;
     l <- h;
@@ -273,7 +273,7 @@ module Mrep5 = {
     l <- l `&` mask26;
     ro.[3] = l;
     l <- rt.[1];
-    ( _5, _6, _7, _8, _9,l) <- x86_SHRD_64 l rt.[2] (W8.of_int 40);
+    ( _5, _6, _7, _8, _9,l) <- SHRD_64 l rt.[2] (W8.of_int 40);
     ro.[4] <- l;
     return (ro);
   }
@@ -625,12 +625,12 @@ proc.
 wp; skip; progress; last first.
  have ?: bW64 3 rt{hr}.[2] by rewrite bW64ub //=; apply (ubW64W 4).
  rewrite bRep5E /=.
- rewrite (x86_SHRD_64_spec rt{hr}.[0] rt{hr}.[1] 52) //.
- rewrite (x86_SHRD_64_spec rt{hr}.[1] rt{hr}.[2] 40) //.
+ rewrite (SHRD_64_spec rt{hr}.[0] rt{hr}.[1] 52) //.
+ rewrite (SHRD_64_spec rt{hr}.[1] rt{hr}.[2] 40) //.
  progress; smt(@BW64').
 rewrite repres5E repres3E; congr.
-rewrite (x86_SHRD_64_spec rt{hr}.[0] rt{hr}.[1] 52) //.
-rewrite (x86_SHRD_64_spec rt{hr}.[1] rt{hr}.[2] 40) //.
+rewrite (SHRD_64_spec rt{hr}.[0] rt{hr}.[1] 52) //.
+rewrite (SHRD_64_spec rt{hr}.[1] rt{hr}.[2] 40) //.
 have ->: valRep3 rt{hr}
          = val_limbs26 [ rt{hr}.[0] `&` mask26
                        ; (rt{hr}.[0] `>>` W8.of_int 26) `&` mask26

@@ -175,7 +175,7 @@ module Mreftable = {
       while (y < 5) {
         i <@ index (x, y);
         z <@ keccakRhoOffsets (i);
-        (aux_1, aux_0, aux_2) <- x86_ROL_64 a.[i] (W8.of_int z);
+        (aux_1, aux_0, aux_2) <- ROL_64 a.[i] (W8.of_int z);
          _0 <- aux_1;
          _1 <- aux_0;
         a.[i] <- aux_2;

@@ -238,7 +238,7 @@ module Mavx2_prevec = {
     a00 <@ Ops.ilxor4u64(a00, lift2array
             (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int 0)))));
     iotas <- (iotas + (W64.of_int 32));
-    ( _0,  _1,  _2, zf, i) <- x86_DEC_32 i;
+    ( _0,  _1,  _2, zf, i) <- DEC_32 i;
     while ((! zf)) {
       c00 <@ Ops.iVPSHUFD_256(a20,(W8.of_int 78));
       c14 <@ Ops.ilxor4u64(a41,a31);
@@ -393,7 +393,7 @@ module Mavx2_prevec = {
         a00 <@ Ops.ilxor4u64(a00, lift2array
                 (loadW256 Glob.mem (W64.to_uint (iotas + (W64.of_int 0)))));
         iotas <- (iotas + (W64.of_int 32));
-      ( _0,  _1,  _2, zf, i) <- x86_DEC_32 i;
+      ( _0,  _1,  _2, zf, i) <- DEC_32 i;
     }
     return (a00, a01, a20, a31, a21, a41, a11);
   }
@@ -431,23 +431,23 @@ op equiv_states_chi (a00 a01 a20 a31 a21 a41 a11 : W64.t Array4.t, st : W64.t Ar
 
 lemma dec : forall (x : W32.t),
       0 < to_uint x <= 24 => 
-         to_uint (x86_DEC_32 x).`5 = to_uint x - 1.
+         to_uint (DEC_32 x).`5 = to_uint x - 1.
 proof.
   move=> x hx;cbv delta.
   by rewrite W32.to_uintB ?uleE //= /#.
 qed.
 
-lemma decK (x : W32.t): (x86_DEC_32 x).`5 + W32.one = x.
-proof. rewrite /x86_DEC_32 /= /rflags_of_aluop_nocf32 /= => *; ring. qed.
+lemma decK (x : W32.t): (DEC_32 x).`5 + W32.one = x.
+proof. rewrite /DEC_32 /= /rflags_of_aluop_nocf32 /= => *; ring. qed.
 
 lemma dec0 (x : W32.t): 0 < to_uint x <= 24 => 
-  (x86_DEC_32 x).`4 <=> to_uint (x86_DEC_32 x).`5 = 0.
+  (DEC_32 x).`4 <=> to_uint (DEC_32 x).`5 = 0.
 proof. by move=> hx;cbv delta; rewrite W32.to_uint_eq. qed.
 
 lemma rolcomp (x : W64.t):
-  (x86_ROL_64 x W8.one).`3 = (x `>>` W8.of_int 63) `|` (x + x).
+  (ROL_64 x W8.one).`3 = (x `>>` W8.of_int 63) `|` (x + x).
 proof. 
-rewrite x86_ROL_64_E /= rol_xor_shft //= (_: x + x = x `<<` W8.one).
+rewrite ROL_64_E /= rol_xor_shft //= (_: x + x = x `<<` W8.one).
 + by rewrite /(`<<`) W64.to_uint_eq to_uint_shl //= to_uintD //= /#.
 rewrite /(`<<`) /(`>>`) /= xorE orE !map2E.
 apply W64.init_ext => /> ?; smt (W64.get_out).
@@ -456,16 +456,16 @@ qed.
 lemma commor (x y  : W64.t): x `|` y = y `|` x.
 proof.  by rewrite orE !map2E; apply W64.init_ext => /> ???; rewrite orbC. qed.
 
-lemma rol0 x: (x86_ROL_64 x W8.zero).`3 = x.
-proof. rewrite x86_ROL_64_E rol_xor =>/>; exact/lsr_0. qed.
+lemma rol0 x: (ROL_64 x W8.zero).`3 = x.
+proof. rewrite ROL_64_E rol_xor =>/>; exact/lsr_0. qed.
 
 lemma roln x n: 0 <= n < 64 => 
-    (x86_ROL_64 x (W8.of_int n)).`3 =
+    (ROL_64 x (W8.of_int n)).`3 =
               (x `>>>` (64 - n)) `|` (x `<<<` n).
 move => H.
 case (n = 0) => HH. 
 + by rewrite HH rol0 => />; smt(lsr_0). 
-rewrite x86_ROL_64_E /= rol_xor_shft /= 1:/#.
+rewrite ROL_64_E /= rol_xor_shft /= 1:/#.
 rewrite /(`<<`) /(`>>`) => />.
 have n256 : n %% 256 = n by smt().
 have n64 : n %% 64 = n by smt().
@@ -631,7 +631,7 @@ lemma lift_roln mem rl rr o1 o2 x:
        (lift2array
           (loadW256 mem
              (to_uint (rl + W64.of_int 96 + W64.of_int (8 * 4 * o1 - 96))))).[o2]))%W64
-    = (x86_ROL_64 x ((of_int (rhotates (conversion o1 o2))))%W8).`3.
+    = (ROL_64 x ((of_int (rhotates (conversion o1 o2))))%W8).`3.
 proof.
 move => hl192 hr192 ho1 ho2 hgl hgr.
 rewrite (loadlift_rhol mem (rl) o1 hl192) 1,2://. 
@@ -777,7 +777,7 @@ seq 1 2 : (#{/~iotas{2}}{~round{1}}{~i{2}}{~st}pre /\
                iotas{2} = _iotas{2} + W64.of_int (round{1} * 32) /\
                to_uint i{2} = 24 - round{1} /\
                ((to_uint i{2} = 0) <> round{1} < 24) /\
-               (x86_DEC_32 (i{2} + W32.of_int 1)).`4 = zf{2} /\
+               (DEC_32 (i{2} + W32.of_int 1)).`4 = zf{2} /\
                0 < round{1} /\ 
                to_uint i{2} <= 24 /\
                constants{1} = Keccakf1600_pref_op.iotas).

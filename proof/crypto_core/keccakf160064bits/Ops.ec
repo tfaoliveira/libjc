@@ -345,15 +345,15 @@ module OpsV = {
   }
 
   proc iVPBROADCAST_4u64(v : W64.t) : vt4u64 = {
-    return x86_VPBROADCAST_4u64 v;
+    return VPBROADCAST_4u64 v;
   }
 
   proc iVPMULU_256 (x y:vt4u64) : vt4u64 = {
-    return x86_VPMULU_256 x y; 
+    return VPMULU_256 x y; 
   }
 
   proc ivadd64u256(x y:vt4u64) : vt4u64 = {
-    return x86_VPADD_4u64 x y; 
+    return VPADD_4u64 x y; 
   }
 
   proc iload4u64 (mem:global_mem_t, p:W64.t) : vt4u64 = {
@@ -361,48 +361,48 @@ module OpsV = {
   }
 
   proc iVPERM2I128(x y:vt4u64, p : W8.t) : vt4u64 = {
-    return x86_VPERM2I128 x y p;
+    return VPERM2I128 x y p;
   }
 
   proc iVPERMQ(x :vt4u64, p : W8.t) : vt4u64 = {
-    return x86_VPERMQ x p;
+    return VPERMQ x p;
   }
 
   proc iVPSRLDQ_256(x:vt4u64, p : W8.t) : vt4u64 = {
-    return x86_VPSRLDQ_256 x p;
+    return VPSRLDQ_256 x p;
   }
 
   proc iVPUNPCKH_4u64(x y:vt4u64) : vt4u64 = {
-    return x86_VPUNPCKH_4u64 x y;
+    return VPUNPCKH_4u64 x y;
   }
 
   proc iVPUNPCKL_4u64 (x y:vt4u64) : vt4u64 = {
-    return x86_VPUNPCKL_4u64 x y;
+    return VPUNPCKL_4u64 x y;
   }
 
   proc iVEXTRACTI128(x:vt4u64, p : W8.t) : vt2u64 = {
-    return x86_VEXTRACTI128 x p;
+    return VEXTRACTI128 x p;
   }  
 
   proc iVPEXTR_64(x:vt2u64, p : W8.t) : W64.t = {
-    return x86_VPEXTR_64 x p;
+    return VPEXTR_64 x p;
   }  
 
 
   proc ivshr64u256 (x: vt4u64, y: W8.t) : vt4u64 = {
-    return x86_VPSRL_4u64 x y;
+    return VPSRL_4u64 x y;
   }
 
   proc ivshl64u256 (x: vt4u64, y: W8.t) : vt4u64 = {
-    return x86_VPSLL_4u64 x y;
+    return VPSLL_4u64 x y;
   }
 
   proc iVPSRLV_4u64 (x: vt4u64, y: vt4u64) : vt4u64 = {
-    return x86_VPSRLV_4u64 x y;
+    return VPSRLV_4u64 x y;
   }
 
   proc iVPSLLV_4u64 (x: vt4u64, y: vt4u64) : vt4u64 = {
-    return x86_VPSLLV_4u64 x y;
+    return VPSLLV_4u64 x y;
   }
 
   proc iland4u64  (x y: vt4u64) : vt4u64 = {
@@ -414,7 +414,7 @@ module OpsV = {
   }
 
   proc ilandn4u64(x y: vt4u64) : vt4u64 = {
-    return x86_VPANDN_256 x y;
+    return VPANDN_256 x y;
   }
 
   proc ilxor4u64(x y: vt4u64) : vt4u64 = {
@@ -422,11 +422,11 @@ module OpsV = {
   }
 
   proc iVPBLENDD_256(x y:vt4u64, p : W8.t) :  vt4u64 = {
-    return x86_VPBLENDD_256 x y p;
+    return VPBLENDD_256 x y p;
   }
 
   proc iVPSHUFD_256 (x :vt4u64, p : W8.t) : vt4u64 = {
-    return x86_VPSHUFD_256 x p;
+    return VPSHUFD_256 x p;
   }
 
 }.
@@ -535,10 +535,10 @@ equiv eq_iVPBROADCAST_4u64 : Ops.iVPBROADCAST_4u64 ~ OpsV.iVPBROADCAST_4u64 : ={
 proof. by proc => /=;wp;skip;rewrite /is4u64. qed.
 
 equiv eq_iVPMULU_256 : Ops.iVPMULU_256 ~ OpsV.iVPMULU_256 : is4u64 x{1} x{2} /\ is4u64 y{1} y{2} ==> is4u64 res{1} res{2}.
-proof. by proc;wp;skip;rewrite /is4u64 => /> &1; rewrite /x86_VPMULU_256. qed.
+proof. by proc;wp;skip;rewrite /is4u64 => /> &1; rewrite /VPMULU_256. qed.
 
 equiv eq_ivadd64u256: Ops.ivadd64u256 ~ OpsV.ivadd64u256 : is4u64 x{1} x{2} /\ is4u64 y{1} y{2} ==> is4u64 res{1} res{2}.
-proof. by proc;wp;skip;rewrite /is4u64 /x86_VPADD_4u64. qed.
+proof. by proc;wp;skip;rewrite /is4u64 /VPADD_4u64. qed.
 
 equiv eq_iload4u64: Ops.iload4u64 ~ OpsV.iload4u64 : ={mem, p} /\ to_uint p{1} + 32 <= W64.modulus ==> is4u64 res{1} res{2}.
 proof. 
@@ -578,7 +578,7 @@ proof. by have /= <- [#|] -> := mema_iota 0 4. qed.
 equiv eq_iVPERMQ : Ops.iVPERMQ ~ OpsV.iVPERMQ : is4u64 x{1} x{2} /\ ={p} ==> is4u64 res{1} res{2}.
 proof. 
   proc; wp; skip; rewrite /is4u64 => /> &1 &2.
-  by rewrite /x86_VPERMQ /= !pack4_bits64 ?modz_cmp.
+  by rewrite /VPERMQ /= !pack4_bits64 ?modz_cmp.
 qed.
 
 lemma lsr_2u64 (w1 w2:W64.t) (x:int) : 0 <= x <= 64 => 
@@ -643,18 +643,18 @@ proof. by proc; wp; skip; rewrite /is4u64 => />; cbv delta. qed.
 equiv eq_iVEXTRACTI128: Ops.iVEXTRACTI128 ~ OpsV.iVEXTRACTI128 : 
   is4u64 x{1} x{2} /\ ={p} ==> is2u64 res{1} res{2}.
 proof.
-  proc; wp; skip;rewrite /is4u64 /is2u64 /x86_VEXTRACTI128 => /> &1 &2.
+  proc; wp; skip;rewrite /is4u64 /is2u64 /VEXTRACTI128 => /> &1 &2.
   by case: (p{2}.[0]) => ?; cbv delta.
 qed.
  
 equiv eq_iVPEXTR_64: Ops.iVPEXTR_64 ~ OpsV.iVPEXTR_64 : is2u64 x{1} x{2} /\ ={p} /\ (p{1} = W8.of_int 0 \/ p{2} = W8.of_int 1)==> res{1} = res{2}.
-proof. by proc; skip; rewrite /is2u64 /x86_VPEXTR_64 => /> &1 &2 [] -> /=. qed.
+proof. by proc; skip; rewrite /is2u64 /VPEXTR_64 => /> &1 &2 [] -> /=. qed.
 
 equiv eq_ivshr64u256: Ops.ivshr64u256 ~ OpsV.ivshr64u256 : is4u64 x{1} x{2} /\ ={y} ==> is4u64 res{1} res{2}.
-proof. by proc; wp; skip; rewrite /is4u64 /x86_VPSRL_4u64. qed.
+proof. by proc; wp; skip; rewrite /is4u64 /VPSRL_4u64. qed.
 
 equiv eq_ivshl64u256: Ops.ivshl64u256 ~ OpsV.ivshl64u256 : is4u64 x{1} x{2} /\ ={y} ==> is4u64 res{1} res{2}.
-proof. by proc; wp; skip; rewrite /is4u64 /x86_VPSLL_4u64. qed.
+proof. by proc; wp; skip; rewrite /is4u64 /VPSLL_4u64. qed.
 
 equiv eq_iland4u64: Ops.iland4u64 ~ OpsV.iland4u64 : is4u64 x{1} x{2} /\ is4u64 y{1} y{2} ==> is4u64 res{1} res{2}.
 proof. by proc; wp; skip; rewrite /is4u64. qed.
@@ -679,7 +679,7 @@ equiv eq_iVPBLENDD_256 : Ops.iVPBLENDD_256 ~ OpsV.iVPBLENDD_256 :
   ==> 
   is4u64 res{1} res{2}.
 proof. 
-  proc; wp; skip; rewrite /is4u64 /x86_VPBLENDD_256 => /> &1 &2 /=.
+  proc; wp; skip; rewrite /is4u64 /VPBLENDD_256 => /> &1 &2 /=.
   apply W8u32.allP => /=.
   split; 1: by case: (p{2}.[0] = p{2}.[1]); case: (p{2}.[0]).
   split; 1: by case: (p{2}.[0] = p{2}.[1]) => [->|]; case: (p{2}.[1]).

@@ -51,7 +51,7 @@ module Mvec = {
     l <- (l `&` (W64.of_int mask26));
     r1234 = OpsV.set_160(r1234,1,o,l);
     l <- rt.[0];
-    ( _0, _1, _2, _3, _4,l) <- x86_SHRD_64 l rt.[1] (W8.of_int 52);
+    ( _0, _1, _2, _3, _4,l) <- SHRD_64 l rt.[1] (W8.of_int 52);
     h <- l;
     l <- (l `&` (W64.of_int mask26));
     r1234 = OpsV.set_160(r1234,2,o,l);
@@ -60,7 +60,7 @@ module Mvec = {
     l <- (l `&` (W64.of_int mask26));
     r1234 = OpsV.set_160(r1234,3,o,l);
     l <- rt.[1];
-    ( _5, _6, _7, _8, _9,l) <- x86_SHRD_64 l rt.[2] (W8.of_int 40);
+    ( _5, _6, _7, _8, _9,l) <- SHRD_64 l rt.[2] (W8.of_int 40);
     r1234 = OpsV.set_160(r1234,4,o,l);
     return (r1234);
   }
