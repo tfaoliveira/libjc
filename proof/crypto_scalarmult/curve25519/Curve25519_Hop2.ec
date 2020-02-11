@@ -53,19 +53,6 @@ module MHop2 = {
     var h : zp;
     h <- f;
 
-    while (0 < i) {
-      h <@ sqr(h);
-      i <- i - 1;
-    }
-    return h;
-  }
-
-  (* iterated sqr *)
-  proc it_sqr_unroll (i : int, f : zp) : zp =
-  {
-    var h : zp;
-    h <- f;
-
     h <@ sqr(f);
     i <- i - 1;
     f <@ sqr(h);
@@ -396,43 +383,57 @@ proc.
 qed.
 
 (** step 8 : iterated square **)
-lemma unroll_it_sqr1 (e : int, z : zp) : (** unroll iterated square 1 -- version with foldl **)
-  0 <= e =>
-    it_sqr1 (e+1) z =
-    it_sqr1 e (exp z 2).
+lemma it_sqr1_m2_exp4 (e : int) (z : zp) :
+  0 <= e - 2 => it_sqr1 e z = it_sqr1 (e-2) (exp (exp z 2) 2).
 proof.
-   move => ege0.
-   rewrite !eq_it_sqr1. smt(). trivial. rewrite /it_sqr //=.
-   rewrite powS //. pose ee := 2 ^ e. smt(expE gt0_pow2).
+  rewrite expE // /= => ?.
+  rewrite !eq_it_sqr1. smt(). trivial.
+  rewrite /it_sqr (*expE*).
+  (* directly rewriting expE takes to long *)
+  have ee :  exp (exp z 4) (2 ^ (e - 2)) =  exp z (2^2 * 2 ^ (e - 2)). smt(expE).
+  rewrite ee. congr.
+  rewrite pow_add //.
 qed.
 
-lemma eq_h2_it_sqr (e : int)
-                   (z : zp) : 
-  hoare[MHop2.it_sqr : i =  e /\
-                       f =  z 
-       ==> res = it_sqr1 e z].
+lemma it_sqr1_0 (e : int) (z : zp) :
+  0 = e => it_sqr1 e z = z.
 proof.
-  proc. inline MHop2.sqr. sp. simplify.
-  rewrite /it_sqr1.
-  while (foldl (fun (z': zp) _ => exp z' 2) z (iota_ 0 e) =
-         foldl (fun (z': zp) _ => exp z' 2) h (iota_ 0 i)
-        ).
-  wp. skip. move => &hr [hin] ?.
-  rewrite hin. smt(unroll_it_sqr1).
-  skip. move => &hr [?] [?] ?. subst. split. trivial.
-  move => ? ? ? ?. rewrite H0.
-  have emptyl : (iota_ 0 i0) = []. smt(iota0). smt().
+  move => ?.
+  rewrite eq_it_sqr1. smt().
+  rewrite /it_sqr. subst. simplify.
+  rewrite expr1 //.
 qed.
 
-lemma eq_h2_it_sqr_unroll :
-  equiv [MHop2.it_sqr_unroll ~ MHop2.it_sqr :
-         ={i} /\ ={f} /\ 2 <= i{1} /\ i{1} %% 2 = 0 ==> ={res}].
+lemma eq_h2_it_sqr (e : int) (z : zp) : 
+  hoare[MHop2.it_sqr :
+         i = e && 2 <= i && i %% 2 = 0 && f =  z 
+         ==>
+        res = it_sqr1 e z].
 proof.
-  proc. inline MHop2.sqr. sp 1 1.
-  unroll{2} 1. rcondt{2} 1. auto => /#. simplify.
-  unroll{2} 5. rcondt{2} 5. auto => /#.
-  (* async while *)
-  admit.
+  proc. inline MHop2.sqr. simplify.
+  while ( 0 <= i && i %% 2 = 0 && it_sqr1 e z = it_sqr1 i f).
+  wp. skip.
+
+  (** alternative version with progress **)
+  (*
+            progress. smt(). smt(). smt(it_sqr1_m2_exp4).
+  wp. skip. progress. smt(). smt(). smt(it_sqr1_m2_exp4).
+  smt(it_sqr1_0).
+  *)
+
+  move => &hr [[?]] [?] hin ?. simplify.
+  split; first by smt(). move => ?.
+  split; first by smt(). move => ?.
+  rewrite hin. move : H2. apply it_sqr1_m2_exp4.
+  wp. skip.
+  move => &hr [?] [?] [?] ?. simplify.
+  split.
+  split; first by smt(). move => ?.
+  split; first by smt(). move => ?.
+  subst. move : H3.  apply it_sqr1_m2_exp4.
+  move => ? ? ? [?] [?] ->. subst.
+  have ieq0 : i0 = 0. smt().
+  rewrite it_sqr1_0 /#.
 qed.
 
 (** step 9 : invert **)
@@ -440,14 +441,14 @@ lemma eq_h2_invert (z : zp) :
   hoare[MHop2.invert : z1' =  z ==> res = invert2 z].
 proof.
   proc. inline MHop2.sqr.      wp.
-  ecall (eq_h2_it_sqr 4 t1).   wp.
-  ecall (eq_h2_it_sqr 50 t2).  wp.
+  ecall (eq_h2_it_sqr 4   t1). wp.
+  ecall (eq_h2_it_sqr 50  t2). wp.
   ecall (eq_h2_it_sqr 100 t2). wp.
-  ecall (eq_h2_it_sqr 50 t1).  wp.
-  ecall (eq_h2_it_sqr 10 t2).  wp.
-  ecall (eq_h2_it_sqr 20 t2).  wp.
-  ecall (eq_h2_it_sqr 10 t1).  wp.
-  ecall (eq_h2_it_sqr 4 t2).   wp.
+  ecall (eq_h2_it_sqr 50  t1). wp.
+  ecall (eq_h2_it_sqr 10  t2). wp.
+  ecall (eq_h2_it_sqr 20  t2). wp.
+  ecall (eq_h2_it_sqr 10  t1). wp.
+  ecall (eq_h2_it_sqr 4   t2). wp.
   skip. simplify.
   move => &hr ?. 
   move=> ? ->. move=> ? ->. 
