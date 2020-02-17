@@ -7,19 +7,21 @@
 
 fn _fe64_sub_rrs
 ( reg   u64[4] f,
-  stack u64[4] g,
-  reg   u64    z
+  stack u64[4] gs
 ) -> reg u64[4]
 {
   inline int i;
   reg bool cf;
   reg u64[4] h;
+  reg u64 z;
+
+  z = #set0();
 
   h = f;
 
-  cf, h[0] -= g[0];
+  cf, h[0] -= gs[0];
   for i=1 to 4
-  { cf, h[i] -= g[i] - cf; }
+  { cf, h[i] -= gs[i] - cf; }
 
   _, z -= z - cf;
   z &= 38;
@@ -39,11 +41,9 @@ fn _fe64_sub_sss(stack u64[4] fs gs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h f;
-  reg u64 z;
 
-  z = #set0();
   f = fs;
-  h = _fe64_sub_rrs(f, gs, z);
+  h = _fe64_sub_rrs(f, gs);
   hs = h;
 
   return hs;
@@ -53,11 +53,9 @@ fn _fe64_sub_rss(stack u64[4] fs gs) -> reg u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h f;
-  reg u64 z;
 
-  z = #set0();
   f = fs;
-  h = _fe64_sub_rrs(f, gs, z);
+  h = _fe64_sub_rrs(f, gs);
 
   return h;
 }
@@ -70,6 +68,7 @@ fn _fe64_sub_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
   reg u64 z;
 
   z = #set0();
+
   h = fs;
 
   cf, h[0] -= g[0];

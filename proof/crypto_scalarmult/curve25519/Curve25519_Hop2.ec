@@ -51,7 +51,7 @@ module MHop2 = {
   proc it_sqr (i : int, f : zp) : zp =
   {
     var h : zp;
-    h <- f;
+    h <- witness;
 
     h <@ sqr(f);
     i <- i - 1;
@@ -84,28 +84,28 @@ module MHop2 = {
     t0 <@ sqr (z1');
     t1 <@ sqr (t0);
     t1 <@ sqr (t1);
-    t1 <- z1' * t1;
-    t0 <- t0 * t1;
+    t1 <@ mul (z1', t1);
+    t0 <@ mul (t0,  t1);
     t2 <@ sqr (t0);
-    t1 <- t1 * t2;
+    t1 <@ mul (t1, t2);
     t2 <@ sqr (t1);
     t2 <@ it_sqr (4, t2);
-    t1 <- t1 * t2;
+    t1 <@ mul (t1, t2);
     t2 <@ it_sqr (10, t1);
-    t2 <- t1 * t2;
+    t2 <@ mul (t1, t2);
     t3 <@ it_sqr (20, t2);
-    t2 <- t2 * t3;
+    t2 <@ mul (t2, t3);
     t2 <@ it_sqr (10, t2);
-    t1 <- t1 * t2;
+    t1 <@ mul (t1, t2);
     t2 <@ it_sqr (50, t1);
-    t2 <- t1 * t2;
+    t2 <@ mul (t1, t2);
     t3 <@ it_sqr (100, t2);
-    t2 <- t2 * t3;
+    t2 <@ mul (t2, t3);
     t2 <@ it_sqr (50, t2);
-    t1 <- t1 * t2;
+    t1 <@ mul (t1, t2);
     t1 <@ it_sqr (4, t1);
     t1 <@ sqr (t1);
-    t1 <- t0 * t1;
+    t1 <@ mul (t0, t1);
     return t1;
   }
   
@@ -353,7 +353,7 @@ rewrite 2!foldl_rev iotaSr //= -cats1 foldr_cat => /#.
 qed.
 
 lemma eq_h2_montgomery_ladder (init : zp)
-                           (k : W256.t) :
+                              (k : W256.t) :
   hoare [MHop2.montgomery_ladder : init' = init /\
                                    k.[0] = false /\
                                    k' = k
@@ -389,7 +389,7 @@ proof.
   rewrite expE // /= => ?.
   rewrite !eq_it_sqr1. smt(). trivial.
   rewrite /it_sqr (*expE*).
-  (* directly rewriting expE takes to long *)
+  (* directly rewriting expE takes too long *)
   have ee :  exp (exp z 4) (2 ^ (e - 2)) =  exp z (2^2 * 2 ^ (e - 2)). smt(expE).
   rewrite ee. congr.
   rewrite pow_add //.
@@ -440,7 +440,8 @@ qed.
 lemma eq_h2_invert (z : zp) : 
   hoare[MHop2.invert : z1' =  z ==> res = invert2 z].
 proof.
-  proc. inline MHop2.sqr.      wp.
+  proc.
+  inline MHop2.sqr MHop2.mul.  wp.
   ecall (eq_h2_it_sqr 4   t1). wp.
   ecall (eq_h2_it_sqr 50  t2). wp.
   ecall (eq_h2_it_sqr 100 t2). wp.

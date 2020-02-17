@@ -113,7 +113,8 @@ proof. by conseq ill_it_sqr (eq_h2_it_sqr e z). qed.
 (** step 9 : invert **)
 lemma ill_invert : islossless MHop2.invert.
 proof.
-  proc. inline MHop2.sqr.
+  proc.
+  inline MHop2.sqr MHop2.mul.
   wp; sp. call(_: true ==> true). apply ill_it_sqr.
   wp; sp. call(_: true ==> true). apply ill_it_sqr.
   wp; sp. call(_: true ==> true). apply ill_it_sqr.
