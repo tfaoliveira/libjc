@@ -195,14 +195,35 @@ qed.
 (** step 4 : cswap **)
 equiv eq_h4_cswap :
   MHop2.cswap ~ M._fe64_cswap:
-  x2{1}     = inzpRep4 x2{2}  /\
-  z2{1}     = inzpRep4 z2r{2} /\
-  x3{1}     = inzpRep4 x3{2}  /\
-  z3{1}     = inzpRep4 z3{2}  /\
-  toswap{1} = (** here **)
+  x2{1}         = inzpRep4 x2{2}  /\
+  z2{1}         = inzpRep4 z2r{2} /\
+  x3{1}         = inzpRep4 x3{2}  /\
+  z3{1}         = inzpRep4 z3{2}  /\
+  b2i toswap{1} = to_uint toswap{2}
+  ==>
+  res{1}.`1     = inzpRep4 res{2}.`1  /\
+  res{1}.`2     = inzpRep4 res{2}.`2  /\
+  res{1}.`3     = inzpRep4 res{2}.`3  /\
+  res{1}.`4     = inzpRep4 res{2}.`4.
 proof.
 proc.
-admit.
+do 4! unroll for{2} ^while.
+case: (toswap{1}).
+  rcondt {1} 1 => //. wp => /=; skip.
+    move => &1 &2 [#] 4!->> ??.
+    have mask_set :  (set0_64.`6 - toswap{2}) = W64.onew. rewrite /set0_64 /=. smt(@W64).
+    rewrite !mask_set /=.
+    have lxor1 : forall (x1 x2:W64.t),  x1 `^` (x2 `^` x1) = x2.
+      move=> *. rewrite xorwC -xorwA xorwK xorw0 //.
+    have lxor2 : forall (x1 x2:W64.t),  x1 `^` (x1 `^` x2) = x2.
+      move=> *. rewrite xorwA xorwK xor0w //. 
+    rewrite !lxor1 !lxor2.
+      admit.
+  rcondf {1} 1 => //. wp => /=; skip.
+    move => &1 &2 [#] 4!->> ??.
+    have mask_not_set :  (set0_64.`6 - toswap{2}) = W64.zero. smt(@W64).
+    rewrite !mask_not_set !andw0 !xorw0.
+    smt(@Array4).
 qed.
 
 (** step 5 : add_and_double **)
@@ -260,11 +281,11 @@ qed.
 (** step 8 : iterated square **)
 equiv eq_h4_it_sqr :
  MHop2.it_sqr ~ M._fe64_it_sqr:
-   f{1}            =    inzpRep4 f{2}            /\
-   i{1}            =    to_uint i{2}             /\
+   f{1}            =    inzpRep4 f{2} /\
+   i{1}            =    to_uint i{2}  /\
    i{1}            <=   W64.modulus   /\
-    2    <= i{1}                     /\
-   i{1} %% 2 = 0
+    2              <=   i{1}          /\
+   i{1} %% 2        =   0
    ==>
    res{1} = inzpRep4 res{2}.`2.
 proof.
