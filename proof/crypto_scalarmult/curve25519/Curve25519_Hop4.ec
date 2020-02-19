@@ -217,8 +217,11 @@ case: (toswap{1}).
       move=> *. rewrite xorwC -xorwA xorwK xorw0 //.
     have lxor2 : forall (x1 x2:W64.t),  x1 `^` (x1 `^` x2) = x2.
       move=> *. rewrite xorwA xorwK xor0w //. 
-    rewrite !lxor1 !lxor2.
-      admit.
+  rewrite !lxor1 !lxor2.
+      split. congr. apply Array4.ext_eq. smt(@Array4).
+      split. congr. apply Array4.ext_eq. smt(@Array4).
+      split. congr. apply Array4.ext_eq. smt(@Array4).
+             congr. apply Array4.ext_eq. smt(@Array4).
   rcondf {1} 1 => //. wp => /=; skip.
     move => &1 &2 [#] 4!->> ??.
     have mask_not_set :  (set0_64.`6 - toswap{2}) = W64.zero. smt(@W64).
