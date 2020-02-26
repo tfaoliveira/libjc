@@ -294,7 +294,7 @@ exists* rt; elim* => rtt.
 call (unpack_spec_h rtt).
 skip; rewrite /mul5Rep54 /=; auto => />; progress;
 [ 1: smt()
-| 2..: move: H5 H7 H9 H13; rewrite !bRep5E; progress;
+| 2..: move: H5 H7 H9 H13; progress;
        (rewrite -Array4.ext_eq_all /all_eq !mulu64E /=; first 8 smt(@BW64'));
        progress; ring ].
 qed.
@@ -568,8 +568,8 @@ wp; seq 13 11: (256 < to_uint inlen0{2} /\ ={Glob.mem, out0, in_00, inlen0} /\
  wp; skip; rewrite /inv_ptr ultE /=; progress;
  [ 1..4,6..10,19..22: smt()
  | 5: rewrite H28 to_uintD_small of_uintK /#
- | 11,13,15,17: rewrite repres5E valRep5E ; smt()
- | 12,14,16,18: rewrite bRep5E; progress; smt(@BW64 bW64_0)
+ | 11,13,15,17: smt()
+ | 12,14,16,18: progress; smt(@BW64 bW64_0)
  ].
 while (#[2:]pre /\ 64 <= to_uint inlen0{2}).
  inline Mhop2.load_4x; wp. 
