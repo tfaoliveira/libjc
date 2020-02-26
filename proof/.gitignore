@@ -15,3 +15,5 @@ Keccak1600_s*.ec
 
 Curve25519_s*.ec
 !Curve25519_*_proof.ec
+
+*.eco

@@ -1,0 +1,522 @@
+require import Int Distr Real SmtMap FSet Mu_mem.
+require (****) PROM FelTactic.
+
+
+type from, to.
+
+op sampleto : to distr.
+
+op bound : int.
+axiom bound_gt0 : 0 < bound.
+
+axiom sampleto_ll:   is_lossless sampleto.
+axiom sampleto_full: is_full     sampleto.
+axiom sampleto_fu:   is_funiform sampleto.
+
+clone import PROM.GenEager as RO with
+  type from <- from,
+  type to   <- to,
+  op sampleto <- fun _ => sampleto,
+  type input <- unit,
+  type output <- bool
+proof * by exact/sampleto_ll.
+
+op increase_counter (c : int) (m : from) : int.
+axiom increase_counter_spec c m : c <= increase_counter c m.
+
+op    bound_counter     : int.
+axiom bound_counter_ge0 : 0 <= bound_counter.
+
+module Counter = {
+  var c : int
+  proc init() = {
+    c <- 0;
+  }
+}.
+
+module type RF = {
+  proc init() : unit
+  proc get(x : from) : to
+}.
+
+module Bounder (F : RF) : RF = {
+  var bounder : int
+  proc init () : unit = {
+    bounder <- 0;
+    Counter.init();
+    F.init();
+  }
+  proc get(x : from) : to = {
+    var y : to <- witness;
+    if (bounder < bound) {
+      bounder <- bounder + 1;
+      if (increase_counter Counter.c x < bound_counter) {
+        Counter.c <- increase_counter Counter.c x;
+        y <- F.get(x);
+      }
+    }
+    return y;
+  }
+}.
+
+
+module type Oracle = {
+  proc get(x : from) : to {}
+}.
+  
+module type AdvPreimage (F : Oracle) = {
+  proc guess(h : to) : from
+}.
+
+module Preimage (A : AdvPreimage, F : RF) = {
+  proc main (hash : to) : bool = {
+    var b,m,hash';
+    Counter.init();
+    Bounder(F).init();
+    m <@ A(Bounder(F)).guess(hash);
+    if (increase_counter Counter.c m < bound_counter) {
+      hash' <@ F.get(m);
+      b <- hash = hash';
+    } else b <- false;
+    return b;
+  }
+}.
+
+section Preimage.
+
+  declare module A : AdvPreimage{RO,Preimage}.
+
+  local module FEL (A : AdvPreimage, F : RF) = {
+    proc main (hash : to) : from = {
+      var m;
+      Bounder(F).init();
+      m <@ A(Bounder(F)).guess(hash);
+      return m;
+    }
+  }.
+
+  local module Preimage2 (A : AdvPreimage, F : RF) = {
+    proc main (hash : to) : bool = {
+      var b,m,hash';
+      m <@ FEL(A,F).main(hash);
+      if (increase_counter Counter.c m < bound_counter) {
+        hash' <@ F.get(m);
+        b <- hash = hash';
+      } else b <- false;
+      return b;
+    }
+  }.
+
+  lemma RO_is_preimage_resistant &m (h : to) :
+    Pr [ Preimage(A,RO).main(h) @ &m : res ] <= (bound + 1)%r * mu1 sampleto h.
+  proof.
+  cut->: Pr [ Preimage (A,RO).main(h) @ &m : res ] = 
+         Pr [ Preimage2(A,RO).main(h) @ &m : res ].
+  + by byequiv=> //=; proc; inline*; sim.
+  byphoare(: arg = h ==> _) => //=; proc.
+  seq 1 : (rng RO.m h) (bound%r * mu1 sampleto h) 1%r 1%r (mu1 sampleto h)
+    (card (fdom RO.m) <= Bounder.bounder <= bound /\ hash = h).
+  + inline*; auto; call(: card (fdom RO.m) <= Bounder.bounder <= bound)=> //=.
+    - proc; inline*; auto; sp; if; 2:auto; wp; sp.
+      if; last by auto; smt().
+      wp; conseq(:_==> card (fdom RO.m) + 1 <= Bounder.bounder <= bound); 2: by auto;smt().
+      move=> &h /> c H1 _ H2 c2 r x h1 h2; split; 2: smt().
+      by rewrite fdom_set fcardU fcard1; smt(fcard_ge0).
+    by auto=> />; rewrite fdom0 fcards0; smt(bound_gt0).
+  + call(: true ==> rng RO.m h)=> //; bypr=> /> {&m} &m.
+    fel 1 Bounder.bounder (fun _, mu1 sampleto h) bound (rng RO.m h) 
+      [Bounder(RO).get: (card (fdom RO.m) <= Bounder.bounder < bound)]
+      (card (fdom RO.m) <= Bounder.bounder <= bound)
+      =>//.
+    - rewrite StdBigop.Bigreal.BRA.big_const List.count_predT List.Range.size_range.
+      rewrite IntExtra.Extrema.max_ler //=; 1:smt(bound_gt0).
+      rewrite-StdRing.RField.AddMonoid.iteropE-StdRing.RField.intmulpE; 1: smt(bound_gt0).
+      by rewrite StdRing.RField.intmulr; smt(). 
+    - inline*; auto=> />. 
+      by rewrite mem_rng_empty /= fdom0 fcards0 /=; smt(bound_gt0). 
+    - proc.
+      sp; if; auto; sp; inline*; sp; wp=> /=.
+      if; last by hoare; auto; progress; smt(mu_bounded).
+      case: (x \in RO.m); wp => //=.
+      + by hoare; auto; smt(mu_bounded). 
+      rnd (pred1 h); auto=> /> &h c ????????.
+      rewrite rngE/= => hh [] a; rewrite get_setE. 
+      case: (a=x{h}) => [->>|] //=.
+      by move:H1; rewrite rngE /= negb_exists/= => /(_ a) //=.
+    - move=> c; proc; inline*; sp; if; sp.
+      + if; auto; progress. 
+        + smt().
+        + by rewrite fdom_set fcardU fcard1; smt(fcard_ge0).
+        + smt().
+        + smt().
+        + smt().
+        + smt().
+        + smt().
+        + smt().
+        + smt().
+      by auto.
+    move=> b c; proc; sp; if; auto; inline*; auto; sp; if; auto; progress. 
+    - rewrite 2!rngE /= eq_iff; split=> [][] a.
+      + by rewrite get_setE; move: H5; rewrite domE /=; smt().
+      move=> H8; exists a; rewrite get_setE; move: H5; rewrite domE /=; smt().
+    - smt().
+    - by rewrite fdom_set fcardU fcard1; smt(fcard_ge0).
+    - smt().
+    - smt().
+    - smt().
+    - smt().
+    - smt().
+    - smt().
+    smt().
+  + by inline*; auto.
+  + by inline*; auto.
+  + inline*; sp; wp.
+    if; sp; wp; last by hoare;auto;progress; smt(mu_bounded).
+    case: (x \in RO.m).
+    - hoare; auto; progress. 
+      rewrite H3/=; move: H1; rewrite rngE /= negb_exists /=.
+      by have:=H3; rewrite domE; smt().
+    rnd (pred1 h); auto=> //= &hr [#]->>??<<-????.
+    by rewrite H3 /= get_setE /=; smt().
+  smt().
+  qed.
+
+end section Preimage.
+
+(*-------------------------------------------------------------------------*)
+module type AdvSecondPreimage (F : Oracle) = {
+  proc guess(m : from) : from
+}.
+
+module SecondPreimage (A : AdvSecondPreimage, F : RF) = {
+  proc main (m1 : from) : bool = {
+    var b, m2, hash1, hash2;
+    Bounder(F).init();
+    m2 <@ A(Bounder(F)).guess(m1);
+    if (increase_counter Counter.c m1 < bound_counter) {
+      Counter.c <- increase_counter Counter.c m1;
+      hash1 <@ F.get(m1);
+      if (increase_counter Counter.c m2 < bound_counter) {
+        Counter.c <- increase_counter Counter.c m2;
+        hash2 <@ F.get(m2);
+        b <- hash1 = hash2 /\ m1 <> m2;
+      } else b <- false;
+    }
+    else b <- false;
+    return b;
+  }
+}.
+
+section SecondPreimage.
+
+
+  declare module A : AdvSecondPreimage{Bounder,RO,FRO}.
+    
+  local module FEL (A : AdvSecondPreimage, F : RO) = {
+    proc main (m1 : from) : from = {
+      var m2;
+      Bounder(F).init();
+      F.sample(m1);
+      m2 <@ A(Bounder(F)).guess(m1);
+      return m2;
+    }
+  }.
+
+  local module SecondPreimage2 (A : AdvSecondPreimage, F : RO) = {
+    var m2 : from
+    proc main (m1 : from) : bool = {
+      var b, hash1,hash2;
+      m2 <@ FEL(A,F).main(m1);
+      if (increase_counter Counter.c m1 < bound_counter) {
+        Counter.c <- increase_counter Counter.c m1;
+        hash1 <@ F.get(m1);
+        if (increase_counter Counter.c m2 < bound_counter) {
+          Counter.c <- increase_counter Counter.c m2;
+          hash2 <@ F.get(m2);
+          b <- hash1 = hash2 /\ m1 <> m2;
+        } else b <- false;
+      }
+      else b <- false;
+      return b;
+    }
+  }.
+
+  local module D1 (A : AdvSecondPreimage, F : RO) = {
+    var m1 : from
+    proc distinguish () : bool = {
+      var b;
+      b <@ SecondPreimage2(A,F).main(m1);
+      return b;
+    }
+  }.
+
+  local module SecondPreimage3 (A : AdvSecondPreimage, F : RO) = {
+    proc main (m1 : from) : bool = {
+      var b;
+      SecondPreimage2.m2 <- witness;
+      D1.m1 <- m1;
+      Bounder(F).init();
+      b <@ D1(A,F).distinguish();
+      return b;
+    }
+  }.
+      
+
+  lemma RO_is_second_preimage_resistant &m (mess1 : from) :
+    Pr [ SecondPreimage(A,RO).main(mess1) @ &m : res ]
+      <= (bound + 1)%r * mu1 sampleto witness.
+  proof.
+  have->: Pr [ SecondPreimage(A,RO).main(mess1) @ &m : res ] =
+          Pr [ SecondPreimage(A,LRO).main(mess1) @ &m : res ].
+  + by byequiv=> //=; proc; inline*; sim.
+  have->: Pr [ SecondPreimage(A,LRO).main(mess1) @ &m : res ] =
+          Pr [ SecondPreimage2(A,LRO).main(mess1) @ &m : res ].
+  + by byequiv=> //=; proc; inline*; sim.
+  have->: Pr [ SecondPreimage2(A,LRO).main(mess1) @ &m : res ] =
+          Pr [ SecondPreimage2(A,RO).main(mess1) @ &m : res ].
+  + have->: Pr [ SecondPreimage2(A,LRO).main(mess1) @ &m : res ] =
+            Pr [ SecondPreimage3(A,LRO).main(mess1) @ &m : res ].
+    - by byequiv=> //=; proc; inline*; wp 15 -2; sim.
+    have->: Pr [ SecondPreimage3(A,LRO).main(mess1) @ &m : res ] =
+            Pr [ SecondPreimage3(A,RO).main(mess1) @ &m : res ].
+    - rewrite eq_sym.
+      byequiv=>//=; proc.
+      by call(RO_LRO_D (D1(A))); inline*; auto.
+    by byequiv=> //=; proc; inline*; wp -2 18; sim.
+  byphoare(: arg = mess1 ==> _)=>//=; proc.
+  seq 1 : (rng (rem RO.m mess1) (oget RO.m.[mess1]))
+          (bound%r * mu1 sampleto witness) 1%r
+          1%r (mu1 sampleto witness)
+          (card (fdom RO.m) - 1 <= Bounder.bounder <= bound
+            /\ mess1 \in RO.m /\ mess1 = m1).
+  + inline*; auto; call(: card (fdom RO.m) - 1 <= Bounder.bounder <= bound
+            /\ mess1 \in RO.m).
+    - proc; inline*; auto; sp; if; sp; auto; if; last by auto; smt().
+      auto=> /> &h c Hc _ Hdom Hc2 _ sample.
+      by rewrite sampleto_full/=!fdom_set !fcardU !fcard1;smt(mem_set fcard_ge0).
+    auto=> /> &h sample.
+    by rewrite mem_set mem_empty/= fdom_set fdom0 fset0U fcard1; smt(bound_gt0).
+  + call(: arg = mess1 ==> rng (rem RO.m mess1) (oget RO.m.[mess1])); auto.
+    bypr=> {&m} &m h; rewrite h.
+    fel 2 Bounder.bounder (fun _, mu1 sampleto witness) bound 
+        (mess1 \in RO.m /\ rng (rem RO.m mess1) (oget RO.m.[mess1]))
+        [Bounder(RO).get: (card (fdom RO.m) - 1 <= Bounder.bounder < bound)]
+        (card (fdom RO.m) - 1 <= Bounder.bounder <= bound /\ mess1 \in RO.m)=> {h}
+      =>//.
+    + rewrite StdBigop.Bigreal.BRA.big_const List.count_predT List.Range.size_range.
+      rewrite IntExtra.Extrema.max_ler //=; 1:smt(bound_gt0).
+      rewrite-StdRing.RField.AddMonoid.iteropE-StdRing.RField.intmulpE; 1: smt(bound_gt0).
+      by rewrite StdRing.RField.intmulr; smt(mu_bounded bound_gt0). 
+    + inline*; auto=> />.
+      move=> &h r; rewrite mem_empty /= !mem_set mem_empty/= sampleto_full /=.
+      rewrite get_set_sameE//= fdom_set fdom0 fset0U fcard1 /= rngE /=; split; 2: smt(bound_gt0). 
+      by rewrite negb_exists/= => a; rewrite remE get_setE //= emptyE; smt().
+    + proc; inline*; sp; if; last by hoare; auto.
+      sp; if; sp; last by hoare; auto; smt(mu_bounded).
+      case: (x0 \in RO.m)=> //=.
+      - by hoare; auto; smt(mu_bounded).
+      rcondt 2; 1: auto; wp=> /=. 
+      conseq(:_ ==> pred1 (oget RO.m.[mess1]) r)=> />. 
+      - move=> /> &h d c H0c Hcb Hnrng Hmc _ Hdom1 _ Hdom2 sample.
+        rewrite mem_set Hdom1 /= get_set_neqE; 1: smt().
+        have->: (rem RO.m{h}.[x{h} <- sample] mess1) = (rem RO.m{h} mess1).[x{h} <- sample].
+        + by apply fmap_eqP=> y; rewrite remE 2!get_setE remE; smt().
+        move: Hnrng; rewrite Hdom1 /= rngE /= negb_exists /= => Hnrng.
+        rewrite rngE/= => [][] mess; rewrite get_setE remE.
+        by have:= Hnrng mess; rewrite remE; smt().
+      rnd; auto; progress. 
+      by have ->:= sampleto_fu witness (oget RO.m{hr}.[mess1]).
+    + move=> c; proc; inline*; sp; if; auto; sp; if; auto; progress. 
+      - smt().
+      - by rewrite fdom_set fcardU fcard1; smt(fcard_ge0).
+      - smt().
+      - smt(mem_set).
+      - smt().
+      - smt().
+      - smt().
+      - smt().
+      - smt().
+      - smt().
+    + move=> b c; proc; inline*; sp; if; auto; sp; if; auto; smt().
+  + by inline*; auto.
+  + by auto. 
+  + inline*.
+    if; sp; last by hoare; auto; smt(mu_bounded).
+    rcondf 2; 1: auto.
+    case(increase_counter Counter.c SecondPreimage2.m2 < bound_counter); last first.
+    - by rcondf 3; 1: auto; hoare; auto; smt(mu_bounded).
+    rcondt 3; 1: auto.
+    swap 3 -2; sp.
+    case: (SecondPreimage2.m2 \in RO.m).
+    - rcondf 5; 1: auto; hoare; auto=> /> &h d _ _ in_dom1 not_rng _ in_dom2.
+      move=> sample2 _ sample1 _; rewrite negb_and/=.
+      move: not_rng; rewrite rngE /= negb_exists /= => /(_ SecondPreimage2.m2{h}).
+      rewrite remE; case: (SecondPreimage2.m2{h} = m1{h})=> //=.
+      by move: in_dom1 in_dom2; smt().
+    rcondt 5; 1: auto; wp; rnd (pred1 hash1); auto.
+    move => /> &h d _ _ in_dom1 not_rng _ _ nin_dom2 sample2 _.
+    rewrite (sampleto_fu (oget RO.m{h}.[m1{h}]) witness) /= => sample1 _.
+    by rewrite get_set_sameE => ->.
+  smt().
+  qed.
+
+end section SecondPreimage.
+
+
+(*--------------------------------------------------------------------------*)
+module type AdvCollision (F : Oracle) = {
+  proc guess() : from * from
+}.
+
+module Collision (A : AdvCollision, F : RO) = {
+  proc main () : bool = {
+    var b,m1,m2,hash1,hash2;
+    Bounder(F).init();
+    (m1,m2) <@ A(Bounder(F)).guess();
+    if (increase_counter Counter.c m1 < bound_counter) {
+      Counter.c <- increase_counter Counter.c m1;
+      hash1 <@ F.get(m1);
+      if (increase_counter Counter.c m2 < bound_counter) {
+        Counter.c <- increase_counter Counter.c m2;
+        hash2 <@ F.get(m2);
+        b <- hash1 = hash2 /\ m1 <> m2;
+      } else b <- false;
+    }
+    else b <- false;
+    return b;
+  }
+}.
+
+section Collision.
+
+  declare module A : AdvCollision {RO, FRO, Bounder}.
+
+  local module FEL (A : AdvCollision, F : RO) = {
+    proc main () : from * from = {
+      var m1,m2;
+      Bounder(F).init();
+      (m1,m2) <@ A(Bounder(F)).guess();
+      return (m1,m2);
+    }
+  }.
+
+  local module Collision2 (A : AdvCollision) (F : RO) = {
+    proc main () : bool = {
+      var b,m1,m2,hash1,hash2;
+      (m1,m2) <@ FEL(A,F).main();
+      if (increase_counter Counter.c m1 < bound_counter) {
+        Counter.c <- increase_counter Counter.c m1;
+        hash1 <@ F.get(m1);
+        if (increase_counter Counter.c m2 < bound_counter) {
+          Counter.c <- increase_counter Counter.c m2;
+          hash2 <@ F.get(m2);
+          b <- hash1 = hash2 /\ m1 <> m2;
+        } else b <- false;
+      }
+      else b <- false;
+      return b;
+    }
+  }.
+
+  op collision (m : ('a, 'b) fmap) =
+    exists m1 m2, m1 <> m2 /\ m1 \in m /\ m2 \in m /\ m.[m1] = m.[m2].
+
+  lemma RO_is_collision_resistant &m :
+    Pr [ Collision(A,RO).main() @ &m : res ]
+      <= ((bound * (bound - 1) + 2)%r / 2%r * mu1 sampleto witness).
+  proof.
+  have->: Pr [ Collision(A,RO).main() @ &m : res ] =
+          Pr [ Collision2(A,RO).main() @ &m : res ].
+  + by byequiv=>//=; proc; inline*; sim.
+  byphoare=> //; proc.
+  seq 1 : (collision RO.m)
+      ((bound * (bound - 1))%r / 2%r * mu1 sampleto witness) 1%r
+      1%r (mu1 sampleto witness)
+      (card (fdom RO.m) <= Bounder.bounder <= bound); first last; first last.
+  + auto.
+  + auto.
+  + inline*.
+    if; sp; last first.
+    - by hoare; auto; smt(mu_bounded).
+    case: (increase_counter Counter.c m2 < bound_counter); last first.
+    - rcondf 4; 1:auto; hoare; auto; smt(mu_bounded).
+    rcondt 4; 1: auto.
+    swap 4 -3.
+    case: (m1 = m2).
+    - by hoare; auto. 
+    case: (m1 \in RO.m); case: (m2 \in RO.m).
+    - rcondf 3; 1: auto; rcondf 6; 1: auto; hoare; auto.
+      move=> /> &h d _ _ Hcoll _ _ neq12 in_dom1 in_dom2 _ _ _ _.
+      move: Hcoll; rewrite /collision negb_exists /= => /(_ m1{h}).
+      rewrite negb_exists /= => /(_ m2{h}).
+      by rewrite neq12 in_dom1 in_dom2 /=; smt().
+    - rcondf 3; 1: auto; rcondt 6; 1: auto; wp; rnd (pred1 hash1).
+      auto=> /> &h d Hmc Hcb Hcoll _ _ neq12 in_dom1 in_dom2 _ _; split.
+      * smt(sampleto_fu).
+      by move=> _ sample _; rewrite get_set_sameE; smt().
+    - rcondt 3; 1: auto; rcondf 7; 1: (by auto; smt(mem_set)).
+      swap 6 -5; wp=> /=; rnd (pred1 (oget RO.m.[m2])); auto.
+      move=> /> &h d _ _ Hcoll _ _ neq12 in_dom1 in_dom2 _ _; split.
+      * smt(sampleto_fu).
+      move=> _ sample _.
+      by rewrite get_set_sameE get_set_neqE 1:eq_sym.
+    rcondt 3; 1: auto; rcondt 7; 1: (by auto; smt(mem_set)).
+    swap 2 -1; swap 6 -4; wp=> //=; rnd (pred1 r); auto.
+    move=> /> &h d _ _ Hcoll _ _ neq12 in_dom1 in_dom2 sample1 _; split.
+    * smt(sampleto_fu).
+    move=> _ sample2 _.
+    by rewrite get_set_sameE get_set_sameE; smt().
+  + by move=> />; smt(mu_bounded).
+  + inline*; wp; call(: card (fdom RO.m) <= Bounder.bounder <= bound); auto.
+    - proc; inline*; sp; if; auto; sp; if; last by auto; smt().
+      auto=> /> &h d Hbc _ _ Hcb sample _; split.
+      * by move=> nin_dom1; rewrite fdom_set fcardU fcard1; smt(fcard_ge0).
+      by move=> in_dom1; smt().
+    by move=> />; rewrite fdom0 fcards0; smt(bound_gt0).
+  call(: true ==> collision RO.m); auto; bypr=> /> {&m} &m.
+  fel 1 Bounder.bounder (fun i, i%r * mu1 sampleto witness) bound 
+        (collision RO.m)
+        [Bounder(RO).get: (card (fdom RO.m) <= Bounder.bounder < bound)]
+        (card (fdom RO.m) <= Bounder.bounder <= bound)=> //. 
+  + rewrite -StdBigop.Bigreal.BRA.mulr_suml StdRing.RField.mulrAC.
+    rewrite StdOrder.RealOrder.ler_wpmul2r; 1: smt(mu_bounded).
+    by rewrite StdBigop.Bigreal.sumidE //; smt(bound_gt0).
+  + inline*; auto=> />.
+    rewrite fdom0 fcards0; split; 2: smt(bound_gt0). 
+    rewrite /collision negb_exists /= => a; rewrite negb_exists /= => b.
+    by rewrite mem_empty.
+  + bypr=> /> {&m} &m; pose c := Bounder.bounder{m}; move=> H0c Hcbound Hcoll Hmc _.
+    byphoare(: !collision RO.m /\ card (fdom RO.m) <= c ==> _)=>//=.
+    proc; inline*; sp; if; last first.
+    - by hoare; auto; smt(mu_bounded).
+    sp; if; last by hoare; auto; smt(mu_bounded).
+    case: (x \in RO.m).
+    - by hoare; auto; smt(mu_bounded).
+    rcondt 4; 1: auto; sp; wp=> /=.
+    conseq(:_==> r \in frng RO.m).
+    - move=> /> &h d c2 Hcoll2 Hb2c Hc2b _ nin_dom sample m1 m2 neq.
+      rewrite 2!mem_set.
+      case: (m1 = x{h}) => //=.
+      * move=> <<-; rewrite eq_sym neq /= get_set_sameE get_set_neqE//= 1:eq_sym //.
+        by rewrite mem_frng rngE /= => _ ->; exists m2.
+      case: (m2 = x{h}) => //=.
+      * move=> <<- _ in_dom1.
+        by rewrite get_set_neqE // get_set_sameE mem_frng rngE/= => <-; exists m1.
+      move=> neq2 neq1 in_dom1 in_dom2; rewrite get_set_neqE // get_set_neqE //.
+      have:= Hcoll2; rewrite negb_exists /= => /(_ m1).
+      rewrite negb_exists /= => /(_ m2).
+      by rewrite neq in_dom1 in_dom2 /= => ->.
+    rnd; skip=> /> &h bounder _ h _. 
+    rewrite (mu_mem (frng RO.m{h}) sampleto (mu1 sampleto witness)); 1: smt(sampleto_fu).
+    rewrite StdOrder.RealOrder.ler_wpmul2r //. 
+    by rewrite RealExtra.le_fromint; smt(le_card_frng_fdom). 
+  + move=> c; proc; sp; if; auto; inline*; auto; sp; if; last by auto; smt().
+    auto=> /> &h d h1 _ h2 _ sample _.
+    by rewrite fdom_set fcardU fcard1; smt(fcard_ge0).
+  move=> b c; proc; inline*; sp; if; auto; sp; if; auto; 2: smt().
+  move=> /> &h  h1 h2 _ _ _ sample _.
+  by rewrite fdom_set fcardU fcard1; smt(fcard_ge0).
+  qed.
+
+
+end section Collision.

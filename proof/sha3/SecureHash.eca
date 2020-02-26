@@ -1,0 +1,147 @@
+require import Int Real SmtMap FSet Distr.
+require (****) OptionIndifferentiability.
+
+type from, to, block.
+
+
+clone import OptionIndifferentiability as OIndif with
+  type p <- block,
+  type f_in <- from,
+  type f_out <- to
+proof *.
+
+
+op sampleto : to distr.
+
+op bound : int.
+axiom bound_ge0 : 0 <= bound.
+
+axiom sampleto_ll:   is_lossless sampleto.
+axiom sampleto_full: is_full     sampleto.
+axiom sampleto_fu:   is_funiform sampleto.
+
+(* clone import PROM.GenEager as RO with *)
+(*   type from <- from, *)
+(*   type to   <- to, *)
+(*   op sampleto <- fun _ => sampleto *)
+(* proof * by exact/sampleto_ll. *)
+
+op increase_counter (c : int) (m : from) : int.
+axiom increase_counter_spec c m : c <= increase_counter c m.
+
+
+(* module type RF = { *)
+(*   proc init() : unit *)
+(*   proc get(x : from) : to option *)
+(*   proc sample (x: from) : unit *)
+(* }. *)
+
+(* module RF (R : RO) : RF = { *)
+(*   proc init = R.init *)
+(*   proc get (x : from) : to option = { *)
+(*     var y; *)
+(*     y <@ R.get(x); *)
+(*     return Some y; *)
+(*   } *)
+(*   proc sample = R.sample *)
+(* }. *)
+
+module Bounder = {
+  var bounder : int
+  proc init () = {
+    bounder <- 0;
+  }
+}.
+
+module FBounder (F : OFUNCTIONALITY) : OFUNCTIONALITY = {
+  proc init () : unit = {
+    Bounder.init();
+    F.init();
+  }
+  proc f(x : from) : to option = {
+    var y : to option <- None;
+    if (increase_counter Bounder.bounder x <= bound) {
+      Bounder.bounder <- increase_counter Bounder.bounder x;
+      y <- F.f(x);
+    }
+    return y;
+  }
+}.
+
+
+module PBounder (P : OPRIMITIVE) : OPRIMITIVE = {
+  proc init () = {
+    P.init();
+    Bounder.init();
+  }
+  proc f (x : block) : block option = {
+    var y <- None;
+    if (Bounder.bounder < bound) {
+      y <- P.f(x);
+      Bounder.bounder <- Bounder.bounder + 1;
+    }
+    return y;
+  }
+  proc fi (x : block) : block option = {
+    var y <- None;
+    if (Bounder.bounder < bound) {
+      y <- P.fi(x);
+      Bounder.bounder <- Bounder.bounder + 1;
+    }
+    return y;
+  }
+}.
+
+module type AdvPreimage (F : ODFUNCTIONALITY) (P : ODPRIMITIVE) = {
+  proc guess(h : to) : from
+}.
+
+module Preimage (A : AdvPreimage, F : OCONSTRUCTION, P : OPRIMITIVE) = {
+  proc main () : bool = {
+    var m,hash,hash';
+    hash <$ sampleto;
+    PBounder(P).init();
+    FBounder(F(P)).init();
+    m <@ A(FBounder(F(P)),PBounder(P)).guess(hash);
+    hash' <@ FBounder(F(P)).f(m);
+    return hash' = Some hash;
+  }
+}.
+
+
+(*-------------------------------------------------------------------------*)
+module type AdvSecondPreimage (F : ODFUNCTIONALITY) (P : ODPRIMITIVE) = {
+  proc guess(m : from) : from
+}.
+
+module SecondPreimage (A : AdvSecondPreimage, F : OCONSTRUCTION, P : OPRIMITIVE) = {
+  proc main (m1 : from) : bool = {
+    var m2, hash1, hash2;
+    PBounder(P).init();
+    FBounder(F(P)).init();
+    m2 <@ A(FBounder(F(P)),PBounder(P)).guess(m1);
+    hash1 <@ FBounder(F(P)).f(m1);
+    hash2 <@ FBounder(F(P)).f(m2);
+    return m1 <> m2 /\ exists y, Some y = hash1 /\ Some y = hash2;
+  }
+}.
+
+
+(*--------------------------------------------------------------------------*)
+module type AdvCollision (F : ODFUNCTIONALITY) (P : ODPRIMITIVE) = {
+  proc guess() : from * from
+}.
+
+module Collision (A : AdvCollision, F : OCONSTRUCTION, P : OPRIMITIVE) = {
+  proc main () : bool = {
+    var m1,m2,hash1,hash2;
+    PBounder(P).init();
+    FBounder(F(P)).init();
+    (m1,m2) <@ A(FBounder(F(P)),PBounder(P)).guess();
+    hash1 <@ FBounder(F(P)).f(m1);
+    hash2 <@ FBounder(F(P)).f(m2);
+    return m1 <> m2 /\ exists y, Some y = hash1 /\ Some y = hash2;
+  }
+}.
+
+

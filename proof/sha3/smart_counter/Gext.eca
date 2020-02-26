@@ -1,0 +1,717 @@
+pragma -oldip.
+require import Core Int Real RealExtra StdOrder Ring StdBigop IntExtra.
+require import List FSet SmtMap Common SLCommon PROM FelTactic Mu_mem.
+require import DProd Dexcepted.
+(*...*) import Capacity IntOrder Bigreal RealOrder BRA DCapacity.
+
+require (*..*) Gcol.
+
+clone export Gcol as Gcol0.
+
+op bad_ext (m mi:smap) y = 
+  mem (image snd (fdom m)) y \/
+  mem (image snd (fdom mi)) y.
+
+op hinvc (m:(handle,capacity)fmap) (c:capacity) =
+  find (+ pred1 c) m.
+
+module G2(D:DISTINGUISHER,HS:FRO) = {
+
+  module M = {
+ 
+    proc f(p : block list): block = {
+      var sa, sa';
+      var h, i, counter <- 0; 
+      sa <- b0;
+      while (i < size p ) {
+        if ((sa +^ nth witness p i, h) \in G1.mh) {
+          (sa, h) <- oget G1.mh.[(sa +^ nth witness p i, h)];
+        } else {
+          if (counter < size p - prefix p (get_max_prefix p (elems (fdom C.queries)))) {
+            HS.sample(G1.chandle);
+            sa'                 <@ F.RO.get(take (i+1) p);
+            sa                  <- sa +^ nth witness p i;
+            G1.mh.[(sa,h)]      <- (sa', G1.chandle);
+            G1.mhi.[(sa',G1.chandle)] <- (sa, h);
+            (sa,h)              <- (sa',G1.chandle);
+            G1.chandle          <- G1.chandle + 1;
+            counter             <- counter + 1;
+          }
+        }
+        i        <- i + 1;
+      }
+      sa <- F.RO.get(p);
+      return sa;
+    }
+  }
+ 
+  module S = {
+ 
+    proc f(x : state): state = {
+      var p, v, y, y1, y2, hy2, hx2, handles_,t;
+ 
+      if (x \notin G1.m) {
+        if (x.`2 \in G1.paths) {
+          (p,v) <- oget G1.paths.[x.`2]; 
+          y1    <- F.RO.get (rcons p (v +^ x.`1));
+          y2    <$ cdistr;
+        } else {
+          y1    <$ bdistr;
+          y2    <$ cdistr;
+        }
+        y     <- (y1, y2);
+ 
+        handles_ <@ HS.restrK();
+        if (!rng handles_ x.`2) {
+          HS.set(G1.chandle, x.`2);
+          G1.chandle <- G1.chandle + 1;
+        }
+        handles_ <- HS.restrK();
+        hx2      <- oget (hinvc handles_ x.`2);
+        t        <@ HS.in_dom((oget G1.mh.[(x.`1,hx2)]).`2, Unknown);
+        if ((x.`1, hx2) \in G1.mh /\ t) {
+          hy2                  <- (oget G1.mh.[(x.`1, hx2)]).`2;
+          y2                   <@ HS.get(hy2);
+          G1.bext              <- G1.bext \/ bad_ext G1.m G1.mi y2 \/ y2 = x.`2;
+          y                    <- (y.`1, y2);
+          G1.m.[x]             <- y;
+          G1.mi.[y]            <- x;
+        } else {
+          hy2                  <- G1.chandle;
+          G1.chandle           <- G1.chandle + 1;
+          HS.set(hy2, y.`2); 
+          G1.m.[x]             <- y;
+          G1.mh.[(x.`1, hx2)]  <- (y.`1, hy2);
+          G1.mi.[y]            <- x;
+          G1.mhi.[(y.`1, hy2)] <- (x.`1, hx2);
+        }
+        if (x.`2 \in G1.paths) {
+          (p,v) <- oget G1.paths.[x.`2]; 
+          G1.paths.[y.`2] <- (rcons p (v +^ x.`1), y.`1);
+        } 
+      } else {   
+        y <- oget G1.m.[x];
+      }
+      return y;
+    }
+ 
+    proc fi(x : state): state = {
+      var y, y1, y2, hx2, hy2, handles_, t;
+ 
+      if (x \notin G1.mi) {
+        handles_ <@ HS.restrK();
+        if (!rng handles_ x.`2) {
+          HS.set(G1.chandle, x.`2);
+          G1.chandle <- G1.chandle + 1;
+        }
+        handles_ <@ HS.restrK();
+        hx2      <- oget (hinvc handles_ x.`2);
+        y1       <$ bdistr;
+        y2       <$ cdistr;
+        y        <- (y1,y2);
+        t        <@ HS.in_dom((oget G1.mhi.[(x.`1,hx2)]).`2, Unknown);
+        if ((x.`1, hx2) \in G1.mhi /\ t) {
+          (y1,hy2)             <- oget G1.mhi.[(x.`1, hx2)];
+          y2                   <@ HS.get(hy2);
+          y                    <- (y.`1, y2);
+          G1.bext              <- G1.bext \/ bad_ext G1.m G1.mi y2 \/ y2 = x.`2;
+          G1.mi.[x]            <- y;
+          G1.m.[y]             <- x;
+        } else {
+          hy2                  <- G1.chandle;
+          G1.chandle           <- G1.chandle + 1;
+          HS.set(hy2, y.`2); 
+          G1.mi.[x]            <- y;
+          G1.mhi.[(x.`1, hx2)] <- (y.`1, hy2);
+          G1.m.[y]             <- x;
+          G1.mh.[(y.`1, hy2)]  <- (x.`1, hx2);
+        }
+      } else {
+        y <- oget G1.mi.[x];
+      }
+      return y;
+    }
+ 
+  }
+ 
+  proc distinguish(): bool = {
+    var b;
+ 
+    F.RO.m   <- empty;
+    G1.m     <- empty;
+    G1.mi    <- empty;
+    G1.mh    <- empty;
+    G1.mhi   <- empty;
+    G1.bext  <- false;
+    C.queries<- empty.[[] <- b0];
+    (* the empty path is initially known by the adversary to lead to capacity 0^c *)
+    HS.set(0,c0);
+    G1.paths    <- empty.[c0 <- ([<:block>],b0)];
+    G1.chandle  <- 1;
+    b           <@ D(M,S).distinguish();
+    return b;
+  }    
+}.
+
+section.
+  
+  declare module D: DISTINGUISHER{G1, G2, FRO, C}.
+
+  op inv_ext (m mi:smap) (FROm:handles) = 
+     exists x h, mem (fdom m `|` fdom mi) x /\ FROm.[h] = Some (x.`2, Unknown).
+
+  op inv_ext1 bext1 bext2 (m mi:smap) (FROm:handles) = 
+    bext1 => (bext2 \/ inv_ext m mi FROm).
+
+  lemma rng_restr (m : ('from, 'to * 'flag) fmap) f x:
+     rng (restr f m) x <=> rng m (x,f).
+  proof.
+    rewrite !rngE;split=>-[z]H;exists z;move:H;rewrite restrP; case m.[z]=>//=.
+    by move=> [t f'] /=;case (f'=f).
+  qed.
+
+  equiv G1_G2 : G1(DRestr(D)).main ~ Eager(G2(DRestr(D))).main1 : 
+     ={glob D} ==> ={res} /\ inv_ext1 G1.bext{1} G1.bext{2} G1.m{2} G1.mi{2} FRO.m{2}.
+  proof.
+    proc;inline{2} FRO.init G2(D, FRO).distinguish;wp.
+    inline*;wp.  
+    call (_: ={F.RO.m,G1.m,G1.mi,G1.mh,G1.mhi,G1.paths,G1.chandle,FRO.m,C.queries,C.c} /\
+             inv_ext1 G1.bext{1} G1.bext{2} G1.m{2} G1.mi{2} FRO.m{2} /\
+             (forall h, h \in FRO.m => h < G1.chandle){1}).
+    + proc.
+      sp;if;auto;inline G1(DRestr(D)).S.f G2(DRestr(D), FRO).S.f;sp;wp.
+      if=>//;last by auto.
+      seq 2 2: (={F.RO.m,G1.m,G1.mi,G1.mh,G1.mhi,G1.paths,G1.chandle,FRO.m,x,x0,y0,C.queries,C.c} /\
+                inv_ext1 G1.bext{1} G1.bext{2} G1.m{2} G1.mi{2} FRO.m{2} /\ x{1} = x0{1} /\
+                (forall h, h \in FRO.m => h < G1.chandle){1} /\
+                x0{1} \notin G1.m{1}).
+      + by if=>//;auto;call (_: ={F.RO.m});[sim |auto].
+      seq 3 5: 
+        (={F.RO.m,G1.m,G1.mi,G1.mh,G1.mhi,G1.paths,G1.chandle,FRO.m,hx2,x,x0,y0,hx2,C.queries,C.c} /\
+         t{2} = (in_dom_with FRO.m (oget G1.mh.[(x.`1, hx2)]).`2 Unknown){1} /\ x{1} = x0{1} /\
+         (G1.bext{1} => (G1.bext{2} \/ (rng FRO.m (x.`2, Unknown)){2} \/
+                         inv_ext G1.m{2} G1.mi{2} FRO.m{2})) /\
+        (forall h, h \in FRO.m => h < G1.chandle){1} /\
+        x0{1} \notin G1.m{1}).
+      + inline *;auto=> &ml&mr[#]10!-> -> ->->Hi-> Hhand -> /=.
+        rewrite -dom_restr rng_restr /=;progress;3:by smt ml=0. 
+        + rewrite !rngE /=; move: H0=> [/Hi[->|[x h][]H1 H2]|H0]//. 
+          + by right; right; exists x h; rewrite get_setE; smt(). 
+          right; left; move: H0; rewrite rngE /= => [][] h Hh.
+          exists h; rewrite get_set_neqE //=.
+          by have:= Hhand h; rewrite domE Hh /#.
+        by move: H0; rewrite mem_set /#.
+      seq 1 1: (={x0,y0,x,F.RO.m,G1.m,G1.mi,G1.mh,G1.mhi,G1.paths,G1.chandle,FRO.m,C.queries,C.c} /\
+                  inv_ext1 G1.bext{1} G1.bext{2} G1.m{2} G1.mi{2} FRO.m{2} /\ x{1} = x0{1} /\
+                  forall (h : handle), h \in FRO.m{1} => h < G1.chandle{1});2:by auto.
+      if=>//.
+      + inline *;rcondt{2} 4.
+        + by move=> &m;auto;rewrite /in_dom_with.
+(*        auto=> |>.  (* Bug ???? *)  *)
+        auto;progress. 
+        + rewrite /inv_ext1=>/H{H}[->//|[|[[x1 x2] h [Hx Hh]]]]. 
+          + rewrite rngE/==>[][]h Hh.
+            case (h = (oget G1.mh{2}.[(x0{2}.`1, hx2{2})]).`2)=> [->>|Hneq].
+            + by rewrite Hh oget_some/#.
+            by right;exists x0{2} h; rewrite fdom_set !in_fsetU !in_fset1/= get_set_neqE//. 
+          case (h = (oget G1.mh{2}.[(x0{2}.`1, hx2{2})]).`2)=> [->>|Hneq]. 
+          + rewrite Hh /bad_ext oget_some /= <@ Hx;rewrite !inE.
+            by move=>[|]/(mem_image snd)->.
+          right;exists (x1,x2) h; move:Hx.
+          by rewrite !fdom_set !in_fsetU !in_fset1 //= => [][] -> //=; rewrite get_set_neqE.
+        by move:H5 H2;rewrite /in_dom_with mem_set /#.
+      inline *;auto;progress;last by move:H3;rewrite mem_set /#.
+      rewrite /inv_ext1=> /H [->//|[|[x' h [Hx Hh]]]].
+      + rewrite rngE=> [][] h Hh.
+        right;exists x0{2} h; rewrite fdom_set !inE /= get_set_neqE //.
+        by move:(H0 h);rewrite domE Hh /#.
+      right;exists x' h; rewrite fdom_set !inE /= !mem_fdom. 
+      move:(H0 h);rewrite domE Hh //= !get_setE => Hh2.
+      have-> /= : ! h = G1.chandle{2} by smt().
+      by rewrite Hh /= mem_set; move: Hx; rewrite in_fsetU !mem_fdom=>[][]->.
+
+    + proc;sp;if;auto;inline G1(DRestr(D)).S.fi G2(DRestr(D), FRO).S.fi;sp;wp.
+      if=>//;last by auto.
+      seq 6 8: 
+        (={F.RO.m,G1.m,G1.mi,G1.mh,G1.mhi,G1.paths,G1.chandle,FRO.m,hx2,x,x0,y0,hx2,C.queries,C.c} /\
+         t{2} = (in_dom_with FRO.m (oget G1.mhi.[(x.`1, hx2)]).`2 Unknown){1} /\ x{1} = x0{1} /\
+         (G1.bext{1} => (G1.bext{2} \/ (rng FRO.m (x.`2, Unknown)){2} \/
+                          inv_ext G1.m{2} G1.mi{2} FRO.m{2})) /\
+        (forall h, h \in FRO.m => h < G1.chandle){1} /\
+        x{1} \notin G1.mi{1}).
+      + inline *;auto=> &ml&mr[#]-><-_ _9!-> Hi Hhand _ -> /=.
+        rewrite -dom_restr rng_restr /=;progress; 3:by smt ml=0.
+        + rewrite rngE/=; case: H2 =>//= H4. 
+          + move:Hi; rewrite/inv_ext1 H4 /= => [][->|] //= [] x h.
+            move=> [#] H5 Hh; right; right.
+            exists x h; rewrite H5 get_set_neqE//=.
+            by move:(Hhand h);rewrite domE Hh /#.
+          move: H4; rewrite rngE /= => [][] h Hh; right; left.
+          exists h; rewrite get_set_neqE //=.
+          by move:(Hhand h);rewrite domE Hh /#.
+        by move:H2;rewrite mem_set /#.
+      if=>//.
+      + inline *;rcondt{2} 4.
+        + by move=> &m;auto;rewrite /in_dom_with.
+        auto;progress. 
+        + rewrite /inv_ext1=>/H{H}[->//|[|[[x1 x2] h [Hx Hh]]]]. 
+          + rewrite rngE => [][h]Hh.
+            case (h = (oget G1.mhi{2}.[(x0{2}.`1, hx2{2})]).`2)=> [->>|Hneq].
+            + by left;rewrite Hh oget_some.
+            right; exists x0{2} h; rewrite !in_fsetU !mem_fdom !mem_set /=. 
+            by rewrite get_set_neqE.
+          case (h = (oget G1.mhi{2}.[(x0{2}.`1, hx2{2})]).`2)=> [->>|Hneq]. 
+          + rewrite Hh /bad_ext oget_some /= <@ Hx;rewrite !inE.
+            by move=>[|]/(mem_image snd)->.
+          right;exists (x1,x2) h;rewrite !in_fsetU !mem_fdom !mem_set /=.
+          rewrite get_set_neqE //= Hh /=.
+          by move: Hx; rewrite in_fsetU !mem_fdom=>[][] ->.
+        by move:H5 H1;rewrite /in_dom_with mem_set /#.
+      inline *;auto;progress;last by move:H3;rewrite mem_set /#.
+      rewrite /inv_ext1=> /H [->//|[|[x' h [Hx Hh]]]].
+      + rewrite rngE => [][h]Hh.
+        right;exists x0{2} h;rewrite get_setE in_fsetU !mem_fdom !mem_set /=. 
+        by move:(H0 h);rewrite domE Hh /#.
+      right;exists x' h;rewrite get_setE in_fsetU !mem_fdom !mem_set /=. 
+      move:Hx; rewrite in_fsetU 2!mem_fdom=>[][]->//=.
+      + by move:(H0 h);rewrite domE Hh /#.
+      by move:(H0 h);rewrite domE Hh /#.
+
+    + proc;sp;if;auto;sp;if;auto;sp.
+      inline G1(DRestr(D)).M.f G2(DRestr(D), FRO).M.f;sp;wp.
+      conseq (_: ={sa,G1.mh,G1.mhi,F.RO.m, G1.chandle, FRO.m,C.queries,C.c} /\
+                 inv_ext1 G1.bext{1} G1.bext{2} G1.m{2} G1.mi{2} FRO.m{2} /\
+                 forall (h0 : handle), h0 \in FRO.m{1} => h0 < G1.chandle{1})=>//.
+      sp;call (_: ={F.RO.m});1:by sim.
+      while (={sa,G1.mh,G1.mhi,F.RO.m,G1.chandle,FRO.m,i,h,sa,p,C.queries,counter,bs} /\
+             inv_ext1 G1.bext{1} G1.bext{2} G1.m{2} G1.mi{2} FRO.m{2} /\ p{2} = bs{2} /\
+             forall (h0 : handle), h0 \in FRO.m{1} => h0 < G1.chandle{1})=>//.
+      if=>//;inline *;1:by auto.
+      if;1,3:auto;progress.
+      rcondt{2} 3;1:by auto=>/#.
+      auto;progress. 
+      + move=>bad1;cut[/=->//|]:=H bad1;rewrite/inv_ext=>[][]x h[]H_dom Hh;right.
+        exists x h;rewrite H_dom/= get_set_neqE //=. 
+        by move:(H0 h);rewrite domE Hh /#.
+      + smt(mem_set).
+      + move=>bad1;cut[/=->//|]:=H bad1;rewrite/inv_ext=>[][]x h[]H_dom Hh;right.
+        exists x h;rewrite H_dom/= get_set_neqE //=. 
+        by move:(H0 h);rewrite domE Hh /#.
+      + smt(mem_set).
+   
+    (* **************** *)
+    inline *;auto;progress.
+    smt(mem_set mem_empty).
+  qed. 
+
+end section.
+
+section EXT.
+
+  declare module D: DISTINGUISHER{C, PF, G1, G2, Perm, RO, Redo}.
+
+  local module ReSample = {
+    var count:int  
+    proc f (h:handle) = {
+      var c;
+      c <$ cdistr;
+      if (card (fdom G1.m) <= max_size /\ card (fdom G1.mi) <= max_size
+         /\ ReSample.count < max_size) {
+        G1.bext   <- G1.bext \/ mem (image snd (fdom G1.m `|` fdom G1.mi)) c;
+        FRO.m.[h] <- (c,Unknown);
+        count <- count + 1 ; 
+      }
+    }
+
+   proc f1 (x:capacity,h:handle) = {
+      var c;
+      c <$ cdistr;
+      if (card (fdom G1.m) < max_size /\ card (fdom G1.mi) < max_size /\ ReSample.count < max_size) {
+        G1.bext   <- G1.bext \/ mem (image snd (fdom G1.m `|` fdom G1.mi) `|` fset1 x) c;
+        FRO.m.[h] <- (c,Unknown);
+        count <- count + 1;
+      }
+    }
+  
+  }.
+
+  local module Gext = {
+
+    proc resample () = {
+      Iter(ReSample).iter (elems (fdom (restr Unknown FRO.m)));
+    }
+  
+    module M = {
+   
+      proc f(p : block list): block = {
+        var sa, sa';
+        var h, i, counter <- 0; 
+        sa <- b0;
+        while (i < size p ) {
+          if ((sa +^ nth witness p i, h) \in G1.mh) {
+            (sa, h) <- oget G1.mh.[(sa +^ nth witness p i, h)];
+          } else {
+            if (counter < size p - prefix p (get_max_prefix p (elems (fdom C.queries)))) {
+              RRO.sample(G1.chandle);
+              sa'                 <@ F.RO.get(take (i+1) p);
+              sa                  <- sa +^ nth witness p i;
+              G1.mh.[(sa,h)]      <- (sa', G1.chandle);
+              G1.mhi.[(sa',G1.chandle)] <- (sa, h);
+              (sa,h)              <- (sa',G1.chandle);
+              G1.chandle          <- G1.chandle + 1;
+              counter             <- counter + 1;
+            }
+          }
+          i        <- i + 1;
+        }
+        sa <- F.RO.get(p);
+        return sa;
+      }
+    }
+   
+    module S = {
+   
+      proc f(x : state): state = {
+        var p, v, y, y1, y2, hy2, hx2, handles_,t;
+   
+        if (x \notin G1.m) {
+          if (x.`2 \in G1.paths) {
+            (p,v) <- oget G1.paths.[x.`2]; 
+            y1    <- F.RO.get (rcons p (v +^ x.`1));
+          } else {
+            y1    <$ bdistr;
+          }
+          y2    <$ cdistr;
+          y     <- (y1, y2);
+          (* exists x h, mem (dom G1.m) x /\ handles.[h] = Some (x.2, I) *)
+   
+          handles_ <@ RRO.restrK();
+          if (!rng handles_ x.`2) {
+            RRO.set(G1.chandle, x.`2);
+            G1.chandle <- G1.chandle + 1;
+          }
+          handles_ <- RRO.restrK();
+          hx2      <- oget (hinvc handles_ x.`2);
+          t        <@ RRO.in_dom((oget G1.mh.[(x.`1,hx2)]).`2, Unknown);
+          if ((x.`1, hx2) \in G1.mh /\ t) {
+            hy2                  <- (oget G1.mh.[(x.`1, hx2)]).`2;
+            ReSample.f1(x.`2, hy2);
+            y2                   <@ FRO.get(hy2);
+            y                    <- (y.`1, y2);
+            G1.m.[x]             <- y;
+            G1.mi.[y]            <- x;
+          } else {
+            hy2                  <- G1.chandle;
+            G1.chandle           <- G1.chandle + 1;
+            RRO.set(hy2, y.`2); 
+            G1.m.[x]             <- y;
+            G1.mh.[(x.`1, hx2)]  <- (y.`1, hy2);
+            G1.mi.[y]            <- x;
+            G1.mhi.[(y.`1, hy2)] <- (x.`1, hx2);
+          }
+          if (x.`2 \in G1.paths) {
+            (p,v) <- oget G1.paths.[x.`2]; 
+            G1.paths.[y.`2] <- (rcons p (v +^ x.`1), y.`1);
+          }
+        } else {   
+          y <- oget G1.m.[x];
+        }
+        return y;
+      }
+   
+      proc fi(x : state): state = {
+        var y, y1, y2, hx2, hy2, handles_, t;
+   
+        if (x \notin G1.mi) {
+          handles_ <@ RRO.restrK();
+          if (!rng handles_ x.`2) {
+            RRO.set(G1.chandle, x.`2);
+            G1.chandle <- G1.chandle + 1;
+          }
+          handles_ <@ RRO.restrK();
+          hx2      <- oget (hinvc handles_ x.`2);
+          y1       <$ bdistr;
+          y2       <$ cdistr;
+          y        <- (y1,y2);
+          t        <@ RRO.in_dom((oget G1.mhi.[(x.`1,hx2)]).`2, Unknown);
+          if ((x.`1, hx2) \in G1.mhi /\ t) {
+            (y1,hy2)             <- oget G1.mhi.[(x.`1, hx2)];
+            ReSample.f1(x.`2,hy2);
+            y2                   <@ FRO.get(hy2);
+            y                    <- (y.`1, y2);
+
+            G1.mi.[x]            <- y;
+            G1.m.[y]             <- x;
+          } else {
+            hy2                  <- G1.chandle;
+            G1.chandle           <- G1.chandle + 1;
+            RRO.set(hy2, y.`2); 
+            G1.mi.[x]            <- y;
+            G1.mhi.[(x.`1, hx2)] <- (y.`1, hy2);
+            G1.m.[y]             <- x;
+            G1.mh.[(y.`1, hy2)]  <- (x.`1, hx2);
+          }
+        } else {
+          y <- oget G1.mi.[x];
+        }
+        return y;
+      }
+   
+    }
+   
+    proc distinguish(): bool = {
+      var b;
+   
+      SLCommon.C.c      <- 0;
+      F.RO.m   <- empty;
+      G1.m     <- empty;
+      G1.mi    <- empty;
+      G1.mh    <- empty;
+      G1.mhi   <- empty;
+      G1.bext  <- false;
+      ReSample.count <- 0;
+      FRO.m    <- empty;
+   
+      (* the empty path is initially known by the adversary to lead to capacity 0^c *)
+      RRO.set(0,c0);
+      G1.paths    <- empty.[c0 <- ([<:block>],b0)];
+      G1.chandle  <- 1;
+      b        <@ DRestr(D,M,S).distinguish();
+      resample();
+      return b;
+    }    
+  }.
+  
+  op inv_lt (m2 mi2:smap) c1 (Fm2:handles) count2 =
+    card (fdom  m2) < c1 /\ card (fdom  mi2) < c1 /\
+    count2 + card (fdom (restr Unknown Fm2)) < c1 /\
+    c1 <= max_size.
+
+  op inv_le (m2 mi2:smap) c1 (Fm2:handles) count2 =
+    card (fdom m2) <= c1 /\ card (fdom mi2) <= c1 /\ 
+    count2 + card (fdom (restr Unknown Fm2)) <= c1 /\
+    c1 <= max_size.
+
+  lemma fset0_eqP (s:'a fset): s = fset0 <=> forall x, !mem s x.
+  proof.
+    split=>[-> x|Hmem];1:by rewrite inE.
+    by apply fsetP=>x;rewrite inE Hmem.
+  qed.
+
+  lemma size_set (m:('a,'b)fmap) (x:'a) (y:'b):
+    card (fdom (m.[x<-y])) = if x \in m then card (fdom m) else card (fdom m) + 1.  
+  proof.
+    rewrite fdom_set;case (x \in m)=> Hx.
+    + by rewrite fsetUC subset_fsetU_id 2:// => z; rewrite ?inE mem_fdom.
+    rewrite fcardUI_indep 1:fset0_eqP=>[z|].
+    + by rewrite !inE;case (z=x)=>//; rewrite mem_fdom. 
+    by rewrite fcard1. 
+  qed.
+
+  lemma size_set_le (m:('a,'b)fmap) (x:'a) (y:'b): card (fdom (m.[x<-y])) <= card (fdom m) + 1. 
+  proof. rewrite size_set /#. qed.
+
+  lemma size_rem (m:('a,'b)fmap) (x:'a):
+    card (fdom (rem m x)) = if x \in m then card (fdom m) - 1 else card (fdom m). 
+  proof.
+    rewrite fdom_rem fcardD;case (x \in m)=> Hx.
+    + by rewrite subset_fsetI_id 2:fcard1// => z;rewrite !inE mem_fdom. 
+    by rewrite (@eq_fcards0 (fdom m `&` fset1 x)) 2:// fset0_eqP=>z;rewrite !inE mem_fdom/#.
+  qed.
+
+  lemma size_rem_le (m:('a,'b)fmap) (x:'a) : card (fdom (rem m x)) <= card (fdom m).    
+  proof. by rewrite size_rem /#. qed.
+
+  lemma size_ge0 (m:('a,'b)fmap) : 0 <= card (fdom m).
+  proof. rewrite fcard_ge0. qed.
+
+  lemma size0 : card (fdom empty<:'a,'b>) = 0.
+  proof. by rewrite fdom0 fcards0. qed.
+
+  local equiv RROset_inv_lt : RRO.set ~ RRO.set :  
+     ={x,y,FRO.m} /\ inv_lt G1.m{2} G1.mi{2} C.c{1} FRO.m{2} ReSample.count{2} ==>
+     ={res,FRO.m} /\ inv_lt G1.m{2} G1.mi{2} C.c{1} FRO.m{2} ReSample.count{2}.
+  proof.
+    proc;auto=> &ml&mr[#]3!-> /= @/inv_lt [*].
+    rewrite restr_set /=;smt w=(size_set_le size_rem_le).
+  qed.
+
+  local lemma Pr_ext &m: 
+    Pr[Gext.distinguish()@&m : G1.bext /\ ReSample.count <= max_size] <=
+       max_size%r * ((2*max_size)%r / (2^c)%r).
+  proof. 
+    fel 8 ReSample.count (fun x=> (2*max_size)%r / (2^c)%r)
+      max_size G1.bext 
+      [ReSample.f : 
+        (card (fdom G1.m) <= max_size /\ card (fdom G1.mi) <= max_size /\ ReSample.count < max_size);
+       ReSample.f1 : 
+        (card (fdom G1.m) < max_size /\ card (fdom G1.mi) < max_size /\ ReSample.count < max_size)
+      ]=> //; 2:by auto.
+    + rewrite /felsum Bigreal.sumr_const count_predT size_range.
+      apply ler_wpmul2r;1:by apply eps_ge0.
+      by rewrite le_fromint;smt ml=0 w=max_ge0. 
+    + proc;rcondt 2;1:by auto.
+      wp; rnd (mem (image snd (fdom G1.m `|` fdom G1.mi ))); skip=> /> &hr h1 h2 h3 h4 h5.
+      rewrite (Mu_mem.mu_mem 
+                   (image snd (fdom G1.m{hr} `|` fdom G1.mi{hr}))
+                   cdistr (1%r/(2^c)%r))//.
+      + by move=>x _;rewrite DCapacity.dunifin1E capacity_card.
+      rewrite ler_wpmul2r;1:by apply divr_ge0=>//;apply /c_ge0r. 
+      rewrite imageU fcardU le_fromint.
+      move:(fcard_image_leq snd (fdom G1.m{hr}))(fcard_image_leq snd (fdom G1.mi{hr})).
+      smt(fcard_ge0).
+    + by move=>c1;proc;auto=> &hr [^H 2->]/#. 
+    + by move=> b1 c1;proc;auto=> /#.
+    + proc;rcondt 2;1:by auto.
+      wp;rnd (mem (image snd (fdom G1.m `|` fdom G1.mi) `|` fset1 x));skip=> /> &hr ?????.
+      rewrite (Mu_mem.mu_mem (image snd (fdom G1.m{hr}`|`fdom G1.mi{hr}) `|` fset1 x{hr}) cdistr (1%r/(2^c)%r))//.
+      + by move=>x _;rewrite DCapacity.dunifin1E capacity_card.
+      rewrite ler_wpmul2r;1:by apply divr_ge0=>//;apply /c_ge0r. 
+      rewrite imageU !fcardU le_fromint fcard1.
+      move:(fcard_image_leq snd (fdom G1.m{hr}))(fcard_image_leq snd (fdom G1.mi{hr})).
+      smt w=fcard_ge0.
+    + by move=>c1;proc;auto=> &hr [^H 2->]/#. 
+    by move=> b1 c1;proc;auto=> /#.
+  qed.
+
+
+  local equiv EG2_Gext : Eager(G2(DRestr(D))).main2 ~ Gext.distinguish: 
+     ={glob D} ==> 
+       ReSample.count{2} <= max_size /\
+       ((G1.bext{1} \/ inv_ext G1.m{1} G1.mi{1} FRO.m{1}) => G1.bext{2}).
+  proof.
+    proc;inline *;wp.
+    while (={l,FRO.m,G1.m,G1.mi} /\ card (fdom G1.m{2}) <= max_size /\ 
+             card (fdom G1.mi{2}) <= max_size /\ 
+            ReSample.count{2} + size l{2} <= max_size /\ 
+            ((G1.bext{1} \/
+             exists (x : state) (h : handle),
+               mem (fdom G1.m{1} `|` fdom G1.mi{1}) x /\
+               FRO.m{1}.[h] = Some (x.`2, Unknown) /\ !mem l{1} h) => 
+             G1.bext{2})). 
+    + rcondt{2} 3.  
+      + move=> &m;auto=> &m'[#] 6!-> /= + _ _;case (l{m'})=>//=; smt w=List.size_ge0.
+      auto=> &ml&mr[#]6!->;case(l{mr})=>[//|h1 l1/=Hle Hext c ?/=];split.
+      + smt w=(drop0 size_ge0).
+      rewrite drop0=>-[H|[x h][#]];1:by rewrite Hext // H.
+      rewrite get_setE;case (h=h1)=> [/=->Hin->_ | Hneq ???].
+      + by right;apply (mem_image snd _ x).
+      by rewrite Hext 2://;right;exists x h;rewrite Hneq.
+    wp; call (_: ={F.RO.m,FRO.m,G1.paths,G1.mh,G1.mhi,G1.m,G1.mi,G1.chandle,G1.bext, C.c,C.queries} /\ 
+                 inv_le G1.m{2} G1.mi{2} C.c{1} FRO.m{2}  ReSample.count{2}).
+    + proc;sp;if=>//=;swap -1. 
+      call (_: ={x,F.RO.m,FRO.m,G1.paths,G1.mh,G1.mhi,G1.m,G1.mi,G1.chandle,G1.bext,C.c,C.queries} /\
+               inv_lt  G1.m{2} G1.mi{2} C.c{1} FRO.m{2}  ReSample.count{2} ==>
+               ={res,F.RO.m,FRO.m,G1.paths,G1.mh,G1.mhi,G1.m,G1.mi,G1.chandle,G1.bext,C.c,C.queries} /\
+               inv_le  G1.m{2} G1.mi{2} C.c{1} FRO.m{2}  ReSample.count{2});last by auto=>/#.
+      proc;if=>//;last by auto=>/#.
+      seq 8 9 : (={x, y, F.RO.m, FRO.m, G1.paths, G1.mh, G1.mhi, G1.m, G1.mi, G1.chandle,
+                   G1.bext, C.c, C.queries} /\
+                 inv_le G1.m{2} G1.mi{2} C.c{1} FRO.m{2} ReSample.count{2});2:by auto. 
+      seq 2 3 :
+        (={y,x,F.RO.m,FRO.m,G1.paths,G1.mh,G1.mhi,G1.m,G1.mi,G1.chandle,G1.bext, C.c,C.queries} /\
+        inv_lt  G1.m{2} G1.mi{2} C.c{1} FRO.m{2}  ReSample.count{2}).
+      + by if=>//;auto;call (_: ={F.RO.m});auto.
+      seq 5 5 : 
+        (={t,y,x,hx2,F.RO.m,FRO.m,G1.paths,G1.mh,G1.mhi,G1.m,G1.mi,G1.chandle,G1.bext, C.c,C.queries} /\
+        inv_lt  G1.m{2} G1.mi{2} C.c{1} FRO.m{2}  ReSample.count{2} /\
+        (t => in_dom_with FRO.m (oget G1.mh.[(x.`1, hx2)]).`2 Unknown){1}).
+      + inline RRO.in_dom; wp;call (_: ={FRO.m});1:by sim.
+        inline RRO.restrK;sp 1 1;if=>//.
+        by wp;call RROset_inv_lt;auto.
+      if=>//;wp. 
+      + inline *;rcondt{1} 4;1:by auto=>/#. 
+        rcondt{2} 5;1:by auto;smt w=(size_ge0).
+        rcondt{2} 10. by auto;progress;rewrite mem_set.
+        wp;rnd{2};auto=> /= ??[#]!-> @/inv_lt @/inv_le [#] mlt milt clt cle Hin 4? /=. 
+        move => ? _;rewrite /bad_ext !get_setE /= set_set_eqE //=.
+        rewrite !(imageU,inE) restr_set /= size_rem dom_restr Hin //=; smt w=size_set_le.
+      by call RROset_inv_lt;auto;smt w=size_set_le.
+
+    + proc;sp;if=> //;swap -1.
+      call (_: ={x,F.RO.m,FRO.m,G1.paths,G1.mh,G1.mhi,G1.m,G1.mi,G1.chandle,G1.bext,C.c} /\
+               inv_lt  G1.m{2} G1.mi{2} C.c{1} FRO.m{2}  ReSample.count{2} ==>
+               ={res,F.RO.m,FRO.m,G1.paths,G1.mh,G1.mhi,G1.m,G1.mi,G1.chandle,G1.bext,C.c} /\
+               inv_le  G1.m{2} G1.mi{2} C.c{1} FRO.m{2}  ReSample.count{2});last by auto=> /#.
+      proc;if=>//;last by auto=>/#.
+      seq 8 8 : 
+        (={t,y,x,hx2,F.RO.m,FRO.m,G1.paths,G1.mh,G1.mhi,G1.m,G1.mi,G1.chandle,G1.bext, C.c} /\
+        inv_lt  G1.m{2} G1.mi{2} C.c{1} FRO.m{2}  ReSample.count{2} /\
+        (t => in_dom_with FRO.m (oget G1.mhi.[(x.`1, hx2)]).`2 Unknown){1}).
+      + inline RRO.in_dom; auto;call (_: ={FRO.m});1:by sim.
+        inline RRO.restrK;sp 1 1;if=>//.
+        by wp;call RROset_inv_lt;auto.
+      if=>//;wp. 
+      + inline *;rcondt{1} 4;1:by auto=>/#.
+        rcondt{2} 5;1:by auto;smt w=(size_ge0).
+        rcondt{2} 10. by auto;progress;rewrite mem_set.
+        wp;rnd{2};auto=> /= ??[#]!-> @/inv_lt @/inv_le [#] mlt milt clt cle Hin 5? _.
+        rewrite /bad_ext !get_setE /= set_set_eqE //=.
+        rewrite !(imageU,inE) restr_set /= size_rem dom_restr Hin //=; smt w=size_set_le.
+      by call RROset_inv_lt;auto;smt w=size_set_le.
+
+    + proc;sp 1 1;if;auto;if;auto=>//.
+      inline G2(DRestr(D), RRO).M.f Gext.M.f.
+      sp 6 6;elim *=> c0L c0R. 
+      wp;call (_: ={F.RO.m});1:by sim.
+      conseq(:_==> ={i,p,G1.mh,sa,h,FRO.m,F.RO.m,G1.mh,G1.mhi,G1.chandle,counter} /\
+             0 <= i{1} <= size p{1} /\
+             0 <= counter{1} <= size p{1} -
+             prefix bs{1} (get_max_prefix bs{1} (elems (fdom C.queries{1}))) /\
+             c0R + size p{1} -
+             prefix bs{1} (get_max_prefix bs{1} (elems (fdom C.queries{1}))) <= max_size /\
+             inv_le G1.m{2} G1.mi{2} (c0R + counter){2} FRO.m{2} ReSample.count{2});1:smt(List.size_ge0).
+      while (={bs,i,p,G1.mh,sa,h,FRO.m,F.RO.m,G1.mh,G1.mhi,G1.chandle,counter,C.queries} /\
+             bs{1} = p{1} /\ 0 <= i{1} <= size p{1} /\ 
+             0 <= counter{1} <= size p{1} -
+             prefix bs{1} (get_max_prefix bs{1} (elems (fdom C.queries{1}))) /\
+             c0R + size p{1} -
+             prefix bs{1} (get_max_prefix bs{1} (elems (fdom C.queries{1}))) <= max_size /\
+             inv_le G1.m{2} G1.mi{2} (c0R + counter){2} FRO.m{2} ReSample.count{2});
+        last by auto;smt(List.size_ge0 prefix_sizel).
+      if=> //;1:by auto=>/#.  
+      if=> //;2:by auto=>/#.  
+      auto;call (_: ={F.RO.m});1:by sim.
+      inline *;auto=> &ml &mr [#]!->@/inv_le Hi0[#] _ H_c_0 H_c_max H1 [#]H_size_m H_size_mi H_count H2 H3/=.
+      rewrite H3/==>H_nin_dom H_counter_prefix c;rewrite DCapacity.dunifin_fu/=.
+      case(G1.chandle{mr} \in FRO.m{mr})=>//=[/#|]H_handle_in_dom.
+      progress;..-3,-1: rewrite/#; by rewrite restr_set_eq size_set/=/#. 
+
+    auto;progress[delta];rewrite ?(size0,restr0,restr_set,rem0,max_ge0,-sizeE,-cardE) //=. 
+    + smt(size_rem_le size0).
+    + smt().
+    + smt().
+    + smt().
+    + by elim H7=>// [[x h] [#]];rewrite -memE mem_fdom dom_restr /in_dom_with domE=> _ ->.
+    by apply H10.
+  qed.
+
+  axiom D_ll:
+   forall (F <: DFUNCTIONALITY{D}) (P <: DPRIMITIVE{D}),
+     islossless P.f => islossless P.fi => islossless F.f => islossless D(F, P).distinguish.
+
+  lemma Real_G2 &m: 
+     Pr[GReal(D).main() @ &m: res /\ C.c <= max_size] <=
+     Pr[Eager(G2(DRestr(D))).main2() @ &m: res] +
+     (max_size ^ 2 - max_size)%r / 2%r * mu dstate (pred1 witness) + 
+     max_size%r * ((2*max_size)%r / (2^c)%r) + 
+     max_size%r * ((2*max_size)%r / (2^c)%r).
+  proof.
+    apply (ler_trans _ _ _ (Real_G1 D D_ll &m)).
+    do !apply ler_add => //.
+    + cut ->: Pr[G1(DRestr(D)).main() @ &m : res] = Pr[Eager(G2(DRestr(D))).main1() @ &m : res].
+      + by byequiv (G1_G2 D).
+      by apply lerr_eq;byequiv (Eager_1_2 (G2(DRestr(D)))). 
+    + by apply (Pr_G1col D D_ll &m).
+    apply (ler_trans Pr[Eager(G2(DRestr(D))).main1()@&m: G1.bext \/ inv_ext G1.m G1.mi FRO.m]).
+    + by byequiv (G1_G2 D)=>//#.     
+    apply (ler_trans Pr[Eager(G2(DRestr(D))).main2()@&m : G1.bext \/ inv_ext G1.m G1.mi FRO.m]).
+    + by apply lerr_eq;byequiv (Eager_1_2 (G2(DRestr(D)))). 
+    apply (ler_trans _ _ _ _ (Pr_ext &m)).
+    byequiv EG2_Gext=>//#. 
+  qed.
+
+end section EXT.
+
+
+    

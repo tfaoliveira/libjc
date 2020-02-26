@@ -1,0 +1,123 @@
+(* Infinite random oracle, mapping values of type [from] to infinite
+   sequences of values of type [to], each sampled uniformly and
+   independently. We obviously make it lazy. Inputs not satisfying
+   a validity predicate are mapped to the empty list *)
+
+require import Core Int Bool List FSet SmtMap.
+
+type to, from.
+
+op valid : from -> bool.
+op dto   : to distr.
+
+module type IRO = {
+  proc init() : unit
+
+  (* f x, returning the first n elements of the result *)
+  proc f(x : from, n : int) : to list
+}.
+
+pred prefix_closed (m : (from * int,to) fmap) =
+  forall x n,
+    (x,n) \in m =>
+    (forall i, 0 <= i < n =>
+      (x,i) \in m).
+
+pred prefix_closed' (m : (from * int,to) fmap) =
+  forall x n i,
+    (x,n) \in m =>
+    0 <= i < n =>
+    (x,i) \in m.
+
+lemma prefix_closed_equiv m: prefix_closed m <=> prefix_closed' m.
+proof. smt(). qed.
+
+(* official version: *)
+
+module IRO : IRO = {
+  var mp : (from * int, to) fmap
+
+  proc init() = {
+    mp <- empty;
+  }
+
+  proc fill_in(x, n) = {
+    if ((x,n) \notin mp) {
+      mp.[(x,n)] <$ dto;
+    }
+    return oget mp.[(x,n)];
+  }
+
+  proc f(x, n) = {
+    var b, bs;
+    var i <- 0;
+
+    bs <- [];
+    if (valid x) {
+      while (i < n) {
+        b <@ fill_in(x, i);
+        bs <- rcons bs b;
+        i <- i + 1;
+      }
+    }
+
+    return bs;
+  }
+}.
+
+(* version for AbsorbToBlocks.ec attempt *)
+
+module IRO' : IRO = {
+  var mp : (from * int, to)  fmap
+  var visible : (from * int) fset
+
+  proc resample_invisible() = {
+    var work, x;
+
+    work <- fdom mp `\` visible;
+    while (work <> fset0) {
+      x <- pick work;
+      mp.[x] <$ dto;
+      work <- work `\` fset1 x;
+    }
+  }
+
+  proc init() = {
+    mp <- empty;
+    visible <- fset0;
+  }
+
+  proc fill_in(x,n) = {
+    if ((x,n) \notin mp) {
+      mp.[(x,n)] <$ dto;
+    }
+    return oget mp.[(x,n)];
+  }
+
+  proc f(x, n) = {
+    var b, bs;
+    var i <- 0;
+
+    bs <- [];
+    if (valid x) {
+      visible <- visible `|` fset1 (x,n);
+      while (i < n) {
+        b <@ fill_in(x,i);
+        bs <- rcons bs b;
+        i <- i + 1;
+      }
+    }
+
+    return bs;
+  }
+
+  proc f_lazy(x, i) = {
+    var b <- witness;
+
+    if (valid x /\ 0 <= i) {
+      visible <- visible `|` fset1 (x,i);
+      b <@ fill_in(x,i);
+    }
+    return b;
+  }
+}.

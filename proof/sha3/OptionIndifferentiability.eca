@@ -1,0 +1,61 @@
+(** A primitive: the building block we assume ideal **)
+type p.
+
+module type OPRIMITIVE = {
+  proc init(): unit
+  proc f(x : p): p option
+  proc fi(x : p): p option
+}.
+
+module type ODPRIMITIVE = {
+  proc f(x : p): p option
+  proc fi(x : p): p option
+}.
+
+(** A functionality: the target construction **)
+type f_in, f_out.
+
+module type OFUNCTIONALITY = {
+  proc init(): unit
+  proc f(x : f_in): f_out option
+}.
+
+module type ODFUNCTIONALITY = {
+  proc f(x : f_in): f_out option
+}.
+
+(** A construction takes a primitive and builds a functionality.
+    A simulator takes a functionality and simulates the primitive.
+    A distinguisher gets oracle access to a primitive and a
+      functionality and returns a boolean (its guess as to whether it
+      is playing with constructed functionality and ideal primitive or
+      with ideal functionality and simulated primitive). **)
+module type OCONSTRUCTION (P : ODPRIMITIVE) = {
+  proc init() : unit {}
+  proc f(x : f_in): f_out option { P.f }
+}.
+
+module type OSIMULATOR (F : ODFUNCTIONALITY) = {
+  proc init() : unit { }
+  proc f(x : p) : p option { F.f }
+  proc fi(x : p) : p option { F.f }
+}.
+
+module type ODISTINGUISHER (F : ODFUNCTIONALITY, P : ODPRIMITIVE) = {
+  proc distinguish(): bool 
+}.
+
+module OIndif (F : OFUNCTIONALITY, P : OPRIMITIVE, D : ODISTINGUISHER) = {
+  proc main(): bool = {
+    var b;
+
+         P.init();
+         F.init();
+    b <@ D(F,P).distinguish();
+    return b;
+  }
+}.
+
+(* Using the name Real can be a bad idea, since it can clash with the theory Real *)
+module OGReal(C : OCONSTRUCTION, P : OPRIMITIVE) = OIndif(C(P),P).
+module OGIdeal(F : OFUNCTIONALITY, S : OSIMULATOR) = OIndif(F,S(F)).

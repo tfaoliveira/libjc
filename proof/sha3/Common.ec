@@ -1,10 +1,7 @@
 (*------------------- Common Definitions and Lemmas --------------------*)
-
-prover quorum=2 ["Z3" "Alt-Ergo"].
-
 require import Core Int IntExtra IntDiv Real List Distr.
 require import Ring StdRing StdOrder StdBigop BitEncoding DProd.
-require (*--*) FinType BitWord IdealPRP Monoid.
+require (*--*) FinType BitWord PRP Monoid.
 (*---*) import IntID IntOrder Bigint Bigint.BIA IntDiv.
 
 pragma +implicits.
@@ -107,13 +104,16 @@ by rewrite addzC (@last_nonempty y z).
 qed.
 
 (*------------------------------ Primitive -----------------------------*)
+clone export PRP as PRPt with
+  type D  <- block * capacity.
 
-clone export IdealPRP as Perm with
-  type D  <- block * capacity,
+clone export StrongPRP as PRPSec.
+
+clone export RP as Perm with
   op   dD <- bdistr `*` cdistr
   rename
     [module type] "PRP" as "PRIMITIVE"
-    [module] "RandomPermutation" as "Perm"
+    [module] "RP" as "Perm"
   proof dD_ll.
 realize dD_ll.
 by apply/dprod_ll; rewrite Block.DBlock.dunifin_ll Capacity.DCapacity.dunifin_ll.

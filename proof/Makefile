@@ -4,9 +4,10 @@
 ECROOT   ?=
 ECCHECK  ?=
 ECARGS   ?=
+ECJOBS   ?= 1
 ECCONF   := tests.config 
 XUNITOUT ?= xunit.xml
-CHECKS   ?= keccakf160064bits keccak1600 chacha20 poly1305
+CHECKS   ?= all
 
 ifeq ($(ECCHECK),)
 ifeq ($(ECROOT),)
@@ -61,10 +62,7 @@ usage:
 	@echo "Usage: make <target> where <target> in [check|check-xunit]" >&2
 
 check: generate
-	$(ECCHECK) --bin-args="$(ECARGS)" $(ECCONF) $(CHECKS)
-
-check-xunit: generate
-	$(ECCHECK) --bin-args="$(ECARGS)" --report=$(XUNITOUT) $(ECCONF) $(CHECKS)
+	$(ECCHECK) --bin-args="$(ECARGS)" --jobs="$(ECJOBS)" $(ECCONF) $(CHECKS)
 
 generate: $(ECSRC)
 	@true
