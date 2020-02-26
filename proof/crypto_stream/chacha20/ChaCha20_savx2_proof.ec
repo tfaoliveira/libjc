@@ -332,7 +332,7 @@ proof.
   move=> mem_R i_R0 h10 h11 h12 h13 h14 h15.
   have ->> /= : i_R0 = 32 by smt().
   have : forall (j : int), 0 <= j => j < len{2} - 32 => mem_R.[plain{2} + 32 + j] = Glob.mem{2}.[plain{2} + 32 + j].
-  + by move=> j *; rewrite -addzA /#.
+  + by move=> j *; rewrite -addzA &(h14) /#.
   smt (WArray64.initE WArray32.initE Array8.initE).
 qed.
 
@@ -381,7 +381,7 @@ proof.
   split; 1: smt (WArray32.initE WArray16.initE Array4.initE).
   move=> mem_R i_R0 h10 h11 h12 h13 h14 h15; have ->> /= : i_R0 = 16 by smt().
   have : forall (j : int), 0 <= j => j < len{2} - 16 => mem_R.[plain{2} + 16 + j] = Glob.mem{2}.[plain{2} + 16 + j].
-  + by move=> *;rewrite -1?addzA /#.
+  + by move=> *;rewrite -1?addzA &(h14) /#.
   smt (WArray32.initE WArray16.initE Array4.initE).
 qed.
 
@@ -550,7 +550,10 @@ proof.
   move=> h1 h2 h3 h4 ; rewrite ultE W2u32.to_uint_truncateu32 //.
   have ->> : i_L = to_uint len{2} by smt().
   move=> k3 *; rewrite h4 1://.
-  have h : 0 <= k3 < 16 by smt().
+  have h : 0 <= k3.
+smt().
+
+< 16 by smt().
   by rewrite /init32 initE initE /= bits8_W4u32_red h /= get_of_list /#.
 qed.
 

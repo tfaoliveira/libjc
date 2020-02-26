@@ -243,7 +243,9 @@ proof.
   rewrite heq hl /=.
   have ? : 0 <= min 64 len0 by smt().
   apply (eq_from_nth W8.zero).
-  + rewrite size_take 1:// size_map2 size_bytes_of_block size_loads_8 /l8 /= /#.
+    (* FIXME: should work without *)
+  + rewrite size_take 1:// size_map2 /= (size_bytes_of_block k0).
+    rewrite size_loads_8 /l8 /= /#.
   have -> : size (take (min 64 len0) l8) = min 64 len0.
   + by rewrite size_take 1:// /l8 /= /#.
   move=> j h_j.
@@ -349,7 +351,7 @@ proof.
     rewrite /setup /loads_32 /=;split;2:smt().
     rewrite Array8.of_listK 1:// Array3.of_listK 1:// /=.
     by apply Array16.all_eq_eq; rewrite /Array16.all_eq.
-  move=> mem len0 output1 plain1 ? hinv ? plain2 c.
+  move=> mem len0 output1 plain1 ? hinv _ ? plain2 c.
   have ->> : len0 = 0 by smt().
   rewrite {2}/loads_8 /= cats0 => <<-.
   by rewrite size_loads_8 (max_ler _ _ H) => ->. 
