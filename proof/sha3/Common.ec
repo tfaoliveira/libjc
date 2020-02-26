@@ -586,14 +586,7 @@ move: bp=> [s n] _ b2b_xs_eq.
 case: (last b0 xs <> b0)=> [// | last_xs_eq_b0]. 
 rewrite negbK in last_xs_eq_b0.
 have xs_non_nil : xs <> [].
-  case: xs b2b_xs_eq last_xs_eq_b0 vb_xs=> // contrad.
-  rewrite blocks2bits_nil in contrad.
-  have contrad_last :
-    false = last false (s ++ [true] ++ nseq n false ++ [true]).
-    have {1}-> : false = last false [] by trivial.
-    by rewrite {1}contrad.
-  rewrite last_cat /= in contrad_last.
-  elim contrad_last.
+  by case: xs b2b_xs_eq last_xs_eq_b0 vb_xs.
 elim (last_drop_all_but_last b0 xs)=> // drop_xs.
 have xs_take_drop : xs = take (size xs - 1) xs ++ drop (size xs - 1) xs
   by rewrite cat_take_drop.

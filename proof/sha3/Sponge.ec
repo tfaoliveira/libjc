@@ -1637,8 +1637,7 @@ rcondf{2} 1; first auto; progress;
   by rewrite -lezNgt needed_blocks_non_pos ltzW.
 rcondf{1} 1; first auto; progress;
   by rewrite -lezNgt pmulr_lle0 1:gt0_r needed_blocks_non_pos ltzW.
-auto; progress;
-  [by rewrite blocks2bits_nil | by smt(needed_blocks0)].
+auto => />;smt(needed_blocks0).
 (* 0 <= n1 *)
 conseq
   (_ :

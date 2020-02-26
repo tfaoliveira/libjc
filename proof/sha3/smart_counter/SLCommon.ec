@@ -1065,7 +1065,7 @@ lemma hinvP handles c:
   if hinv handles c = None then forall h f, handles.[h] <> Some(c,f)
   else exists f, handles.[oget (hinv handles c)] = Some(c,f).
 proof.
-  cut @/pred1@/(\o)/=[[h []->[]Hmem <<-]|[]->H h f]/= := 
+  have /= @/pred1 @/(\o) [[h []->[]Hmem <<-]|[]->H h f]/=  := 
     findP (fun (_ : handle) => pred1 c \o fst) handles.
   + exists (oget handles.[h]).`2.
     by move: Hmem; rewrite domE; case: (handles.[h])=> //= - [].
@@ -1089,7 +1089,7 @@ lemma hinvKP handles c:
   else handles.[oget (hinvK handles c)] = Some(c,Known).
 proof.
   rewrite /hinvK.
-  cut @/pred1/= [[h]|][->/=]:= findP (+ pred1 c) (restr Known handles).
+  cut /= @/pred1/= [[h]|][->/=]:= findP (+ pred1 c) (restr Known handles).
   + by rewrite domE restrP;case (handles.[h])=>//= /#.
   by move=>+h-/(_ h);rewrite domE restrP => H1/#. 
 qed.

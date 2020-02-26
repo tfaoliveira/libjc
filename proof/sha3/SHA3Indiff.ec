@@ -167,9 +167,9 @@ proof.
 byequiv=> //; proc.
 seq 2 2 : (={glob Dist} /\ ={Perm.m, Perm.mi} ); first sim.
 inline*; wp; sp.
-call (_ : ={c}(Cntr, BlockSponge.C) /\ ={Perm.m, Perm.mi}).
-proc; sp; if=> //; sp; sim.
-proc; sp; if=> //; sp; sim.
+call (_ : ={c}(Cntr, BlockSponge.C) /\ ={Perm.m, Perm.mi}) => //.
++ by proc; sp; if=> //; sp; sim.
++ by proc; sp; if=> //; sp; sim.
 proc=> /=.
 inline BlockSponge.FC(BlockSponge.Sponge(Perm)).f.
 wp; sp.
@@ -181,9 +181,7 @@ seq 1 1 :
 auto; progress; by rewrite size_pad2blocks.
 inline RaiseFun(BlockSponge.Sponge(Perm)).f.
 wp; sp.
-call (_ : ={Perm.m, Perm.mi}); first sim.
-auto.
-auto; progress; by rewrite blocks2bits_nil.
+call (_ : ={Perm.m, Perm.mi}); first by sim.
 auto.
 qed.
 
@@ -222,7 +220,6 @@ inline RaiseFun(BlockSponge.BIRO.IRO).f.
 wp; sp.
 call (_ : ={BlockSponge.BIRO.IRO.mp}); first sim.
 auto.
-auto; progress. by rewrite blocks2bits_nil.
 auto.
 qed.
 
