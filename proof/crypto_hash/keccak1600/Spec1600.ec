@@ -291,7 +291,8 @@ apply Array25.ext_eq => i Hi.
 rewrite /st0 createE !initiE // get64E; beta.
 rewrite -(W8u8.unpack8K W64.zero); congr.
 apply W8u8.Pack.init_ext => k Hk; beta.
-by rewrite WArray200.initiE 1:/# /= W8u8.get_zero.
+(* FIXME: /create necessary ? *)
+by rewrite /create WArray200.initiE 1:/# /= W8u8.get_zero.
 qed.
 
 lemma state2bits0: state2bits st0 = nseq 1600 false.
@@ -618,14 +619,14 @@ rewrite catA w8L2bits_cat; congr; last first.
 rewrite w8L2bits_cat -!catA; congr.
 rewrite /w8L2bits /flatten /chunkfill chunkfillsizeE' 1:/# size_cat /=; first smt(size_ge0).
 rewrite modz_small; first smt(size_ge0).
-pose L:= (nth false _ 0 :: _).
 apply (eq_from_nth false).
  by rewrite !size_cat /= size_nseq max_ler /#.
-rewrite (:size L=8) //.
+pose sL := size _.
+rewrite (:sL=8) 1://.
 move=> i Hi; have: i \in iota_ 0 8 by smt().
 move=> {Hi} Hi.
 rewrite -cat1s !nth_cat /= nth_nseq_if.
-move: i Hi; rewrite /L -List.allP /= => {L}.
+move: i Hi; rewrite /L -List.allP /= => {sL}.
 move: mbits Hmbits => [|x0 [|x1 [|x2 [|x3 [|x4 [|x5 xs]]]]]] //=.
 smt(size_ge0).
 qed.

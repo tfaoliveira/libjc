@@ -344,7 +344,7 @@ while (#[2,-2:]pre /\ outlen_ = outlen /\ out_ = out /\
  rewrite (take_nth W8.zero) ?size_squeezestate 1:/#.
  rewrite stores8_rcons; congr.
   by rewrite to_uintD_small 1:/# size_take ?size_squeezestate /#.
-  by rewrite state_get8P nth_take /#.
+  rewrite /get8 state_get8P nth_take /#.
 wp; while (#[2:]pre /\ 0 <= to_uint i <= to_uint outlen_ %/ 8 /\ out = out_ /\
            to_uint outlen8 = to_uint outlen %/ 8 /\
            Glob.mem = stores64 mem (to_uint out_) (take (to_uint i)

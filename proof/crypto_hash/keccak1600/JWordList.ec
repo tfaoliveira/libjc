@@ -135,8 +135,6 @@ proof.
 elim: l1 l2 => //=.
  by move=> [|y ys]; rewrite w8L2bits_nil // w8L2bits_cons.
 move=> x xs IH1; elim => //=.
- rewrite map2C; first by move=> b1 b2; ring.
- by rewrite w8L2bits_cons.
 move=> y ys IH2.
 rewrite !w8L2bits_cons map2_cat.
  by rewrite !size_w2bits.
@@ -244,8 +242,6 @@ lemma w64L2bits_cat l1 l2:
  w64L2bits (l1++l2) = w64L2bits l1 ++ w64L2bits l2.
 proof.
 elim: l1 => //=.
- by rewrite w64L2bits_nil.
-by move=> x xs IH; rewrite !w64L2bits_cons IH.
 qed.
 
 lemma take_w64L2bits n l:
@@ -294,7 +290,7 @@ lemma w64L2bits_xor l1 l2:
 proof.
 elim: l1 l2 => //=.
  by move=> [|y ys]; rewrite w64L2bits_nil // w64L2bits_cons.
-move=> x xs IH1; elim => //=.
+move=> x xs IH1; elim => /=.
  rewrite w64L2bits_nil map2C; first by move=> b1 b2; ring.
  by rewrite w64L2bits_cons.
 move=> y ys IH2.
@@ -450,7 +446,6 @@ proof.
 elim: l; first by rewrite /w64L2w8L /flatten.
 move=> x xs IH.
 rewrite /w64L2w8L map_cons flatten_cons w64L2bits_cons w8L2bits_cat; congr.
-by rewrite /w8L2bits /flatten.
 qed.
 
 lemma w64L2w8L_singl x: w64L2w8L [x] = W8u8.to_list x by rewrite /w64L2w8L.
@@ -459,7 +454,6 @@ lemma w64L2w8L_cat l1 l2:
  w64L2w8L (l1++l2) = w64L2w8L l1 ++ w64L2w8L l2.
 proof.
 elim: l1 => //= x xs IH.
-by rewrite !w64L2w8L_cons IH catA.
 qed.
 
 lemma take_w64L2w8L n l:

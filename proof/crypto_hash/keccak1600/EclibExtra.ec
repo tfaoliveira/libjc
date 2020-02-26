@@ -378,7 +378,7 @@ case: (0 < k) => Hk; last first.
  by rewrite take_le0 1:/# BitEncoding.BitChunking.chunk_le0 1:/#.
 case: (0 < size l) => Hsz; last first.
  have ->: l=[] by smt(size_ge0).
- by rewrite chunkfill_nil /= /BitEncoding.BitChunking.chunk /= mkseq0.
+ by rewrite chunkfill_nil /= /BitEncoding.BitChunking.chunk.
 rewrite -nth0 /BitEncoding.BitChunking.chunk nth_mkseq /=.
  by rewrite size_chunkfill // /#.
 by rewrite drop0.
