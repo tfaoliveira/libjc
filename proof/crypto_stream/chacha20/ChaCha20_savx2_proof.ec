@@ -549,11 +549,9 @@ proof.
   move=> i_L k8_L; split; 1:smt().
   move=> h1 h2 h3 h4 ; rewrite ultE W2u32.to_uint_truncateu32 //.
   have ->> : i_L = to_uint len{2} by smt().
-  move=> k3 *; rewrite h4 1://.
-  have h : 0 <= k3.
-smt().
-
-< 16 by smt().
+  (* FIXME: /= was not used before *)
+  move=> k3 /= *; rewrite h4 1://.
+  have h : 0 <= k3 < 16 by smt().
   by rewrite /init32 initE initE /= bits8_W4u32_red h /= get_of_list /#.
 qed.
 
@@ -1168,7 +1166,7 @@ op half_x8_ (k1 k2 k3 k4 k5 k6 k7 k8 : W32.t Array8.t) =
 lemma mapi_map2 n (f : int -> 'a -> 'b) (s : 'a list) :
   mapi n f s = map2 (fun i x => f i x) (range n (n + size s)) s.
 proof.
-elim: s n => //= [@/range //|x s ih] n.
+elim: s n => //= x s ih n.
 rewrite (@range_cat (n + 1)); 1,2:smt(size_ge0).
 rewrite rangeS addzCA addzA (@addzC 1) -(@cat1s x).
 by rewrite map2_cat //= -ih.
@@ -1436,7 +1434,7 @@ proof.
   move=> i1 k0_7 ??? h2.
   have ->> : i0 = 8 by smt().
   have ->> : i1 = 8 by smt().
-  split; apply Array8.all_eq_eq; rewrite /Array8.all_eq /=.
+  split=> [|_]; apply Array8.all_eq_eq; rewrite /Array8.all_eq /=.
   + by rewrite !h2; cbv delta.
   by rewrite !h1; cbv delta.
 qed.
@@ -1728,7 +1726,7 @@ proof.
     ecall (eq_store_x2 len{1});skip => /> &1 &2 h1 h2 h3 hlen1 e0 e1 e2 e3 hlen2.
     split. 
     + by apply Array4.all_eq_eq;rewrite /all_eq /= /x2_ e0 e1 e2 e3 /x4_.  
-    move=> [r1 r2 r3] /> re -> ???;split; 1:smt().
+    move=> _ [r1 r2 r3] /> re -> ???;split; 1:smt().
     by apply Array4.all_eq_eq;rewrite /all_eq /= /x4_ /= /x2_ /=.
   call eq_store_x2_last; skip => /> &1 &2 h1 h2 h3 hlen1 e0 e1 e2 e3 hlen2.
   split; 1:smt(). 
@@ -1935,8 +1933,7 @@ proof.
   + by move=> />;rewrite uleE /=.
   + wp; ecall{2} (interleave_0_spec s_k0_7{2} k8_15{2} 4) => /=.
     ecall (eq_store_x4 len{1}); skip => />.
-    move=> &1 &2 h1 h2 h3 h4 h5 [output1 plain1 len1] [output2 plain2 len2] /> h6 h7 h8 h9;split;2:smt().
-    by cbv delta.
+    move=> &1 &2 h1 h2 h3 h4 [output1 plain1 len1] [output2 plain2 len2] /> *; smt().
   skip => /> /#.
 qed.
 
