@@ -1,0 +1,1 @@
+#define hmacsha256_impl hmacsha256_IMPL

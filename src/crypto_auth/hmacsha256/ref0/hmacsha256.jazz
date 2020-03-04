@@ -1,0 +1,71 @@
+#ifndef HMACSHA256_REF0
+#define HMACSHA256_REF0
+
+#include "crypto_hash/sha256/ref0/sha256.jazz"
+
+fn _hmacsha256_ref0(reg u64 out in inlen k padded)
+{
+  inline int t;
+  reg u64 bits;
+  stack u64 outs ins inlens ks paddeds bitss;
+  reg u8 v;
+  stack u32[8] H;
+
+  // store variables in the stack
+  outs = out;
+  ins = in;
+  inlens = inlen;
+  ks = k;
+  paddeds = padded;
+
+  // calculate the number of bits
+  bits = inlen;
+  bits <<= 3;
+  bits += 512;
+  bitss = bits;
+
+  // set first block with k ^ 0x36
+  for t=0 to 32
+  { v = (u8)[k + t];
+    v ^= 0x36;
+    (u8)[padded + t] = v;
+    (u8)[padded + t + 32] = 0x36;
+  }
+
+  H = initH();
+  H, _, _ = _sha256_blocks_ref0(H, padded, 64);
+
+  in = ins;
+  inlen = inlens;
+  H, in, inlen = _sha256_blocks_ref0(H, in, inlen);
+
+  padded = paddeds; bits = bitss;
+  inlen = sha256_lastblock_ref0(in, inlen, padded, bits);
+  H, _, _ = _sha256_blocks_ref0(H, padded, inlen);
+
+  k = ks;
+  padded = paddeds;
+  for t=0 to 32
+  { v = (u8)[k + t];
+    v ^= 0x5c;
+    (u8)[padded + t] = v;
+    (u8)[padded + t + 32] = 0x5c;
+  }
+
+  store_H_mem(padded+64, H);
+
+  for t=1 to 32
+  { (u8)[padded + t + 96] = 0; }
+
+  (u8)[padded + 96] = 0x80;
+  (u8)[padded + 126] = 0x3; // 00 || 768 
+
+  // call sha256 blocks
+  H = initH();
+  H, _, _ = _sha256_blocks_ref0(H, padded, 128);
+
+  out = outs;
+  store_H_mem(out, H);
+}
+
+#endif

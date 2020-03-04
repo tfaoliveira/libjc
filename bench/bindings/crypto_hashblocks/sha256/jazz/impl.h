@@ -1,0 +1,1 @@
+#define sha256_blocks_impl sha256_blocks_IMPL

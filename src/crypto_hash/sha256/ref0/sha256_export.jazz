@@ -1,0 +1,6 @@
+#include "crypto_hash/sha256/ref0/sha256.jazz"
+
+export fn sha256_ref0(reg u64 out in inlen padded)
+{
+  _sha256_ref0(out, in, inlen, padded);
+}

@@ -1,0 +1,352 @@
+#ifndef SHA256_BLOCKS_REF0
+#define SHA256_BLOCKS_REF0
+inline fn initK() -> stack u32[64]
+{
+  inline int i;
+  stack u32[64] K;
+
+  K[ 0] = 0x428a2f98;
+  K[ 1] = 0x71374491;
+  K[ 2] = 0xb5c0fbcf;
+  K[ 3] = 0xe9b5dba5;
+  K[ 4] = 0x3956c25b;
+  K[ 5] = 0x59f111f1;
+  K[ 6] = 0x923f82a4;
+  K[ 7] = 0xab1c5ed5;
+  K[ 8] = 0xd807aa98;
+  K[ 9] = 0x12835b01;
+  K[10] = 0x243185be;
+  K[11] = 0x550c7dc3;
+  K[12] = 0x72be5d74;
+  K[13] = 0x80deb1fe;
+  K[14] = 0x9bdc06a7;
+  K[15] = 0xc19bf174;
+  K[16] = 0xe49b69c1;
+  K[17] = 0xefbe4786;
+  K[18] = 0x0fc19dc6;
+  K[19] = 0x240ca1cc;
+  K[20] = 0x2de92c6f;
+  K[21] = 0x4a7484aa;
+  K[22] = 0x5cb0a9dc;
+  K[23] = 0x76f988da;
+  K[24] = 0x983e5152;
+  K[25] = 0xa831c66d;
+  K[26] = 0xb00327c8;
+  K[27] = 0xbf597fc7;
+  K[28] = 0xc6e00bf3;
+  K[29] = 0xd5a79147;
+  K[30] = 0x06ca6351;
+  K[31] = 0x14292967;
+  K[32] = 0x27b70a85;
+  K[33] = 0x2e1b2138;
+  K[34] = 0x4d2c6dfc;
+  K[35] = 0x53380d13;
+  K[36] = 0x650a7354;
+  K[37] = 0x766a0abb;
+  K[38] = 0x81c2c92e;
+  K[39] = 0x92722c85;
+  K[40] = 0xa2bfe8a1;
+  K[41] = 0xa81a664b;
+  K[42] = 0xc24b8b70;
+  K[43] = 0xc76c51a3;
+  K[44] = 0xd192e819;
+  K[45] = 0xd6990624;
+  K[46] = 0xf40e3585;
+  K[47] = 0x106aa070;
+  K[48] = 0x19a4c116;
+  K[49] = 0x1e376c08;
+  K[50] = 0x2748774c;
+  K[51] = 0x34b0bcb5;
+  K[52] = 0x391c0cb3;
+  K[53] = 0x4ed8aa4a;
+  K[54] = 0x5b9cca4f;
+  K[55] = 0x682e6ff3;
+  K[56] = 0x748f82ee;
+  K[57] = 0x78a5636f;
+  K[58] = 0x84c87814;
+  K[59] = 0x8cc70208;
+  K[60] = 0x90befffa;
+  K[61] = 0xa4506ceb;
+  K[62] = 0xbef9a3f7;
+  K[63] = 0xc67178f2;
+
+  return K;
+}
+
+inline fn load_bigendian(reg u64 in, inline int o) -> reg u32
+{
+  inline int i;
+  reg u32[4] v;
+  reg u32 r;
+
+  for i=0 to 4
+  { v[i] = (32u)(u8)[in + i + o]; }
+
+  r = v[3];
+  for i=0 to 3
+  { v[i] <<= (3-i)*8;
+    r |= v[i];
+  }
+
+  return r;
+}
+
+inline fn store_bigendian(reg u64 in, inline int o, reg u32 u)
+{
+  inline int i;
+  for i=3 downto 0
+  { (u8)[in + i + o] = (8u)u;
+    u >>= 8;
+  }
+
+  (u8)[in + 0 + o] = (8u)u;
+}
+
+inline fn load_H_mem(reg u64 pH) -> stack u32[8]
+{
+  inline int i;
+  stack u32[8] H;
+  reg u32[8] rH;
+
+  for i=0 to 8
+  { rH[i] = load_bigendian(pH, i*4);
+    H[i]  = rH[i]; }
+
+  return H;
+}
+
+inline fn store_H_mem(reg u64 pH, stack u32[8] H)
+{
+  inline int i;
+  reg u32[8] rH;
+
+  for i=0 to 8
+  { rH[i] = H[i];
+    store_bigendian(pH, i*4, rH[i]); }
+}
+
+inline fn load_H_stack(stack u32[8] H) -> reg u32, reg u32, reg u32, reg u32,
+                                          reg u32, reg u32, reg u32, reg u32
+{
+  reg u32 a b c d e f g h;
+
+  a = H[0];
+  b = H[1];
+  c = H[2];
+  d = H[3];
+  e = H[4];
+  f = H[5];
+  g = H[6];
+  h = H[7];
+
+  return a,b,c,d,e,f,g,h;
+}
+
+inline fn store_H_stack(reg u32 a b c d e f g h) -> stack u32[8]
+{
+  stack u32[8] H;
+
+  H[0] = a;
+  H[1] = b;
+  H[2] = c;
+  H[3] = d;
+  H[4] = e;
+  H[5] = f;
+  H[6] = g;
+  H[7] = h;
+
+  return H;
+}
+
+inline fn SHR(reg u32 x, inline int c) -> reg u32
+{
+  reg u32 r;
+  r   = x;
+  r >>= c;
+  return r;
+}
+
+inline fn ROTR(reg u32 x, inline int c) -> reg u32
+{
+  reg u32 r;
+  r = x;
+  _, _, r = #ROR_32(r, c);
+  return r;
+}
+
+//(x & y) ^ (!x & z)
+inline fn CH(reg u32 x y z) -> reg u32
+{
+  reg u32 r s;
+
+  r  =  x;
+  r &=  y;
+  s  =  x;
+  s  = !s;
+  s &=  z;
+  r ^=  s;
+
+  return r;
+}
+
+//(x & y) ^ (x & z) ^ (y & z)
+inline fn MAJ(reg u32 x y z) -> reg u32
+{
+  reg u32 r s;
+
+  r  = x;
+  r &= y;
+  s  = x;
+  s &= z;
+  r ^= s;
+  s  = y;
+  s &= z;
+  r ^= s;
+
+  return r;
+}
+
+// (x >>> 2) ^ (x >>> 13) ^ (x >>> 22)
+inline fn BSIG0(reg u32 x) -> reg u32
+{
+  reg u32 r s;
+
+  r  = ROTR(x, 2);
+  s  = ROTR(x,13);
+  r ^= s;
+  s  = ROTR(x,22);
+  r ^= s;
+
+  return r;
+}
+
+// (x >>> 6) ^ (x >>> 11) ^ (x >>> 25)
+inline fn BSIG1(reg u32 x) -> reg u32
+{
+  reg u32 r s;
+
+  r  = ROTR(x, 6);
+  s  = ROTR(x,11);
+  r ^= s;
+  s  = ROTR(x,25);
+  r ^= s;
+
+  return r;
+}
+
+// (x >>> 7) ^ (x >>> 18) ^ (x >> 3)
+inline fn SSIG0(reg u32 x) -> reg u32
+{
+  reg u32 r s;
+
+  r  = ROTR(x, 7);
+  s  = ROTR(x,18);
+  r ^= s;
+  s  = SHR(x,3);
+  r ^= s;
+
+  return r;
+}
+
+// (x >>> 17) ^ (x >>> 19) ^ (x >> 10)
+inline fn SSIG1(reg u32 x) -> reg u32
+{
+  reg u32 r s;
+
+  r  = ROTR(x,17);
+  s  = ROTR(x,19);
+  r ^= s;
+  s  = SHR(x,10);
+  r ^= s;
+
+  return r;
+}
+
+// Wt = SSIG1(W(t-2)) + W(t-7) + SSIG0(t-15) + W(t-16)
+inline fn Wt(stack u32[64] W, inline int t) -> stack u32[64]
+{
+  reg u32 wt wt2 wt15;
+
+  wt2  = W[t-2];
+  wt   = SSIG1(wt2);
+  wt  += W[t-7];
+  wt15 = W[t-15];
+  wt15 = SSIG0(wt15);
+  wt  += wt15;
+  wt  += W[t-16];
+
+  W[t] = wt;
+
+  return W;
+}
+
+inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
+{
+  inline int t;
+  reg u32 T1 T2 a b c d e f g h r;
+  stack u32[64] W;
+  reg u64 tr;
+
+  // TODO: replace by global array
+  stack u32[64] K;
+  K = initK();
+
+  while(inlen >= 64)
+  {
+    for t=0 to 16
+    { W[t] = load_bigendian(in, t*4); }
+
+    for t=16 to 64
+    { W = Wt(W, t); }
+
+    a, b, c, d, e, f, g, h = load_H_stack(H);
+
+    tr = 0;
+    while(tr < 64)
+    {
+      //T1 = h + BSIG1(e) + CH(e,f,g) + Kt + Wt
+      T1  = h;
+      r   = BSIG1(e);
+      T1 += r;
+      r   = CH(e,f,g);
+      T1 += r;
+      T1 += K[(int)tr];
+      T1 += W[(int)tr];
+
+      //T2 = BSIG0(a) + MAJ(a,b,c)
+      T2  = BSIG0(a);
+      r   = MAJ(a,b,c);
+      T2 += r;
+
+      h  = g;
+      g  = f;
+      f  = e;
+      e  = d;
+      e += T1;
+      d  = c;
+      c  = b;
+      b  = a;
+      a  = T1;
+      a += T2;
+
+      tr+= 1;
+    }
+
+    a += H[0];
+    b += H[1];
+    c += H[2];
+    d += H[3];
+    e += H[4];
+    f += H[5];
+    g += H[6];
+    h += H[7];
+
+    H = store_H_stack(a,b,c,d,e,f,g,h);
+
+    in += 64;
+    inlen -= 64;
+  }
+
+  return H, in, inlen;
+}
+#endif

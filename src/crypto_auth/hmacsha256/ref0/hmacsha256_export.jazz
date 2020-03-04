@@ -1,0 +1,6 @@
+#include "crypto_auth/hmacsha256/ref0/hmacsha256.jazz"
+
+export fn hmacsha256_ref0(reg u64 out in inlen k padded)
+{
+  _hmacsha256_ref0(out, in, inlen, k, padded);
+}

@@ -1,1 +1,1 @@
-crypto_scalarmult curve25519 jazz/mulx
+crypto_auth hmacsha256 jazz/ref0
