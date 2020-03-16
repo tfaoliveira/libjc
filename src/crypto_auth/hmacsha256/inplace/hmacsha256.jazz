@@ -1,0 +1,7 @@
+#ifndef HMACSHA256_INPLACE
+#define HMACSHA256_INPLACE
+
+#include "crypto_hash/sha256/inplace/sha256.jazz"
+#include "crypto_auth/hmacsha256/common/hmacsha256.jazz"
+
+#endif

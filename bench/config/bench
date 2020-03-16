@@ -1,1 +1,3 @@
 crypto_auth hmacsha256 jazz/ref0
+crypto_auth hmacsha256 jazz/ref
+crypto_auth hmacsha256 jazz/inplace

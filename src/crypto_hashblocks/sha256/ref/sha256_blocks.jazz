@@ -1,0 +1,121 @@
+#ifndef SHA256_BLOCKS_REF
+#define SHA256_BLOCKS_REF
+
+#include "crypto_hashblocks/sha256/ref0/sha256_blocks.jazz"
+
+inline fn M(stack u32[16] W, inline int i0 i14 i9 i1) -> stack u32[16]
+{
+  reg u32 t w0 w14 w1;
+
+  // W[i0] += SSIG1(W[i14]) + W[i9] + SSIG0(W[i1]);
+  w0  = W[i0];
+
+  w14 = W[i14];
+  t   = SSIG1(w14);
+  w0 += t;
+
+  w0 += W[i9];
+
+  t   = SSIG0(W[i1]);
+  w0 += t;
+
+  W[i0] = w0;
+
+  return W;
+}
+
+inline fn EXPAND(stack u32[16] W) -> stack u32[16]
+{
+  inline int i;
+
+  for i=0 to 16
+  { W = M(W, i, (i+14)%16, (i+9)%16, (i+1)%16); }
+
+  return W;
+}
+
+inline fn F(reg u32[8] r, stack u32[16] W, stack u32[64] K, inline int wi ki) -> reg u32[8]
+{
+  reg u32 t T1 T2;
+  stack u32 T1s;
+
+  //T1 = h + BSIG1(e) + CH(e,f,g) + Kt + Wt
+  T1  = r[7];
+  t   = BSIG1(r[4]);
+  T1 += t;
+  t   = CH(r[4],r[5],r[6]);
+  T1 += t;
+  T1 += K[ki];
+  T1 += W[wi];
+  T1s = T1;
+
+  //T2 = BSIG0(a) + MAJ(a,b,c)
+  T2  = BSIG0(r[0]);
+  t   = MAJ(r[0],r[1],r[2]);
+  T2 += t;
+
+  r[7]  = r[6];
+  r[6]  = r[5];
+  r[5]  = r[4];
+  r[4]  = r[3];
+  r[4] += T1s;
+  r[3]  = r[2];
+  r[2]  = r[1];
+  r[1]  = r[0];
+  r[0]  = T1s;
+  r[0] += T2;
+
+  return r;
+}
+
+inline fn G(reg u32[8] r, stack u32[16] W, stack u32[64] K, inline int kb) -> reg u32[8]
+{
+  inline int i;
+
+  for i=0 to 16
+  { r = F(r, W, K, i, kb+i); }
+
+  return r;
+}
+
+inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
+{
+  inline int i;
+  reg u32[8] r;
+  stack u32[16] W;
+  stack u32[64] K;
+  stack u64 ins inlens;
+
+  K = initK();
+  r = H;
+
+  inlens = inlen;
+
+  while(inlens >= 64)
+  {
+    for i=0 to 16
+    { W[i] = load_bigendian(in, i*4); }
+
+    ins = in;
+
+    for i=0 to 4
+    { r = G(r, W, K, 16*i);
+      if(i < 3)
+      { W = EXPAND(W); }
+    }
+
+    for i=0 to 8
+    { r[i] += H[i]; }
+
+    H = r;
+
+    in = ins;
+    in += 64;
+    inlens -= 64;
+  }
+
+  inlen = inlens;
+  return H, in, inlen;
+}
+
+#endif

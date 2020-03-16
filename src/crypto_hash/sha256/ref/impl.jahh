@@ -1,0 +1,2 @@
+#define sha256 _sha256_ref
+#define sha256_blocks _sha256_blocks_ref

@@ -11,14 +11,13 @@ extern void hmacsha256_impl(
   const unsigned char *in,
   unsigned long long inlen,
   const unsigned char *k,
-  unsigned char *padded
+  unsigned long long klen,
+  unsigned char *kpadded
 );
 
 int crypto_auth(unsigned char *out,const unsigned char *in,unsigned long long inlen,const unsigned char *k)
 {
-  unsigned char out__[CRYPTO_BYTES];
-  unsigned char padded[128];
-  hmacsha256_impl(out__, in, inlen, k, padded);
-  memcpy(out, out__, CRYPTO_BYTES);
+  unsigned char hkpadded[32+128];
+  hmacsha256_impl(out, in, inlen, k, 32, hkpadded);
   return 0;
 }

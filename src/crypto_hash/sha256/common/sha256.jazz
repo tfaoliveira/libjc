@@ -1,0 +1,89 @@
+#ifndef SHA256_COMMON
+#define SHA256_COMMON
+
+#include "utils/spill.jazz"
+#include "impl.jahh"
+
+inline fn initH() -> stack u32[8]
+{
+  stack u32[8] H;
+
+  H[0]  = 0x6a09e667;
+  H[1]  = 0xbb67ae85;
+  H[2]  = 0x3c6ef372;
+  H[3]  = 0xa54ff53a;
+  H[4]  = 0x510e527f;
+  H[5]  = 0x9b05688c;
+  H[6]  = 0x1f83d9ab;
+  H[7]  = 0x5be0cd19;
+
+  return H;
+}
+
+// p should be 64 or 128
+inline fn sha256_lastblock0(reg u64 padded i bits, inline int p)
+{
+  inline int t;
+
+  // set to zero from i until p-8
+  while(i < (p-8))
+  { (u8)[padded + i] = 0x0;
+    i += 1; }
+
+  // starting from the last position, p-1, until p-8: copy length byte by byte
+  for t=(p-1) downto (p-(8+1))
+  { (u8)[padded + t] = (8u) bits; bits >>= 8; }
+
+}
+
+// writes in 'padded' the data for the last block
+inline fn sha256_lastblock(reg u64 in inlen padded bits) -> reg u64
+{
+  reg u64 i;
+  reg u8 v;
+
+  // copy the remaining input message into padded
+  i = 0;
+  while(i < inlen)
+  { v = (u8)[in + i];
+    (u8)[padded + i] = v;
+    i += 1; }
+
+  // set 0x80 after message
+  (u8)[padded + i] = 0x80;
+  i += 1;
+
+  // set remaining space with '0's and bit length at the end
+  if(inlen < 56)
+  { sha256_lastblock0(padded, i, bits, 64);  inlen = 64;  }
+  else
+  { sha256_lastblock0(padded, i, bits, 128); inlen = 128; }
+
+  return inlen;
+}
+
+fn sha256(reg u64 out in inlen padded)
+{
+  inline int t;
+  reg u64 bits;
+  stack u64 outs bitss paddeds;
+  stack u32[8] H;
+
+  outs = out;
+
+  bits = inlen;
+  bits <<= 3;
+
+  bitss, paddeds = r2s_x2(bits, padded);
+
+  H = initH();
+  H, in, inlen = sha256_blocks(H, in, inlen);
+
+  bits, padded = s2r_x2(bitss, paddeds);
+  inlen = sha256_lastblock(in, inlen, padded, bits); // ideally it should return padded (as stack)
+  H, _, _ = sha256_blocks(H, padded, inlen);
+
+  out = outs;
+  store_H_mem(out, H);
+}
+#endif

@@ -1,0 +1,6 @@
+#include "crypto_hash/sha256/inplace/sha256.jazz"
+
+export fn sha256_inplace(reg u64 out in inlen padded)
+{
+  _sha256_inplace(out, in, inlen, padded);
+}

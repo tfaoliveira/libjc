@@ -1,5 +1,6 @@
 #ifndef SHA256_BLOCKS_REF0
 #define SHA256_BLOCKS_REF0
+
 inline fn initK() -> stack u32[64]
 {
   inline int i;
@@ -349,4 +350,5 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
 
   return H, in, inlen;
 }
+
 #endif

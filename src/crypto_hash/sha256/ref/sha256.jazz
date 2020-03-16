@@ -1,0 +1,7 @@
+#ifndef SHA256_REF
+#define SHA256_REF
+
+#include "crypto_hashblocks/sha256/ref/sha256_blocks.jazz"
+#include "crypto_hash/sha256/common/sha256.jazz"
+
+#endif

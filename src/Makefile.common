@@ -3,7 +3,7 @@ JFLAGS ?=
 JASMINC ?= jasminc
 
 %.japp: %.jazz
-	gpp -I../../../ $(GFLAGS) -o $@ $<
+	gpp -I. -I../../../ $(GFLAGS) -o $@ $<
 
 %.s: %.japp
 	$(JASMINC) $(JFLAGS) -pasm $< > $@ || rm -f $@

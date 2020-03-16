@@ -1,0 +1,7 @@
+#ifndef SHA256_INPLACE
+#define SHA256_INPLACE
+
+#include "crypto_hashblocks/sha256/inplace/sha256_blocks.jazz"
+#include "crypto_hash/sha256/common/sha256.jazz"
+
+#endif

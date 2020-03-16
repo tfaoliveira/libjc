@@ -1,0 +1,6 @@
+#include "crypto_auth/hmacsha256/inplace/hmacsha256.jazz"
+
+export fn hmacsha256_inplace(reg u64 out in inlen k klen hkpadded)
+{
+  _hmacsha256_inplace(out, in, inlen, k, klen, hkpadded);
+}
