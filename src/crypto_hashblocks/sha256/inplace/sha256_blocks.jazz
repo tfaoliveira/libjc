@@ -4,7 +4,7 @@
 #include "crypto_hashblocks/sha256/ref0/sha256_blocks.jazz"
 #include "crypto_hashblocks/sha256/ref/sha256_blocks.jazz"
 
-inline fn F1(reg u32[8] r, stack u32[16] W, stack u32[64] K, inline int rb wb kb) -> reg u32[8]
+inline fn F1(reg u32[8] r, stack u32[16] W, inline int rb wb kb) -> reg u32[8]
 {
   inline int i0 i1 i2 i3 i4 i5 i6 i7;
   reg u32 t;
@@ -40,12 +40,12 @@ inline fn F1(reg u32[8] r, stack u32[16] W, stack u32[64] K, inline int rb wb kb
   return r;
 }
 
-inline fn G1(reg u32[8] r, stack u32[16] W, stack u32[64] K, inline int kb) -> reg u32[8]
+inline fn G1(reg u32[8] r, stack u32[16] W, inline int kb) -> reg u32[8]
 {
   inline int i;
 
   for i=0 to 16
-  { r = F1(r, W, K, ((16-i) % 8), i, kb+i); }
+  { r = F1(r, W, ((16-i) % 8), i, kb+i); }
 
   return r;
 }
@@ -55,9 +55,7 @@ inline fn _sha256_blocks_inplace(stack u32[8] H, reg u64 in inlen) -> stack u32[
   inline int i, j;
   reg u32[8] r;
   stack u32[16] W;
-  stack u32[64] K;
 
-  K = initK();
   r = H;
 
   while(inlen >= 64)
@@ -67,7 +65,7 @@ inline fn _sha256_blocks_inplace(stack u32[8] H, reg u64 in inlen) -> stack u32[
 
     for i=0 to 4
     { 
-      r = G1(r, W, K, 16*i);
+      r = G1(r, W, 16*i);
       if(i < 3)
       { W = EXPAND(W); }
     }

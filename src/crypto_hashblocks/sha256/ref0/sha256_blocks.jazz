@@ -1,78 +1,72 @@
 #ifndef SHA256_BLOCKS_REF0
 #define SHA256_BLOCKS_REF0
 
-inline fn initK() -> stack u32[64]
-{
-  inline int i;
-  stack u32[64] K;
-
-  K[ 0] = 0x428a2f98;
-  K[ 1] = 0x71374491;
-  K[ 2] = 0xb5c0fbcf;
-  K[ 3] = 0xe9b5dba5;
-  K[ 4] = 0x3956c25b;
-  K[ 5] = 0x59f111f1;
-  K[ 6] = 0x923f82a4;
-  K[ 7] = 0xab1c5ed5;
-  K[ 8] = 0xd807aa98;
-  K[ 9] = 0x12835b01;
-  K[10] = 0x243185be;
-  K[11] = 0x550c7dc3;
-  K[12] = 0x72be5d74;
-  K[13] = 0x80deb1fe;
-  K[14] = 0x9bdc06a7;
-  K[15] = 0xc19bf174;
-  K[16] = 0xe49b69c1;
-  K[17] = 0xefbe4786;
-  K[18] = 0x0fc19dc6;
-  K[19] = 0x240ca1cc;
-  K[20] = 0x2de92c6f;
-  K[21] = 0x4a7484aa;
-  K[22] = 0x5cb0a9dc;
-  K[23] = 0x76f988da;
-  K[24] = 0x983e5152;
-  K[25] = 0xa831c66d;
-  K[26] = 0xb00327c8;
-  K[27] = 0xbf597fc7;
-  K[28] = 0xc6e00bf3;
-  K[29] = 0xd5a79147;
-  K[30] = 0x06ca6351;
-  K[31] = 0x14292967;
-  K[32] = 0x27b70a85;
-  K[33] = 0x2e1b2138;
-  K[34] = 0x4d2c6dfc;
-  K[35] = 0x53380d13;
-  K[36] = 0x650a7354;
-  K[37] = 0x766a0abb;
-  K[38] = 0x81c2c92e;
-  K[39] = 0x92722c85;
-  K[40] = 0xa2bfe8a1;
-  K[41] = 0xa81a664b;
-  K[42] = 0xc24b8b70;
-  K[43] = 0xc76c51a3;
-  K[44] = 0xd192e819;
-  K[45] = 0xd6990624;
-  K[46] = 0xf40e3585;
-  K[47] = 0x106aa070;
-  K[48] = 0x19a4c116;
-  K[49] = 0x1e376c08;
-  K[50] = 0x2748774c;
-  K[51] = 0x34b0bcb5;
-  K[52] = 0x391c0cb3;
-  K[53] = 0x4ed8aa4a;
-  K[54] = 0x5b9cca4f;
-  K[55] = 0x682e6ff3;
-  K[56] = 0x748f82ee;
-  K[57] = 0x78a5636f;
-  K[58] = 0x84c87814;
-  K[59] = 0x8cc70208;
-  K[60] = 0x90befffa;
-  K[61] = 0xa4506ceb;
-  K[62] = 0xbef9a3f7;
-  K[63] = 0xc67178f2;
-
-  return K;
-}
+u32[64] K = {
+  0x428a2f98,
+  0x71374491,
+  0xb5c0fbcf,
+  0xe9b5dba5,
+  0x3956c25b,
+  0x59f111f1,
+  0x923f82a4,
+  0xab1c5ed5,
+  0xd807aa98,
+  0x12835b01,
+  0x243185be,
+  0x550c7dc3,
+  0x72be5d74,
+  0x80deb1fe,
+  0x9bdc06a7,
+  0xc19bf174,
+  0xe49b69c1,
+  0xefbe4786,
+  0x0fc19dc6,
+  0x240ca1cc,
+  0x2de92c6f,
+  0x4a7484aa,
+  0x5cb0a9dc,
+  0x76f988da,
+  0x983e5152,
+  0xa831c66d,
+  0xb00327c8,
+  0xbf597fc7,
+  0xc6e00bf3,
+  0xd5a79147,
+  0x06ca6351,
+  0x14292967,
+  0x27b70a85,
+  0x2e1b2138,
+  0x4d2c6dfc,
+  0x53380d13,
+  0x650a7354,
+  0x766a0abb,
+  0x81c2c92e,
+  0x92722c85,
+  0xa2bfe8a1,
+  0xa81a664b,
+  0xc24b8b70,
+  0xc76c51a3,
+  0xd192e819,
+  0xd6990624,
+  0xf40e3585,
+  0x106aa070,
+  0x19a4c116,
+  0x1e376c08,
+  0x2748774c,
+  0x34b0bcb5,
+  0x391c0cb3,
+  0x4ed8aa4a,
+  0x5b9cca4f,
+  0x682e6ff3,
+  0x748f82ee,
+  0x78a5636f,
+  0x84c87814,
+  0x8cc70208,
+  0x90befffa,
+  0xa4506ceb,
+  0xbef9a3f7,
+  0xc67178f2
+};
 
 inline fn load_bigendian(reg u64 in, inline int o) -> reg u32
 {
@@ -287,10 +281,9 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
   reg u32 T1 T2 a b c d e f g h r;
   stack u32[64] W;
   reg u64 tr;
+  reg ptr u32[64] Kp;
 
-  // TODO: replace by global array
-  stack u32[64] K;
-  K = initK();
+  Kp = K;
 
   while(inlen >= 64)
   {
@@ -311,7 +304,7 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
       T1 += r;
       r   = CH(e,f,g);
       T1 += r;
-      T1 += K[(int)tr];
+      T1 += Kp[(int)tr];
       T1 += W[(int)tr];
 
       //T2 = BSIG0(a) + MAJ(a,b,c)

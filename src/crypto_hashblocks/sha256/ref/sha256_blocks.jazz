@@ -34,7 +34,7 @@ inline fn EXPAND(stack u32[16] W) -> stack u32[16]
   return W;
 }
 
-inline fn F(reg u32[8] r, stack u32[16] W, stack u32[64] K, inline int wi ki) -> reg u32[8]
+inline fn F(reg u32[8] r, stack u32[16] W, inline int wi ki) -> reg u32[8]
 {
   reg u32 t T1 T2;
   stack u32 T1s;
@@ -68,12 +68,12 @@ inline fn F(reg u32[8] r, stack u32[16] W, stack u32[64] K, inline int wi ki) ->
   return r;
 }
 
-inline fn G(reg u32[8] r, stack u32[16] W, stack u32[64] K, inline int kb) -> reg u32[8]
+inline fn G(reg u32[8] r, stack u32[16] W, inline int kb) -> reg u32[8]
 {
   inline int i;
 
   for i=0 to 16
-  { r = F(r, W, K, i, kb+i); }
+  { r = F(r, W, i, kb+i); }
 
   return r;
 }
@@ -83,23 +83,16 @@ inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], 
   inline int i;
   reg u32[8] r;
   stack u32[16] W;
-  stack u32[64] K;
-  stack u64 ins inlens;
 
-  K = initK();
   r = H;
 
-  inlens = inlen;
-
-  while(inlens >= 64)
+  while(inlen >= 64)
   {
     for i=0 to 16
     { W[i] = load_bigendian(in, i*4); }
 
-    ins = in;
-
     for i=0 to 4
-    { r = G(r, W, K, 16*i);
+    { r = G(r, W, 16*i);
       if(i < 3)
       { W = EXPAND(W); }
     }
@@ -109,12 +102,10 @@ inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], 
 
     H = r;
 
-    in = ins;
     in += 64;
-    inlens -= 64;
+    inlen -= 64;
   }
 
-  inlen = inlens;
   return H, in, inlen;
 }
 
