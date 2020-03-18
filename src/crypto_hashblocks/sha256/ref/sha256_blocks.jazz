@@ -83,13 +83,17 @@ inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], 
   inline int i;
   reg u32[8] r;
   stack u32[16] W;
+  stack u64 in_s;
 
   r = H;
 
+  in_s = in;
   while(inlen >= 64)
   {
+    in = in_s;
     for i=0 to 16
     { W[i] = load_bigendian(in, i*4); }
+    //in_s = in;//
 
     for i=0 to 4
     { r = G(r, W, 16*i);
@@ -102,10 +106,13 @@ inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], 
 
     H = r;
 
-    in += 64;
+    //in = in_s;//
+    //in += 64;//
+    in_s += 64;
     inlen -= 64;
   }
 
+  in = in_s;
   return H, in, inlen;
 }
 

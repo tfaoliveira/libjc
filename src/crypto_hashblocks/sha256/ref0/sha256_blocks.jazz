@@ -280,8 +280,9 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
   inline int t;
   reg u32 T1 T2 a b c d e f g h r;
   stack u32[64] W;
-  reg u64 tr;
   reg ptr u32[64] Kp;
+  reg u64 tr;
+  stack u64 in_s;
 
   Kp = K;
 
@@ -289,6 +290,7 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
   {
     for t=0 to 16
     { W[t] = load_bigendian(in, t*4); }
+    in_s = in;
 
     for t=16 to 64
     { W = Wt(W, t); }
@@ -337,6 +339,7 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
 
     H = store_H_stack(a,b,c,d,e,f,g,h);
 
+    in = in_s;
     in += 64;
     inlen -= 64;
   }
