@@ -1,7 +1,7 @@
-#GFLAGS:= -DKECCAK_1600_SPECIFIC_IMPLEMENTATIONS
+#GFLAGS:= -DKECCAK1600_SPECIFIC_IMPLEMENTATIONS
 JFLAGS:= -lea
 
-default: shake256.japp shake256.s
+default: shake256_export.japp shake256_export.s
 	@true
 
 include ../../../Makefile.common

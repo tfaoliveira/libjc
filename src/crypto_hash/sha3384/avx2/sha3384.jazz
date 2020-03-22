@@ -1,11 +1,11 @@
+#ifndef SHA3384_AVX2
+#define SHA3384_AVX2
+
 #define KECCAK1600_ADD_FULL_BLOCK_IMPLEMENTATION 1
-
-u64 s_zero = 0;
-
 fn add_full_block(
   reg u256[7] state,
   stack u64[28] s_state,
-  reg u64 a_jagged,
+  reg ptr u64[25] _not_used_,
   reg u64 in inlen,
   reg u64 rate
 ) -> reg u256[7], stack u64[28], reg u64, reg u64
@@ -32,7 +32,7 @@ fn add_full_block(
   state[1] ^= a01;
   state[2] ^= s20[u256 0];
 
-  zero = #VPBROADCAST_4u64(s_zero);
+  zero = #set0_256();
  
   a11 = (u256)[in + 8*6 ]; // (1,4) (1,3) (1,2) (1,1)
 
@@ -59,3 +59,10 @@ fn add_full_block(
 }
 
 #include "crypto_hash/keccak1600/avx2/keccak1600.jazz"
+
+fn __sha3384_avx2(reg u64 out in inlen)
+{
+  __keccak1600_avx2(out, (384/8), in, inlen, 0x06, (832/8));
+}
+
+#endif

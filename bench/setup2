@@ -21,6 +21,9 @@ cp ./patch/$version/crypto_hash/sha3256/checksumsmall supercop-$version/crypto_h
 cp ./patch/$version/crypto_hash/sha3224/checksumbig supercop-$version/crypto_hash/sha3224/checksumbig
 cp ./patch/$version/crypto_hash/sha3224/checksumsmall supercop-$version/crypto_hash/sha3224/checksumsmall
 
+cp ./patch/$version/crypto_core/keccakf160064bits/checksumbig supercop-$version/crypto_core/keccakf160064bits/checksumbig
+cp ./patch/$version/crypto_core/keccakf160064bits/checksumsmall supercop-$version/crypto_core/keccakf160064bits/checksumsmall
+
 echo "bench" > config/work
 mkdir -p data/
 

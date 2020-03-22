@@ -1,20 +1,33 @@
 #include "crypto_core/keccakf160064bits/avx2/keccakf1600.jazz"
 
-export fn _keccakf1600_avx2(
-  reg u64 out in
-          _rhotates_left
-          _rhotates_right
-          _iotas
-)
+export fn keccakf1600_avx2(reg u64 out in)
 {
   inline int i;
+  stack u256[7] state_s;
   reg u256[7] state;
+  reg u64 t idx;
 
-  for i=0 to 7
-  { state[i] = (u256)[in + 32*i]; }
+  for i=0 to 25
+  { t = [in + 8*i];
+    idx = a_jagged[i];
+    state_s[u64 (int)idx] = t;
+  }
 
-  state = __keccakf1600_avx2(state, _rhotates_left, _rhotates_right, _iotas);
+  t = state_s[u64 0];
+  state_s[u64 1] = t;
+  state_s[u64 2] = t;
+  state_s[u64 3] = t;
+  
+  state = state_s;
 
-  for i=0 to 7
-  { (u256)[out + 32*i] = state[i]; }
+  state = __keccakf1600_avx2(state);
+
+  state_s = state;
+
+  for i=0 to 25
+  { idx = a_jagged[i];
+    t = state_s[u64 (int)idx];
+    [out + 8*i] = t;
+  }
 }
+

@@ -1,24 +1,79 @@
-#include "crypto_core/keccakf160064bits/avx2/keccakf1600.jahh"
+#ifndef KECCAKF1600_AVX2
+#define KECCAKF1600_AVX2
 
-fn __keccakf1600_avx2(
-  reg u256[7] state,
-  reg u64 _rhotates_left,
-  reg u64 _rhotates_right,
-  reg u64 _iotas
-) -> reg u256[7]
+u256[24] iotas_g =
+{
+  (4u64)[0x0000000000000001, 0x0000000000000001, 0x0000000000000001, 0x0000000000000001],
+  (4u64)[0x0000000000008082, 0x0000000000008082, 0x0000000000008082, 0x0000000000008082],
+  (4u64)[0x800000000000808a, 0x800000000000808a, 0x800000000000808a, 0x800000000000808a],
+  (4u64)[0x8000000080008000, 0x8000000080008000, 0x8000000080008000, 0x8000000080008000],
+  (4u64)[0x000000000000808b, 0x000000000000808b, 0x000000000000808b, 0x000000000000808b],
+  (4u64)[0x0000000080000001, 0x0000000080000001, 0x0000000080000001, 0x0000000080000001],
+  (4u64)[0x8000000080008081, 0x8000000080008081, 0x8000000080008081, 0x8000000080008081],
+  (4u64)[0x8000000000008009, 0x8000000000008009, 0x8000000000008009, 0x8000000000008009],
+  (4u64)[0x000000000000008a, 0x000000000000008a, 0x000000000000008a, 0x000000000000008a],
+  (4u64)[0x0000000000000088, 0x0000000000000088, 0x0000000000000088, 0x0000000000000088],
+  (4u64)[0x0000000080008009, 0x0000000080008009, 0x0000000080008009, 0x0000000080008009],
+  (4u64)[0x000000008000000a, 0x000000008000000a, 0x000000008000000a, 0x000000008000000a],
+  (4u64)[0x000000008000808b, 0x000000008000808b, 0x000000008000808b, 0x000000008000808b],
+  (4u64)[0x800000000000008b, 0x800000000000008b, 0x800000000000008b, 0x800000000000008b],
+  (4u64)[0x8000000000008089, 0x8000000000008089, 0x8000000000008089, 0x8000000000008089],
+  (4u64)[0x8000000000008003, 0x8000000000008003, 0x8000000000008003, 0x8000000000008003],
+  (4u64)[0x8000000000008002, 0x8000000000008002, 0x8000000000008002, 0x8000000000008002],
+  (4u64)[0x8000000000000080, 0x8000000000000080, 0x8000000000000080, 0x8000000000000080],
+  (4u64)[0x000000000000800a, 0x000000000000800a, 0x000000000000800a, 0x000000000000800a],
+  (4u64)[0x800000008000000a, 0x800000008000000a, 0x800000008000000a, 0x800000008000000a],
+  (4u64)[0x8000000080008081, 0x8000000080008081, 0x8000000080008081, 0x8000000080008081],
+  (4u64)[0x8000000000008080, 0x8000000000008080, 0x8000000000008080, 0x8000000000008080],
+  (4u64)[0x0000000080000001, 0x0000000080000001, 0x0000000080000001, 0x0000000080000001],
+  (4u64)[0x8000000080008008, 0x8000000080008008, 0x8000000080008008, 0x8000000080008008]
+};
+
+u256[6] rhotates_left = 
+{
+  (4u64)[41, 36, 18,  3],
+  (4u64)[27, 28, 62,  1],
+  (4u64)[39, 56,  6, 45],
+  (4u64)[ 8, 55, 61, 10],
+  (4u64)[20, 25, 15,  2],
+  (4u64)[14, 21, 43, 44]
+};
+
+u256[6] rhotates_right =
+{
+  (4u64)[64-41, 64-36, 64-18, 64- 3],
+  (4u64)[64-27, 64-28, 64-62, 64- 1],
+  (4u64)[64-39, 64-56, 64- 6, 64-45],
+  (4u64)[64- 8, 64-55, 64-61, 64-10],
+  (4u64)[64-20, 64-25, 64-15, 64- 2],
+  (4u64)[64-14, 64-21, 64-43, 64-44]
+};
+
+u64[25] a_jagged = 
+{
+   0,  4,  5,  6,  7,
+  10, 24, 13, 18, 23,
+   8, 16, 25, 22, 15,
+  11, 12, 21, 26, 19,
+   9, 20, 17, 14, 27
+};
+
+fn __keccakf1600_avx2(reg u256[7] state) -> reg u256[7]
 {
   reg u256[9] t;
   reg u256 c00 c14 d00 d14;
 
   reg bool zf;
-  reg u32 r;
-  reg u64 rhotates_left;
-  reg u64 rhotates_right;
-  reg u64 iotas;
+  reg u64 r iotas_o;
 
-  rhotates_left  = _rhotates_left + 96;
-  rhotates_right = _rhotates_right + 96;
-  iotas          = _iotas;
+  reg ptr u256[24] iotas_p;
+  reg ptr u256[6] rhotates_left_p;
+  reg ptr u256[6] rhotates_right_p;
+
+  iotas_p = iotas_g;
+  iotas_o = 0;
+  rhotates_left_p = rhotates_left;
+  rhotates_right_p = rhotates_right;
 
   r = 24;
   align while
@@ -51,32 +106,32 @@ fn __keccakf1600_avx2(
 	  d14 = d14 ^ t[4];
 
 	  //######################################## Rho + Pi + pre-Chi shuffle
-	  t[3] = #VPSLLV_4u64(state[2], B256(rhotates_left,0,96) );
-	  state[2] = #VPSRLV_4u64(state[2], B256(rhotates_right,0,96) );
+    t[3] = #VPSLLV_4u64(state[2], rhotates_left_p[0] );
+	  state[2] = #VPSRLV_4u64(state[2], rhotates_right_p[0] );
 	  state[2] = state[2] | t[3];
 	  state[3] = state[3] ^ d14;
-	  t[4] = #VPSLLV_4u64(state[3], B256(rhotates_left,2,96) );
-	  state[3] = #VPSRLV_4u64(state[3], B256(rhotates_right,2,96) );
+	  t[4] = #VPSLLV_4u64(state[3], rhotates_left_p[2] );
+	  state[3] = #VPSRLV_4u64(state[3], rhotates_right_p[2] );
 	  state[3] = state[3] | t[4];
 	  state[4] = state[4] ^ d14;
-	  t[5] = #VPSLLV_4u64(state[4], B256(rhotates_left,3,96) );
-	  state[4] = #VPSRLV_4u64(state[4], B256(rhotates_right,3,96) );
+	  t[5] = #VPSLLV_4u64(state[4], rhotates_left_p[3] );
+	  state[4] = #VPSRLV_4u64(state[4], rhotates_right_p[3] );
 	  state[4] = state[4] | t[5];
 	  state[5] = state[5] ^ d14;
-	  t[6] = #VPSLLV_4u64(state[5], B256(rhotates_left,4,96) );
-	  state[5] = #VPSRLV_4u64(state[5], B256(rhotates_right,4,96) );
+	  t[6] = #VPSLLV_4u64(state[5], rhotates_left_p[4] );
+	  state[5] = #VPSRLV_4u64(state[5], rhotates_right_p[4] );
 	  state[5] = state[5] | t[6];
 	  state[6] = state[6] ^ d14;
 	  t[3] = #VPERMQ(state[2], (4u2)[2,0,3,1]);
 	  t[4] = #VPERMQ(state[3], (4u2)[2,0,3,1]);
-	  t[7] = #VPSLLV_4u64(state[6], B256(rhotates_left,5,96) );
-	  t[1] = #VPSRLV_4u64(state[6], B256(rhotates_right,5,96) );
+	  t[7] = #VPSLLV_4u64(state[6], rhotates_left_p[5] );
+	  t[1] = #VPSRLV_4u64(state[6], rhotates_right_p[5] );
 	  t[1] = t[1] | t[7];
 	  state[1] = state[1] ^ d14;
 	  t[5] = #VPERMQ(state[4], (4u2)[0,1,2,3]);
 	  t[6] = #VPERMQ(state[5], (4u2)[1,3,0,2]);
-	  t[8] = #VPSLLV_4u64(state[1], B256(rhotates_left,1,96) );
-	  t[2] = #VPSRLV_4u64(state[1], B256(rhotates_right,1,96) );
+	  t[8] = #VPSLLV_4u64(state[1], rhotates_left_p[1] );
+	  t[2] = #VPSRLV_4u64(state[1], rhotates_right_p[1] );
 	  t[2] = t[2] | t[8];
 
 	  //######################################## Chi
@@ -135,11 +190,13 @@ fn __keccakf1600_avx2(
 	  state[4] = state[4] ^ t[4];
 
 	  //######################################## Iota
-	  state[0] = state[0] ^ B256(iotas,0,0);
+	  state[0] = state[0] ^ iotas_p.[(int) iotas_o];
+    iotas_o += 32;
 
-    iotas = iotas + 32;
-    (_,_,_,zf,r) = #DEC_32(r);
-  } (!zf)
+    _,_,_,zf,r = #DEC_64(r);
+  }(!zf)
 
   return state;
 }
+
+#endif

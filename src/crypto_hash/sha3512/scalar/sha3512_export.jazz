@@ -1,0 +1,6 @@
+#include "crypto_hash/sha3512/scalar/sha3512.jazz"
+
+export fn sha3512_scalar(reg u64 out in inlen)
+{
+  __sha3512_scalar(out, in, inlen);
+}

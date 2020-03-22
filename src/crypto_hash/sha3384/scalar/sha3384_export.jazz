@@ -1,0 +1,6 @@
+#include "crypto_hash/sha3384/scalar/sha3384.jazz"
+
+export fn sha3384_scalar(reg u64 out in inlen)
+{
+  __sha3384_scalar(out, in, inlen);
+}

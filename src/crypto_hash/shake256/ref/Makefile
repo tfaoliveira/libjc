@@ -1,6 +1,6 @@
 JFLAGS:= -lea
 
-default: shake256.japp shake256.s
+default: shake256_export.japp shake256_export.s
 	@true
 
 include ../../../Makefile.common

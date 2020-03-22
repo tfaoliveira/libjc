@@ -1,6 +1,7 @@
 JFLAGS:= -lea
 
-default: sha3384.japp sha3384.s
+default: sha3384_export.japp sha3384_export.s
 	@true
 
 include ../../../Makefile.common
+
