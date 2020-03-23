@@ -1,4 +1,0 @@
-#define sha256 _sha256_ref0
-#define sha256_blocks _sha256_blocks_ref0
-#define hmacsha256 _hmacsha256_ref0
-
