@@ -2,6 +2,9 @@
 #define SHA256_REF0
 
 #include "crypto_hashblocks/sha256/ref0/sha256_blocks.jazz"
+
+#define sha256 _sha256_ref0
+#define sha256_blocks _sha256_blocks_ref0
 #include "crypto_hash/sha256/common/sha256.jazz"
 
 #endif

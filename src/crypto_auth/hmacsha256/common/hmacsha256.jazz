@@ -2,7 +2,6 @@
 #define HMACSHA256_COMMON
 
 #include "utils/spill.jazz"
-#include "impl.jahh"
 
 inline fn hmacsha256_pad(reg u64 padded k klen, inline u8 pad)
 {

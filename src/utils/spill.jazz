@@ -62,6 +62,16 @@ inline fn s2r_x8(stack u64 as bs cs ds es fs gs hs) -> reg u64, reg u64, reg u64
   return a, b, c, d, e, f, g, h;
 }
 
+inline fn s2r_x9(stack u64 as bs cs ds es fs gs hs is) -> reg u64, reg u64, reg u64, reg u64,
+                                                          reg u64, reg u64, reg u64, reg u64,
+                                                          reg u64
+{
+  reg u64 a b c d e f g h i;
+  a, b, c, d, e, f, g, h = s2r_x8(as, bs, cs, ds, es, fs, gs, hs);
+  i = is;
+  return a, b, c, d, e, f, g, h, i;
+}
+
 // u64 (default) reg to stack
 inline fn r2s_x2(reg u64 a b) -> stack u64, stack u64
 {
@@ -121,6 +131,16 @@ inline fn r2s_x8(reg u64 a b c d e f g h) -> stack u64, stack u64, stack u64, st
   as, bs, cs, ds, es, fs, gs = r2s_x7(a, b, c, d, e, f, g);
   hs = h;
   return as, bs, cs, ds, es, fs, gs, hs;
+}
+
+inline fn r2s_x9(reg u64 a b c d e f g h i) -> stack u64, stack u64, stack u64, stack u64,
+                                               stack u64, stack u64, stack u64, stack u64,
+                                               stack u64
+{
+  stack u64 as bs cs ds es fs gs hs is;
+  as, bs, cs, ds, es, fs, gs, hs = r2s_x8(a, b, c, d, e, f, g, h);
+  is = i;
+  return as, bs, cs, ds, es, fs, gs, hs, is;
 }
 
 #endif

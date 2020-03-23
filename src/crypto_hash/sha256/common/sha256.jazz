@@ -2,7 +2,6 @@
 #define SHA256_COMMON
 
 #include "utils/spill.jazz"
-#include "impl.jahh"
 
 inline fn initH() -> stack u32[8]
 {

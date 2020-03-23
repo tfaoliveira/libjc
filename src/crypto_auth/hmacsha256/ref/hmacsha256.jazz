@@ -2,6 +2,8 @@
 #define HMACSHA256_REF
 
 #include "crypto_hash/sha256/ref/sha256.jazz"
+
+#define hmacsha256 _hmacsha256_ref
 #include "crypto_auth/hmacsha256/common/hmacsha256.jazz"
 
 #endif
