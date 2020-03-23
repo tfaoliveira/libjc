@@ -2,10 +2,18 @@
 
 # --------------------------------------------------------------------
 SUBDIRS := \
+  crypto_auth/hmacsha256/ref0 \
+  crypto_auth/hmacsha256/ref \
+  crypto_auth/hmacsha256/inplace \
+  \
   crypto_core/keccakf160064bits/ref \
   crypto_core/keccakf160064bits/scalar \
   crypto_core/keccakf160064bits/avx2 \
   crypto_core/keccakf160064bits/avx2_openssl \
+  \
+  crypto_hash/sha256/ref0 \
+  crypto_hash/sha256/ref \
+  crypto_hash/sha256/inplace \
   \
   crypto_hash/keccak1600/ref \
   crypto_hash/keccak1600/scalar \
@@ -29,6 +37,10 @@ SUBDIRS := \
   crypto_hash/shake256/ref \
   crypto_hash/shake256/scalar \
   crypto_hash/shake256/avx2 \
+  \
+  crypto_hashblocks/sha256/ref0 \
+  crypto_hashblocks/sha256/ref \
+  crypto_hashblocks/sha256/inplace \
   \
   crypto_onetimeauth/poly1305/ref3 \
   crypto_onetimeauth/poly1305/avx \
