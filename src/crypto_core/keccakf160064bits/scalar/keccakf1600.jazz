@@ -1,5 +1,65 @@
-#include "crypto_core/keccakf160064bits/scalar/keccakf1600.jahh"
+#ifndef KECCAKF1600_SCALAR
+#define KECCAKF1600_SCALAR
 
+// reversed iotas with the first position at zero
+u64[25] iotas_r =
+{   0x0000000000000000
+  , 0x8000000080008008
+  , 0x0000000080000001
+  , 0x8000000000008080
+  , 0x8000000080008081
+  , 0x800000008000000a
+  , 0x000000000000800a
+  , 0x8000000000000080
+  , 0x8000000000008002
+  , 0x8000000000008003
+  , 0x8000000000008089
+  , 0x800000000000008b
+  , 0x000000008000808b
+  , 0x000000008000000a
+  , 0x0000000080008009
+  , 0x0000000000000088
+  , 0x000000000000008a
+  , 0x8000000000008009
+  , 0x8000000080008081
+  , 0x0000000080000001
+  , 0x000000000000808b
+  , 0x8000000080008000
+  , 0x800000000000808a
+  , 0x0000000000008082
+  , 0x0000000000000001
+};
+
+u64[24] iotas = {
+  0x0000000000000001,
+  0x0000000000008082,
+  0x800000000000808a,
+  0x8000000080008000,
+  0x000000000000808b,
+  0x0000000080000001,
+  0x8000000080008081,
+  0x8000000000008009,
+  0x000000000000008a,
+  0x0000000000000088,
+  0x0000000080008009,
+  0x000000008000000a,
+  0x000000008000808b,
+  0x800000000000008b,
+  0x8000000000008089,
+  0x8000000000008003,
+  0x8000000000008002,
+  0x8000000000000080,
+  0x000000000000800a,
+  0x800000008000000a,
+  0x8000000080008081,
+  0x8000000000008080,
+  0x0000000080000001,
+  0x8000000080008008
+};
+
+
+// CHECKME: replace by index calls?
+#define S(base,x,y) base[(5*((x) % 5) + ((y) % 5))]
 
 fn index(inline int x, inline int y) -> inline int {
   inline int r;
@@ -47,13 +107,13 @@ fn ROL64(reg u64 x, inline int c) -> reg u64
 }
 
 
-fn theta_sum(_state_t a) -> reg u64[5]
+fn theta_sum(stack u64[25] a) -> reg u64[5]
 {
   inline int i j;
   reg u64[5] c;
 
   for i=0 to 5
-  { c[i] = S(a, 0, i); }
+  { c[i] =  S(a, 0, i); }
 
   for j=1 to 5
   { for i=0 to 5
@@ -82,7 +142,7 @@ fn theta_rol(reg u64[5] c) -> reg u64[5]
 
 fn rol_sum(
   reg u64[5] d,
-  _state_t a,
+  stack u64[25] a,
   inline int offset
 ) -> reg u64[5]
 {
@@ -105,11 +165,11 @@ fn rol_sum(
 
 
 fn set_row(
-  _state_t r,
+  stack u64[25] r,
   inline int row,
   reg u64[5] c,
-  stack u64 iota
-) -> _state_t
+  reg u64 iota
+) -> stack u64[25]
 {
   inline int j j1 j2;
   reg u64 t;
@@ -128,17 +188,10 @@ fn set_row(
 }
 
 
-fn round2x(
-  _state_t a,
-  _state_t r,
-  reg u64 iotas,
-  inline int o
-) -> _state_t, _state_t
+fn round2x(stack u64[25] a, stack u64[25] r, reg u64 iota) -> stack u64[25], stack u64[25]
 {
   reg u64[5] c d;
-  stack u64 iota;
 
-  iota = [iotas + o];
   c = theta_sum(a);
   d = theta_rol(c);
   c = rol_sum(d, a, 0);
@@ -155,24 +208,65 @@ fn round2x(
   return a, r;
 }
 
-
-fn __keccakf1600_scalar(
-  _state_t a,
-  reg u64 iotas
-) -> _state_t, reg u64
+fn get_iota(reg ptr u64[25] sp, reg u64 round) -> stack u64
 {
+  reg ptr u64[25] p;
+  stack u64 sv;
+  reg u64 v;
+
+  p = sp;
+  v = p[(int)round];
+  sv = v;
+
+  return sv;
+}
+
+fn __keccakf1600_scalar(stack u64[25] a) -> stack u64[25]
+{
+  #if 0
   reg bool zf;
-  _state_t r;
+  stack u64[25] r;
+  reg ptr u64[25] iotas_p;
+  reg u64 iota round;
+
+  iotas_p = iotas_r;
+  round = 24;
 
   while
   {
-    a, r = round2x(a, r, iotas, 0);
-    r, a = round2x(r, a, iotas, 8);
-    iotas += 16;
-    _, _, _, _, zf = #TEST_8(iotas,255);
+    iota = iotas_p[(int) round];
+    a, r = round2x(a, r, iota);
+    round -= 1;
+
+    iota = iotas_p[(int) round];
+    r, a = round2x(r, a, iota);
+    (_, _, _, zf, round) = #DEC(round);
+
   } (!zf)
+  #else
+  // 2.7K cycles faster for 16KiB
+  stack u64[25] r;
+  reg ptr u64[24] iotas_p;
+  reg u64 iota round;
 
-  iotas -= 192;
+  iotas_p = iotas;
+  round = 0;
 
-  return a, iotas;
+  while(round < 24)
+  {
+    iota = iotas_p[(int) round];
+    a, r = round2x(a, r, iota);
+    round += 1;
+
+    iota = iotas_p[(int) round];
+    r, a = round2x(r, a, iota);
+    round += 1;
+  }
+  #endif
+
+  return a;
 }
+
+#undef S
+
+#endif

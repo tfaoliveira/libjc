@@ -1,18 +1,15 @@
+#ifndef KECCAK1600_AVX2
+#define KECCAK1600_AVX2
+
 #include "crypto_core/keccakf160064bits/avx2/keccakf1600.jazz"
-
-
-u64 g_zero = 0;
-
 
 fn keccak_init() -> reg u256[7]
 {
   inline int i;
   reg u256[7] state;
 
-  state[0] = #VPBROADCAST_4u64(g_zero);
-
-  for i=1 to 7
-  { state[i] = state[0]; }
+  for i=0 to 7
+  { state[i] = #set0_256(); }
 
   return state;
 }
@@ -24,7 +21,7 @@ fn init_s_state() -> stack u64[28]
   stack u64[28] s_state;
   reg u256 zero;
 
-  zero = #VPBROADCAST_4u64(g_zero);
+  zero = #set0_256();
   for i=0 to 7
   { s_state[u256 i] = zero; }
 
@@ -36,7 +33,7 @@ fn init_s_state() -> stack u64[28]
 fn add_full_block(
   reg u256[7] state,
   stack u64[28] s_state,
-  reg   u64 a_jagged,
+  reg ptr u64[25] a_jagged_p,
   reg u64 in inlen,
   reg u64 rate
 ) -> reg u256[7], stack u64[28], reg u64, reg u64
@@ -52,17 +49,15 @@ fn add_full_block(
   while ( j < rate8 )
   {
     t = [in + 8*j];
-    l = B(a_jagged, j);
+    l = a_jagged_p[(int) j];
     s_state[(int) l] = t;
     j += 1;
   }
 
-  //
   t = s_state[0];
   s_state[1] = t;
   s_state[2] = t;
   s_state[3] = t;
-  //
 
   for i = 0 to 7
   { state[i] ^= s_state[u256 i]; }
@@ -78,7 +73,7 @@ fn add_full_block(
 fn add_final_block(
   reg  u256[7] state,
   stack u64[28] s_state,
-  reg   u64 a_jagged,
+  reg ptr u64[25] a_jagged_p,
   reg   u64 in inlen,
   reg   u8  trail_byte,
   reg   u64 rate
@@ -96,11 +91,11 @@ fn add_final_block(
   while ( j < inlen8 )
   {
     t = [in + 8*j];
-    l = B(a_jagged, j);
+    l = a_jagged_p[(int) j];
     s_state[(int) l] = t;
     j += 1;
   }
-  l = B(a_jagged, j);
+  l = a_jagged_p[(int) j];
   l <<= 3;
   j <<= 3;
 
@@ -114,22 +109,20 @@ fn add_final_block(
 
   s_state[u8 (int) l] = trail_byte;
 
-  // j  = (rate-1) >> 3; // TODO IMPROVE ME
+  // j  = (rate-1) >> 3;
   j = rate; j -= 1; j >>= 3;
-  l  = B(a_jagged, j);
+  l  = a_jagged_p[(int) j];
   l <<= 3;
-  // l += ((rate-1) & 0x7); // TODO IMPROVE ME
+  // l += ((rate-1) & 0x7)
   j = rate; j -= 1; j &= 0x7;
   l += j;
 
   s_state[u8 (int) l] ^= 0x80;
 
-  //
   t = s_state[0];
   s_state[1] = t;
   s_state[2] = t;
   s_state[3] = t;
-  //
 
   for i = 0 to 7
   { state[i] ^= s_state[u256 i]; }
@@ -141,7 +134,7 @@ fn add_final_block(
 // obs: @pre: len <= rate_in_bytes
 fn xtr_full_block(
   reg u256[7] state,
-  reg u64 a_jagged,
+  reg ptr u64[25] a_jagged_p,
   reg u64 out,
   reg u64 len
 ) -> reg u64
@@ -159,7 +152,7 @@ fn xtr_full_block(
   j = 0;
   while ( j < len8 )
   {
-    l = B(a_jagged, j);
+    l = a_jagged_p[(int) j];
     t = s_state[(int) l];
     [out + 8*j] = t;
     j += 1;
@@ -174,7 +167,7 @@ fn xtr_full_block(
 // obs: @pre: len <= rate_in_bytes
 fn xtr_bytes(
   reg u256[7] state,
-  reg u64 a_jagged,
+  reg ptr u64[25] a_jagged_p,
   reg u64 out,
   reg u64 len
 ) -> reg u64
@@ -191,14 +184,12 @@ fn xtr_bytes(
   len8 >>= 3;
   j = 0;
   while ( j < len8 )
-  {
-    l = B(a_jagged, j);
+  { l = a_jagged_p[(int) j];
     t = s_state[(int) l];
     [out + 8*j] = t;
     j += 1;
   }
-  l = B(a_jagged, j);
-
+  l = a_jagged_p[(int)j];
   j <<= 3;
   l <<= 3;
 
@@ -216,91 +207,58 @@ fn xtr_bytes(
 }
 
 
-fn absorb(
-  reg u256[7] state,
-  reg u64 rhotates_left rhotates_right iotas a_jagged,
-  reg u64 in inlen,
-  reg u8  trail_byte,
-  reg u64 rate
-) -> reg u256[7]
+fn absorb(reg u256[7] state, reg u64 in inlen, reg u8  trail_byte, reg u64 rate) -> reg u256[7]
 {
   stack u64[28] s_state;
+  reg ptr u64[25] a_jagged_p;
+
+  a_jagged_p = a_jagged;
   s_state = init_s_state();
 
   // intermediate blocks
   while ( inlen >= rate )
   {
-    state, s_state, in, inlen = add_full_block(state, s_state, a_jagged, in, inlen, rate);
-    state = __keccakf1600_avx2(state, rhotates_left, rhotates_right, iotas);
+    state, s_state, in, inlen = add_full_block(state, s_state, a_jagged_p, in, inlen, rate);
+    state = __keccakf1600_avx2(state);
   }
 
   // final block
-  state = add_final_block(state, s_state, a_jagged, in, inlen, trail_byte, rate);
+  state = add_final_block(state, s_state, a_jagged_p, in, inlen, trail_byte, rate);
 
   return state;
 }
 
 
-fn squeeze(
-  reg u256[7] state,
-  reg u64 rhotates_left rhotates_right iotas a_jagged,
-  reg u64 out outlen,
-  reg u64 rate
-)
+fn squeeze(reg u256[7] state, reg u64 out outlen rate)
 {
+  reg ptr u64[25] a_jagged_p;
+
+  a_jagged_p = a_jagged;
+
   // intermediate blocks
   while ( outlen > rate )
   {
-    state = __keccakf1600_avx2(state, rhotates_left, rhotates_right, iotas);
-    out = xtr_full_block(state, a_jagged, out, rate);
+    state = __keccakf1600_avx2(state);
+    out = xtr_full_block(state, a_jagged_p, out, rate);
     outlen -= rate;
   }
 
-  state = __keccakf1600_avx2(state, rhotates_left, rhotates_right, iotas);
-  out = xtr_bytes(state, a_jagged, out, outlen);
+  state = __keccakf1600_avx2(state);
+  out = xtr_bytes(state, a_jagged_p, out, outlen);
 }
 
 
-fn __keccak1600_avx2(
-  reg   u64 out outlen,
-  reg   u64 rhotates_left rhotates_right iotas a_jagged,
-  reg   u64 in inlen,
-  reg   u8  trail_byte,
-  reg   u64 rate
-)
+fn __keccak1600_avx2(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
 {
   reg u256[7] state;
 
   state = keccak_init();
 
   // absorb
-  state = absorb(state,
-                 rhotates_left, rhotates_right, iotas, a_jagged,
-                 in, inlen, trail_byte, rate);
+  state = absorb(state, in, inlen, trail_byte, rate);
 
   // squeeze
-  squeeze(state,
-          rhotates_left, rhotates_right, iotas, a_jagged,
-          out, outlen, rate);
+  squeeze(state, out, outlen, rate);
 }
 
-
-export fn keccak1600_avx2(reg u64 out outlen in inlen config glob)
-{
-  reg   u64 rhotates_left rhotates_right iotas a_jagged;
-  reg   u8  trail_byte; // no need to spill
-  reg   u64 rate;
-
-  trail_byte = (u8)[config + 8*0];
-  rate       = [config + 8*1]; // rate in bytes
-
-  rhotates_left  = [glob + 8*0];
-  rhotates_right = [glob + 8*1];
-  iotas          = [glob + 8*2];
-  a_jagged       = [glob + 8*3];
-
-  __keccak1600_avx2(out, outlen,
-               rhotates_left, rhotates_right, iotas, a_jagged,
-               in, inlen,
-               trail_byte, rate);
-}
+#endif

@@ -1,6 +1,9 @@
+#ifndef KECCAK1600_SCALAR
+#define KECCAK1600_SCALAR
+
 #include "crypto_core/keccakf160064bits/scalar/keccakf1600.jazz"
 
-
+//TODO include utils and use s2r/r2s; check proof first 
 fn spill_2(reg u64 a b) -> stack u64, stack u64
 {
   stack u64 sa sb;
@@ -39,24 +42,15 @@ fn load_3(stack u64 sa sb sc) -> reg u64, reg u64, reg u64
 }
 
 
-fn keccak_init(
-  #if !STATE_IN_STACK
-  reg u64 m
-  #endif
-) -> _state_t
+fn keccak_init() -> stack u64[25]
 {
-  _state_t state;
+  stack u64[25] state;
   reg u64 i t;
 
-  _, _, _, _, _, t = #set0();
-
-  #if !STATE_IN_STACK
-  state = m; //if state is in stack this is just ignored
-  #endif
-
+  _,_,_,_,_, t = #set0();
   i = 0;
   while (i < 25)
-  { B(state,i) = t;
+  { state[(int)i] = t;
     i += 1;
   }
 
@@ -65,11 +59,11 @@ fn keccak_init(
 
 
 fn add_full_block(
-  _state_t state,
+  stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
   reg u64 rate
-) -> _state_t, reg u64, reg u64
+) -> stack u64[25], reg u64, reg u64
 {
   reg u64 i t rate64;
 
@@ -79,7 +73,7 @@ fn add_full_block(
   while( i < rate64)
   {
     t = [in + 8*i];
-    B(state,i) ^= t;
+    state[(int)i] ^= t;
     i+=1;
   }
 
@@ -92,12 +86,12 @@ fn add_full_block(
 
 // obs: @pre: inlen < rate_in_bytes
 fn add_final_block(
-  _state_t state,
+  stack u64[25] state,
   reg   u64 in,
   reg   u64 inlen,
   reg   u8  trail_byte,
   reg   u64 rate
-) -> _state_t
+) -> stack u64[25]
 {
   reg u64 i t inlen8;
   reg u8 c;
@@ -108,7 +102,7 @@ fn add_final_block(
   while ( i < inlen8 )
   {
     t = [in + 8*i];
-    B(state,i) ^= t;
+    state[(int)i] ^= t;
     i += 1;
   }
 
@@ -116,27 +110,26 @@ fn add_final_block(
   while ( i < inlen )
   {
     c = (u8)[in + i];
-    B8(state,i) ^= c;
+    state[u8 (int)i] ^= c;
     i += 1;
   }
 
-  B8(state,i) ^= trail_byte;
+  state[u8 (int)i] ^= trail_byte;
 
   i = rate;
   i -= 1;
-  B8(state,i) ^= 0x80;
+  state[u8 (int)i] ^= 0x80;
 
   return state;
 }
 
 
 fn absorb(
-  _state_t state,
-  reg   u64 iotas,
+  stack u64[25] state,
   reg   u64 in inlen,
-  stack u64 s_trail_byte,
+  stack u8  s_trail_byte,
   reg   u64 rate // rate already in bytes -- it is returned bc of spills
-) -> _state_t, reg u64, reg u64
+) -> stack u64[25], reg u64
 {
   stack u64 s_in s_inlen s_rate;
   reg u8 trail_byte;
@@ -148,22 +141,21 @@ fn absorb(
     state, in, inlen = add_full_block(state, in, inlen, rate);
     s_in, s_inlen, s_rate = spill_3(in, inlen, rate);
 
-    state, iotas = __keccakf1600_scalar(state, iotas);
+    state = __keccakf1600_scalar(state);
     in, inlen, rate = load_3(s_in, s_inlen, s_rate);
   }
 
   // final block
-  t = s_trail_byte;
-  trail_byte = (8u) t;
+  trail_byte = s_trail_byte;
 
   state = add_final_block(state, in, inlen, trail_byte, rate);
 
-  return state, iotas, rate;
+  return state, rate;
 }
 
 
 fn xtr_full_block(
-  _state_t state,
+  stack u64[25] state,
   reg u64 out,
   reg u64 outlen,
   reg u64 rate
@@ -176,7 +168,7 @@ fn xtr_full_block(
   i = 0;
   while ( i < rate64 )
   {
-    t = B(state,i);
+    t = state[(int)i];
     [out + 8*i] = t;
     i += 1;
   }
@@ -189,7 +181,7 @@ fn xtr_full_block(
 
 
 fn xtr_bytes(
-  _state_t state,
+  stack u64[25] state,
   reg u64 out,
   reg u64 outlen
 ) -> reg u64
@@ -202,7 +194,7 @@ fn xtr_bytes(
   i = 0;
   while ( i < outlen8 )
   {
-    t = B(state,i);
+    t = state[(int)i];
     [out + 8*i] = t;
     i += 1;
   }
@@ -210,7 +202,7 @@ fn xtr_bytes(
 
   while ( i < outlen )
   {
-    c = B8(state,i);
+    c = state[u8 (int)i];
     (u8)[out + i] = c;
     i += 1;
   }
@@ -221,8 +213,7 @@ fn xtr_bytes(
 
 
 fn squeeze(
-  _state_t state,
-  reg   u64 iotas,
+  stack u64[25] state,
   stack u64 s_out,
   reg   u64 outlen,
   reg   u64 rate
@@ -235,7 +226,7 @@ fn squeeze(
   while ( outlen > rate )
   {
     s_outlen, s_rate = spill_2(outlen, rate);
-    state, iotas = __keccakf1600_scalar(state, iotas);
+    state = __keccakf1600_scalar(state);
     out, outlen, rate = load_3(s_out, s_outlen, s_rate);
 
     out, outlen = xtr_full_block(state, out, outlen, rate);
@@ -243,51 +234,31 @@ fn squeeze(
   }
 
   s_outlen = outlen;
-  state, iotas = __keccakf1600_scalar(state, iotas);
+  state = __keccakf1600_scalar(state);
   out, outlen = load_2(s_out, s_outlen);
 
   out = xtr_bytes(state, out, outlen);
 }
 
 
-fn __keccak1600_scalar(
-  stack u64 s_out s_outlen,
-  reg   u64 iotas,
-  reg   u64 in inlen _mem,
-  stack u64 s_trail_byte,
-  reg   u64 rate
-)
+fn __keccak1600_scalar(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
 {
-  _state_t state;
-  reg u64 outlen;
-
-  state = keccak_init(_mem);
-
-  // absorb
-  state, iotas, rate = absorb(state, iotas, in, inlen, s_trail_byte, rate);
-
-  // squeeze
-  outlen = s_outlen;
-  squeeze(state, iotas, s_out, outlen, rate);
-}
-
-
-export fn keccak1600_scalar(reg u64 out outlen in inlen_ config iotas _mem)
-{
-  stack u64 s_trail_byte;
+  stack u64[25] state;
   stack u64 s_out s_outlen;
-  reg   u64   trail_byte;
-  reg   u64   rate inlen;
+  stack u8 s_trail_byte;
 
   s_out = out;
   s_outlen = outlen;
-
-  inlen = inlen_; // swap register, rcx is needed
-
-  trail_byte = (64u)(u8)[config + 8*0];
   s_trail_byte = trail_byte;
 
-  rate = [config + 8*1]; // rate in bytes
+  state = keccak_init();
 
-  __keccak1600_scalar(s_out, s_outlen, iotas, in, inlen, s_trail_byte, rate);
+  // absorb
+  state, rate = absorb(state, in, inlen, s_trail_byte, rate);
+
+  // squeeze
+  outlen = s_outlen;
+  squeeze(state, s_out, outlen, rate);
 }
+
+#endif

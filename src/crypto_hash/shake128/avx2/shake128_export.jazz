@@ -1,0 +1,6 @@
+#include "crypto_hash/shake128/avx2/shake128.jazz"
+
+export fn shake128_avx2(reg u64 out outlen in inlen)
+{
+  __shake128_avx2(out, outlen, in, inlen);
+}

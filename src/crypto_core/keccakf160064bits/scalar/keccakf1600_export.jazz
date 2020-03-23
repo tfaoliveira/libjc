@@ -1,18 +1,18 @@
 #include "crypto_core/keccakf160064bits/scalar/keccakf1600.jazz"
 
-export fn keccakf1600_ref(reg u64 out in _iotas)
+export fn keccakf1600_scalar(reg u64 out in _iotas)
 {
   inline int i;
-  _state_t state;
+  stack u64[25] state;
   reg u64 t;
 
   for i=0 to 25
   { t = [in + 8*i];
-    B(state,i) = t; }
+    state[i] = t; }
 
-  state, _iotas = __keccakf1600_scalar(state, _iotas);
+  state = __keccakf1600_scalar(state);
 
   for i=0 to 25
-  { t = B(state,i);
+  { t = state[i];
     [out + 8*i] = t; }
 }

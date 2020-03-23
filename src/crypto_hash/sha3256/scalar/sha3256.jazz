@@ -1,1 +1,11 @@
+#ifndef SHA3256_SCALAR
+#define SHA3256_SCALAR
+
 #include "crypto_hash/keccak1600/scalar/keccak1600.jazz"
+
+fn __sha3256_scalar(reg u64 out in inlen)
+{
+  __keccak1600_scalar(out, (256/8), in, inlen, 0x06, (1088/8));
+}
+
+#endif

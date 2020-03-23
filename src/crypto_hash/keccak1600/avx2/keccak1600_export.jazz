@@ -1,0 +1,6 @@
+#include "crypto_hash/keccak1600/avx2/keccak1600.jazz"
+
+export fn keccak1600_avx2(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
+{
+  __keccak1600_avx2(out, outlen, in, inlen, trail_byte, rate);
+}

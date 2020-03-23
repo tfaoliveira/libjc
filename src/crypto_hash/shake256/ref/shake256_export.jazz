@@ -1,0 +1,6 @@
+#include "crypto_hash/shake256/ref/shake256.jazz"
+
+export fn shake256_ref(reg u64 out outlen in inlen)
+{
+  __shake256_ref(out, outlen, in, inlen);
+}

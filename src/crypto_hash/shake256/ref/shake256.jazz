@@ -1,1 +1,11 @@
+#ifndef SHAKE256_REF
+#define SHAKE256_REF
+
 #include "crypto_hash/keccak1600/ref/keccak1600.jazz"
+
+fn __shake256_ref(reg u64 out outlen in inlen)
+{
+  __keccak1600_ref(out, outlen, in, inlen, 0x1F, (1088/8));
+}
+
+#endif

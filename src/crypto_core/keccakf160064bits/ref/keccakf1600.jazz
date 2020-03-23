@@ -1,3 +1,33 @@
+#ifndef KECCAKF1600_REF
+#define KECCAKF1600_REF
+
+u64[24] keccakRoundConstants = {
+  0x0000000000000001,
+  0x0000000000008082,
+  0x800000000000808a,
+  0x8000000080008000,
+  0x000000000000808b,
+  0x0000000080000001,
+  0x8000000080008081,
+  0x8000000000008009,
+  0x000000000000008a,
+  0x0000000000000088,
+  0x0000000080008009,
+  0x000000008000000a,
+  0x000000008000808b,
+  0x800000000000008b,
+  0x8000000000008089,
+  0x8000000000008003,
+  0x8000000000008002,
+  0x8000000000000080,
+  0x000000000000800a,
+  0x800000008000000a,
+  0x8000000080008081,
+  0x8000000000008080,
+  0x0000000080000001,
+  0x8000000080008008
+};
+
 inline
 fn index(inline int x, inline int y) -> inline int {
   inline int r;
@@ -137,46 +167,30 @@ fn keccakP1600_round(stack u64[25] state, reg u64 c) -> stack u64[25] {
 }
 
 
-inline
-fn keccakRoundConstants() -> stack u64[24] {
-  stack u64[24] constants;
-  reg u64 t;
-  t = 0x0000000000000001; constants[ 0] = t;
-  t = 0x0000000000008082; constants[ 1] = t;
-  t = 0x800000000000808a; constants[ 2] = t;
-  t = 0x8000000080008000; constants[ 3] = t;
-  t = 0x000000000000808b; constants[ 4] = t;
-  t = 0x0000000080000001; constants[ 5] = t;
-  t = 0x8000000080008081; constants[ 6] = t;
-  t = 0x8000000000008009; constants[ 7] = t;
-  t = 0x000000000000008a; constants[ 8] = t;
-  t = 0x0000000000000088; constants[ 9] = t;
-  t = 0x0000000080008009; constants[10] = t;
-  t = 0x000000008000000a; constants[11] = t;
-  t = 0x000000008000808b; constants[12] = t;
-  t = 0x800000000000008b; constants[13] = t;
-  t = 0x8000000000008089; constants[14] = t;
-  t = 0x8000000000008003; constants[15] = t;
-  t = 0x8000000000008002; constants[16] = t;
-  t = 0x8000000000000080; constants[17] = t;
-  t = 0x000000000000800a; constants[18] = t;
-  t = 0x800000008000000a; constants[19] = t;
-  t = 0x8000000080008081; constants[20] = t;
-  t = 0x8000000000008080; constants[21] = t;
-  t = 0x0000000080000001; constants[22] = t;
-  t = 0x8000000080008008; constants[23] = t;
-  return constants;
-}
-
-
-fn __keccakf1600_ref(stack u64[25] state) -> stack u64[25] {
+fn __keccakf1600_ref(stack u64[25] state) -> stack u64[25]
+{
+  #if 0
   inline int round;
-  stack u64[24] constants;
-  constants = keccakRoundConstants();
   for round = 0 to 24 {
-    state = keccakP1600_round(state, constants[round]);
+    // RC get's loaded into a register
+    // with global arrays - 3k cycles/16KiB/shake256 w/ 136 bytes
+    state = keccakP1600_round(state, keccakRoundConstants[round]);
   }
+  #else
+  reg u64 round RC;
+  reg ptr u64[24] kRCp;
+
+  kRCp = keccakRoundConstants;
+  round = 0;
+  while(round < 24)
+  {
+    RC = kRCp[(int) round];
+    state = keccakP1600_round(state, RC);
+    round += 1;
+  }
+  #endif
+
   return state;
 }
 
-
+#endif
