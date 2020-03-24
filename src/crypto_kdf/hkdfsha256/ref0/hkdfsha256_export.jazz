@@ -1,11 +1,11 @@
 #include "crypto_kdf/hkdfsha256/ref0/hkdfsha256.jazz"
 
-export fn hkdfsha256_extract(reg u64 PRK salt saltlen IKM IKMlen hkpadded)
+export fn hkdfsha256_extract_ref0(reg u64 PRK salt saltlen IKM IKMlen hkpadded)
 {
-  _hkdfsha256_extract(PRK, salt, saltlen, IKM, IKMlen, hkpadded);
+  _hkdfsha256_extract_ref0(PRK, salt, saltlen, IKM, IKMlen, hkpadded);
 }
 
-export fn hkdfsha256_expand(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
+export fn hkdfsha256_expand_ref0(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
 {
-  _hkdfsha256_expand(OKM, PRK, info, infolen, L, hkpadded_Tinfoc);
+  _hkdfsha256_expand_ref0(OKM, PRK, info, infolen, L, hkpadded_Tinfoc);
 }

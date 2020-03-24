@@ -1,0 +1,11 @@
+#ifndef HKDFSHA256_INPLACE
+#define HKDFSHA256_INPLACE
+
+#include "crypto_auth/hmacsha256/inplace/hmacsha256.jazz"
+
+#define hkdfsha256_extract _hkdfsha256_extract_inplace
+#define hkdfsha256_expand _hkdfsha256_expand_inplace
+#include "crypto_kdf/hkdfsha256/common/hkdfsha256.jazz"
+
+#endif
+

@@ -1,0 +1,11 @@
+#ifndef HKDFSHA256_REF
+#define HKDFSHA256_REF
+
+#include "crypto_auth/hmacsha256/ref/hmacsha256.jazz"
+
+#define hkdfsha256_extract _hkdfsha256_extract_ref
+#define hkdfsha256_expand _hkdfsha256_expand_ref
+#include "crypto_kdf/hkdfsha256/common/hkdfsha256.jazz"
+
+#endif
+

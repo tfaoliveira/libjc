@@ -1,0 +1,34 @@
+#ifndef UTILS_MATH
+#define UTILS_MATH
+
+// TODO write constant-time versions of these functions
+
+// returns ceil(x / 2^n)
+fn ceil(reg u64 x, inline int n) -> reg u64
+{
+  reg u64 c y;
+
+  c = x;
+  c >>= n;
+
+  y = x;
+  y &= ((2^n)-1);
+
+  if( y > 0 )
+  { c += 1; }
+
+  return c;
+}
+
+// returns min x y
+fn min(reg u64 x, reg u64 y) -> reg u64
+{
+  reg u64 c;
+  if(x < y)
+  { c = x; }
+  else
+  { c = y; }
+  return c;
+}
+
+#endif

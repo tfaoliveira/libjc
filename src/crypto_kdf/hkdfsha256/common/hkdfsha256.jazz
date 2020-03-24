@@ -1,0 +1,77 @@
+#ifndef HKDFSHA256_COMMON
+#define HKDFSHA256_COMMON
+
+#include "utils/spill.jazz"
+#include "utils/math.jazz"
+#include "utils/memory.jazz"
+
+// hkpadded with (32 + 128)
+fn hkdfsha256_extract(reg u64 PRK salt saltlen IKM IKMlen hkpadded)
+{
+  hmacsha256(PRK, IKM, IKMlen, salt, saltlen, hkpadded);
+}
+
+// hkpadded_Tinfoc: hkpadded (32 + 128) + Tinfoc (32 + infolen + 1)
+fn hkdfsha256_expand(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
+{
+  stack u64 N_s L_s OKM_s Tinfoc_s infoc_s Tinfoclen_s infolen_s PRK_s hkpadded_s;
+  stack u8 C_s;
+
+  reg u64 N Tlen Tinfoc infoc Tinfoclen hkpadded;
+  reg u8 C;
+
+  hkpadded = hkpadded_Tinfoc;
+  Tinfoc = hkpadded_Tinfoc + (32+128);
+
+  // N = ceil(L/HashLen)
+  N = ceil(L, 5);
+
+  // OKM = first L octets of T
+  //  where T = T(1) | T(2) | T(3) | ... | T(N)
+  //        T0 = empty string (zero length)
+  //        T1 = HMAC-Hash(PRK, T0 | info | 0x01)
+  //        T2 = HMAC-Hash(PRK, T1 | info | 0x02)
+
+  memcpy_u8_do(Tinfoc, 32, info, infolen);
+
+  Tlen = 0;
+  C = 0x1;
+
+  while(N > 0)
+  {
+    (u8)[Tinfoc + 32 + infolen] = C;
+
+    // this code should compile with -lea and -no-lea because of different
+    // implementations of sha256, so we use the lea directly
+    Tinfoclen = #LEA_64(infolen + 1);
+    Tinfoclen += Tlen;
+
+    infoc = #LEA_64(Tinfoc + 32);
+    infoc -= Tlen;
+
+    // TODO CHECKME in the future not the most efficient spill but when function
+    // calls are supported this will probably be done automatically... so let it
+    // be for a while
+    N_s, L_s, OKM_s, Tinfoc_s, infoc_s, Tinfoclen_s, infolen_s, PRK_s, hkpadded_s = 
+      r2s_x9(N, L, OKM, Tinfoc, infoc, Tinfoclen, infolen, PRK, hkpadded);
+    C_s = C;
+
+    hmacsha256(Tinfoc, infoc, Tinfoclen, PRK, 32, hkpadded);
+
+    C = C_s;
+    N, L, OKM, Tinfoc, infoc, Tinfoclen, infolen, PRK, hkpadded = 
+      s2r_x9(N_s, L_s, OKM_s, Tinfoc_s, infoc_s, Tinfoclen_s, infolen_s, PRK_s, hkpadded_s);
+
+    Tlen = min(32, L);
+    memcpy_u8(OKM, Tinfoc, Tlen);
+
+    OKM += Tlen;
+    L -= Tlen;
+
+    N -= 1;
+    C += 1;
+  }
+}
+
+#endif
+
