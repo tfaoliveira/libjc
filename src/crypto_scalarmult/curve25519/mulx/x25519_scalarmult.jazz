@@ -212,8 +212,6 @@ fn _x25519_scalarmult(
   { [rp + 8*i] = r[i]; }
 }
 
-
-
 //////
 
 fn _fe64_1_x3() -> stack u64[4], reg u64[4], stack u64[4]

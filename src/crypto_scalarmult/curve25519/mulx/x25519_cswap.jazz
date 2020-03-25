@@ -17,17 +17,17 @@ fn _fe64_cswap(stack u64[4] x2,
   mask = #set0();
   mask -= toswap; // if toswap == 1 mask = -1 or all bits at 1, 0 otherwise
 
-  // swap between z2r and z3
+  // swap between z2 and z3
   z3r = z3;
   t4  = z2r;
 
-  for i=0 to 4 { t4[i]  ^= z3r[i]; }
-  for i=0 to 4 { t4[i]  &= mask;   }
+  for i=0 to 4 { t4[i]  ^= z3r[i]; } // t4 =  z2 ^ z3
+  for i=0 to 4 { t4[i]  &= mask;   } // t4 = (z2 ^ z3) & mask --> if m==0 then t4 = {0} 
   for i=0 to 4 { z2r[i] ^= t4[i];
                  z3r[i] ^= t4[i];
                  z3[i]   = z3r[i]; }
 
-  // swap between z2r and z3
+  // swap between x3r and z3
   x3r = x3;
 
   for i=0 to 4 { x2r[i]  = x2[i];
