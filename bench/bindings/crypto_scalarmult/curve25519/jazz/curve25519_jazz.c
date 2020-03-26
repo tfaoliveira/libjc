@@ -16,11 +16,10 @@ int crypto_scalarmult(
   const unsigned char *p
 )
 {
-  int r;
   unsigned char n_[32], p_[32];
   memcpy(n_, n, 32);
   memcpy(p_, p, 32);
-  r = curve25519_impl(q,n_,p_);
+  curve25519_impl(q,n_,p_);
   return 0;
 }
 
@@ -29,8 +28,7 @@ int crypto_scalarmult_base(
   const unsigned char *n
 )
 {
-  int r;
-  r = crypto_scalarmult(q,n,basepoint);
+  crypto_scalarmult(q,n,basepoint);
   return 0;
 }
 

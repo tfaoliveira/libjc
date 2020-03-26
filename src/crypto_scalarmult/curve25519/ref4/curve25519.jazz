@@ -1,3 +1,5 @@
+// TODO - refactor this implementation
+
 u64 __38 = 38;
 
 param int rem_p = 38; /* 2^(4*64) mod p */
@@ -827,6 +829,5 @@ export fn curve25519_ref4(
 
   sp = sp_s;
   for i = 0 to 4 { buf = save[i]; [sp + 8*i] = buf; }
- 
 }
 

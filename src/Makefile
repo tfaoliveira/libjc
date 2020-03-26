@@ -42,6 +42,10 @@ SUBDIRS := \
   crypto_hashblocks/sha256/ref \
   crypto_hashblocks/sha256/inplace \
   \
+  crypto_kdf/hkdfsha256/ref0 \
+  crypto_kdf/hkdfsha256/ref \
+  crypto_kdf/hkdfsha256/inplace \
+  \
   crypto_onetimeauth/poly1305/ref3 \
   crypto_onetimeauth/poly1305/avx \
   crypto_onetimeauth/poly1305/avx2 \
