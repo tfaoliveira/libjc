@@ -36,22 +36,33 @@ ECSRC := \
 \
  crypto_core/keccakf160064bits/Keccakf1600_sref.ec \
  crypto_core/keccakf160064bits/Keccakf1600_sscalar.ec \
- crypto_core/keccakf160064bits/Keccakf1600_savx2.ec \
- crypto_core/keccakf160064bits/Keccakf1600_savx2_openssl.ec \
+\
  crypto_core/keccakf160064bits/Keccakf1600_sref_CT.ec \
  crypto_core/keccakf160064bits/Keccakf1600_sscalar_CT.ec \
- crypto_core/keccakf160064bits/Keccakf1600_savx2_CT.ec \
- crypto_core/keccakf160064bits/Keccakf1600_savx2_openssl_CT.ec \
+\
+\
 \
  crypto_hash/keccak1600/Keccak1600_sref.ec \
  crypto_hash/keccak1600/Keccak1600_sscalar.ec \
- crypto_hash/keccak1600/Keccak1600_savx2.ec \
+\
  crypto_hash/keccak1600/Keccak1600_sref_CT.ec \
  crypto_hash/keccak1600/Keccak1600_sscalar_CT.ec \
- crypto_hash/keccak1600/Keccak1600_savx2_CT.ec \
+\
 \
  crypto_scalarmult/curve25519/Curve25519_smulx.ec \
  crypto_scalarmult/curve25519/Curve25519_smulx_CT.ec
+
+#TODO: toEC 525
+#crypto_core/keccakf160064bits/Keccakf1600_savx2.ec
+#crypto_core/keccakf160064bits/Keccakf1600_savx2_CT.ec
+#crypto_hash/keccak1600/Keccak1600_savx2.ec
+#crypto_hash/keccak1600/Keccak1600_savx2_CT.ec
+
+#TODO: implementation not used; should only exist in easycrypt
+#    : Keccakf1600_savx2_openssl.ec -> Keccakf1600_pavx2_openssl.ec
+#crypto_core/keccakf160064bits/Keccakf1600_savx2_openssl.ec
+#crypto_core/keccakf160064bits/Keccakf1600_savx2_openssl_CT.ec -> No longer necessary
+
 
 # --------------------------------------------------------------------
 .PHONY: default usage check check-xunit generate clean
@@ -108,4 +119,7 @@ crypto_scalarmult/curve25519/Curve25519_s%.ec: $(TOP)/src/crypto_scalarmult/curv
 
 crypto_scalarmult/curve25519/Curve25519_s%_CT.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
 	cd $$(dirname $@) && jasminc -ec curve25519_$* -oec $$(basename $@) -CT $<
+
+%.japp: %.jazz
+	cd $$(dirname $@) && $(MAKE) $$(basename $@)
 

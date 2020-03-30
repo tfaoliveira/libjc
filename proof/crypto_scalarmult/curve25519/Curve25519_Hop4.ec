@@ -300,14 +300,14 @@ proc.
          i{1}            %%   2 = 0 /\
          zf{2} = (i{2} = W64.zero)).
   swap 2 3 3. wp. conseq(_: _ ==> f{1} = inzpRep4 f{2}).
-  move=> &1 &2 [#] ????? ->> ?? ??? /=.
-    rewrite /DEC_64 /rflags_of_aluop_nocf64 /ZF_of_w64 => /=.
+  move=> &1 &2 [#] ????? ->> ?? ??? /=. print DEC_64.
+    rewrite /DEC_64 /rflags_of_aluop_nocf_w /ZF_of_w64 => /=.
     progress.
     smt(@W64). move : H1; smt(). smt(). smt(). smt(@W64). smt(@W64).
   by do 2! call eq_h4_sqr; skip; done.
   swap 3 4 4. wp. conseq(_: _ ==> f{1} = inzpRep4 f{2}).
   move=> &1 &2 [#] /= ->> ->> ??? ?? ->> /=.
-    rewrite /DEC_64 /rflags_of_aluop_nocf64 /ZF_of_w64 => /=.
+    rewrite /DEC_64 /rflags_of_aluop_nocf_w /ZF_of_w64 => /=.
     progress.
     smt(@W64). move : H1; smt(). smt(). smt(). smt(@W64). smt(@W64).
   by do 2! call eq_h4_sqr; wp; skip; done.

@@ -37,16 +37,19 @@ op swap_tuple( t : ('a * 'a) * ('a * 'a) ) = (t.`2, t.`1).
 
 op ith_bit(k : W256.t, i : int) = k.[i].
 
+op montgomery_ladder_step(k : W256.t, init : zp, nqs : (zp * zp) * (zp * zp), ctr : int) =
+  if ith_bit k ctr
+  then swap_tuple (add_and_double init (swap_tuple(nqs)))
+  else add_and_double init nqs.
+
 op montgomery_ladder(init : zp, k : W256.t) =
-  let nqs0 = ((Zp.one,Zp.zero),(init,Zp.one)) in
-  foldl (fun (nqs : (zp * zp) * (zp * zp)) ctr => 
-         if ith_bit k ctr
-         then swap_tuple (add_and_double init (swap_tuple(nqs)))
-         else add_and_double init nqs) nqs0 (rev (iota_ 0 255)).
+  foldl (montgomery_ladder_step k init)
+        ((Zp.one,Zp.zero),(init,Zp.one))
+        (rev (iota_ 0 255)).
 
 op encodePoint (q: zp * zp) : W256.t =
   let q = q.`1 * (ZModpRing.exp q.`2 (p - 2)) in
-      W256.of_int (asint q) axiomatized by encodePointE.
+      W256.of_int (asint q).
 
 op scalarmult (k:W256.t) (u:W256.t) : W256.t =
   let k = decodeScalar25519 k in

@@ -467,7 +467,7 @@ proof.
   ecall (eq_h2_invert z2).
   skip. simplify.
   move => &hr [?] [?] ? ?. move=> ->.
-  rewrite encodePoint1E /= H0 H1 //.
+  rewrite /encodePoint1 /= H0 H1 //.
 qed.
 
 (** step 11 : scalarmult **)
@@ -475,7 +475,7 @@ lemma eq_h2_scalarmult (k u : W256.t) :
   hoare[MHop2.scalarmult : k' = k /\ u' = u ==> res = scalarmult k u].
 proof.
   rewrite -eq_scalarmult1.
-  proc. sp.
+  proc. sp. (*CHECKME: ecall is taking a bit too long; see if it can be improved *)
   ecall (eq_h2_encode_point (x2,z2)).     simplify.
   ecall (eq_h2_montgomery_ladder u'' k'). simplify.
   ecall (eq_h2_decode_u_coordinate u').   simplify.
