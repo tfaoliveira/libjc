@@ -1,0 +1,29 @@
+#include "crypto_hash/sha256/ref0c/sha256.jazz"
+
+export fn sha256_ref0c(reg u64 out in inlen padded)
+{
+  _sha256_ref0c(out, in, inlen, padded);
+}
+
+export fn sha256_ctx_size_ref0c() -> reg u64
+{
+  reg u64 r;
+  r = _sha256_ctx_size_ref0c();
+  return r;
+}
+
+export fn sha256_init_ref0c(reg u64 ctx)
+{
+  _sha256_init_ref0c(ctx);
+}
+
+export fn sha256_update_ref0c(reg u64 in inlen ctx)
+{
+  _sha256_update_ref0c(in, inlen, ctx);
+}
+
+export fn sha256_finish_ref0c(reg u64 out ctx)
+{
+  _sha256_finish_ref0c(out, ctx);
+}
+

@@ -1,0 +1,16 @@
+#ifndef SHA256_REF0C
+#define SHA256_REF0C
+
+#include "crypto_hashblocks/sha256/ref0/sha256_blocks.jazz"
+
+#define sha256_blocks _sha256_blocks_ref0
+
+#define sha256 _sha256_ref0c
+#define sha256_ctx_size _sha256_ctx_size_ref0c
+#define sha256_init _sha256_init_ref0c
+#define sha256_update _sha256_update_ref0c
+#define sha256_finish _sha256_finish_ref0c
+
+#include "crypto_hash/sha256/common/sha256.jazz"
+
+#endif

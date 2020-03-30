@@ -5,11 +5,20 @@ fn memcpy_u8(reg u64 dest src n)
 {
   reg u64 i;
   reg u8 c;
-
   i = 0;
   while (i < n)
   { c = (u8)[src + i];
     (u8)[dest + i] = c;
+    i += 1;
+  }
+}
+
+fn memset_u8(reg u64 dest n, reg u8 c)
+{
+  reg u64 i;
+  i = 0;
+  while (i < n)
+  { (u8)[dest + i] = c;
     i += 1;
   }
 }

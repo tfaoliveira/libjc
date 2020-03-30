@@ -31,4 +31,15 @@ fn min(reg u64 x, reg u64 y) -> reg u64
   return c;
 }
 
+// returns max x y
+fn max(reg u64 x, reg u64 y) -> reg u64
+{
+  reg u64 c;
+  if(x < y)
+  { c = y; }
+  else
+  { c = x; }
+  return c;
+}
+
 #endif

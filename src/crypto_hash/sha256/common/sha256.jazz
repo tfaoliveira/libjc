@@ -1,7 +1,9 @@
 #ifndef SHA256_COMMON
 #define SHA256_COMMON
 
+#include "utils/memory.jazz"
 #include "utils/spill.jazz"
+#include "utils/math.jazz"
 
 inline fn initH() -> stack u32[8]
 {
@@ -36,7 +38,7 @@ inline fn sha256_lastblock0(reg u64 padded i bits, inline int p)
 }
 
 // writes in 'padded' the data for the last block
-inline fn sha256_lastblock(reg u64 in inlen padded bits) -> reg u64
+inline fn sha256_lastblock1(reg u64 in inlen padded bits) -> reg u64
 {
   reg u64 i;
   reg u8 v;
@@ -79,10 +81,195 @@ fn sha256(reg u64 out in inlen padded)
   H, in, inlen = sha256_blocks(H, in, inlen);
 
   bits, padded = s2r_x2(bitss, paddeds);
-  inlen = sha256_lastblock(in, inlen, padded, bits); // ideally it should return padded (as stack)
+  inlen = sha256_lastblock1(in, inlen, padded, bits); // ideally it should return padded (as stack)
   H, _, _ = sha256_blocks(H, padded, inlen);
 
   out = outs;
   store_H_mem(out, H);
 }
+
+////////////////////////////////
+// ctx -> u32[8]  -> H
+//        u8[128] -> padded (also used as buffer)
+//        u64     -> paddedLen (how many bytes from prev. inputs are in padded)
+//        u64     -> length (total processed length)
+
+inline fn sha256_get_H(reg u64 ctx) -> reg u64
+{
+  return ctx;
+}
+
+inline fn sha256_get_padded(reg u64 ctx) -> reg u64
+{
+  reg u64 padded;
+  padded = #LEA(ctx + (8*4));
+  return padded;
+}
+
+inline fn sha256_get_paddedLen(reg u64 ctx) -> reg u64
+{
+  reg u64 paddedLen;
+  paddedLen = (u64)[ctx + (4*8 + 128)];
+  return paddedLen;
+}
+
+inline fn sha256_get_length(reg u64 ctx) -> reg u64
+{
+  reg u64 length;
+  length = (u64)[ctx + (4*8 + 128 + 8)];
+  return length;
+}
+
+inline fn sha256_set_paddedLen(reg u64 ctx paddedLen)
+{
+  (u64)[ctx + (4*8 + 128)] = paddedLen;
+}
+
+inline fn sha256_set_length(reg u64 ctx length)
+{
+  (u64)[ctx + (4*8 + 128 + 8)] = length;
+}
+
+inline fn sha256_add_length(reg u64 ctx length)
+{
+  (u64)[ctx + (4*8 + 128 + 8)] += length;
+}
+
+fn sha256_ctx_size() -> reg u64
+{
+  reg u64 r;
+  r = 8*4 + 128 + 8 + 8;
+  return r;
+}
+
+fn sha256_init(reg u64 ctx)
+{
+  stack u32[8] H;
+  reg u64 H_p z;
+
+  H = initH();
+  H_p = sha256_get_H(ctx);
+  store_H_mem(H_p, H);
+
+  z = #set0();
+  sha256_set_paddedLen(ctx, z);
+  sha256_set_length(ctx, z);
+}
+
+// TODO: CHECK COMMENTS
+fn sha256_update(reg u64 in inlen ctx)
+{
+  stack u32[8] H;
+  stack u64 in_s inlen_s ctx_s;
+  reg u64 H_p padded paddedO paddedLen length;
+
+  // update length (bytes)
+  sha256_add_length(ctx, inlen);
+
+  // load H
+  H_p = sha256_get_H(ctx);
+  H = load_H_mem(H_p);
+
+  // sha256_get_padded 
+  padded = sha256_get_padded(ctx);
+  paddedLen = sha256_get_paddedLen(ctx);
+
+  // @pre : 0 <= paddedLen < 64'
+  //
+  // if 0 < paddedLen
+  // then copy 'min (64-paddedLen) inlen' bytes
+  // else copy '0' bytes
+  // <=> 
+  // copy 'min ((64-paddedLen)%64) inlen' bytes
+  length = 64;
+  length -= paddedLen;
+  length &= 0x3F;
+  length = min(length, inlen);
+
+  // copy 'length' bytes into 'padded'
+  paddedO = #LEA(padded + paddedLen);
+  memcpy_u8(paddedO, in, length);
+
+  // update paddedLen/inlen/in
+  paddedLen += length;
+  // 0 <= paddedLen <= 64
+  inlen -= length;
+  in += length;
+
+  in_s, inlen_s, ctx_s = r2s_x3(in, inlen, ctx);
+
+  // digest padded
+  H, _, paddedLen = sha256_blocks(H, padded, paddedLen);
+  // 0 <= paddedLen < 64
+  ctx = ctx_s;
+  sha256_set_paddedLen(ctx, paddedLen);
+
+  in, inlen = s2r_x2(in_s, inlen_s);
+
+  // paddedLen /= 0 ==> inlen == 0
+  H, in, inlen = sha256_blocks(H, in, inlen);
+
+  ctx = ctx_s;
+  padded = sha256_get_padded(ctx);
+  paddedLen = sha256_get_paddedLen(ctx);
+
+  // 0 <= inlen < 64 /\
+  // 0 < inlen ==> paddedLen == 0
+  memcpy_u8(padded, in, inlen);
+  paddedLen = max(paddedLen, inlen);
+  sha256_set_paddedLen(ctx, paddedLen);
+
+  H_p = sha256_get_H(ctx);
+  store_H_mem(H_p, H);
+}
+
+inline fn sha256_lastblock2(reg u64 padded paddedLen bits) -> reg u64
+{
+  reg u64 i;
+
+  i = paddedLen;
+
+  // set 0x80 after message
+  (u8)[padded + i] = 0x80;
+  i += 1;
+
+  // set remaining space with '0's and bit length at the end
+  if(paddedLen < 56)
+  { sha256_lastblock0(padded, i, bits, 64);  paddedLen = 64;  }
+  else
+  { sha256_lastblock0(padded, i, bits, 128); paddedLen = 128; }
+
+  return paddedLen;
+}
+
+fn sha256_finish(reg u64 out ctx)
+{
+  stack u32[8] H;
+  stack u64 out_s;
+  reg u64 H_p padded paddedLen bits;
+
+  out_s = out;
+
+  // load H
+  H_p = sha256_get_H(ctx);
+  H = load_H_mem(H_p);
+
+  // get padded paddedLen and bits 
+  padded = sha256_get_padded(ctx);
+  paddedLen = sha256_get_paddedLen(ctx);
+  bits = sha256_get_length(ctx);
+  bits <<= 3;
+
+  paddedLen = sha256_lastblock2(padded, paddedLen, bits);
+  H, _, _ = sha256_blocks(H, padded, paddedLen);
+
+  out = out_s;
+  store_H_mem(out, H);
+}
+
 #endif
+
+
+
+
+
