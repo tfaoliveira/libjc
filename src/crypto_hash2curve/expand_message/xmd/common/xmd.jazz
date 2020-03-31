@@ -7,8 +7,8 @@
 #include "utils/math.jazz"
 
 // to be defined:
-// - hashsize (32)
-// - hashrate (64)
+// - hashsize (e.g. 32)
+// - hashrate (e.g. 64)
 //
 // - hash_init (e.g. sha256_init_ref0c)
 // - hash_update (e.g. sha256_update_ref0c)
