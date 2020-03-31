@@ -352,7 +352,7 @@ int test##k() \
   uint64_t size; \
   uint8_t *in, *ctx; \
   size = sha256_ctx_size(); \
-  ctx = (uint8_t*) calloc(1,size); \
+  ctx = (uint8_t*) calloc(size,1); \
   in = g_in; \
   for(i=0;i<65;i++) \
   { r = test_run##k(&(g_out[32*i]), in, i, ctx); \

@@ -22,9 +22,9 @@ int test_run(
 {
   int r;
 
-  uint8_t *hkpaddedtinfoc = (uint8_t*) calloc(1,193+infolen);
-  uint8_t *cPRK = (uint8_t*) calloc(1,PRKlen);
-  uint8_t *cOKM = (uint8_t*) calloc(1,L);
+  uint8_t *hkpaddedtinfoc = (uint8_t*) calloc(193+infolen,1);
+  uint8_t *cPRK = (uint8_t*) calloc(PRKlen,1);
+  uint8_t *cOKM = (uint8_t*) calloc(L,1);
   assert(NULL != hkpaddedtinfoc && NULL != cPRK && NULL != cOKM);
 
   hkdfsha256_extract(cPRK, salt, saltlen, IKM, IKMlen, hkpaddedtinfoc);

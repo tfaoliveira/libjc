@@ -13,16 +13,6 @@ fn memcpy_u8(reg u64 dest src n)
   }
 }
 
-fn memset_u8(reg u64 dest n, reg u8 c)
-{
-  reg u64 i;
-  i = 0;
-  while (i < n)
-  { (u8)[dest + i] = c;
-    i += 1;
-  }
-}
-
 // same as memcpy_u8 but it also receives an offset to be applied to dest
 fn memcpy_u8_do(reg u64 dest, inline int dest_offset, reg u64 src n)
 {
@@ -36,5 +26,30 @@ fn memcpy_u8_do(reg u64 dest, inline int dest_offset, reg u64 src n)
     i += 1;
   }
 }
+
+fn memset_u8(reg u64 dest n, reg u8 c)
+{
+  reg u64 i;
+  i = 0;
+  while (i < n)
+  { (u8)[dest + i] = c;
+    i += 1;
+  }
+}
+
+// dest[0..n] ^= src[0..n]
+fn xor_u8_inplace(reg u64 dest src n)
+{
+  reg u64 i;
+  reg u8 c;
+
+  i = 0;
+  while(i < n)
+  { c = (u8)[src + i];
+    (u8)[dest + i] ^= c;
+    i += 1;
+  }
+}
+
 
 #endif

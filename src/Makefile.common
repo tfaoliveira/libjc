@@ -1,9 +1,10 @@
+TOP := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 GFLAGS ?=
 JFLAGS ?=
 JASMINC ?= jasminc
 
 %.japp: %.jazz
-	gpp -I. -I../../../ $(GFLAGS) -o $@ $<
+	gpp -I. -I$(TOP) $(GFLAGS) -o $@ $<
 
 %.s: %.japp
 	$(JASMINC) $(JFLAGS) -pasm $< > $@ || rm -f $@

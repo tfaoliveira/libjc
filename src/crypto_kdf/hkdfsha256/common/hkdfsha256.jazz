@@ -24,7 +24,7 @@ fn hkdfsha256_expand(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
   Tinfoc = hkpadded_Tinfoc + (32+128);
 
   // N = ceil(L/HashLen)
-  N = ceil(L, 5);
+  N = ceil_pow2(L, 5);
 
   // OKM = first L octets of T
   //  where T = T(1) | T(2) | T(3) | ... | T(N)
