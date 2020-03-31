@@ -1,0 +1,10 @@
+#ifndef SHA512_REF0
+#define SHA512_REF0
+
+#include "crypto_hashblocks/sha512/ref0/sha512_blocks.jazz"
+
+#define sha512 _sha512_ref0
+#define sha512_blocks _sha512_blocks_ref0
+#include "crypto_hash/sha512/common/sha512.jazz"
+
+#endif

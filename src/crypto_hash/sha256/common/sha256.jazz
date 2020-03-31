@@ -93,7 +93,7 @@ fn sha256(reg u64 out in inlen padded)
 //        u8[128] -> padded (also used as buffer)
 //        u64     -> paddedLen (how many bytes from prev. inputs are in padded)
 //        u64     -> length (total processed length)
-//        u8[256] -> buffer (for jazz functions that cannot allocate space)
+//        u8[128] -> buffer (for jazz functions that cannot allocate space)
 
 inline fn sha256_get_H(reg u64 ctx) -> reg u64
 {
@@ -146,7 +146,7 @@ inline fn sha256_add_length(reg u64 ctx length)
 fn sha256_ctx_size() -> reg u64
 {
   reg u64 r;
-  r = 8*4 + 128 + 8 + 8 + 256;
+  r = 8*4 + 128 + 8 + 8 + 128;
   return r;
 }
 
@@ -221,8 +221,7 @@ fn sha256_update(reg u64 in inlen ctx)
   padded = sha256_get_padded(ctx);
   paddedLen = sha256_get_paddedLen(ctx);
 
-  // 0 <= inlen < 64 /\
-  // 0 < inlen ==> paddedLen == 0
+  // 0 <= inlen < 64 /\ 0 < inlen ==> paddedLen == 0
   memcpy_u8(padded, in, inlen);
   paddedLen = max(paddedLen, inlen);
   sha256_set_paddedLen(ctx, paddedLen);

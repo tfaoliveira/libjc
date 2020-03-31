@@ -1,0 +1,361 @@
+#ifndef SHA512_BLOCKS_REF0
+#define SHA512_BLOCKS_REF0
+
+u64[80] K = {
+  0x428a2f98d728ae22,
+  0x7137449123ef65cd,
+  0xb5c0fbcfec4d3b2f,
+  0xe9b5dba58189dbbc,
+  0x3956c25bf348b538,
+  0x59f111f1b605d019,
+  0x923f82a4af194f9b,
+  0xab1c5ed5da6d8118,
+  0xd807aa98a3030242,
+  0x12835b0145706fbe,
+  0x243185be4ee4b28c,
+  0x550c7dc3d5ffb4e2,
+  0x72be5d74f27b896f,
+  0x80deb1fe3b1696b1,
+  0x9bdc06a725c71235,
+  0xc19bf174cf692694,
+  0xe49b69c19ef14ad2,
+  0xefbe4786384f25e3,
+  0x0fc19dc68b8cd5b5,
+  0x240ca1cc77ac9c65,
+  0x2de92c6f592b0275,
+  0x4a7484aa6ea6e483,
+  0x5cb0a9dcbd41fbd4,
+  0x76f988da831153b5,
+  0x983e5152ee66dfab,
+  0xa831c66d2db43210,
+  0xb00327c898fb213f,
+  0xbf597fc7beef0ee4,
+  0xc6e00bf33da88fc2,
+  0xd5a79147930aa725,
+  0x06ca6351e003826f,
+  0x142929670a0e6e70,
+  0x27b70a8546d22ffc,
+  0x2e1b21385c26c926,
+  0x4d2c6dfc5ac42aed,
+  0x53380d139d95b3df,
+  0x650a73548baf63de,
+  0x766a0abb3c77b2a8,
+  0x81c2c92e47edaee6,
+  0x92722c851482353b,
+  0xa2bfe8a14cf10364,
+  0xa81a664bbc423001,
+  0xc24b8b70d0f89791,
+  0xc76c51a30654be30,
+  0xd192e819d6ef5218,
+  0xd69906245565a910,
+  0xf40e35855771202a,
+  0x106aa07032bbd1b8,
+  0x19a4c116b8d2d0c8,
+  0x1e376c085141ab53,
+  0x2748774cdf8eeb99,
+  0x34b0bcb5e19b48a8,
+  0x391c0cb3c5c95a63,
+  0x4ed8aa4ae3418acb,
+  0x5b9cca4f7763e373,
+  0x682e6ff3d6b2b8a3,
+  0x748f82ee5defb2fc,
+  0x78a5636f43172f60,
+  0x84c87814a1f0ab72,
+  0x8cc702081a6439ec,
+  0x90befffa23631e28,
+  0xa4506cebde82bde9,
+  0xbef9a3f7b2c67915,
+  0xc67178f2e372532b,
+  0xca273eceea26619c,
+  0xd186b8c721c0c207,
+  0xeada7dd6cde0eb1e,
+  0xf57d4f7fee6ed178,
+  0x06f067aa72176fba,
+  0x0a637dc5a2c898a6,
+  0x113f9804bef90dae,
+  0x1b710b35131c471b,
+  0x28db77f523047d84,
+  0x32caab7b40c72493,
+  0x3c9ebe0a15c9bebc,
+  0x431d67c49c100d4c,
+  0x4cc5d4becb3e42b6,
+  0x597f299cfc657e2a,
+  0x5fcb6fab3ad6faec,
+  0x6c44198c4a475817
+};
+
+inline fn load_bigendian(reg u64 in, inline int o) -> reg u64
+{
+  inline int i;
+  reg u64 v r;
+
+  r = 0;
+  for i=0 to 8
+  { v   = (64u)(u8)[in + i + o];
+    v <<= (7-i)*8;
+    r  |= v;
+  }
+
+  return r;
+}
+
+inline fn store_bigendian(reg u64 in, inline int o, reg u64 u)
+{
+  inline int i;
+  for i=7 downto -1
+  { (u8)[in + i + o] = (8u)u;
+    u >>= 8; //CHECK if dead code elimination removes this in last iteration
+  }
+}
+
+inline fn load_H_mem(reg u64 pH) -> stack u64[8]
+{
+  inline int i;
+  stack u64[8] H;
+  reg u64[8] rH;
+
+  for i=0 to 8
+  { rH[i] = load_bigendian(pH, i*8);
+    H[i]  = rH[i]; }
+
+  return H;
+}
+
+inline fn store_H_mem(reg u64 pH, stack u64[8] H)
+{
+  inline int i;
+  reg u64[8] rH;
+
+  for i=0 to 8
+  { rH[i] = H[i];
+    store_bigendian(pH, i*8, rH[i]); }
+}
+
+inline fn load_H_stack(stack u64[8] H) -> reg u64, reg u64, reg u64, reg u64,
+                                          reg u64, reg u64, reg u64, reg u64
+{
+  reg u64 a b c d e f g h;
+
+  a = H[0];
+  b = H[1];
+  c = H[2];
+  d = H[3];
+  e = H[4];
+  f = H[5];
+  g = H[6];
+  h = H[7];
+
+  return a,b,c,d,e,f,g,h;
+}
+
+inline fn store_H_stack(reg u64 a b c d e f g h) -> stack u64[8]
+{
+  stack u64[8] H;
+
+  H[0] = a;
+  H[1] = b;
+  H[2] = c;
+  H[3] = d;
+  H[4] = e;
+  H[5] = f;
+  H[6] = g;
+  H[7] = h;
+
+  return H;
+}
+
+inline fn SHR(reg u64 x, inline int c) -> reg u64
+{
+  reg u64 r;
+  r   = x;
+  r >>= c;
+  return r;
+}
+
+inline fn ROTR(reg u64 x, inline int c) -> reg u64
+{
+  reg u64 r;
+  r = x;
+  _, _, r = #ROR_64(r, c);
+  return r;
+}
+
+//(x & y) ^ (!x & z)
+inline fn CH(reg u64 x y z) -> reg u64
+{
+  reg u64 r s;
+
+  r  =  x;
+  r &=  y;
+  s  =  x;
+  s  = !s;
+  s &=  z;
+  r ^=  s;
+
+  return r;
+}
+
+//(x & y) ^ (x & z) ^ (y & z)
+inline fn MAJ(reg u64 x y z) -> reg u64
+{
+  reg u64 r s;
+
+  r  = x;
+  r &= y;
+  s  = x;
+  s &= z;
+  r ^= s;
+  s  = y;
+  s &= z;
+  r ^= s;
+
+  return r;
+}
+
+// (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+inline fn BSIG0(reg u64 x) -> reg u64
+{
+  reg u64 r s;
+
+  r  = ROTR(x,28);
+  s  = ROTR(x,34);
+  r ^= s;
+  s  = ROTR(x,39);
+  r ^= s;
+
+  return r;
+}
+
+// (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+inline fn BSIG1(reg u64 x) -> reg u64
+{
+  reg u64 r s;
+
+  r  = ROTR(x,14);
+  s  = ROTR(x,18);
+  r ^= s;
+  s  = ROTR(x,41);
+  r ^= s;
+
+  return r;
+}
+
+// (x >>> 1) ^ (x >>> 8) ^ (x >> 7)
+inline fn SSIG0(reg u64 x) -> reg u64
+{
+  reg u64 r s;
+
+  r  = ROTR(x,1);
+  s  = ROTR(x,8);
+  r ^= s;
+  s  = SHR(x,7);
+  r ^= s;
+
+  return r;
+}
+
+// (x >>> 19) ^ (x >>> 61) ^ (x >> 6)
+inline fn SSIG1(reg u64 x) -> reg u64
+{
+  reg u64 r s;
+
+  r  = ROTR(x,19);
+  s  = ROTR(x,61);
+  r ^= s;
+  s  = SHR(x,6);
+  r ^= s;
+
+  return r;
+}
+
+// Wt = SSIG1(W(t-2)) + W(t-7) + SSIG0(t-15) + W(t-16)
+inline fn Wt(stack u64[80] W, inline int t) -> stack u64[80]
+{
+  reg u64 wt wt2 wt15;
+
+  wt2  = W[t-2];
+  wt   = SSIG1(wt2);
+  wt  += W[t-7];
+  wt15 = W[t-15];
+  wt15 = SSIG0(wt15);
+  wt  += wt15;
+  wt  += W[t-16];
+
+  W[t] = wt;
+
+  return W;
+}
+
+inline fn _sha512_blocks_ref0(stack u64[8] H, reg u64 in inlen) -> stack u64[8], reg u64, reg u64
+{
+  inline int t;
+  reg u64 T1 T2 a b c d e f g h r;
+  stack u64[80] W;
+  reg ptr u64[80] Kp;
+  reg u64 tr;
+  stack u64 in_s;
+
+  Kp = K;
+
+  while(inlen >= 128)
+  {
+    for t=0 to 16
+    { W[t] = load_bigendian(in, t*8); }
+    in_s = in;
+
+    for t=16 to 80
+    { W = Wt(W, t); }
+
+    a, b, c, d, e, f, g, h = load_H_stack(H);
+
+    tr = 0;
+    while(tr < 80)
+    {
+      //T1 = h + BSIG1(e) + CH(e,f,g) + Kt + Wt
+      T1  = h;
+      r   = BSIG1(e);
+      T1 += r;
+      r   = CH(e,f,g);
+      T1 += r;
+      T1 += Kp[(int)tr];
+      T1 += W[(int)tr];
+
+      //T2 = BSIG0(a) + MAJ(a,b,c)
+      T2  = BSIG0(a);
+      r   = MAJ(a,b,c);
+      T2 += r;
+
+      h  = g;
+      g  = f;
+      f  = e;
+      e  = d;
+      e += T1;
+      d  = c;
+      c  = b;
+      b  = a;
+      a  = T1;
+      a += T2;
+
+      tr+= 1;
+    }
+
+    a += H[0];
+    b += H[1];
+    c += H[2];
+    d += H[3];
+    e += H[4];
+    f += H[5];
+    g += H[6];
+    h += H[7];
+
+    H = store_H_stack(a,b,c,d,e,f,g,h);
+
+    in = in_s;
+    in += 128;
+    inlen -= 128;
+  }
+
+  return H, in, inlen;
+}
+
+#endif

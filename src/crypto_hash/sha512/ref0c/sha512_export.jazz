@@ -1,0 +1,29 @@
+#include "crypto_hash/sha512/ref0c/sha512.jazz"
+
+export fn sha512_ref0c(reg u64 out in inlen padded)
+{
+  _sha512_ref0c(out, in, inlen, padded);
+}
+
+export fn sha512_ctx_size_ref0c() -> reg u64
+{
+  reg u64 r;
+  r = _sha512_ctx_size_ref0c();
+  return r;
+}
+
+export fn sha512_init_ref0c(reg u64 ctx)
+{
+  _sha512_init_ref0c(ctx);
+}
+
+export fn sha512_update_ref0c(reg u64 in inlen ctx)
+{
+  _sha512_update_ref0c(in, inlen, ctx);
+}
+
+export fn sha512_finish_ref0c(reg u64 out ctx)
+{
+  _sha512_finish_ref0c(out, ctx);
+}
+
