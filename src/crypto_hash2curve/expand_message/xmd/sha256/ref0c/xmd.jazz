@@ -1,0 +1,19 @@
+#ifndef XMD_SHA256_REF0C
+#define XMD_SHA256_REF0C
+
+
+#include "crypto_hash/sha256/ref0c/sha256_export.jazz"
+
+#define hashsize 32
+#define hashrate 64
+
+#define hash_init _sha256_init_ref0c
+#define hash_update _sha256_update_ref0c
+#define hash_finish _sha256_finish_ref0c
+#define hash_get_buffer sha256_get_buffer
+
+#define expand_message_xmd _expand_message_xmd_sha256_ref0c
+
+#include "crypto_hash2curve/expand_message/xmd/common/xmd.jazz"
+
+#endif
