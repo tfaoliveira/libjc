@@ -4,7 +4,7 @@
 // TODO write constant-time versions of these functions
 
 // returns ceil(x / y)
-fn ceil(reg u64 x y) -> reg u64
+inline fn ceil(reg u64 x y) -> reg u64
 {
   reg u64 c;
 
@@ -17,7 +17,7 @@ fn ceil(reg u64 x y) -> reg u64
 }
 
 // returns ceil(x / 2^n)
-fn ceil_pow2(reg u64 x, inline int n) -> reg u64
+inline fn ceil_pow2(reg u64 x, inline int n) -> reg u64
 {
   reg u64 c y;
 
@@ -34,7 +34,7 @@ fn ceil_pow2(reg u64 x, inline int n) -> reg u64
 }
 
 // returns min x y
-fn min(reg u64 x, reg u64 y) -> reg u64
+inline fn min(reg u64 x, reg u64 y) -> reg u64
 {
   reg u64 c;
   if(x < y)
@@ -45,7 +45,7 @@ fn min(reg u64 x, reg u64 y) -> reg u64
 }
 
 // returns max x y
-fn max(reg u64 x, reg u64 y) -> reg u64
+inline fn max(reg u64 x, reg u64 y) -> reg u64
 {
   reg u64 c;
   if(x < y)

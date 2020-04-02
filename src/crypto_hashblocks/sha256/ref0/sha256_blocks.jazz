@@ -275,6 +275,7 @@ inline fn Wt(stack u32[64] W, inline int t) -> stack u32[64]
   return W;
 }
 
+// TODO: change to non-inline
 inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
 {
   inline int t;

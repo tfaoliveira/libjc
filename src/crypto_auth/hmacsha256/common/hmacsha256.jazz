@@ -76,7 +76,7 @@ fn hmacsha256(reg u64 out in inlen k klen hkpadded)
   H, in, inlen = sha256_blocks(H, in, inlen);
 
   (padded, bits) = s2r_x2(padded_s, bits_s);
-  inlen = sha256_lastblock(in, inlen, padded, bits);
+  inlen = sha256_lastblock1(in, inlen, padded, bits);
   H, _, _ = sha256_blocks(H, padded, inlen);
 
   // H(K XOR opad, ...)
