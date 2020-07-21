@@ -68,6 +68,7 @@ u32[64] K = {
   0xc67178f2
 };
 
+#if 0
 inline fn load_bigendian(reg u64 in, inline int o) -> reg u32
 {
   inline int i;
@@ -96,16 +97,18 @@ inline fn store_bigendian(reg u64 in, inline int o, reg u32 u)
 
   (u8)[in + 0 + o] = (8u)u;
 }
+#endif
 
 inline fn load_H_mem(reg u64 pH) -> stack u32[8]
 {
   inline int i;
   stack u32[8] H;
-  reg u32[8] rH;
+  reg u32 v;
 
   for i=0 to 8
-  { rH[i] = load_bigendian(pH, i*4);
-    H[i]  = rH[i]; }
+  { v = (u32)[pH + i*4];
+    v = #BSWAP_32(v);
+    H[i] = v; }
 
   return H;
 }
@@ -113,11 +116,13 @@ inline fn load_H_mem(reg u64 pH) -> stack u32[8]
 inline fn store_H_mem(reg u64 pH, stack u32[8] H)
 {
   inline int i;
-  reg u32[8] rH;
+  reg u32 v;
 
   for i=0 to 8
-  { rH[i] = H[i];
-    store_bigendian(pH, i*4, rH[i]); }
+  { v = H[i];
+    v = #BSWAP_32(v);
+    (u32)[pH + i*4] = v;
+  }
 }
 
 inline fn load_H_stack(stack u32[8] H) -> reg u32, reg u32, reg u32, reg u32,
@@ -279,7 +284,7 @@ inline fn Wt(stack u32[64] W, inline int t) -> stack u32[64]
 inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
 {
   inline int t;
-  reg u32 T1 T2 a b c d e f g h r;
+  reg u32 T1 T2 a b c d e f g h r v;
   stack u32[64] W;
   reg ptr u32[64] Kp;
   reg u64 tr;
@@ -290,7 +295,10 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
   while(inlen >= 64)
   {
     for t=0 to 16
-    { W[t] = load_bigendian(in, t*4); }
+    { v = (u32)[in + t*4];
+      v = #BSWAP_32(v);
+      W[t] = v;
+    }
     in_s = in;
 
     for t=16 to 64

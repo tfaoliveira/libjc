@@ -159,7 +159,7 @@ fn sha256_init(reg u64 ctx)
   H_p = sha256_get_H(ctx);
   store_H_mem(H_p, H);
 
-  z = #set0();
+  _,_,_,_,_, z = #set0();
   sha256_set_paddedLen(ctx, z);
   sha256_set_length(ctx, z);
 }
