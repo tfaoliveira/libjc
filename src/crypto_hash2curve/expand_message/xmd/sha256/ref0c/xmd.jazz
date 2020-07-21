@@ -10,7 +10,7 @@
 #define hash_init _sha256_init_ref0c
 #define hash_update _sha256_update_ref0c
 #define hash_finish _sha256_finish_ref0c
-#define hash_get_buffer sha256_get_buffer
+#define hash_get_buffer __sha256_get_buffer
 
 #define expand_message_xmd _expand_message_xmd_sha256_ref0c
 

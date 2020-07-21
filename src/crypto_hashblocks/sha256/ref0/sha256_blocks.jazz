@@ -1,75 +1,27 @@
 #ifndef SHA256_BLOCKS_REF0
 #define SHA256_BLOCKS_REF0
 
-u32[64] K = {
-  0x428a2f98,
-  0x71374491,
-  0xb5c0fbcf,
-  0xe9b5dba5,
-  0x3956c25b,
-  0x59f111f1,
-  0x923f82a4,
-  0xab1c5ed5,
-  0xd807aa98,
-  0x12835b01,
-  0x243185be,
-  0x550c7dc3,
-  0x72be5d74,
-  0x80deb1fe,
-  0x9bdc06a7,
-  0xc19bf174,
-  0xe49b69c1,
-  0xefbe4786,
-  0x0fc19dc6,
-  0x240ca1cc,
-  0x2de92c6f,
-  0x4a7484aa,
-  0x5cb0a9dc,
-  0x76f988da,
-  0x983e5152,
-  0xa831c66d,
-  0xb00327c8,
-  0xbf597fc7,
-  0xc6e00bf3,
-  0xd5a79147,
-  0x06ca6351,
-  0x14292967,
-  0x27b70a85,
-  0x2e1b2138,
-  0x4d2c6dfc,
-  0x53380d13,
-  0x650a7354,
-  0x766a0abb,
-  0x81c2c92e,
-  0x92722c85,
-  0xa2bfe8a1,
-  0xa81a664b,
-  0xc24b8b70,
-  0xc76c51a3,
-  0xd192e819,
-  0xd6990624,
-  0xf40e3585,
-  0x106aa070,
-  0x19a4c116,
-  0x1e376c08,
-  0x2748774c,
-  0x34b0bcb5,
-  0x391c0cb3,
-  0x4ed8aa4a,
-  0x5b9cca4f,
-  0x682e6ff3,
-  0x748f82ee,
-  0x78a5636f,
-  0x84c87814,
-  0x8cc70208,
-  0x90befffa,
-  0xa4506ceb,
-  0xbef9a3f7,
-  0xc67178f2
+u32[64] SHA256_K = {
+  0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,
+  0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+  0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,
+  0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+  0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,
+  0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+  0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,
+  0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+  0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,
+  0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+  0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,
+  0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+  0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,
+  0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+  0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,
+  0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 };
 
 #if 0
-inline fn load_bigendian(reg u64 in, inline int o) -> reg u32
+inline fn __sha256_load_bigendian(reg u64 in, inline int o) -> reg u32
 {
   inline int i;
   reg u32[4] v;
@@ -87,7 +39,7 @@ inline fn load_bigendian(reg u64 in, inline int o) -> reg u32
   return r;
 }
 
-inline fn store_bigendian(reg u64 in, inline int o, reg u32 u)
+inline fn __sha256_store_bigendian(reg u64 in, inline int o, reg u32 u)
 {
   inline int i;
   for i=3 downto 0
@@ -99,7 +51,7 @@ inline fn store_bigendian(reg u64 in, inline int o, reg u32 u)
 }
 #endif
 
-inline fn load_H_mem(reg u64 pH) -> stack u32[8]
+inline fn __sha256_load_H_mem(reg u64 pH) -> stack u32[8]
 {
   inline int i;
   stack u32[8] H;
@@ -113,7 +65,7 @@ inline fn load_H_mem(reg u64 pH) -> stack u32[8]
   return H;
 }
 
-inline fn store_H_mem(reg u64 pH, stack u32[8] H)
+inline fn __sha256_store_H_mem(reg u64 pH, stack u32[8] H)
 {
   inline int i;
   reg u32 v;
@@ -125,8 +77,8 @@ inline fn store_H_mem(reg u64 pH, stack u32[8] H)
   }
 }
 
-inline fn load_H_stack(stack u32[8] H) -> reg u32, reg u32, reg u32, reg u32,
-                                          reg u32, reg u32, reg u32, reg u32
+inline fn __sha256_load_H_stack(stack u32[8] H) -> reg u32, reg u32, reg u32, reg u32,
+                                                   reg u32, reg u32, reg u32, reg u32
 {
   reg u32 a b c d e f g h;
 
@@ -142,10 +94,26 @@ inline fn load_H_stack(stack u32[8] H) -> reg u32, reg u32, reg u32, reg u32,
   return a,b,c,d,e,f,g,h;
 }
 
-inline fn store_H_stack(reg u32 a b c d e f g h) -> stack u32[8]
+inline fn __sha256_load_H_regp(reg ptr u32[8] H) -> reg u32, reg u32, reg u32, reg u32,
+                                                    reg u32, reg u32, reg u32, reg u32
 {
-  stack u32[8] H;
+  reg u32 a b c d e f g h;
 
+  a = H[0];
+  b = H[1];
+  c = H[2];
+  d = H[3];
+  e = H[4];
+  f = H[5];
+  g = H[6];
+  h = H[7];
+
+  return a,b,c,d,e,f,g,h;
+}
+
+
+inline fn __sha256_store_H_stack(stack u32[8] H, reg u32 a b c d e f g h) -> stack u32[8]
+{
   H[0] = a;
   H[1] = b;
   H[2] = c;
@@ -158,7 +126,21 @@ inline fn store_H_stack(reg u32 a b c d e f g h) -> stack u32[8]
   return H;
 }
 
-inline fn SHR(reg u32 x, inline int c) -> reg u32
+inline fn __sha256_store_H_regp(reg ptr u32[8] H, reg u32 a b c d e f g h) -> reg ptr u32[8]
+{
+  H[0] = a;
+  H[1] = b;
+  H[2] = c;
+  H[3] = d;
+  H[4] = e;
+  H[5] = f;
+  H[6] = g;
+  H[7] = h;
+
+  return H;
+}
+
+inline fn __sha256_SHR(reg u32 x, inline int c) -> reg u32
 {
   reg u32 r;
   r   = x;
@@ -166,7 +148,7 @@ inline fn SHR(reg u32 x, inline int c) -> reg u32
   return r;
 }
 
-inline fn ROTR(reg u32 x, inline int c) -> reg u32
+inline fn __sha256_ROTR(reg u32 x, inline int c) -> reg u32
 {
   reg u32 r;
   r = x;
@@ -175,7 +157,7 @@ inline fn ROTR(reg u32 x, inline int c) -> reg u32
 }
 
 //(x & y) ^ (!x & z)
-inline fn CH(reg u32 x y z) -> reg u32
+inline fn __sha256_CH(reg u32 x y z) -> reg u32
 {
   reg u32 r s;
 
@@ -190,7 +172,7 @@ inline fn CH(reg u32 x y z) -> reg u32
 }
 
 //(x & y) ^ (x & z) ^ (y & z)
-inline fn MAJ(reg u32 x y z) -> reg u32
+inline fn __sha256_MAJ(reg u32 x y z) -> reg u32
 {
   reg u32 r s;
 
@@ -207,71 +189,71 @@ inline fn MAJ(reg u32 x y z) -> reg u32
 }
 
 // (x >>> 2) ^ (x >>> 13) ^ (x >>> 22)
-inline fn BSIG0(reg u32 x) -> reg u32
+inline fn __sha256_BSIG0(reg u32 x) -> reg u32
 {
   reg u32 r s;
 
-  r  = ROTR(x, 2);
-  s  = ROTR(x,13);
+  r  = __sha256_ROTR(x, 2);
+  s  = __sha256_ROTR(x,13);
   r ^= s;
-  s  = ROTR(x,22);
+  s  = __sha256_ROTR(x,22);
   r ^= s;
 
   return r;
 }
 
 // (x >>> 6) ^ (x >>> 11) ^ (x >>> 25)
-inline fn BSIG1(reg u32 x) -> reg u32
+inline fn __sha256_BSIG1(reg u32 x) -> reg u32
 {
   reg u32 r s;
 
-  r  = ROTR(x, 6);
-  s  = ROTR(x,11);
+  r  = __sha256_ROTR(x, 6);
+  s  = __sha256_ROTR(x,11);
   r ^= s;
-  s  = ROTR(x,25);
+  s  = __sha256_ROTR(x,25);
   r ^= s;
 
   return r;
 }
 
 // (x >>> 7) ^ (x >>> 18) ^ (x >> 3)
-inline fn SSIG0(reg u32 x) -> reg u32
+inline fn __sha256_SSIG0(reg u32 x) -> reg u32
 {
   reg u32 r s;
 
-  r  = ROTR(x, 7);
-  s  = ROTR(x,18);
+  r  = __sha256_ROTR(x, 7);
+  s  = __sha256_ROTR(x,18);
   r ^= s;
-  s  = SHR(x,3);
+  s  = __sha256_SHR(x,3);
   r ^= s;
 
   return r;
 }
 
 // (x >>> 17) ^ (x >>> 19) ^ (x >> 10)
-inline fn SSIG1(reg u32 x) -> reg u32
+inline fn __sha256_SSIG1(reg u32 x) -> reg u32
 {
   reg u32 r s;
 
-  r  = ROTR(x,17);
-  s  = ROTR(x,19);
+  r  = __sha256_ROTR(x,17);
+  s  = __sha256_ROTR(x,19);
   r ^= s;
-  s  = SHR(x,10);
+  s  = __sha256_SHR(x,10);
   r ^= s;
 
   return r;
 }
 
 // Wt = SSIG1(W(t-2)) + W(t-7) + SSIG0(t-15) + W(t-16)
-inline fn Wt(stack u32[64] W, inline int t) -> stack u32[64]
+inline fn __sha256_Wt(stack u32[64] W, inline int t) -> stack u32[64]
 {
   reg u32 wt wt2 wt15;
 
   wt2  = W[t-2];
-  wt   = SSIG1(wt2);
+  wt   = __sha256_SSIG1(wt2);
   wt  += W[t-7];
   wt15 = W[t-15];
-  wt15 = SSIG0(wt15);
+  wt15 = __sha256_SSIG0(wt15);
   wt  += wt15;
   wt  += W[t-16];
 
@@ -280,8 +262,8 @@ inline fn Wt(stack u32[64] W, inline int t) -> stack u32[64]
   return W;
 }
 
-// TODO: change to non-inline
-inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
+#if 0
+inline fn __sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
 {
   inline int t;
   reg u32 T1 T2 a b c d e f g h r v;
@@ -290,7 +272,7 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
   reg u64 tr;
   stack u64 in_s;
 
-  Kp = K;
+  Kp = SHA256_K;
 
   while(inlen >= 64)
   {
@@ -302,25 +284,25 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
     in_s = in;
 
     for t=16 to 64
-    { W = Wt(W, t); }
+    { W = __sha256_Wt(W, t); }
 
-    a, b, c, d, e, f, g, h = load_H_stack(H);
+    a, b, c, d, e, f, g, h = __sha256_load_H_stack(H);
 
     tr = 0;
     while(tr < 64)
     {
       //T1 = h + BSIG1(e) + CH(e,f,g) + Kt + Wt
       T1  = h;
-      r   = BSIG1(e);
+      r   = __sha256_BSIG1(e);
       T1 += r;
-      r   = CH(e,f,g);
+      r   = __sha256_CH(e,f,g);
       T1 += r;
       T1 += Kp[(int)tr];
       T1 += W[(int)tr];
 
       //T2 = BSIG0(a) + MAJ(a,b,c)
-      T2  = BSIG0(a);
-      r   = MAJ(a,b,c);
+      T2  = __sha256_BSIG0(a);
+      r   = __sha256_MAJ(a,b,c);
       T2 += r;
 
       h  = g;
@@ -346,7 +328,7 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
     g += H[6];
     h += H[7];
 
-    H = store_H_stack(a,b,c,d,e,f,g,h);
+    H = __sha256_store_H_stack(H, a,b,c,d,e,f,g,h);
 
     in = in_s;
     in += 64;
@@ -355,5 +337,87 @@ inline fn _sha256_blocks_ref0(stack u32[8] H, reg u64 in inlen) -> stack u32[8],
 
   return H, in, inlen;
 }
+#endif
+
+fn _sha256_blocks_ref0(reg ptr u32[8] H, reg u64 in inlen) -> reg ptr u32[8], reg u64, reg u64
+{
+  inline int t;
+  reg u32 T1 T2 a b c d e f g h r v;
+  stack u32[64] W;
+  reg ptr u32[64] Kp;
+  stack ptr u32[8] Hp;
+  reg u64 tr;
+  stack u64 in_s;
+
+  Kp = SHA256_K;
+  Hp = H;
+
+  while(inlen >= 64)
+  {
+    for t=0 to 16
+    { v = (u32)[in + t*4];
+      v = #BSWAP_32(v);
+      W[t] = v;
+    }
+    in_s = in;
+
+    for t=16 to 64
+    { W = __sha256_Wt(W, t); }
+
+    a, b, c, d, e, f, g, h = __sha256_load_H_regp(Hp);
+
+    tr = 0;
+    while(tr < 64)
+    {
+      //T1 = h + BSIG1(e) + CH(e,f,g) + Kt + Wt
+      T1  = h;
+      r   = __sha256_BSIG1(e);
+      T1 += r;
+      r   = __sha256_CH(e,f,g);
+      T1 += r;
+      T1 += Kp[(int)tr];
+      T1 += W[(int)tr];
+
+      //T2 = BSIG0(a) + MAJ(a,b,c)
+      T2  = __sha256_BSIG0(a);
+      r   = __sha256_MAJ(a,b,c);
+      T2 += r;
+
+      h  = g;
+      g  = f;
+      f  = e;
+      e  = d;
+      e += T1;
+      d  = c;
+      c  = b;
+      b  = a;
+      a  = T1;
+      a += T2;
+
+      tr+= 1;
+    }
+
+    H = Hp;
+    a += H[0];
+    b += H[1];
+    c += H[2];
+    d += H[3];
+    e += H[4];
+    f += H[5];
+    g += H[6];
+    h += H[7];
+
+    H = __sha256_store_H_regp(H,a,b,c,d,e,f,g,h);
+    Hp = H;
+
+    in = in_s;
+    in += 64;
+    inlen -= 64;
+  }
+
+  H = Hp;
+  return H, in, inlen;
+}
+
 
 #endif

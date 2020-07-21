@@ -26,10 +26,10 @@ fn expand_message_xmd(reg u64 out outlen msg msglen DST DSTlen ctx)
   reg u8 zu8;
 
   out_s, outlen_s, msg_s, msglen_s, DST_s, DSTlen_s, ctx_s =
-    r2s_x7(out, outlen, msg, msglen, DST, DSTlen, ctx);
+    __r2s_x7(out, outlen, msg, msglen, DST, DSTlen, ctx);
 
   hashsize = HASHSIZE;
-  ell = ceil(outlen, hashsize);
+  ell = __ceil(outlen, hashsize);
   ell_s = ell;
 
   // since hash_update receives pointer, not stack:
@@ -37,7 +37,7 @@ fn expand_message_xmd(reg u64 out outlen msg msglen DST DSTlen ctx)
   Zpad = hash_get_buffer(ctx);
   hashrate = HASHRATE;
   zu8 = 0;
-  memset_u8(Zpad, hashrate, zu8);
+  __memset_u8(Zpad, hashrate, zu8);
 
   // len_in_bytes || 0 || dst_len
   // - lib_0_str = buffer + hashrate
@@ -67,7 +67,7 @@ fn expand_message_xmd(reg u64 out outlen msg msglen DST DSTlen ctx)
 
   b_i = hash_get_buffer(ctx);
   b_i += HASHSIZE;                               b_i_s=b_i;hashsize=HASHSIZE;zu8=0;
-  memset_u8(b_i, hashsize, zu8);                 ell=ell_s;
+  __memset_u8(b_i, hashsize, zu8);               ell=ell_s;
 
   DSTlen_str = #LEA(b_i + HASHSIZE + 2);         DSTlen=DSTlen_s;
   (u8)[DSTlen_str + 0] = (8u) DSTlen;
@@ -78,15 +78,15 @@ fn expand_message_xmd(reg u64 out outlen msg msglen DST DSTlen ctx)
   i = 1;
   while(i <= ell)
   {                                              b_0=b_0_s;i_s=i;ell_s=ell;hashsize=HASHSIZE;
-    xor_u8_inplace(b_i, b_0, hashsize);          ctx=ctx_s;
+    __xor_u8_inplace(b_i, b_0, hashsize);        ctx=ctx_s;
 	  (u8)[b_i + HASHSIZE] = (8u) i;
     hash_init(ctx);                              length=hashsize+1;
     hash_update(b_i, length, ctx);               DST=DST_s;DSTlen=DSTlen_s;ctx=ctx_s;
     hash_update(DST, DSTlen, ctx);               DSTlen_str=DSTlen_str_s;length=1;ctx=ctx_s;
     hash_update(DSTlen_str, length, ctx);        b_i=b_i_s; ctx=ctx_s;
     hash_finish(b_i, ctx);                       hashsize=HASHSIZE;outlen=outlen_s;out=out_s;
-    length = min(hashsize, outlen);
-    memcpy_u8(out, b_i, length);
+    length = __min(hashsize, outlen);            b_i=b_i_s;
+    __memcpy_u8(out, b_i, length);
     out += length;                               out_s=out;
     outlen -= length;                            outlen_s=outlen;i=i_s;ell=ell_s;
     i += 1;

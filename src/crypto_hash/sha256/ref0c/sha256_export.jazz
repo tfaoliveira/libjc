@@ -8,7 +8,7 @@ export fn sha256_ref0c(reg u64 out in inlen padded)
 export fn sha256_ctx_size_ref0c() -> reg u64
 {
   reg u64 r;
-  r = _sha256_ctx_size_ref0c();
+  r = __sha256_ctx_size_ref0c();
   return r;
 }
 

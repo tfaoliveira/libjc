@@ -4,7 +4,7 @@
 // TODO write constant-time versions of these functions
 
 // returns ceil(x / y)
-inline fn ceil(reg u64 x y) -> reg u64
+inline fn __ceil(reg u64 x y) -> reg u64
 {
   reg u64 c;
 
@@ -16,43 +16,62 @@ inline fn ceil(reg u64 x y) -> reg u64
   return c;
 }
 
-// returns ceil(x / 2^n)
-inline fn ceil_pow2(reg u64 x, inline int n) -> reg u64
+// returns ceil(x / 2^n); mask is 2^n-1
+inline fn __ceil_pow2(reg u64 x, inline int n mask) -> reg u64
 {
-  reg u64 c y;
-
-  c = x;
-  c >>= n;
-
-  y = x;
-  y &= ((2^n)-1);
-
-  if( y > 0 )
-  { c += 1; }
-
-  return c;
+  reg bool zf;
+  reg u64 r r1 m;
+  r = x;
+  r >>= n;
+  r1 = #LEA(r + 1);
+  m = mask;
+  _, _, _, _, zf, x = #AND(x, m);
+  r = r1 if zf;
+  return r;
 }
 
 // returns min x y
-inline fn min(reg u64 x, reg u64 y) -> reg u64
+inline fn __min(reg u64 x y) -> reg u64
 {
-  reg u64 c;
-  if(x < y)
-  { c = x; }
-  else
-  { c = y; }
-  return c;
+  reg bool cf;
+  reg u64 r;
+  _,cf,_,_,_ = #CMP(x, y);
+  r = y;
+  r = x if cf;
+  return r;
 }
 
 // returns max x y
-inline fn max(reg u64 x, reg u64 y) -> reg u64
+inline fn __max(reg u64 x y) -> reg u64
 {
-  reg u64 c;
-  if(x < y)
-  { c = y; }
-  else
-  { c = x; }
-  return c;
+  reg bool cf;
+  reg u64 r;
+  _,cf,_,_,_ = #CMP(x, y);
+  r = x;
+  r = y if cf;
+  return r;
+}
+
+// returns ceil(x / 2^32)
+export fn ceil_pow2_32(reg u64 x) -> reg u64
+{
+  reg u64 r;
+  r = __ceil_pow2(x,32,0xFFFFFFFF);
+  return r;
+}
+
+export fn min(reg u64 x y) -> reg u64
+{
+  reg u64 r;
+  r = __min(x,y);
+  return r;
+}
+
+export fn max(reg u64 x y) -> reg u64
+{
+  reg u64 r;
+  r = __max(x,y);
+  return r;
 }
 
 #endif

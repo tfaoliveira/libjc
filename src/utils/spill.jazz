@@ -2,7 +2,7 @@
 #define UTILS_SPILL
 
 // u64 (default) stack to reg 
-inline fn s2r_x2(stack u64 as bs) -> reg u64, reg u64
+inline fn __s2r_x2(stack u64 as bs) -> reg u64, reg u64
 {
   reg u64 a b;
   a = as;
@@ -10,70 +10,70 @@ inline fn s2r_x2(stack u64 as bs) -> reg u64, reg u64
   return a, b;
 }
 
-inline fn s2r_x3(stack u64 as bs cs) -> reg u64, reg u64, reg u64
+inline fn __s2r_x3(stack u64 as bs cs) -> reg u64, reg u64, reg u64
 {
   reg u64 a b c;
-  a, b = s2r_x2(as, bs);
+  a, b = __s2r_x2(as, bs);
   c = cs;
   return a, b, c;
 }
 
-inline fn s2r_x4(stack u64 as bs cs ds) -> reg u64, reg u64, reg u64, reg u64
+inline fn __s2r_x4(stack u64 as bs cs ds) -> reg u64, reg u64, reg u64, reg u64
 {
   reg u64 a b c d;
-  a, b, c = s2r_x3(as, bs, cs);
+  a, b, c = __s2r_x3(as, bs, cs);
   d = ds;
   return a, b, c, d;
 }
 
-inline fn s2r_x5(stack u64 as bs cs ds es) -> reg u64, reg u64, reg u64, reg u64,
-                                              reg u64
+inline fn __s2r_x5(stack u64 as bs cs ds es) -> reg u64, reg u64, reg u64, reg u64,
+                                                reg u64
 {
   reg u64 a b c d e;
-  a, b, c, d = s2r_x4(as, bs, cs, ds);
+  a, b, c, d = __s2r_x4(as, bs, cs, ds);
   e = es;
   return a, b, c, d, e;
 }
 
-inline fn s2r_x6(stack u64 as bs cs ds es fs) -> reg u64, reg u64, reg u64, reg u64,
-                                                 reg u64, reg u64
+inline fn __s2r_x6(stack u64 as bs cs ds es fs) -> reg u64, reg u64, reg u64, reg u64,
+                                                   reg u64, reg u64
 {
   reg u64 a b c d e f;
-  a, b, c, d, e = s2r_x5(as, bs, cs, ds, es);
+  a, b, c, d, e = __s2r_x5(as, bs, cs, ds, es);
   f = fs;
   return a, b, c, d, e, f;
 }
 
-inline fn s2r_x7(stack u64 as bs cs ds es fs gs) -> reg u64, reg u64, reg u64, reg u64,
-                                                    reg u64, reg u64, reg u64
+inline fn __s2r_x7(stack u64 as bs cs ds es fs gs) -> reg u64, reg u64, reg u64, reg u64,
+                                                      reg u64, reg u64, reg u64
 {
   reg u64 a b c d e f g;
-  a, b, c, d, e, f = s2r_x6(as, bs, cs, ds, es, fs);
+  a, b, c, d, e, f = __s2r_x6(as, bs, cs, ds, es, fs);
   g = gs;
   return a, b, c, d, e, f, g;
 }
 
-inline fn s2r_x8(stack u64 as bs cs ds es fs gs hs) -> reg u64, reg u64, reg u64, reg u64,
-                                                       reg u64, reg u64, reg u64, reg u64
+inline fn __s2r_x8(stack u64 as bs cs ds es fs gs hs) -> reg u64, reg u64, reg u64, reg u64,
+                                                         reg u64, reg u64, reg u64, reg u64
 {
   reg u64 a b c d e f g h;
-  a, b, c, d, e, f, g = s2r_x7(as, bs, cs, ds, es, fs, gs);
+  a, b, c, d, e, f, g = __s2r_x7(as, bs, cs, ds, es, fs, gs);
   h = hs;
   return a, b, c, d, e, f, g, h;
 }
 
-inline fn s2r_x9(stack u64 as bs cs ds es fs gs hs is) -> reg u64, reg u64, reg u64, reg u64,
-                                                          reg u64, reg u64, reg u64, reg u64,
-                                                          reg u64
+inline fn __s2r_x9(stack u64 as bs cs ds es fs gs hs is) -> reg u64, reg u64, reg u64, reg u64,
+                                                            reg u64, reg u64, reg u64, reg u64,
+                                                            reg u64
 {
   reg u64 a b c d e f g h i;
-  a, b, c, d, e, f, g, h = s2r_x8(as, bs, cs, ds, es, fs, gs, hs);
+  a, b, c, d, e, f, g, h = __s2r_x8(as, bs, cs, ds, es, fs, gs, hs);
   i = is;
   return a, b, c, d, e, f, g, h, i;
 }
 
 // u64 (default) reg to stack
-inline fn r2s_x2(reg u64 a b) -> stack u64, stack u64
+inline fn __r2s_x2(reg u64 a b) -> stack u64, stack u64
 {
   stack u64 as bs;
   as = a;
@@ -81,64 +81,64 @@ inline fn r2s_x2(reg u64 a b) -> stack u64, stack u64
   return as, bs;
 }
 
-inline fn r2s_x3(reg u64 a b c) -> stack u64, stack u64, stack u64
+inline fn __r2s_x3(reg u64 a b c) -> stack u64, stack u64, stack u64
 {
   stack u64 as bs cs;
-  as, bs = r2s_x2(a, b);
+  as, bs = __r2s_x2(a, b);
   cs = c;
   return as, bs, cs;
 }
 
-inline fn r2s_x4(reg u64 a b c d) -> stack u64, stack u64, stack u64, stack u64
+inline fn __r2s_x4(reg u64 a b c d) -> stack u64, stack u64, stack u64, stack u64
 {
   stack u64 as bs cs ds;
-  as, bs, cs = r2s_x3(a, b, c);
+  as, bs, cs = __r2s_x3(a, b, c);
   ds = d;
   return as, bs, cs, ds;
 }
 
-inline fn r2s_x5(reg u64 a b c d e) -> stack u64, stack u64, stack u64, stack u64,
-                                       stack u64
+inline fn __r2s_x5(reg u64 a b c d e) -> stack u64, stack u64, stack u64, stack u64,
+                                         stack u64
 {
   stack u64 as bs cs ds es;
-  as, bs, cs, ds = r2s_x4(a, b, c, d);
+  as, bs, cs, ds = __r2s_x4(a, b, c, d);
   es = e;
   return as, bs, cs, ds, es;
 }
 
-inline fn r2s_x6(reg u64 a b c d e f) -> stack u64, stack u64, stack u64, stack u64,
-                                         stack u64, stack u64
+inline fn __r2s_x6(reg u64 a b c d e f) -> stack u64, stack u64, stack u64, stack u64,
+                                           stack u64, stack u64
 {
   stack u64 as bs cs ds es fs;
-  as, bs, cs, ds, es = r2s_x5(a, b, c, d, e);
+  as, bs, cs, ds, es = __r2s_x5(a, b, c, d, e);
   fs = f;
   return as, bs, cs, ds, es, fs;
 }
 
-inline fn r2s_x7(reg u64 a b c d e f g) -> stack u64, stack u64, stack u64, stack u64,
-                                           stack u64, stack u64, stack u64
+inline fn __r2s_x7(reg u64 a b c d e f g) -> stack u64, stack u64, stack u64, stack u64,
+                                             stack u64, stack u64, stack u64
 {
   stack u64 as bs cs ds es fs gs;
-  as, bs, cs, ds, es, fs = r2s_x6(a, b, c, d, e, f);
+  as, bs, cs, ds, es, fs = __r2s_x6(a, b, c, d, e, f);
   gs = g;
   return as, bs, cs, ds, es, fs, gs;
 }
 
-inline fn r2s_x8(reg u64 a b c d e f g h) -> stack u64, stack u64, stack u64, stack u64,
-                                             stack u64, stack u64, stack u64, stack u64
+inline fn __r2s_x8(reg u64 a b c d e f g h) -> stack u64, stack u64, stack u64, stack u64,
+                                               stack u64, stack u64, stack u64, stack u64
 {
   stack u64 as bs cs ds es fs gs hs;
-  as, bs, cs, ds, es, fs, gs = r2s_x7(a, b, c, d, e, f, g);
+  as, bs, cs, ds, es, fs, gs = __r2s_x7(a, b, c, d, e, f, g);
   hs = h;
   return as, bs, cs, ds, es, fs, gs, hs;
 }
 
-inline fn r2s_x9(reg u64 a b c d e f g h i) -> stack u64, stack u64, stack u64, stack u64,
-                                               stack u64, stack u64, stack u64, stack u64,
-                                               stack u64
+inline fn __r2s_x9(reg u64 a b c d e f g h i) -> stack u64, stack u64, stack u64, stack u64,
+                                                 stack u64, stack u64, stack u64, stack u64,
+                                                 stack u64
 {
   stack u64 as bs cs ds es fs gs hs is;
-  as, bs, cs, ds, es, fs, gs, hs = r2s_x8(a, b, c, d, e, f, g, h);
+  as, bs, cs, ds, es, fs, gs, hs = __r2s_x8(a, b, c, d, e, f, g, h);
   is = i;
   return as, bs, cs, ds, es, fs, gs, hs, is;
 }

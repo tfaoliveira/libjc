@@ -1,7 +1,7 @@
 #ifndef UTILS_MEMORY
 #define UTILS_MEMORY
 
-inline fn memcpy_u8(reg u64 dest src n)
+inline fn __memcpy_u8(reg u64 dest src n)
 {
   reg u64 i;
   reg u8 c;
@@ -14,7 +14,7 @@ inline fn memcpy_u8(reg u64 dest src n)
 }
 
 // same as memcpy_u8 but it also receives an offset to be applied to dest
-inline fn memcpy_u8_do(reg u64 dest, inline int dest_offset, reg u64 src n)
+inline fn __memcpy_u8_do(reg u64 dest, inline int dest_offset, reg u64 src n)
 {
   reg u64 i;
   reg u8 c;
@@ -27,7 +27,7 @@ inline fn memcpy_u8_do(reg u64 dest, inline int dest_offset, reg u64 src n)
   }
 }
 
-inline fn memset_u8(reg u64 dest n, reg u8 c)
+inline fn __memset_u8(reg u64 dest n, reg u8 c)
 {
   reg u64 i;
   i = 0;
@@ -38,7 +38,7 @@ inline fn memset_u8(reg u64 dest n, reg u8 c)
 }
 
 // dest[0..n] ^= src[0..n]
-inline fn xor_u8_inplace(reg u64 dest src n)
+inline fn __xor_u8_inplace(reg u64 dest src n)
 {
   reg u64 i;
   reg u8 c;
