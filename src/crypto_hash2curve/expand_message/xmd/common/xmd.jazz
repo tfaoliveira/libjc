@@ -1,95 +1,92 @@
 #ifndef XMD_COMMON
 #define XMD_COMMON
 
-// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-09
 
 #include "utils/memory.jazz"
 #include "utils/math.jazz"
 
 // to be defined:
-// - hashsize (e.g. 32)
-// - hashrate (e.g. 64)
+// - HASHSIZE (e.g. 32)
+// - HASHRATE (e.g. 64)
 //
 // - hash_init (e.g. sha256_init_ref0c)
 // - hash_update (e.g. sha256_update_ref0c)
 // - hash_finish (e.g. sha256_finish_ref0c)
 // - hash_get_buffer (sha256_get_buffer - internal function - no need to append _IMPL)
 //
-// #pre: ceil(outlen,hashsize) <= 255
+// #pre: ceil(outlen,HASHSIZE) <= 255
 //
 #[returnaddress="stack"]
 fn expand_message_xmd(reg u64 out outlen msg msglen DST DSTlen ctx)
 {
   stack u64 out_s outlen_s msg_s msglen_s DST_s DSTlen_s ctx_s;
-  stack u64 i_s ell_s lib_0_DSTlen_str_s b_0_s b_i_s;
-  reg u64 i h ell length Zpad lib_0_DSTlen_str b_0 b_i;
+  stack u64 i_s ell_s lib_0_str_s DSTlen_str_s b_0_s b_i_s;
+  reg u64 i h ell length hashsize hashrate Zpad lib_0_str DSTlen_str b_0 b_i;
   reg u8 zu8;
 
   out_s, outlen_s, msg_s, msglen_s, DST_s, DSTlen_s, ctx_s =
     r2s_x7(out, outlen, msg, msglen, DST, DSTlen, ctx);
 
-  length = hashsize;
-  ell = ceil(outlen, length);
+  hashsize = HASHSIZE;
+  ell = ceil(outlen, hashsize);
   ell_s = ell;
 
   // since hash_update receives pointer, not stack:
-  // - Zpad = padded + hashrate
+  // - Zpad = buffer + hashrate
   Zpad = hash_get_buffer(ctx);
-  length = hashrate;
+  hashrate = HASHRATE;
   zu8 = 0;
-  memset_u8(Zpad, length, zu8);
+  memset_u8(Zpad, hashrate, zu8);
 
   // len_in_bytes || 0 || dst_len
-  // - lib_0_dstlen_str = padded + hashrate
-  lib_0_DSTlen_str = hash_get_buffer(ctx);
-  lib_0_DSTlen_str += hashrate; // so it doesn't collide with Zpad
+  // - lib_0_str = buffer + hashrate
+  lib_0_str = hash_get_buffer(ctx);
+  lib_0_str += HASHRATE; // so it doesn't collide with Zpad
 
   h = outlen; h >>= 8;
-  (u8)[lib_0_DSTlen_str + 0] = (8u) h;      // high
-  (u8)[lib_0_DSTlen_str + 1] = (8u) outlen; // low
-  (u8)[lib_0_DSTlen_str + 2] =  0;
-  (u8)[lib_0_DSTlen_str + 3] = (8u) DSTlen;
-  lib_0_DSTlen_str_s = lib_0_DSTlen_str;
+  (u8)[lib_0_str + 0] = (8u) h;      // high
+  (u8)[lib_0_str + 1] = (8u) outlen; // low
+  (u8)[lib_0_str + 2] =  0;
+  lib_0_str_s = lib_0_str;
+
+  DSTlen_str = #LEA(lib_0_str + 3);
+  (u8)[DSTlen_str + 0] = (8u) DSTlen;
+  DSTlen_str_s = DSTlen_str;
 
   // b_0 = H(Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime)
-  //                                                  || I2OSP(len(DST), 1) || DST)
-  hash_init(ctx);
-  length = hashrate;
-  hash_update(Zpad, length, ctx);                msg=msg_s; msglen=msglen_s; ctx=ctx_s;
-  hash_update(msg, msglen, ctx);                 lib_0_DSTlen_str=lib_0_DSTlen_str_s; ctx=ctx_s;
-  length = 4;
-  hash_update(lib_0_DSTlen_str, length, ctx);    DST=DST_s; DSTlen=DSTlen_s; ctx=ctx_s;
-  hash_update(DST, DSTlen, ctx);                 ctx=ctx_s;
+  //                                                  || DST || I2OSP(len(DST), 1) )
+  hash_init(ctx);                                hashrate = HASHRATE;
+  hash_update(Zpad, hashrate, ctx);              msg=msg_s;msglen=msglen_s;ctx=ctx_s;
+  hash_update(msg, msglen, ctx);                 lib_0_str=lib_0_str_s;length=3;ctx=ctx_s;
+  hash_update(lib_0_str, length, ctx);           DST=DST_s;DSTlen=DSTlen_s;ctx=ctx_s;
+  hash_update(DST, DSTlen, ctx);                 DSTlen_str=DSTlen_str_s;length=1;ctx=ctx_s;
+  hash_update(DSTlen_str, length, ctx);          ctx=ctx_s;
   b_0 = hash_get_buffer(ctx);                    b_0_s=b_0;
-  hash_finish(b_0, ctx);
+  hash_finish(b_0, ctx);                         ctx=ctx_s;
 
-  //
   b_i = hash_get_buffer(ctx);
-  b_i += hashsize;                               b_i_s=b_i; DSTlen=DSTlen_s;
-  length = hashsize;
-  zu8 = 0;
-  memset_u8(b_i, length, zu8);                   ell=ell_s;
-  (u8)[b_i + hashsize + 1] = (8u) DSTlen;
+  b_i += HASHSIZE;                               b_i_s=b_i;hashsize=HASHSIZE;zu8=0;
+  memset_u8(b_i, hashsize, zu8);                 ell=ell_s;
+
+  DSTlen_str = #LEA(b_i + HASHSIZE + 2);         DSTlen=DSTlen_s;
+  (u8)[DSTlen_str + 0] = (8u) DSTlen;
+  DSTlen_str_s = DSTlen_str;
 
   // b_i = H(strxor(b_0, b_(i - 1)) || I2OSP(i, 1) || DST_prime)
-  //                                               || I2OSP(len(DST), 1) || DST)
+  //                                               || DST || I2OSP(len(DST), 1) )
   i = 1;
   while(i <= ell)
-  {                                              b_0=b_0_s;i_s=i;ell_s=ell;
-    length = hashsize;
-    xor_u8_inplace(b_i, b_0, length);            ctx=ctx_s;
-	  (u8)[b_i + hashsize] = (8u) i;
-
-    hash_init(ctx);
-    length = hashsize + 2;
-    hash_update(b_i, length, ctx);               DST=DST_s; DSTlen=DSTlen_s; ctx=ctx_s;
-    hash_update(DST, DSTlen, ctx);               b_i=b_i_s; ctx=ctx_s;
-    hash_finish(b_i, ctx);                       b_i=b_i_s; // hash_finish writes b_i
-                                                 outlen=outlen_s; out=out_s;
-    length = hashsize;
-    length = min(length, outlen);
+  {                                              b_0=b_0_s;i_s=i;ell_s=ell;hashsize=HASHSIZE;
+    xor_u8_inplace(b_i, b_0, hashsize);          ctx=ctx_s;
+	  (u8)[b_i + HASHSIZE] = (8u) i;
+    hash_init(ctx);                              length=hashsize+1;
+    hash_update(b_i, length, ctx);               DST=DST_s;DSTlen=DSTlen_s;ctx=ctx_s;
+    hash_update(DST, DSTlen, ctx);               DSTlen_str=DSTlen_str_s;length=1;ctx=ctx_s;
+    hash_update(DSTlen_str, length, ctx);        b_i=b_i_s; ctx=ctx_s;
+    hash_finish(b_i, ctx);                       hashsize=HASHSIZE;outlen=outlen_s;out=out_s;
+    length = min(hashsize, outlen);
     memcpy_u8(out, b_i, length);
-
     out += length;                               out_s=out;
     outlen -= length;                            outlen_s=outlen;i=i_s;ell=ell_s;
     i += 1;

@@ -4,8 +4,8 @@
 
 #include "crypto_hash/sha256/ref0c/sha256_export.jazz"
 
-#define hashsize 32
-#define hashrate 64
+#define HASHSIZE 32
+#define HASHRATE 64
 
 #define hash_init _sha256_init_ref0c
 #define hash_update _sha256_update_ref0c
