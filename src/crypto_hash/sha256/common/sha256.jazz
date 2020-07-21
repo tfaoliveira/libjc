@@ -249,6 +249,7 @@ inline fn sha256_lastblock2(reg u64 padded paddedLen bits) -> reg u64
   return paddedLen;
 }
 
+#[returnaddress="stack"]
 fn sha256_finish(reg u64 out ctx)
 {
   stack u32[8] H;

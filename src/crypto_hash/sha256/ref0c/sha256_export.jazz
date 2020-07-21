@@ -12,18 +12,27 @@ export fn sha256_ctx_size_ref0c() -> reg u64
   return r;
 }
 
-export fn sha256_init_ref0c(reg u64 ctx)
+export fn sha256_init_ref0c(reg u64 _ctx)
 {
+  reg u64 ctx;
+  ctx = _ctx;
   _sha256_init_ref0c(ctx);
 }
 
-export fn sha256_update_ref0c(reg u64 in inlen ctx)
+export fn sha256_update_ref0c(reg u64 _in _inlen _ctx)
 {
+  reg u64 in inlen ctx;
+  in = _in;
+  inlen = _inlen;
+  ctx = _ctx;
   _sha256_update_ref0c(in, inlen, ctx);
 }
 
-export fn sha256_finish_ref0c(reg u64 out ctx)
+export fn sha256_finish_ref0c(reg u64 _out _ctx)
 {
+  reg u64 out ctx;
+  out = _out;
+  ctx = _ctx;
   _sha256_finish_ref0c(out, ctx);
 }
 
