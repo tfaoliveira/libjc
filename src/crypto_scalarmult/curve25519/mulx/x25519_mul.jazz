@@ -307,7 +307,7 @@
 // - fe_mul_cn: for the remaining columns
 
 
-fn fe64_mul_c0
+inline fn __fe64_mul_c0
 ( reg u64 f0,
   reg u64[4] g,
   reg u64 z, // zero
@@ -334,7 +334,7 @@ fn fe64_mul_c0
   return h, r, cf, of;
 }
 
-fn fe64_mul_c1
+inline fn __fe64_mul_c1
 ( reg u64[4] h,
   reg u64[4] r,
   reg u64 f,
@@ -367,7 +367,7 @@ fn fe64_mul_c1
   return h, r, cf, of;
 }
 
-fn fe64_mul_c2
+inline fn __fe64_mul_c2
 ( reg u64[4] h,
   reg u64[4] r,
   reg u64 f,
@@ -400,7 +400,7 @@ fn fe64_mul_c2
   return h, r, cf, of;
 }
 
-fn fe64_mul_c3
+inline fn __fe64_mul_c3
 ( reg u64[4] h,
   reg u64[4] r,
   reg u64 f,
@@ -434,7 +434,7 @@ fn fe64_mul_c3
 }
 
 
-fn _fe64_mul_rsr
+inline fn __fe64_mul_rsr
 ( stack u64[4] fs,
   reg u64[4] g
 ) -> reg u64[4]
@@ -446,24 +446,24 @@ fn _fe64_mul_rsr
   of, cf, _, _, _, z = #set0();
 
   f = fs[0];
-  h, r, cf, of = fe64_mul_c0(      f, g, z, cf, of);
+  h, r, cf, of = __fe64_mul_c0(      f, g, z, cf, of);
 
   f = fs[1];
-  h, r, cf, of = fe64_mul_c1(h, r, f, g, z, cf, of);
+  h, r, cf, of = __fe64_mul_c1(h, r, f, g, z, cf, of);
 
   f = fs[2];
-  h, r, cf, of = fe64_mul_c2(h, r, f, g, z, cf, of);
+  h, r, cf, of = __fe64_mul_c2(h, r, f, g, z, cf, of);
 
   f = fs[3];
-  h, r, cf, of = fe64_mul_c3(h, r, f, g, z, cf, of);
+  h, r, cf, of = __fe64_mul_c3(h, r, f, g, z, cf, of);
 
   _38 = 38;
-  h = _fe64_reduce(h, r, _38, z, cf, of);
+  h = __fe64_reduce(h, r, _38, z, cf, of);
 
   return h;
 }
 
-fn _fe64_mul_rgr
+inline fn __fe64_mul_rgr
 ( reg ptr u64[252*4] fp,
   stack u64 i,
   reg u64[4] g
@@ -480,64 +480,64 @@ fn _fe64_mul_rgr
   of, cf, _, _, _, z = #set0();
 
   f = fp[(int)o]; o += 1;
-  h, r, cf, of = fe64_mul_c0(      f, g, z, cf, of);
+  h, r, cf, of = __fe64_mul_c0(      f, g, z, cf, of);
 
   f = fp[(int)o]; o += 1;
-  h, r, cf, of = fe64_mul_c1(h, r, f, g, z, cf, of);
+  h, r, cf, of = __fe64_mul_c1(h, r, f, g, z, cf, of);
 
   f = fp[(int)o]; o += 1; os = o;
-  h, r, cf, of = fe64_mul_c2(h, r, f, g, z, cf, of);
+  h, r, cf, of = __fe64_mul_c2(h, r, f, g, z, cf, of);
 
   o = os;
   f = fp[(int)o];
-  h, r, cf, of = fe64_mul_c3(h, r, f, g, z, cf, of);
+  h, r, cf, of = __fe64_mul_c3(h, r, f, g, z, cf, of);
 
   _38 = 38;
-  h = _fe64_reduce(h, r, _38, z, cf, of);
+  h = __fe64_reduce(h, r, _38, z, cf, of);
 
   return h;
 }
 
 
-fn _fe64_mul_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
+inline fn __fe64_mul_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = _fe64_mul_rsr(fs, g);
+  h = __fe64_mul_rsr(fs, g);
   hs = h;
 
   return hs;
 }
 
-fn _fe64_mul_rgs(reg ptr u64[252*4] fp, stack u64 i, stack u64[4] gs) -> reg u64[4]
+inline fn __fe64_mul_rgs(reg ptr u64[252*4] fp, stack u64 i, stack u64[4] gs) -> reg u64[4]
 {
   reg u64[4] h g;
 
   g = gs;
-  h = _fe64_mul_rgr(fp, i, g);
+  h = __fe64_mul_rgr(fp, i, g);
 
   return h;
 }
 
-fn _fe64_mul_sss(stack u64[4] fs gs) -> stack u64[4]
+inline fn __fe64_mul_sss(stack u64[4] fs gs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h g;
 
   g = gs;
-  h = _fe64_mul_rsr(fs, g);
+  h = __fe64_mul_rsr(fs, g);
   hs = h;
 
   return hs;
 }
 
-fn _fe64_mul_rss(stack u64[4] fs gs) -> reg u64[4]
+inline fn __fe64_mul_rss(stack u64[4] fs gs) -> reg u64[4]
 {
   reg u64[4] h g;
 
   g = gs;
-  h = _fe64_mul_rsr(fs, g);
+  h = __fe64_mul_rsr(fs, g);
 
   return h;
 }

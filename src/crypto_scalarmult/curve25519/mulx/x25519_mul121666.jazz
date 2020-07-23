@@ -15,7 +15,7 @@
 // h4  = f3*_121666_h
 
 
-fn _fe64_mul121666(stack u64[4] f) -> reg u64[4]
+inline fn __fe64_mul121666(stack u64[4] f) -> reg u64[4]
 {
   inline int i;
   reg bool cf;
@@ -53,12 +53,12 @@ fn _fe64_mul121666(stack u64[4] f) -> reg u64[4]
   return h;
 }
 
-fn _fe64_mul121666_ss(stack u64[4] f) -> stack u64[4]
+inline fn __fe64_mul121666_ss(stack u64[4] f) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = _fe64_mul121666(f);
+  h = __fe64_mul121666(f);
   hs = h;
 
   return hs;

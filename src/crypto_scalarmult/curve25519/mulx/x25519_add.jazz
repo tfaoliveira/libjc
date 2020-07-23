@@ -5,7 +5,7 @@
 // h = 2**0*f0 + 2**64*f1 + 2**128*f2 + 2**192*f3 +
 //     2**0*g0 + 2**64*g1 + 2**128*g2 + 2**192*g3
 
-fn _fe64_add_rrs
+inline fn __fe64_add_rrs
 ( reg   u64[4] f,
   stack u64[4] g
 ) -> reg u64[4]
@@ -37,34 +37,34 @@ fn _fe64_add_rrs
   return h;
 }
 
-fn _fe64_add_sss(stack u64[4] fs gs) -> stack u64[4]
+inline fn __fe64_add_sss(stack u64[4] fs gs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h f;
 
   f = fs;
-  h = _fe64_add_rrs(f, gs);
+  h = __fe64_add_rrs(f, gs);
   hs = h;
 
   return hs;
 }
 
-fn _fe64_add_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
+inline fn __fe64_add_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = _fe64_add_rrs(g, fs);
+  h = __fe64_add_rrs(g, fs);
   hs = h;
 
   return hs;
 }
 
-fn _fe64_add_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
+inline fn __fe64_add_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
 {
   reg u64[4] h;
 
-  h = _fe64_add_rrs(g, fs);
+  h = __fe64_add_rrs(g, fs);
 
   return h;
 }

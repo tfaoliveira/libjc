@@ -165,7 +165,7 @@
 //   
 
 
-fn _fe64_sqr_rr(reg u64[4] f) -> reg u64[4]
+inline fn __fe64_sqr_rr(reg u64[4] f) -> reg u64[4]
 {
   reg bool cf of;
   inline int i;
@@ -241,22 +241,22 @@ fn _fe64_sqr_rr(reg u64[4] f) -> reg u64[4]
   of, r[3] = #ADOX ( r[3], z,    of ); // of = 0 ?? TODO: VERIFYME
 
   _38 = 38;
-  h = _fe64_reduce(h, r, _38, z, cf, of);
+  h = __fe64_reduce(h, r, _38, z, cf, of);
 
   return h;
 }
 
-fn _fe64_it_sqr(stack u64 i, reg u64[4] f) -> stack u64, reg u64[4]
+inline fn __fe64_it_sqr(stack u64 i, reg u64[4] f) -> stack u64, reg u64[4]
 {
   reg bool zf;
   reg u64[4] h;
 
   while
   {
-    h = _fe64_sqr_rr(f);
+    h = __fe64_sqr_rr(f);
     (_, _, _, _, i) = #DEC(i);
 
-    f = _fe64_sqr_rr(h);
+    f = __fe64_sqr_rr(h);
     (_, _, _, zf, i) = #DEC(i);
 
   } (!zf)
@@ -264,35 +264,35 @@ fn _fe64_it_sqr(stack u64 i, reg u64[4] f) -> stack u64, reg u64[4]
   return i, f;
 }
 
-fn _fe64_sqr_ss(stack u64[4] fs) -> stack u64[4]
+inline fn __fe64_sqr_ss(stack u64[4] fs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] f h;
 
   f = fs;
-  h = _fe64_sqr_rr(f);
+  h = __fe64_sqr_rr(f);
   hs = h;
 
   return hs;
 }
 
-fn _fe64_sqr_sr(reg u64[4] f) -> stack u64[4]
+inline fn __fe64_sqr_sr(reg u64[4] f) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = _fe64_sqr_rr(f);
+  h = __fe64_sqr_rr(f);
   hs = h;
 
   return hs;
 }
 
-fn _fe64_sqr_rs(stack u64[4] fs) -> reg u64[4]
+inline fn __fe64_sqr_rs(stack u64[4] fs) -> reg u64[4]
 {
   reg u64[4] f h;
 
   f = fs;
-  h = _fe64_sqr_rr(f);
+  h = __fe64_sqr_rr(f);
 
   return h;
 }

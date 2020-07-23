@@ -1,8 +1,8 @@
 #ifndef X25519_TOBYTES
 #define X25519_TOBYTES
 
-// implements openssl strategy : clever
-fn _fe64_tobytes(reg u64[4] f) -> reg u64[4]
+// OpenSSL
+inline fn __fe64_tobytes(reg u64[4] f) -> reg u64[4]
 {
   reg bool cf;
   reg u64 t;

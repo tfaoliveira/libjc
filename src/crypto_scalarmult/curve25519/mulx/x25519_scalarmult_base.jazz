@@ -258,7 +258,7 @@ u64[252*4] table_ladder = {
  0xccdfcf2fc18b6d68, 0xa8ebcba8b7806167, 0x980697f95e2937e3, 0x02fbba1cd0126e8c
 };
 
-fn _fe64_1_x3() -> stack u64[4], reg u64[4], stack u64[4]
+inline fn __fe64_1_x3() -> stack u64[4], reg u64[4], stack u64[4]
 {
   inline int i;
   stack u64[4] f1s f3s;
@@ -282,7 +282,7 @@ fn _fe64_1_x3() -> stack u64[4], reg u64[4], stack u64[4]
 
 // "How to (pre-)compute a ladder"
 // implementation in C: https://github.com/armfazh/rfc7748_precomputed
-fn _x25519_scalarmult_base(
+inline fn __x25519_scalarmult_base(
   reg u64 out,
   reg u64 scalar
 )
@@ -309,7 +309,7 @@ fn _x25519_scalarmult_base(
   e[31] &= 0x7f;
   e[31] |= 0x40;
 
-  u1, z1r, z2 = _fe64_1_x3();
+  u1, z1r, z2 = __fe64_1_x3();
 
 	u2r[0] = 0x7e94e1fec82faabd;
 	u2r[1] = 0xbbf095ae14b2edf8;
@@ -325,29 +325,29 @@ fn _x25519_scalarmult_base(
     poss = pos;
     swap = swaps;
 
-    b = ith_bit(e, pos+3);
+    b = __ith_bit(e, pos+3);
 
     swap ^= b;
 
-    u1,  u2 = _fe64_cswap_ssss(u1,  u2, swap);
-    z1r, z2 = _fe64_cswap_rsrs(z1r, z2, swap);
+    u1,  u2 = __fe64_cswap_ssss(u1,  u2, swap);
+    z1r, z2 = __fe64_cswap_rsrs(z1r, z2, swap);
 
     swaps = b;
 
-    t2    = _fe64_sub_ssr(u1, z1r);
-    t1    = _fe64_add_ssr(u1, z1r);
+    t2    = __fe64_sub_ssr(u1, z1r);
+    t1    = __fe64_add_ssr(u1, z1r);
 
     table_ladder_p = table_ladder_s;
-    t3r   = _fe64_mul_rgs(table_ladder_p, poss, t2);
+    t3r   = __fe64_mul_rgs(table_ladder_p, poss, t2);
 
-    t2    = _fe64_sub_ssr(t1, t3r);
-    t1r   = _fe64_add_rsr(t1, t3r);
+    t2    = __fe64_sub_ssr(t1, t3r);
+    t1r   = __fe64_add_rsr(t1, t3r);
 
-    t1    = _fe64_sqr_sr(t1r);
-    t2    = _fe64_sqr_ss(t2);
+    t1    = __fe64_sqr_sr(t1r);
+    t2    = __fe64_sqr_ss(t2);
 
-    u1    = _fe64_mul_sss(z2, t1);
-    z1r   = _fe64_mul_sss(u2, t2);
+    u1    = __fe64_mul_sss(z2, t1);
+    z1r   = __fe64_mul_sss(u2, t2);
 
     pos = poss;
     pos += 1;
@@ -358,25 +358,25 @@ fn _x25519_scalarmult_base(
   {
     poss = pos;
 
-    t1  = _fe64_add_ssr(u1, z1r);
-    t2  = _fe64_sub_ssr(u1, z1r);
-    t1  = _fe64_sqr_ss(t1);
-    t2r = _fe64_sqr_rs(t2);
+    t1  = __fe64_add_ssr(u1, z1r);
+    t2  = __fe64_sub_ssr(u1, z1r);
+    t1  = __fe64_sqr_ss(t1);
+    t2r = __fe64_sqr_rs(t2);
     t3  = t2r;
 
-    t2  = _fe64_sub_ssr(t1, t2r);
-    t4  = _fe64_mul_a24_ss(t2, 121666);
-    t4  = _fe64_add_sss(t4, t3);
-    u1  = _fe64_mul_sss(t1, t3);
-    z1r = _fe64_mul_rss(t2, t4);
+    t2  = __fe64_sub_ssr(t1, t2r);
+    t4  = __fe64_mul_a24_ss(t2, 121666);
+    t4  = __fe64_add_sss(t4, t3);
+    u1  = __fe64_mul_sss(t1, t3);
+    z1r = __fe64_mul_rss(t2, t4);
 
     pos = poss;
     pos += 1;
   } (pos < 3)
 
-  t1r = _fe64_invert(z1r);
-  t1r = _fe64_mul_rsr(u1, t1r);
-  t1r = _fe64_tobytes(t1r);
+  t1r = __fe64_invert(z1r);
+  t1r = __fe64_mul_rsr(u1, t1r);
+  t1r = __fe64_tobytes(t1r);
 
   out = outs;
   for i=0 to 4
