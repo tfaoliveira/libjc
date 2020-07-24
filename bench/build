@@ -59,3 +59,8 @@ usuba_dir="$src_libs_dir/usuba/supercop/crypto_stream/chacha20"
 vale_dir="$src_libs_dir/vale/poly1305/"
 ./scripts/vale_copy $vale_dir $root
 
+###fld-ecc-vec
+fld_ecc_vec_dir="$src_libs_dir/fld-ecc-vec/"
+./scripts/fld-ecc-vec_static $fld_ecc_vec_dir $static_libs_dir
+
+

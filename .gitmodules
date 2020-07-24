@@ -39,3 +39,7 @@
 	path = env/third_party/z3
 	url = https://github.com/Z3Prover/z3.git
 	ignore = dirty
+[submodule "bench/third_party/fld-ecc-vec"]
+	path = bench/third_party/fld-ecc-vec
+	url = https://github.com/armfazh/fld-ecc-vec.git
+  ignore = dirty

@@ -105,7 +105,8 @@ find  bindings/ -name "api.h" | grep $impl | while read binding
 do
   bindingdir=`dirname $binding`
   supercopdir=supercop-$version/`echo $bindingdir | sed -e 's/^bindings\///'`
-  libname=third_party_static_libs/`echo $bindingdir | sed -e "s/.*$impl\//${impl}_/"`.a
+  #libname=third_party_static_libs/`echo $bindingdir | sed -e "s/.*$impl\//${impl}_/"`.a
+  libname=third_party_static_libs/`echo $bindingdir | sed -e "s/.*$impl\//${impl}_/g" -e "s/\//_/g"`.a
   mkdir -p $supercopdir
   rm -fr $supercopdir/*
   find $bindingdir -maxdepth 1 -type f -exec cp {} $supercopdir \;

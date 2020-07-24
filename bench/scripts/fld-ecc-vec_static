@@ -1,0 +1,20 @@
+#!/bin/bash
+
+whereami=$(cd `dirname "$0"`; pwd -P)
+myname=`basename "$0"`
+build_dir="$1/build"
+libs_dir="$2"
+
+(mkdir -p $build_dir && \
+  cd $build_dir && \
+  rm -fr * && \
+  CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake .. && \
+  make all && \
+  cp lib/libfaz_ecc_avx2.a $libs_dir/${myname}_x64.a && \
+  cp lib/libfaz_ecc_avx2.a $libs_dir/${myname}_avx2.a && \
+  cp ../include/faz_ecdh_avx2.h ../../../bindings/crypto_scalarmult/curve25519/fld-ecc-vec/static/x64 && \
+  cp ../include/faz_ecdh_avx2.h ../../../bindings/crypto_scalarmult/curve25519/fld-ecc-vec/static/avx2 && \
+  cd $libs_dir && \
+  $whereami/rename_lib ${myname}_x64 $libs_dir && \
+  $whereami/rename_lib ${myname}_avx2 $libs_dir
+)

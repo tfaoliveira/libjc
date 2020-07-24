@@ -1,14 +1,3 @@
-crypto_hash sha3384 jazz/scalar
-crypto_hash sha3384 jazz/avx2
-crypto_hash shake256 jazz/scalar
-crypto_hash shake256 jazz/avx2
-crypto_hash shake256 jazz/ref
-crypto_hash sha3512 jazz/scalar
-crypto_hash sha3512 jazz/avx2
-crypto_hash shake128 jazz/scalar
-crypto_hash shake128 jazz/avx2
-crypto_hash sha3224 jazz/scalar
-crypto_hash sha3224 jazz/avx2
-crypto_hash sha3256 jazz/scalar
-crypto_hash sha3256 jazz/avx2
-
+crypto_scalarmult curve25519 jazz/mulx
+crypto_scalarmult curve25519 fld-ecc-vec/static/x64
+crypto_scalarmult curve25519 fld-ecc-vec/static/avx2
