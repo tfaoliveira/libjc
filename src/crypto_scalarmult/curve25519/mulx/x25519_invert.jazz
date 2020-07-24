@@ -6,7 +6,7 @@
 // supercop * / crypto_scalarmult / curve25519 ref10 implementation
 inline fn __fe64_invert(reg u64[4] f) -> reg u64[4]
 {
-  stack u64 i;
+  stack u32 i;
   stack u64[4] fs t0s t1s t2s t3s;
   reg u64[4] t0  t1  t2  t3;
 

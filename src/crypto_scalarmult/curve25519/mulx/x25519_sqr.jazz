@@ -246,22 +246,23 @@ inline fn __fe64_sqr_rr(reg u64[4] f) -> reg u64[4]
   return h;
 }
 
-inline fn __fe64_it_sqr(stack u64 i, reg u64[4] f) -> stack u64, reg u64[4]
+inline fn __fe64_it_sqr(stack u32 is, reg u64[4] f) -> stack u32, reg u64[4]
 {
   reg bool zf;
   reg u64[4] h;
+  reg u32 i; // TODO: TO REMOVE: WORKAROUND
 
   while
   {
-    h = __fe64_sqr_rr(f);
-    (_, _, _, _, i) = #DEC(i);
+    h = __fe64_sqr_rr(f);         i=is;
+    (_, _, _, _, i) = #DEC_32(i); is=i;
 
-    f = __fe64_sqr_rr(h);
-    (_, _, _, zf, i) = #DEC(i);
+    f = __fe64_sqr_rr(h);         i=is;
+    (_, _, _, zf, i) = #DEC_32(i);is=i;
 
   } (!zf)
 
-  return i, f;
+  return is, f;
 }
 
 inline fn __fe64_sqr_ss(stack u64[4] fs) -> stack u64[4]

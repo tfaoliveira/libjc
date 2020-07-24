@@ -325,7 +325,8 @@ inline fn __x25519_scalarmult_base(
     poss = pos;
     swap = swaps;
 
-    b = __ith_bit(e, pos+3);
+    pos += 3;
+    b = __ith_bit(e, pos);
 
     swap ^= b;
 
@@ -347,7 +348,7 @@ inline fn __x25519_scalarmult_base(
     t2    = __fe64_sqr_ss(t2);
 
     u1    = __fe64_mul_sss(z2, t1);
-    z1r   = __fe64_mul_sss(u2, t2);
+    z1r   = __fe64_mul_rss(u2, t2);
 
     pos = poss;
     pos += 1;
