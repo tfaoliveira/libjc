@@ -1,4 +1,4 @@
-#include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult.jazz"
+#include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult2.jazz"
 #include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult_base.jazz"
 
 export fn curve25519_mulx(reg u64 out scalar point)

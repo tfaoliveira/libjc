@@ -1,3 +1,1 @@
 crypto_scalarmult curve25519 jazz/mulx
-crypto_scalarmult curve25519 fld-ecc-vec/static/x64
-crypto_scalarmult curve25519 fld-ecc-vec/static/avx2
