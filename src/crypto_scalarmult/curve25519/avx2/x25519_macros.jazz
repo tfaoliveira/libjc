@@ -1,0 +1,55 @@
+#ifndef X25519_MACROS
+#define X25519_MACROS
+
+#define MUL #VPMULU_256
+#define MUL_M(a,b,i) #VPMULU_256(a,(u256)[b + 32*i])
+#define SHUF32 #VPSHUFD_256
+#define SHUF32_M(a,i,c) #VPSHUFD_256((u256)[a + 32*i],c)
+
+#define ALIGNR(c, a, b) \
+  x=#VPSLLDQ_256(a,8);\
+  c=#VPSRLDQ_256(b,8);\
+  c|=x
+
+#define ADD_MUL(c, a, b) \
+  x = MUL(a, b);\
+  c +4u64= x
+
+#define ADD_MUL_M(c, a, b, i) \
+  x = MUL(a, (u256)[b + 32*i]);\
+  c +4u64= x
+
+#define SHLV #VPSLLV_4u64
+#define SHRV #VPSRLV_4u64
+
+
+#if 0
+inline fn ALIGNR(reg u256 a b) -> reg u256
+{
+  reg u256 r t;
+  t = #VPSLLDQ_256(a, 8);
+  r = #VPSRLDQ_256(b, 8);
+  r |= t;
+  return r;
+}
+
+inline fn ADD_MUL(reg u256 c a, stack u256 b) -> reg u256
+{
+  reg u256 t;
+  t = MUL(a, b);
+  c +4u64= t;
+  return c;
+}
+
+inline fn ADD_MUL_M(reg u256 c a, reg u64 b, inline int i) -> reg u256
+{
+  reg u256 t;
+  t = MUL(a, (u256)[b + 32*i]);
+  c +4u64= t;
+  return c;
+}
+#endif
+
+#endif
+
+

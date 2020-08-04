@@ -1,0 +1,45 @@
+#ifndef X25519_ADDSUB
+#define X25519_ADDSUB
+
+#include "x25519_globals.jazz"
+#include "x25519_macros.jazz"
+
+inline fn __addsub_rr(reg u256[5] a b) -> reg u256[5], reg u256[5]
+{
+  inline int i;
+  reg u256[5] _2P;
+  reg u256 d c;
+
+  for i=0 to 5
+  { _2P[i] = CONST_2P_2P_H0H5[i];
+    d = a[i] +4u64 b[i];
+    _2P[i] -4u64= b[i];
+    b[i] = a[i] +4u64 _2P[i];
+    a[i] = d;
+  }
+  return a, b;
+}
+
+#ifdef EXPORT
+
+export fn addsub_rr(reg u64 ap bp)
+{
+  inline int i;
+  reg u256[5] a b;
+
+  for i=0 to 5
+  { a[i] = (u256)[ap + 32*i];
+    b[i] = (u256)[bp + 32*i];
+  }
+  a, b = __addsub_rr(a, b);
+
+  for i=0 to 5
+  { (u256)[ap + 32*i] = a[i];
+    (u256)[bp + 32*i] = b[i];
+  }
+}
+
+#endif
+
+#endif
+

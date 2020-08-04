@@ -1,157 +1,139 @@
 #ifndef X25519_MUL
 #define X25519_MUL
 
-u256 g_times_19 = (4u64)[19, 19, 19, 19];
-u256 g_sh_0     = (4u64)[0, 1, 0, 1];
-u256 g_sh_1     = (4u64)[1, 0, 1, 0];
-u256[2] g_sh_01 = {
-  (4u64)[0, 1, 0, 1],
-  (4u64)[1, 0, 1, 0]
-};
+#include "x25519_globals.jazz"
+#include "x25519_macros.jazz"
 
-// function __mul_rss returns a*b
-//
-// let b is stored in B[10..14]. if we consider b to contain the following:
-//   c1  c2   d1  d2
-//   c3  c4   d3  d4
-//   c5  c6   d5  d6
-//   c7  c8   d7  d8
-//   c9  c10  d9  d10
-//
-// B[0..4] will provide space to store:
-//   c1*19  c2*19   d1*19  d2*19
-//   c3*19  c4*19   d3*19  d4*19
-//   c5*19  c6*19   d5*19  d6*19
-//   c7*19  c8*19   d7*19  d8*19
-//   c9*19  c10*19  d9*19  d10*19
-//
-// and B[5..9]:
-//   c2*19   c1  d2*19   d1
-//   c4*19   c3  d4*19   d3
-//   c6*19   c5  d6*19   d5
-//   c8*19   c7  d8*19   d7
-//   c10*19  c9  d10*19  d9
-
-inline fn __mul_shufd(inline int idx) -> inline u8
+inline fn __mul_rss(stack u256[5] a, stack u256[5] b) -> reg u256[5]
 {
-  inline u8 ctrl;
-  ctrl = 0x44;
-  if(idx > 4){ ctrl = 0xEE; }
-  return ctrl;
+  inline int i;
+	reg u256 x ai aj;
+	reg u256[5] br dr er c k t;
+	stack u256[5] d e;
+
+  br = b;
+
+  for i=4 downto -1
+  { er[i] = MUL(br[i], g_times_19);
+    //dr[i] = ALIGNX(br[i],er[i]);
+    ALIGNR(dr[i],br[i],er[i]);
+    e[i]  = er[i]; 
+    d[i]  = dr[i]; }
+
+	ai = SHUF32(a[0],0x44);  	      aj = SHUF32(a[1],0x44);
+	c[0] = MUL(ai,b[0]);       		  k[0] = MUL(aj,d[4]);
+	c[1] = MUL(ai,b[1]);       		  k[1] = MUL(aj,b[0]);
+	c[2] = MUL(ai,b[2]);       		  k[2] = MUL(aj,b[1]);
+	c[3] = MUL(ai,b[3]);       		  k[3] = MUL(aj,b[2]);
+	c[4] = MUL(ai,b[4]);       		  k[4] = MUL(aj,b[3]);
+
+	ai = SHUF32(a[2], 0x44);        aj = SHUF32(a[3], 0x44);
+	ADD_MUL(c[0],ai,d[3]);          ADD_MUL(k[0],aj,d[2]);
+	ADD_MUL(c[1],ai,d[4]);          ADD_MUL(k[1],aj,d[3]);
+	ADD_MUL(c[2],ai,b[0]);          ADD_MUL(k[2],aj,d[4]);
+	ADD_MUL(c[3],ai,b[1]);          ADD_MUL(k[3],aj,b[0]);
+	ADD_MUL(c[4],ai,b[2]);          ADD_MUL(k[4],aj,b[1]);
+
+	ai = SHUF32(a[4],0x44);         aj = SHUF32(a[0],0xEE);
+	ADD_MUL(c[0],ai,d[1]);          ADD_MUL(k[0],aj,d[0]);
+	ADD_MUL(c[1],ai,d[2]);          ADD_MUL(k[1],aj,d[1]);
+	ADD_MUL(c[2],ai,d[3]);          ADD_MUL(k[2],aj,d[2]);
+	ADD_MUL(c[3],ai,d[4]);          ADD_MUL(k[3],aj,d[3]);
+	ADD_MUL(c[4],ai,b[0]);          ADD_MUL(k[4],aj,d[4]);
+
+	ai = SHUF32(a[1],0xEE);         aj = SHUF32(a[2],0xEE);
+	ADD_MUL(c[0],ai,e[4]);          ADD_MUL(k[0],aj,e[3]);
+	ADD_MUL(c[1],ai,d[0]);          ADD_MUL(k[1],aj,e[4]);
+	ADD_MUL(c[2],ai,d[1]);          ADD_MUL(k[2],aj,d[0]);
+	ADD_MUL(c[3],ai,d[2]);          ADD_MUL(k[3],aj,d[1]);
+	ADD_MUL(c[4],ai,d[3]);          ADD_MUL(k[4],aj,d[2]);
+
+	ai = SHUF32(a[3],0xEE);         aj = SHUF32(a[4],0xEE);
+	ADD_MUL(c[0],ai,e[2]);          ADD_MUL(k[0],aj,e[1]);
+	ADD_MUL(c[1],ai,e[3]);          ADD_MUL(k[1],aj,e[2]);
+	ADD_MUL(c[2],ai,e[4]);          ADD_MUL(k[2],aj,e[3]);
+	ADD_MUL(c[3],ai,d[0]);          ADD_MUL(k[3],aj,e[4]);
+	ADD_MUL(c[4],ai,d[1]);          ADD_MUL(k[4],aj,d[0]);
+
+	t[0] = SHLV(k[0],g_sh_0);
+	t[1] = SHLV(k[1],g_sh_1);
+	t[2] = SHLV(k[2],g_sh_0);
+	t[3] = SHLV(k[3],g_sh_1);
+	t[4] = SHLV(k[4],g_sh_0);
+
+	c[0] +4u64= t[0];
+	c[1] +4u64= t[1];
+	c[2] +4u64= t[2];
+	c[3] +4u64= t[3];
+	c[4] +4u64= t[4];
+
+  return c;
 }
 
-inline fn __mul_rss(stack u256[5] _a, stack u256[15] _B) -> reg u256[5], stack u256[15]
+inline fn __mul_rmm(reg u64 a b) -> reg u256[5]
 {
-  inline int i j;
-  inline u8 ctrl1 ctrl2;
-  reg u256 ai aj t0 t1 t19;
-  reg u256[5] d e t c k;
-  reg u256[15] B;
-  reg u256[2] sh_01;
+  inline int i;
+	reg u256 x ai aj;
+	reg u256[5] br dr er c k t;
+	stack u256[5] d e;
 
-  // init _B[0..9]
-  t19 = g_times_19;
-  B[10+4] = _B[10+4];
-  for i=4 downto -1 // 4,3,2,1,0
-  { B[10+i-1] = _B[10+i-1]; // prefetch
-    e[i] = #VPMULU_256(t19, B[10+i]);
-
-    t0   = #VPSLLDQ_256(B[10+i], 8);
-    d[i] = #VPSRLDQ_256(e[i], 8);
-    d[i] |= t0;
-
-    //d[i] = #VPALIGNR(B[10+i], e[i], 8); // TODO TEST WITH THIS INSTRUCTION
-    //d[i] = #VSHUFPD_256(B[10+i], e[i], 4u1[0,1,0,1]); // AND THIS ONE
-
-    _B[i] = e[i];
-    _B[5+i] = d[i];
-  }
-
-  // i= 0
-  ai = #VPSHUFD_256(_a[0],0x44);
-  aj = #VPSHUFD_256(_a[1],0x44);
-  for j=4 downto -1
-  { c[j] = #VPMULU_256(ai, B[10+j]);
-    k[j] = #VPMULU_256(aj, B[9+j]);
-  }
-
-  // i= 1..4
-  for i=1 to 5
-  { ctrl1 = __mul_shufd(i*2);
-    ctrl2 = __mul_shufd(i*2+1);
-    ai = #VPSHUFD_256(_a[(i*2  ) % 5], ctrl1);
-    aj = #VPSHUFD_256(_a[(i*2+1) % 5], ctrl2);
-    for j=4 downto -1
-    { t0 = #VPMULU_256(ai, _B[10+j- i*2]);
-      t1 = #VPMULU_256(aj, _B[9+j - i*2]);
-      c[j] +4u64= t0;
-      k[j] +4u64= t1;
-    }
-  }
-
-  sh_01 = g_sh_01;
   for i=0 to 5
-  { t[i] = #VPSLLV_4u64(k[i], sh_01[i % 2]);
-    c[i] +4u64= t[i];
+  { br[i] = (u256)[b + 32*i]; }
+
+  for i=4 downto -1
+  { er[i] = MUL(br[i], g_times_19);
+    //dr[i] = ALIGNX(br[i],er[i]);
+    ALIGNR(dr[i],br[i],er[i]);
+    e[i]  = er[i];
+    d[i]  = dr[i];
   }
 
-  return c, _B;
-}
+	ai = SHUF32_M(a,0,0x44);  	    aj = SHUF32_M(a,1,0x44);
+	c[0] = MUL_M(ai,b,0);       		k[0] = MUL(aj,d[4]);
+	c[1] = MUL_M(ai,b,1);       		k[1] = MUL_M(aj,b,0);
+	c[2] = MUL_M(ai,b,2);       		k[2] = MUL_M(aj,b,1);
+	c[3] = MUL_M(ai,b,3);       		k[3] = MUL_M(aj,b,2);
+	c[4] = MUL_M(ai,b,4);       		k[4] = MUL_M(aj,b,3);
 
-inline fn __mul_rmm(reg u64 _a, reg u64 _B) -> reg u256[5]
-{
-  inline int i j;
-  inline u8 ctrl1 ctrl2;
-  reg u256 ai aj t0 t1 t19;
-  reg u256[5] d e t c k;
-  reg u256[15] B;
-  reg u256[2] sh_01;
+	ai = SHUF32_M(a,2,0x44);        aj = SHUF32_M(a,3,0x44);
+	ADD_MUL(  c[0],ai,d[3]);        ADD_MUL(  k[0],aj,d[2]);
+	ADD_MUL(  c[1],ai,d[4]);        ADD_MUL(  k[1],aj,d[3]);
+	ADD_MUL_M(c[2],ai,b,0 );        ADD_MUL(  k[2],aj,d[4]);
+	ADD_MUL_M(c[3],ai,b,1 );        ADD_MUL_M(k[3],aj,b,0 );
+	ADD_MUL_M(c[4],ai,b,2 );        ADD_MUL_M(k[4],aj,b,1 );
 
-  // init _B[0..9]
-  t19 = g_times_19;
-  B[10+4] = (u256)[_B + 32*(10+4)]; /*_B[10+4];*/
-  for i=4 downto -1 // 4,3,2,1,0
-  { B[10+i-1] = (u256)[_B + 32*(10+i-1)]; /*_B[10+i-1];*/ // prefetch
-    e[i] = #VPMULU_256(t19, B[10+i]);
+	ai = SHUF32_M(a,4,0x44);        aj = SHUF32_M(a,0,0xEE);
+	ADD_MUL(  c[0],ai,d[1]);        ADD_MUL(k[0],aj,d[0]);
+	ADD_MUL(  c[1],ai,d[2]);        ADD_MUL(k[1],aj,d[1]);
+	ADD_MUL(  c[2],ai,d[3]);        ADD_MUL(k[2],aj,d[2]);
+	ADD_MUL(  c[3],ai,d[4]);        ADD_MUL(k[3],aj,d[3]);
+	ADD_MUL_M(c[4],ai,b,0 );        ADD_MUL(k[4],aj,d[4]);
 
-    t0   = #VPSLLDQ_256(B[10+i], 8);
-    d[i] = #VPSRLDQ_256(e[i], 8);
-    d[i] |= t0;
+	ai = SHUF32_M(a,1,0xEE);        aj = SHUF32_M(a,2,0xEE);
+	ADD_MUL(c[0],ai,e[4]);          ADD_MUL(k[0],aj,e[3]);
+	ADD_MUL(c[1],ai,d[0]);          ADD_MUL(k[1],aj,e[4]);
+	ADD_MUL(c[2],ai,d[1]);          ADD_MUL(k[2],aj,d[0]);
+	ADD_MUL(c[3],ai,d[2]);          ADD_MUL(k[3],aj,d[1]);
+	ADD_MUL(c[4],ai,d[3]);          ADD_MUL(k[4],aj,d[2]);
 
-    //d[i] = #VPALIGNR(B[10+i], e[i], 8); // TODO TEST WITH THIS INSTRUCTION
-    //d[i] = #VSHUFPD_256(B[10+i], e[i], 4u1[0,1,0,1]); // AND THIS ONE
+	ai = SHUF32_M(a,3,0xEE);        aj = SHUF32_M(a,4,0xEE);
+	ADD_MUL(c[0],ai,e[2]);          ADD_MUL(k[0],aj,e[1]);
+	ADD_MUL(c[1],ai,e[3]);          ADD_MUL(k[1],aj,e[2]);
+	ADD_MUL(c[2],ai,e[4]);          ADD_MUL(k[2],aj,e[3]);
+	ADD_MUL(c[3],ai,d[0]);          ADD_MUL(k[3],aj,e[4]);
+	ADD_MUL(c[4],ai,d[1]);          ADD_MUL(k[4],aj,d[0]);
 
-    /*_B[i]*/   (u256)[_B + 32*i] = e[i];
-    /*_B[5+i]*/ (u256)[_B + 32*(5+i)] = d[i];
-  }
+	t[0] = SHLV(k[0],g_sh_0);
+	t[1] = SHLV(k[1],g_sh_1);
+	t[2] = SHLV(k[2],g_sh_0);
+	t[3] = SHLV(k[3],g_sh_1);
+	t[4] = SHLV(k[4],g_sh_0);
 
-  // i= 0
-  ai = #VPSHUFD_256((u256)[_a + 32*0],0x44);
-  aj = #VPSHUFD_256((u256)[_a + 32*1],0x44);
-  for j=4 downto -1
-  { c[j] = #VPMULU_256(ai, B[10+j]);
-    k[j] = #VPMULU_256(aj, B[9+j]);
-  }
-
-  // i= 1..4
-  for i=1 to 5
-  { ctrl1 = __mul_shufd(i*2);
-    ctrl2 = __mul_shufd(i*2+1);
-    ai = #VPSHUFD_256((u256)[_a + 32*((i*2  ) % 5)], ctrl1);
-    aj = #VPSHUFD_256((u256)[_a + 32*((i*2+1) % 5)], ctrl2);
-    for j=4 downto -1
-    { t0 = #VPMULU_256(ai, (u256)[_B + 32*(10+j- i*2)]/*_B[10+j- i*2]*/);
-      t1 = #VPMULU_256(aj, (u256)[_B + 32*(9+j - i*2)]/*_B[9+j - i*2]*/);
-      c[j] +4u64= t0;
-      k[j] +4u64= t1;
-    }
-  }
-
-  sh_01 = g_sh_01;
-  for i=0 to 5
-  { t[i] = #VPSLLV_4u64(k[i], sh_01[i % 2]);
-    c[i] +4u64= t[i];
-  }
+	c[0] +4u64= t[0];
+	c[1] +4u64= t[1];
+	c[2] +4u64= t[2];
+	c[3] +4u64= t[3];
+	c[4] +4u64= t[4];
 
   return c;
 }
@@ -161,24 +143,20 @@ inline fn __mul_rmm(reg u64 _a, reg u64 _B) -> reg u256[5]
 export fn mul_rss(reg u64 cp ap bp)
 {
   inline int i;
-  reg u256 z t1 t2;
-  reg u256[5] cr;
-  stack u256[5] as;
-  stack u256[15] bs;
+  reg u256 av bv;
+  reg u256[5] c;
+  stack u256[5] a b;
 
-  z = #set0_256();
   for i=0 to 5
-  { t1 = (u256)[ap + 32*i];
-    t2 = (u256)[bp + 32*i];
-    as[i] = t1;
-    bs[i] = z;
-    bs[5+i] = z;
-    bs[10+i] = t2;
+  { av = (u256)[ap + 32*i];
+    bv = (u256)[bp + 32*i];
+    a[i] = av;
+    b[i] = bv;
   }
-  cr, bs = __mul_rss(as, bs);
+  c = __mul_rss(a, b);
 
   for i=0 to 5
-  { (u256)[cp + 32*i] = cr[i]; }
+  { (u256)[cp + 32*i] = c[i]; }
 }
 
 export fn mul_rmm(reg u64 cp ap bp)

@@ -1,0 +1,183 @@
+#ifndef X25519_COMPRESS
+#define X25519_COMPRESS
+
+#include "x25519_globals.jazz"
+#include "x25519_macros.jazz"
+
+inline fn __mul19(reg u256 a) -> reg u256
+{
+  reg u256 t0 t1;
+  t0 = SHLV(a, g_shift_4);
+  t1 = SHLV(a, g_shift_1);
+  t0 +4u64= t1;
+  t0 +4u64= a;
+  a = SHUF32(t0,0x4E);
+  return a;
+}
+
+inline fn __compress_r(reg u256[5] c) -> reg u256[5]
+{
+  reg u256 h0_5 h1_6 h2_7 h3_8 h4_9;
+
+  h0_5 = SHRV(c[0], g_shift0);
+  c[0] &= g_mask0;
+  c[1] +4u64= h0_5;
+
+  h1_6 = SHRV(c[1], g_shift1);
+  c[1] &= g_mask1;
+  c[2] +4u64= h1_6;
+
+  h2_7 = SHRV(c[2], g_shift0);
+  c[2] &= g_mask0;
+  c[3] +4u64= h2_7;
+
+  h3_8 = SHRV(c[3], g_shift1);
+  c[3] &= g_mask1;
+  c[4] +4u64= h3_8;
+
+  h4_9 = SHRV(c[4], g_shift0);
+  c[4] &= g_mask0;
+
+  h4_9 = __mul19(h4_9);
+
+  c[0] +4u64= h4_9;
+
+  h0_5 = SHRV(c[0], g_shift0);
+  c[0] &= g_mask0;
+  c[1] +4u64= h0_5;
+
+  return c;
+}
+
+inline fn __compress2_rr(reg u256[5] c d) -> reg u256[5], reg u256[5]
+{
+  reg u256 h0_5 h1_6 h2_7 h3_8 h4_9;
+  reg u256 H0_5 H1_6 H2_7 H3_8 H4_9;
+
+  h0_5 = SHRV(c[0], g_shift0);
+  H0_5 = SHRV(d[0], g_shift0);
+  c[0] &= g_mask0;
+  d[0] &= g_mask0;
+  c[1] +4u64= h0_5;
+  d[1] +4u64= H0_5;
+
+  h1_6 = SHRV(c[1], g_shift1);
+  H1_6 = SHRV(d[1], g_shift1);
+  c[1] &= g_mask1;
+  d[1] &= g_mask1;
+  c[2] +4u64= h1_6;
+  d[2] +4u64= H1_6;
+
+  h2_7 = SHRV(c[2], g_shift0);
+  H2_7 = SHRV(d[2], g_shift0);
+  c[2] &= g_mask0;
+  d[2] &= g_mask0;
+  c[3] +4u64= h2_7;
+  d[3] +4u64= H2_7;
+
+  h3_8 = SHRV(c[3], g_shift1);
+  H3_8 = SHRV(d[3], g_shift1);
+  c[3] &= g_mask1;
+  d[3] &= g_mask1;
+  c[4] +4u64= h3_8;
+  d[4] +4u64= H3_8;
+
+  h4_9 = SHRV(c[4], g_shift0);
+  H4_9 = SHRV(d[4], g_shift0);
+  c[4] &= g_mask0;
+  d[4] &= g_mask0;
+
+  h4_9 = __mul19(h4_9);
+  H4_9 = __mul19(H4_9);
+
+  c[0] +4u64= h4_9;
+  d[0] +4u64= H4_9;
+
+  h0_5 = SHRV(c[0], g_shift0);
+  H0_5 = SHRV(d[0], g_shift0);
+  c[0] &= g_mask0;
+  d[0] &= g_mask0;
+  c[1] +4u64= h0_5;
+  d[1] +4u64= H0_5;
+
+  return c, d;
+}
+
+inline fn __compressfast_r(reg u256[5] c) -> reg u256[5]
+{
+  reg u256[5] L M;
+
+  L[0] = c[0] & g_mask0;
+  L[1] = c[1] & g_mask1;
+  L[2] = c[2] & g_mask0;
+  L[3] = c[3] & g_mask1;
+  L[4] = c[4] & g_mask0;
+
+  M[0] = SHRV(c[0], g_shift0);
+  M[1] = SHRV(c[1], g_shift1);
+  M[2] = SHRV(c[2], g_shift0);
+  M[3] = SHRV(c[3], g_shift1);
+  M[4] = SHRV(c[4], g_shift0);
+
+  M[4] = __mul19(M[4]);
+
+  c[0] = L[0] +4u64 M[4];
+  c[1] = L[1] +4u64 M[0];
+  c[2] = L[2] +4u64 M[1];
+  c[3] = L[3] +4u64 M[2];
+  c[4] = L[4] +4u64 M[3];
+
+  return c;
+}
+
+
+#ifdef EXPORT
+
+export fn compress_r(reg u64 cp)
+{
+  inline int i;
+  reg u256[5] c;
+
+  for i=0 to 5
+  { c[i] = (u256)[cp + 32*i]; }
+
+  c = __compress_r(c);
+
+  for i=0 to 5
+  { (u256)[cp + 32*i] = c[i]; }
+}
+
+export fn compress2_rr(reg u64 cp dp)
+{
+  inline int i;
+  reg u256[5] c d;
+
+  for i=0 to 5
+  { c[i] = (u256)[cp + 32*i];
+    d[i] = (u256)[dp + 32*i];}
+
+  c,d = __compress2_rr(c,d);
+
+  for i=0 to 5
+  { (u256)[cp + 32*i] = c[i];
+    (u256)[dp + 32*i] = d[i]; }
+}
+
+export fn compressfast_r(reg u64 cp)
+{
+  inline int i;
+  reg u256[5] c;
+
+  for i=0 to 5
+  { c[i] = (u256)[cp + 32*i]; }
+
+  c = __compressfast_r(c);
+
+  for i=0 to 5
+  { (u256)[cp + 32*i] = c[i]; }
+}
+
+#endif
+
+#endif
+
