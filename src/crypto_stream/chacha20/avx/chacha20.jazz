@@ -373,7 +373,7 @@ inline fn __store_last(reg u64 output plain, reg u32 len, reg u128[2] k)
 
 
 // stores 64 bytes
-fn __store_x1(reg u64 output plain, reg u32 len, reg u128[4] k) -> reg u64, reg u64, reg u32, reg u128[4]
+inline fn __store_x1(reg u64 output plain, reg u32 len, reg u128[4] k) -> reg u64, reg u64, reg u32, reg u128[4]
 {
   inline int i;
 

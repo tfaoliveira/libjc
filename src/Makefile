@@ -55,7 +55,8 @@ SUBDIRS := \
   crypto_stream/chacha20/avx2 \
   \
   crypto_scalarmult/curve25519/ref4 \
-  crypto_scalarmult/curve25519/mulx
+  crypto_scalarmult/curve25519/mulx \
+  crypto_scalarmult/curve25519/avx2
 
 # --------------------------------------------------------------------
 SRC    := $(shell find crypto_* -name '*.c')

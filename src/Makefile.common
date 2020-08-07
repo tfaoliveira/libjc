@@ -10,7 +10,7 @@ JASMINC ?= jasminc
 	gpp -I. -I$(TOP) $(GFLAGS) -o $@ $<
 
 %.s: %.japp
-	$(JASMINC) $(JFLAGS) -pasm $< > $@ || rm -f $@
+	$(JASMINC) $(JFLAGS) -o $@ $< || (rm -f $@ && touch fail)
 
 clean:
-	@rm -f *.japp *.s
+	@rm -f fail *.japp *.s
