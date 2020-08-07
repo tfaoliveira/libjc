@@ -1,28 +1,94 @@
-#ifndef X25519_ADDSUB
-#define X25519_ADDSUB
+#ifndef X25519_AVX2_ADDSUB
+#define X25519_AVX2_ADDSUB
 
-#include "x25519_globals.jazz"
-#include "x25519_macros.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_globals.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_macros.jazz"
 
-inline fn __addsub_rr(reg u256[5] a b) -> reg u256[5], reg u256[5]
+inline fn __rrx_addsub_rr(reg u256[5] a b) -> reg u256[5], reg u256[5]
 {
   inline int i;
   reg u256[5] _2P;
   reg u256 d c;
 
+  _2P = CONST_2P_2P_H0H5;
   for i=0 to 5
-  { _2P[i] = CONST_2P_2P_H0H5[i];
-    d = a[i] +4u64 b[i];
+  { d = a[i] +4u64 b[i];
     _2P[i] -4u64= b[i];
     b[i] = a[i] +4u64 _2P[i];
     a[i] = d;
   }
+
   return a, b;
+}
+
+inline fn __rrx_addsub_rrss(stack u256[5] as bs) -> reg u256[5], reg u256[5]
+{
+  inline int i;
+  reg u256[5] _2P a b;
+  reg u256 d c;
+
+  _2P = CONST_2P_2P_H0H5;
+  a   = as;
+  for i=0 to 5
+  { d = a[i] +4u64 bs[i];
+    _2P[i] -4u64= bs[i];
+    b[i] = a[i] +4u64 _2P[i];
+    a[i] = d;
+  }
+
+  return a, b;
+}
+
+#if 0
+inline fn __rrx_addsub_srrr(reg u256[5] a b) -> stack u256[5], reg u256[5]
+{
+  inline int i;
+  reg   u256[3] _2P;
+  stack u256[5] as;
+  reg u256 d c;
+
+  for i=0 to 3
+  { _2P[i] = #VPBROADCAST_2u128(CONST_2P_2P_H0H5_012[i]); }
+
+  for i=0 to 3
+  { d = a[i] +4u64 b[i];
+    c = _2P[i] -4u64 b[i];
+    b[i] = a[i] +4u64 c;
+    as[i] = d;
+  }
+
+  for i=3 to 5
+  { d = a[i] +4u64 b[i];
+    c = _2P[i-2] -4u64 b[i];
+    b[i] = a[i] +4u64 c;
+    as[i] = d;
+  }
+
+  return as, b;
+}
+#endif
+
+inline fn __rrx_addsub_srrr(reg u256[5] a b) -> stack u256[5], reg u256[5]
+{
+  inline int i;
+  reg   u256[5] _2P;
+  stack u256[5] as;
+  reg u256 d c;
+
+  _2P = CONST_2P_2P_H0H5;
+  for i=0 to 5
+  { d = a[i] +4u64 b[i];
+    _2P[i] -4u64= b[i];
+    b[i] = a[i] +4u64 _2P[i];
+    as[i] = d;
+  }
+
+  return as, b;
 }
 
 #ifdef EXPORT
 
-export fn addsub_rr(reg u64 ap bp)
+export fn rrx_addsub_rr(reg u64 ap bp)
 {
   inline int i;
   reg u256[5] a b;
@@ -31,7 +97,7 @@ export fn addsub_rr(reg u64 ap bp)
   { a[i] = (u256)[ap + 32*i];
     b[i] = (u256)[bp + 32*i];
   }
-  a, b = __addsub_rr(a, b);
+  a, b = __rrx_addsub_rr(a, b);
 
   for i=0 to 5
   { (u256)[ap + 32*i] = a[i];

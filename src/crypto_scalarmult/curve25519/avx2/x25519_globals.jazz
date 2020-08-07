@@ -1,10 +1,15 @@
-#ifndef X25519_GLOBALS
-#define X25519_GLOBALS
+#ifndef X25519_AVX2_GLOBALS
+#define X25519_AVX2_GLOBALS
 
 u256 g_times_19 = (4u64)[19, 19, 19, 19];
 
 u256 g_sh_0     = (4u64)[0, 1, 0, 1];
 u256 g_sh_1     = (4u64)[1, 0, 1, 0];
+
+u256[2] g_sh_01 = {
+  (4u64)[0, 1, 0, 1],
+  (4u64)[1, 0, 1, 0]
+};
 
 u256[2] g_sh_01 = {
   (4u64)[0, 1, 0, 1],
@@ -19,6 +24,12 @@ u256[5] CONST_2P_2P_H0H5 = {
   (4u64)[0x3fffffe, 0x7fffffe, 0x3fffffe, 0x7fffffe]
 };
 
+u128[3] CONST_2P_2P_H0H5_012 = {
+  (2u64)[0x3fffffe, 0x7ffffda],
+  (2u64)[0x7fffffe, 0x3fffffe],
+  (2u64)[0x3fffffe, 0x7fffffe]
+};
+
 u256 g_mask0  = (4u64)[0x1FFFFFF, 0x3FFFFFF, 0x1FFFFFF, 0x3FFFFFF];
 u256 g_mask1  = (4u64)[0x3FFFFFF, 0x1FFFFFF, 0x3FFFFFF, 0x1FFFFFF];
 u256 g_shift0 = (4u64)[25, 26, 25, 26];
@@ -26,4 +37,14 @@ u256 g_shift1 = (4u64)[26, 25, 26, 25];
 u256 g_shift_4 = (4u64)[4,64,4,64];
 u256 g_shift_1 = (4u64)[1,64,1,64];
 
+u128 g_vmask0 = (2u64)[0x1FFFFFF, 0x3FFFFFF];
+u128 g_vmask1 = (2u64)[0x3FFFFFF, 0x1FFFFFF];
+
+u256 g_a24 = (4u64)[121665, 121665, 121665, 121665];
+
+u256 g_swap_perm = (8u32)[7, 6, 5, 4, 3, 2, 1, 0];
+
+u256 g_3one = (4u64)[0,1,0,0];
+
 #endif
+

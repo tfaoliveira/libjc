@@ -1,5 +1,5 @@
-#ifndef X25519_SCALARMULT_BASE
-#define X25519_SCALARMULT_BASE
+#ifndef X25519_MULX_SCALARMULT_BASE
+#define X25519_MULX_SCALARMULT_BASE
 
 #include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult.jazz"
 
@@ -282,7 +282,7 @@ inline fn __fe64_1_x3() -> stack u64[4], reg u64[4], stack u64[4]
 
 // "How to (pre-)compute a ladder"
 // implementation in C: https://github.com/armfazh/rfc7748_precomputed
-inline fn __x25519_scalarmult_base(
+inline fn __x25519_scalarmult_base_mulx(
   reg u64 out,
   reg u64 scalar
 )

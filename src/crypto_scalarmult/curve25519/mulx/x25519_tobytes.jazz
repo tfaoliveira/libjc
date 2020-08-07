@@ -1,5 +1,5 @@
-#ifndef X25519_TOBYTES
-#define X25519_TOBYTES
+#ifndef X25519_MULX_TOBYTES
+#define X25519_MULX_TOBYTES
 
 // OpenSSL
 inline fn __fe64_tobytes(reg u64[4] f) -> reg u64[4]

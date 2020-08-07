@@ -1,5 +1,5 @@
-#ifndef X25519_ADD
-#define X25519_ADD
+#ifndef X25519_MULX_ADD
+#define X25519_MULX_ADD
 
 // h = f + g
 // h = 2**0*f0 + 2**64*f1 + 2**128*f2 + 2**192*f3 +

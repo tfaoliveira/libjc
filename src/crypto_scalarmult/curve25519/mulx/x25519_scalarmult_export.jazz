@@ -3,10 +3,10 @@
 
 export fn curve25519_mulx(reg u64 out scalar point)
 {
-  __x25519_scalarmult(out, scalar, point);
+  __x25519_scalarmult_mulx(out, scalar, point);
 }
 
 export fn curve25519_mulx_base(reg u64 out scalar)
 {
-  __x25519_scalarmult_base(out, scalar);
+  __x25519_scalarmult_base_mulx(out, scalar);
 }

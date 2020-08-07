@@ -1,6 +1,7 @@
-#ifndef X25519_SQR
-#define X25519_SQR
-#include "x25519_reduce.jazz"
+#ifndef X25519_MULX_SQR
+#define X25519_MULX_SQR
+
+#include "crypto_scalarmult/curve25519/mulx/x25519_reduce.jazz"
 
 // note: _l stands for the lower 64 bits of multiplication, _h for higher
 //

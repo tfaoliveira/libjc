@@ -1,0 +1,201 @@
+#ifndef X25519_AVX2_SER
+#define X25519_AVX2_SER
+
+#include "crypto_scalarmult/curve25519/avx2/x25519_globals.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_macros.jazz"
+#include "crypto_scalarmult/curve25519/mulx/x25519_tobytes.jazz"
+
+//TODO CHECK safety
+inline fn __rrx_ser_rs(stack u256[3] a) -> reg u64[4]
+{
+  inline int i;
+  reg bool cf;
+  reg u64[4] c; 
+  reg u64 l h c4;
+
+  ////
+  c[0] = a[u64 0];
+  for i=1 to 4
+  { _,_,_,_,_, c[i] = #set0(); }
+  _,_,_,_,_, c4 = #set0();
+
+  //
+  l = a[u64 2];
+  _,_,_,_,_, h = #set0();
+  _,_,_,_,_, h = #SHLD(h, l, 26);
+  l <<= 26;
+  cf, c[0] += l;
+  cf, c[1] += h + cf;
+  _,  c[2] += 0 + cf;
+
+  //
+  l = a[u64 4];
+  _,_,_,_,_, h = #set0();
+  _,_,_,_,_, h = #SHLD(h, l, 51);
+  l <<= 51;
+  cf, c[0] += l;
+  cf, c[1] += h + cf;
+  _,  c[2] += 0 + cf;
+
+  //
+  l = a[u64 6];
+  _,_,_,_,_, h = #set0();
+  _,_,_,_,_, h = #SHLD(h, l, 13);
+  l <<= 13;
+  cf, c[1] += l;
+  cf, c[2] += h + cf;
+  _,  c[3] += 0 + cf;
+
+  //
+  l = a[u64 8];
+  _,_,_,_,_, h = #set0();
+  _,_,_,_,_, h = #SHLD(h, l, 38);
+  l <<= 38;
+  cf, c[1] += l;
+  cf, c[2] += h + cf;
+  _,  c[3] += 0 + cf;
+
+  ////
+  l = a[u64 1];
+  cf, c[2] += l;
+  cf, c[3] += 0 + cf;
+  _,  c4   += 0 + cf;
+
+  //
+  l = a[u64 3];
+  _,_,_,_,_, h = #set0();
+  _,_,_,_,_, h = #SHLD(h, l, 25);
+  l <<= 25;
+  cf, c[2] += l;
+  cf, c[3] += h + cf;
+  _,  c4   += 0 + cf;
+
+  //
+  l = a[u64 5];
+  _,_,_,_,_, h = #set0();
+  _,_,_,_,_, h = #SHLD(h, l, 51);
+  l <<= 51;
+  cf, c[2] += l;
+  cf, c[3] += h + cf;
+  _,  c4   += 0 + cf;
+
+  //
+  l = a[u64 7];
+  _,_,_,_,_, h = #set0();
+  _,_,_,_,_, h = #SHLD(h, l, 12);
+  l <<= 12;
+  cf, c[3] += l;
+  cf, c4   += h + cf;
+
+  //
+  l = a[u64 9];
+  _,_,_,_,_, h = #set0();
+  _,_,_,_,_, h = #SHLD(h, l, 38);
+  l <<= 38;
+  cf, c[3] += l;
+  cf, c4   += h + cf;
+
+  //
+  _, _, _, _, _, l = #IMULri(c4, 38);  
+  cf, c[0] += l;
+  cf, c[1] += 0 + cf;
+
+  c = __fe64_tobytes(c);
+  return c;
+}
+
+inline fn __rrx_unser_rr(reg u64[4] pA) -> reg u256[3]
+{
+  reg u128 xA xF;
+  reg u128 z z0 z1 z2 z3 z4;
+  reg u128 xB xC xD xE xG xH xI xJ;
+  reg u256[3] pC;
+  stack u256[3] pCs;
+
+  pA = __fe64_tobytes(pA);
+
+  xA = #set0_128();
+  xF = #set0_128();
+  xA = #VPINSR_2u64(xA, pA[0], 0);
+  xA = #VPINSR_2u64(xA, pA[1], 1);
+  xF = #VPINSR_2u64(xF, pA[2], 0);
+  xF = #VPINSR_2u64(xF, pA[3], 1);
+
+  xC = SHR8N128(xA, 6);  xC = SHR128(xC, 3);
+  xH = SHR8N128(xF, 6);  xH = SHR128(xH, 3);
+  xE = SHR8N128(xA, 12); xE = SHR128(xE, 6);
+  xJ = SHR8N128(xF, 12); xJ = SHR128(xJ, 6);
+
+  xB = SHR128(xA, 26);
+  xG = SHR128(xF, 25);
+  xD = SHR128(xC, 26);
+  xI = SHR128(xH, 25);
+
+  z0 = UPKL64128(xA, xF);
+  z1 = UPKL64128(xB, xG);
+  z2 = UPKL64128(xC, xH);
+  z3 = UPKL64128(xD, xI);
+  z4 = UPKL64128(xE, xJ);
+
+  z0 &= g_vmask0;
+  z1 &= g_vmask1;
+  z2 &= g_vmask0;
+  z3 &= g_vmask1;
+  z4 &= g_vmask0;
+
+  // TODO vinsertf128
+  z = #set0_128();
+  pCs[u128 0] = z0;
+  pCs[u128 1] = z1;
+
+  pCs[u128 2] = z2;
+  pCs[u128 3] = z3;
+
+  pCs[u128 4] = z4;
+  pCs[u128 5] = z;
+  pC = pCs;
+
+  return pC;
+}
+
+
+#ifdef EXPORT
+
+export fn rrx_ser_rs(reg u64 cp ap)
+{
+  inline int i;
+  reg u256 av;
+  stack u256[3] a;
+  reg u64[4] c;
+
+  for i=0 to 3
+  { av = (u256)[ap + 32*i];
+    a[i] = av;
+  }
+  c = __rrx_ser_rs(a);
+
+  for i=0 to 4
+  { [cp + 8*i] = c[i]; }
+}
+
+export fn rrx_unser_rr(reg u64 cp ap)
+{
+  inline int i;
+  reg u64[4] a;
+  reg u256[3] c;
+
+  for i=0 to 4
+  { a[i] = [ap + 8*i]; }
+
+  c = __rrx_unser_rr(a);
+
+  
+  for i=0 to 3
+  { (u256)[cp + 32*i] = c[i]; }
+}
+
+
+#endif
+
+#endif
+

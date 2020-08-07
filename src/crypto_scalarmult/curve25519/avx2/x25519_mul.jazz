@@ -1,10 +1,10 @@
-#ifndef X25519_MUL
-#define X25519_MUL
+#ifndef X25519_AVX2_MUL
+#define X25519_AVX2_MUL
 
-#include "x25519_globals.jazz"
-#include "x25519_macros.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_globals.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_macros.jazz"
 
-inline fn __mul_rss(stack u256[5] a, stack u256[5] b) -> reg u256[5]
+inline fn __rrx_mul_rss(stack u256[5] a, stack u256[5] b, stack u256 sh_0 sh_1) -> reg u256[5]
 {
   inline int i;
 	reg u256 x ai aj;
@@ -15,7 +15,7 @@ inline fn __mul_rss(stack u256[5] a, stack u256[5] b) -> reg u256[5]
 
   for i=4 downto -1
   { er[i] = MUL(br[i], g_times_19);
-    //dr[i] = ALIGNX(br[i],er[i]);
+    //dr[i] = ALIGNX(br[i],er[i]); //TODO
     ALIGNR(dr[i],br[i],er[i]);
     e[i]  = er[i]; 
     d[i]  = dr[i]; }
@@ -55,22 +55,17 @@ inline fn __mul_rss(stack u256[5] a, stack u256[5] b) -> reg u256[5]
 	ADD_MUL(c[3],ai,d[0]);          ADD_MUL(k[3],aj,e[4]);
 	ADD_MUL(c[4],ai,d[1]);          ADD_MUL(k[4],aj,d[0]);
 
-	t[0] = SHLV(k[0],g_sh_0);
-	t[1] = SHLV(k[1],g_sh_1);
-	t[2] = SHLV(k[2],g_sh_0);
-	t[3] = SHLV(k[3],g_sh_1);
-	t[4] = SHLV(k[4],g_sh_0);
-
-	c[0] +4u64= t[0];
-	c[1] +4u64= t[1];
-	c[2] +4u64= t[2];
-	c[3] +4u64= t[3];
+	t[0] = SHLV(k[0],sh_0); t[1] = SHLV(k[1],sh_1);
+	c[0] +4u64= t[0];         c[1] +4u64= t[1];
+	t[2] = SHLV(k[2],sh_0); t[3] = SHLV(k[3],sh_1);
+	c[2] +4u64= t[2];         c[3] +4u64= t[3];
+	t[4] = SHLV(k[4],sh_0);
 	c[4] +4u64= t[4];
 
   return c;
 }
 
-inline fn __mul_rmm(reg u64 a b) -> reg u256[5]
+inline fn __rrx_mul_rmm(reg u64 a b) -> reg u256[5]
 {
   inline int i;
 	reg u256 x ai aj;
@@ -82,7 +77,7 @@ inline fn __mul_rmm(reg u64 a b) -> reg u256[5]
 
   for i=4 downto -1
   { er[i] = MUL(br[i], g_times_19);
-    //dr[i] = ALIGNX(br[i],er[i]);
+    //dr[i] = ALIGNX(br[i],er[i]); //TODO
     ALIGNR(dr[i],br[i],er[i]);
     e[i]  = er[i];
     d[i]  = dr[i];
@@ -140,12 +135,16 @@ inline fn __mul_rmm(reg u64 a b) -> reg u256[5]
 
 #ifdef EXPORT
 
-export fn mul_rss(reg u64 cp ap bp)
+export fn rrx_mul_rss(reg u64 cp ap bp)
 {
   inline int i;
-  reg u256 av bv;
+  reg u256 v0 v1 av bv;
   reg u256[5] c;
   stack u256[5] a b;
+  stack u256 sh_0 sh_1;
+
+  v0 = g_sh_0; v1 = g_sh_1;
+  sh_0 = v0;   sh_1 = v1;
 
   for i=0 to 5
   { av = (u256)[ap + 32*i];
@@ -153,17 +152,17 @@ export fn mul_rss(reg u64 cp ap bp)
     a[i] = av;
     b[i] = bv;
   }
-  c = __mul_rss(a, b);
+  c = __rrx_mul_rss(a, b, sh_0, sh_1);
 
   for i=0 to 5
   { (u256)[cp + 32*i] = c[i]; }
 }
 
-export fn mul_rmm(reg u64 cp ap bp)
+export fn rrx_mul_rmm(reg u64 cp ap bp)
 {
   inline int i;
   reg u256[5] cr;
-  cr = __mul_rmm(ap, bp);
+  cr = __rrx_mul_rmm(ap, bp);
   for i=0 to 5
   { (u256)[cp + 32*i] = cr[i]; }
 }
@@ -171,3 +170,4 @@ export fn mul_rmm(reg u64 cp ap bp)
 #endif
 
 #endif
+

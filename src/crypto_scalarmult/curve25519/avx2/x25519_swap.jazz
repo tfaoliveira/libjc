@@ -1,0 +1,102 @@
+#ifndef X25519_SWAP
+#define X25519_SWAP
+
+#include "x25519_globals.jazz"
+#include "x25519_macros.jazz"
+
+inline fn __rrx_cmov_ss(reg u64 bit, stack u256[5] a b, inline int ao bo) -> stack u256[5]
+{
+  inline int i;
+  reg bool zf;
+  reg u32 v;
+
+  _, _, _, _, zf = #TEST(bit, bit);
+
+  for i=0 to 5
+  { v = a[u32 0+ao+i*8];
+    v = b[u32 0+bo+i*8] if !zf;
+    a[u32 0+ao+i*8] = v;
+
+    v = a[u32 2+ao+i*8];
+    v = b[u32 2+bo+i*8] if !zf;
+    a[u32 2+ao+i*8] = v;
+  }
+  
+  return a;
+}
+
+inline fn __rrx_cmov1_ss(reg u64 bit, stack u256[5] a, inline int ao bo) -> stack u256[5]
+{
+  inline int i;
+  reg bool zf;
+  reg u32 v;
+
+  _, _, _, _, zf = #TEST(bit, bit);
+
+  for i=0 to 5
+  { v = a[u32 0+ao+i*8];
+    v = a[u32 0+bo+i*8] if !zf;
+    a[u32 0+ao+i*8] = v;
+
+    v = a[u32 2+ao+i*8];
+    v = a[u32 2+bo+i*8] if !zf;
+    a[u32 2+ao+i*8] = v;
+  }
+  
+  return a;
+}
+
+#if 0
+fn _rrx_cmov1_ss(reg u64 bit, reg ptr u256[5] a) -> reg ptr u256[5]
+{
+  inline int ao bo i;
+  reg bool zf;
+  reg u32 v;
+
+  _, _, _, _, zf = #TEST(bit, bit);
+
+  ao = 0;
+  bo = 4;
+  for i=0 to 5
+  { v = a[u32 0+ao+i*8];
+    v = a[u32 0+bo+i*8] if !zf;
+    a[u32 0+ao+i*8] = v;
+
+    v = a[u32 2+ao+i*8];
+    v = a[u32 2+bo+i*8] if !zf;
+    a[u32 2+ao+i*8] = v;
+  }
+  
+  return a;
+}
+#endif
+
+//TODO : permutation
+
+#ifdef EXPORT
+
+export fn rrx_cmov_ss(reg u64 bit ap bp)
+{
+  inline int i;
+  reg u256 v1 v2;
+  stack u256[5] a b;
+  
+  for i=0 to 5
+  { v1 = (u256)[ap + 32*i];
+    v2 = (u256)[bp + 32*i];
+    a[i] = v1;
+    b[i] = v2;
+  }
+
+  a = __rrx_cmov_ss(bit,a,b,0,4);
+
+  for i=0 to 5
+  { v1 = a[i];
+    (u256)[ap + 32*i] = v1;
+  }
+}
+
+#endif
+
+#endif
+

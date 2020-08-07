@@ -1,6 +1,6 @@
 JFLAGS:= -lea
 
-default: x25519.japp x25519.s
+default: x25519_scalarmult.japp x25519_scalarmult.s
 	@true
 
 include ../../../Makefile.common

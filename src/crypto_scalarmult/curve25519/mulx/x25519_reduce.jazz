@@ -1,5 +1,5 @@
-#ifndef X25519_REDUCE
-#define X25519_REDUCE
+#ifndef X25519_MULX_REDUCE
+#define X25519_MULX_REDUCE
 
 // we need to reduce h such that (read comments from x25519_mul.jazz for context):
 //

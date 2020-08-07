@@ -1,10 +1,10 @@
-#ifndef X25519_INTER
-#define X25519_INTER
+#ifndef X25519_AVX2_INTER
+#define X25519_AVX2_INTER
 
-#include "x25519_globals.jazz"
-#include "x25519_macros.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_globals.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_macros.jazz"
 
-inline fn __inter1_rr(reg u256[3] a0) -> reg u256[5]
+inline fn __rrx_inter1_rr(reg u256[3] a0) -> reg u256[5]
 {
   reg u256 A0 A4 A8 B0 B4 B8;
   reg u256[5] r;
@@ -25,7 +25,7 @@ inline fn __inter1_rr(reg u256[3] a0) -> reg u256[5]
   return r;
 }
 
-inline fn __inter2_rss(stack u256[3] a0 a1) -> reg u256[5]
+inline fn __rrx_inter2_rss(stack u256[3] a0 a1) -> reg u256[5]
 {
   reg u256 A0 A4 A8 B0 B4 B8;
   reg u256[5] r;
@@ -46,7 +46,7 @@ inline fn __inter2_rss(stack u256[3] a0 a1) -> reg u256[5]
   return r;
 }
 
-inline fn __deinter_rrr(reg u256[5] a) -> reg u256[3], reg u256[3]
+inline fn __rrx_deinter_rrr(reg u256[5] a) -> reg u256[3], reg u256[3]
 {
   reg u256 t;
   reg u256[3] a0 a1;
@@ -56,15 +56,33 @@ inline fn __deinter_rrr(reg u256[5] a) -> reg u256[3], reg u256[3]
   a0[1] = #VPERM2I128(a[2], a[3], (2u4)[2,0]);
   a1[1] = #VPERM2I128(a[2], a[3], (2u4)[3,1]);
   a0[2] = a[4];
+
   //TODO: CHECKME bottleneck: cast u128 into u256 with undefined high?
   t = #set0_256();
   a1[2] = #VPERM2I128(t, a[4], (2u4)[0,3]);
   return a0, a1;
 }
 
+inline fn __rrx_deinter1_sr(reg u256[5] a) -> stack u256[3]
+{
+  reg   u256 t;
+  reg   u256[3] a0;
+  stack u256[3] a0s;
+
+  a0[0]  = #VPERM2I128(a[0], a[1], (2u4)[2,0]);
+  a0s[0] = a0[0];
+
+  a0[1]  = #VPERM2I128(a[2], a[3], (2u4)[2,0]);
+  a0s[1] = a0[1];
+
+  a0s[2] = a[4];
+
+  return a0s;
+}
+
 #ifdef EXPORT
 
-export fn inter1_rr(reg u64 cp ap)
+export fn rrx_inter1_rr(reg u64 cp ap)
 {
   inline int i;
   reg u256[3] a;
@@ -72,13 +90,13 @@ export fn inter1_rr(reg u64 cp ap)
 
   for i=0 to 3
   { a[i] = (u256)[ap + 32*i]; }
-  c = __inter1_rr(a);
+  c = __rrx_inter1_rr(a);
 
   for i=0 to 5
   { (u256)[cp + 32*i] = c[i]; }
 }
 
-export fn inter2_rss(reg u64 cp ap bp)
+export fn rrx_inter2_rss(reg u64 cp ap bp)
 {
   inline int i;
   reg u256 av bv;
@@ -91,13 +109,13 @@ export fn inter2_rss(reg u64 cp ap bp)
     bv = (u256)[bp + 32*i];
     b[i] = bv;
   }
-  c = __inter2_rss(a,b);
+  c = __rrx_inter2_rss(a,b);
 
   for i=0 to 5
   { (u256)[cp + 32*i] = c[i]; }
 }
 
-export fn deinter_rrr(reg u64 ap bp cp)
+export fn rrx_deinter_rrr(reg u64 ap bp cp)
 {
   inline int i;
   reg u256[3] a b;
@@ -106,7 +124,7 @@ export fn deinter_rrr(reg u64 ap bp cp)
   for i=0 to 5
   { c[i] = (u256)[cp + 32*i]; }
 
-  a, b = __deinter_rrr(c);
+  a, b = __rrx_deinter_rrr(c);
 
   for i=0 to 3
   { (u256)[ap + 32*i] = a[i];
@@ -117,3 +135,4 @@ export fn deinter_rrr(reg u64 ap bp cp)
 #endif
 
 #endif
+
