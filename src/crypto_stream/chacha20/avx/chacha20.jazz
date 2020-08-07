@@ -36,7 +36,7 @@ param int i_32 = 32;
 
 
 
-fn load_shufb_cmd() -> stack u128, stack u128
+inline fn __load_shufb_cmd() -> stack u128, stack u128
 {
   reg   u128   r16,   r8;
   stack u128 s_r16, s_r8;
@@ -50,7 +50,7 @@ fn load_shufb_cmd() -> stack u128, stack u128
 
 
 
-fn init_x1(reg u64 key nonce, reg u32 counter) -> reg u128[4]
+inline fn __init_x1(reg u64 key nonce, reg u32 counter) -> reg u128[4]
 {
   reg u128[4] st;
 
@@ -72,7 +72,7 @@ fn init_x1(reg u64 key nonce, reg u32 counter) -> reg u128[4]
 
 
 
-fn init_x4(reg u64 k n1, reg u32 ctr) -> stack u128[16]
+inline fn __init_x4(reg u64 k n1, reg u32 ctr) -> stack u128[16]
 {
   inline int i;
   stack u128[16] st;
@@ -114,7 +114,7 @@ fn init_x4(reg u64 k n1, reg u32 ctr) -> stack u128[16]
 
 
 
-fn copy_state_x1(reg u128[4] st) -> reg u128[4]
+inline fn __copy_state_x1(reg u128[4] st) -> reg u128[4]
 {
   reg u128[4] k;
   k = st;
@@ -123,7 +123,7 @@ fn copy_state_x1(reg u128[4] st) -> reg u128[4]
 
 
 
-fn copy_state_x2(reg u128[4] st) -> reg u128[4], reg u128[4]
+inline fn __copy_state_x2(reg u128[4] st) -> reg u128[4], reg u128[4]
 {
   reg u128[4] k1 k2;
   k1 = st;
@@ -140,7 +140,7 @@ fn copy_state_x2(reg u128[4] st) -> reg u128[4], reg u128[4]
 
 
 
-fn copy_state_x4(stack u128[16] st) -> reg u128[16]
+inline fn __copy_state_x4(stack u128[16] st) -> reg u128[16]
 {
   reg u128[16] k;
   k = st;
@@ -149,7 +149,7 @@ fn copy_state_x4(stack u128[16] st) -> reg u128[16]
 
 
 
-fn sum_states_x1(reg u128[4] k st) -> reg u128[4]
+inline fn __sum_states_x1(reg u128[4] k st) -> reg u128[4]
 {
   inline int i;
   for i=0 to 4
@@ -159,18 +159,18 @@ fn sum_states_x1(reg u128[4] k st) -> reg u128[4]
 
 
 
-fn sum_states_x2(reg u128[4] k1 k2 st) -> reg u128[4], reg u128[4]
+inline fn __sum_states_x2(reg u128[4] k1 k2 st) -> reg u128[4], reg u128[4]
 {
   inline int i;
-  k1 = sum_states_x1(k1, st);
-  k2 = sum_states_x1(k2, st);
+  k1 = __sum_states_x1(k1, st);
+  k2 = __sum_states_x1(k2, st);
   k2[3] +4u32= g_p1;
   return k1, k2;
 }
 
 
 
-fn sum_states_x4(reg u128[16] k, stack u128[16] st) -> reg u128[16]
+inline fn __sum_states_x4(reg u128[16] k, stack u128[16] st) -> reg u128[16]
 {
   inline int i;
   for i=0 to 16
@@ -188,7 +188,7 @@ fn sum_states_x4(reg u128[16] k, stack u128[16] st) -> reg u128[16]
 // t[5] = [51, 50, 35, 34]
 // t[6] = [53, 52, 37, 36]
 // t[7] = [55, 54, 39, 38]
-fn sub_rotate(reg u128[8] t) -> reg u128[8]
+inline fn __sub_rotate(reg u128[8] t) -> reg u128[8]
 {
   inline int i;
   reg u128[8] x;
@@ -224,7 +224,7 @@ fn sub_rotate(reg u128[8] t) -> reg u128[8]
 // x[5] = [53, 37, 21, 5]
 // x[6] = [54, 38, 22, 6]
 // x[7] = [55, 39, 23, 7]
-fn rotate(reg u128[8] x) -> reg u128[8]
+inline fn __rotate(reg u128[8] x) -> reg u128[8]
 {
   inline int i;
   reg u128[8] t;
@@ -233,14 +233,14 @@ fn rotate(reg u128[8] x) -> reg u128[8]
   { t[  i] = #VPUNPCKL_4u32(x[2*i+0], x[2*i+1]);
     t[4+i] = #VPUNPCKH_4u32(x[2*i+0], x[2*i+1]); }
 
-  x = sub_rotate(t);
+  x = __sub_rotate(t);
 
   return x;
 }
 
 
 
-fn rotate_stack(stack u128[8] s) -> reg u128[8]
+inline fn __rotate_stack(stack u128[8] s) -> reg u128[8]
 {
   inline int i;
   reg u128[8] t, x;
@@ -253,14 +253,14 @@ fn rotate_stack(stack u128[8] s) -> reg u128[8]
     t[4+i] = #VPUNPCKH_4u32(x[i], s[2*i+1]);
   }
 
-  x = sub_rotate(t);
+  x = __sub_rotate(t);
 
   return x;
 }
 
 
 
-fn rotate_first_half_x8(reg u128[16] k) -> reg u128[8], stack u128[8]
+inline fn __rotate_first_half_x8(reg u128[16] k) -> reg u128[8], stack u128[8]
 {
   inline int i;
   stack u128[8] s_k8_15;
@@ -272,24 +272,24 @@ fn rotate_first_half_x8(reg u128[16] k) -> reg u128[8], stack u128[8]
   for i=0 to 8
   { k0_7[i] = k[i]; }
 
-  k0_7 = rotate(k0_7);
+  k0_7 = __rotate(k0_7);
 
   return k0_7, s_k8_15;
 }
 
 
 
-fn rotate_second_half_x8(stack u128[8] s_k8_15) -> reg u128[8]
+inline fn __rotate_second_half_x8(stack u128[8] s_k8_15) -> reg u128[8]
 {
   inline int i;
   reg u128[8] k8_15;
-  k8_15 = rotate_stack(s_k8_15);
+  k8_15 = __rotate_stack(s_k8_15);
   return k8_15;
 }
 
 
 
-fn interleave(stack u128[8] s, reg u128[8] k, inline int o) -> reg u128[8]
+inline fn __interleave(stack u128[8] s, reg u128[8] k, inline int o) -> reg u128[8]
 {
   inline int i;
   reg u128[8] sk;
@@ -308,7 +308,7 @@ fn interleave(stack u128[8] s, reg u128[8] k, inline int o) -> reg u128[8]
 
 
 
-fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u64, reg u32
+inline fn __update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u64, reg u32
 {
   output += n;
   plain += n;
@@ -318,14 +318,14 @@ fn update_ptr(reg u64 output plain, reg u32 len, inline int n) -> reg u64, reg u
 
 
 
-fn store(reg u64 output plain, reg u32 len, reg u128[2] k) -> reg u64, reg u64, reg u32, reg u128[2]
+inline fn __store(reg u64 output plain, reg u32 len, reg u128[2] k) -> reg u64, reg u64, reg u32, reg u128[2]
 {
   k[0] ^= (u128)[plain +  0];
   k[1] ^= (u128)[plain + 16];
   (u128)[output +  0] = k[0];
   (u128)[output + 16] = k[1];
 
-  output, plain, len = update_ptr(output, plain, len, 32);
+  output, plain, len = __update_ptr(output, plain, len, 32);
 
   return output, plain, len, k;
 }
@@ -333,7 +333,7 @@ fn store(reg u64 output plain, reg u32 len, reg u128[2] k) -> reg u64, reg u64, 
 
 
 // stores at most 32 bytes
-fn store_last(reg u64 output plain, reg u32 len, reg u128[2] k)
+inline fn __store_last(reg u64 output plain, reg u32 len, reg u128[2] k)
 {
   reg u128 r1;
   reg u64  r2;
@@ -345,7 +345,7 @@ fn store_last(reg u64 output plain, reg u32 len, reg u128[2] k)
   {
     r1 ^= (u128)[plain + 0];
     (u128)[output + 0] = r1;
-    output, plain, len = update_ptr(output, plain, len, 16);
+    output, plain, len = __update_ptr(output, plain, len, 16);
     r1 = k[1];
   }
 
@@ -355,7 +355,7 @@ fn store_last(reg u64 output plain, reg u32 len, reg u128[2] k)
   {
     r2 ^= (u64)[plain + 0];
     (u64)[output + 0] = r2;
-    output, plain, len = update_ptr(output, plain, len, 8);
+    output, plain, len = __update_ptr(output, plain, len, 8);
     r2 = #VPEXTR_64(r1, 1);
   }
 
@@ -366,14 +366,14 @@ fn store_last(reg u64 output plain, reg u32 len, reg u128[2] k)
     (u8)[output + 0] = r3;
     r2 >>= 8;
 
-    output, plain, len = update_ptr(output, plain, len, 1);
+    output, plain, len = __update_ptr(output, plain, len, 1);
   }
 }
 
 
 
 // stores 64 bytes
-fn store_x1(reg u64 output plain, reg u32 len, reg u128[4] k) -> reg u64, reg u64, reg u32, reg u128[4]
+fn __store_x1(reg u64 output plain, reg u32 len, reg u128[4] k) -> reg u64, reg u64, reg u32, reg u128[4]
 {
   inline int i;
 
@@ -383,14 +383,14 @@ fn store_x1(reg u64 output plain, reg u32 len, reg u128[4] k) -> reg u64, reg u6
   for i=0 to 4
   { (u128)[output + 16*i] = k[i]; }
 
-  output, plain, len = update_ptr(output, plain, len, 64);
+  output, plain, len = __update_ptr(output, plain, len, 64);
 
   return output, plain, len, k;
 }
 
 
 // stores at most 64 bytes
-fn store_x1_last(reg u64 output plain, reg u32 len, reg u128[4] k)
+inline fn __store_x1_last(reg u64 output plain, reg u32 len, reg u128[4] k)
 {
   reg u128[2] r;
 
@@ -399,17 +399,17 @@ fn store_x1_last(reg u64 output plain, reg u32 len, reg u128[4] k)
 
   if(len >= 32)
   {
-    output, plain, len, r = store(output, plain, len, r);
+    output, plain, len, r = __store(output, plain, len, r);
     r[0] = k[2];
     r[1] = k[3];
   }
 
-  store_last(output, plain, len, r);
+  __store_last(output, plain, len, r);
 }
 
 
 
-fn store_x2(reg u64 output plain, reg u32 len, reg u128[8] k) -> reg u64, reg u64, reg u32
+inline fn __store_x2(reg u64 output plain, reg u32 len, reg u128[8] k) -> reg u64, reg u64, reg u32
 {
   inline int i;
 
@@ -419,14 +419,14 @@ fn store_x2(reg u64 output plain, reg u32 len, reg u128[8] k) -> reg u64, reg u6
   for i=0 to 8
   { (u128)[output + 16*i] = k[i]; }
 
-  output, plain, len = update_ptr(output, plain, len, 128);
+  output, plain, len = __update_ptr(output, plain, len, 128);
 
   return output, plain, len;
 }
 
 
 
-fn store_x2_last(reg u64 output plain, reg u32 len, reg u128[8] k)
+inline fn __store_x2_last(reg u64 output plain, reg u32 len, reg u128[8] k)
 {
   inline int i;
   reg u128[4] r;
@@ -436,16 +436,16 @@ fn store_x2_last(reg u64 output plain, reg u32 len, reg u128[8] k)
 
   if(len >= 64)
   {
-    output, plain, len, r = store_x1(output, plain, len, r);
+    output, plain, len, r = __store_x1(output, plain, len, r);
     for i=0 to 4 { r[i] = k[i+4]; }
   }
 
-  store_x1_last(output, plain, len, r);
+  __store_x1_last(output, plain, len, r);
 }
 
 
 
-fn store_half_x4(reg u64 output plain, reg u32 len, reg u128[8] k, inline int o)
+inline fn __store_half_x4(reg u64 output plain, reg u32 len, reg u128[8] k, inline int o)
 {
   inline int i;
 
@@ -460,45 +460,45 @@ fn store_half_x4(reg u64 output plain, reg u32 len, reg u128[8] k, inline int o)
 
 
 
-fn store_x4(reg u64 output plain, reg u32 len, reg u128[16] k) -> reg u64, reg u64, reg u32
+inline fn __store_x4(reg u64 output plain, reg u32 len, reg u128[16] k) -> reg u64, reg u64, reg u32
 {
   stack u128[8] s_k8_15;
   reg   u128[8] k0_7, k8_15;
 
-  k0_7, s_k8_15 = rotate_first_half_x8(k);
-  store_half_x4(output, plain, len, k0_7, i_0);
-  k8_15 = rotate_second_half_x8(s_k8_15);
-  store_half_x4(output, plain, len, k8_15, i_32);
+  k0_7, s_k8_15 = __rotate_first_half_x8(k);
+  __store_half_x4(output, plain, len, k0_7, i_0);
+  k8_15 = __rotate_second_half_x8(s_k8_15);
+  __store_half_x4(output, plain, len, k8_15, i_32);
 
-  output, plain, len = update_ptr(output, plain, len, 256);
+  output, plain, len = __update_ptr(output, plain, len, 256);
 
   return output, plain, len;
 }
 
 
 
-fn store_x4_last(reg u64 output plain, reg u32 len, reg u128[16] k)
+inline fn __store_x4_last(reg u64 output plain, reg u32 len, reg u128[16] k)
 {
   stack u128[8] s_k0_7 s_k8_15;
   reg   u128[8] k0_7 k8_15 i0_7;
 
-  k0_7, s_k8_15 = rotate_first_half_x8(k);
+  k0_7, s_k8_15 = __rotate_first_half_x8(k);
   s_k0_7 = k0_7;
-  k8_15 = rotate_second_half_x8(s_k8_15);
-  i0_7 = interleave(s_k0_7, k8_15, i_0);
+  k8_15 = __rotate_second_half_x8(s_k8_15);
+  i0_7 = __interleave(s_k0_7, k8_15, i_0);
 
   if(len >= 128)
   {
-    output, plain, len = store_x2(output, plain, len, i0_7);
-    i0_7 = interleave(s_k0_7, k8_15, i_4);
+    output, plain, len = __store_x2(output, plain, len, i0_7);
+    i0_7 = __interleave(s_k0_7, k8_15, i_4);
   }
 
-  store_x2_last(output, plain, len, i0_7);
+  __store_x2_last(output, plain, len, i0_7);
 }
 
 
 
-fn increment_counter_x4(stack u128[16] s) -> stack u128[16]
+inline fn __increment_counter_x4(stack u128[16] s) -> stack u128[16]
 {
   reg u128 t;
   t = g_cnt_inc;
@@ -509,7 +509,7 @@ fn increment_counter_x4(stack u128[16] s) -> stack u128[16]
 
 
 
-fn rotate_x4(reg u128[4] k, inline int i r, reg u128 r16 r8) -> reg u128[4]
+inline fn __rotate_x4(reg u128[4] k, inline int i r, reg u128 r16 r8) -> reg u128[4]
 {
   // 4 of x4 is the number of lanes, not stream blocks
   reg u128 t;
@@ -532,28 +532,28 @@ fn rotate_x4(reg u128[4] k, inline int i r, reg u128 r16 r8) -> reg u128[4]
 
 
 
-fn line_x4(reg u128[4] k, inline int a b c r, reg u128 r16 r8) -> reg u128[4]
+inline fn __line_x4(reg u128[4] k, inline int a b c r, reg u128 r16 r8) -> reg u128[4]
 {
   k[a/4] +4u32= k[b/4];
   k[c/4] ^= k[a/4];
-  k = rotate_x4(k, (c/4), r, r16, r8);
+  k = __rotate_x4(k, (c/4), r, r16, r8);
   return k;
 }
 
 
 
-fn round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
+inline fn __round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
 {
-  k = line_x4(k, 0, 4, 12, 16, r16, r8);
-  k = line_x4(k, 8, 12, 4, 12, r16, r8);
-  k = line_x4(k, 0, 4, 12,  8, r16, r8);
-  k = line_x4(k, 8, 12, 4,  7, r16, r8);
+  k = __line_x4(k, 0, 4, 12, 16, r16, r8);
+  k = __line_x4(k, 8, 12, 4, 12, r16, r8);
+  k = __line_x4(k, 0, 4, 12,  8, r16, r8);
+  k = __line_x4(k, 8, 12, 4,  7, r16, r8);
   return k;
 }
 
 
 
-fn shuffle_state_x1(reg u128[4] k) -> reg u128[4]
+inline fn __shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 {
   k[1] = #VPSHUFD_128(k[1], (4u2)[0,3,2,1]);
   k[2] = #VPSHUFD_128(k[2], (4u2)[1,0,3,2]);
@@ -563,7 +563,7 @@ fn shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 
 
 
-fn reverse_shuffle_state_x1(reg u128[4] k) -> reg u128[4]
+inline fn __reverse_shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 {
   k[1] = #VPSHUFD_128(k[1], (4u2)[2,1,0,3]);
   k[2] = #VPSHUFD_128(k[2], (4u2)[1,0,3,2]);
@@ -573,25 +573,25 @@ fn reverse_shuffle_state_x1(reg u128[4] k) -> reg u128[4]
 
 
 
-fn column_round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
+inline fn __column_round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
 {
-  k = round_x1(k, r16, r8);
+  k = __round_x1(k, r16, r8);
   return k;
 }
 
 
 
-fn diagonal_round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
+inline fn __diagonal_round_x1(reg u128[4] k, reg u128 r16 r8) -> reg u128[4]
 {
-  k = shuffle_state_x1(k);
-  k = round_x1(k, r16, r8);
-  k = reverse_shuffle_state_x1(k);
+  k = __shuffle_state_x1(k);
+  k = __round_x1(k, r16, r8);
+  k = __reverse_shuffle_state_x1(k);
   return k;
 }
 
 
 
-fn rounds_x1(reg u128[4] k) -> reg u128[4]
+inline fn __rounds_x1(reg u128[4] k) -> reg u128[4]
 {
   reg u64 c;
   reg u128 r16 r8;
@@ -602,8 +602,8 @@ fn rounds_x1(reg u128[4] k) -> reg u128[4]
   c = 0;
   while(c < 10)
   {
-    k = column_round_x1(k, r16, r8);
-    k = diagonal_round_x1(k, r16, r8);
+    k = __column_round_x1(k, r16, r8);
+    k = __diagonal_round_x1(k, r16, r8);
     c += 1;
   }
 
@@ -612,7 +612,7 @@ fn rounds_x1(reg u128[4] k) -> reg u128[4]
 
 
 
-fn inlined_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
+inline fn __inlined_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
 {
   reg u128 t1;
 
@@ -622,8 +622,8 @@ fn inlined_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128
   k1[3] ^= k1[0];
   k2[3] ^= k2[0];
 
-  k1 = rotate_x4(k1, 3, 16, r16, r8);
-  k2 = rotate_x4(k2, 3, 16, r16, r8);
+  k1 = __rotate_x4(k1, 3, 16, r16, r8);
+  k2 = __rotate_x4(k2, 3, 16, r16, r8);
 
 
   k1[2] +4u32= k1[3];
@@ -636,7 +636,7 @@ fn inlined_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128
                           k2[1] ^= k2[2];
   k1[1] ^= t1;
 
-  k2 = rotate_x4(k2, 1, 12, r16, r8);
+  k2 = __rotate_x4(k2, 1, 12, r16, r8);
 
   k1[0] +4u32= k1[1];
   k2[0] +4u32= k2[1];
@@ -644,8 +644,8 @@ fn inlined_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128
   k1[3] ^= k1[0];
   k2[3] ^= k2[0];
 
-  k1 = rotate_x4(k1, 3, 8, r16, r8);
-  k2 = rotate_x4(k2, 3, 8, r16, r8);
+  k1 = __rotate_x4(k1, 3, 8, r16, r8);
+  k2 = __rotate_x4(k2, 3, 8, r16, r8);
 
   k1[2] +4u32= k1[3];
   k2[2] +4u32= k2[3];
@@ -657,50 +657,50 @@ fn inlined_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128
                           k2[1] ^= k2[2];
   k1[1] ^= t1;
 
-  k2 = rotate_x4(k2, 1, 7, r16, r8);
+  k2 = __rotate_x4(k2, 1, 7, r16, r8);
 
   return k1, k2;
 }
 
 
 
-fn column_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
+inline fn __column_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
 {
-  k1, k2 = inlined_round_x2(k1, k2, r16, r8);
+  k1, k2 = __inlined_round_x2(k1, k2, r16, r8);
   return k1, k2;
 }
 
 
 
-fn shuffle_state_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
+inline fn __shuffle_state_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
 {
-  k1 = shuffle_state_x1(k1);
-  k2 = shuffle_state_x1(k2);
+  k1 = __shuffle_state_x1(k1);
+  k2 = __shuffle_state_x1(k2);
   return k1, k2;
 }
 
 
 
-fn reverse_shuffle_state_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
+inline fn __reverse_shuffle_state_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
 {
-  k1 = reverse_shuffle_state_x1(k1);
-  k2 = reverse_shuffle_state_x1(k2);
+  k1 = __reverse_shuffle_state_x1(k1);
+  k2 = __reverse_shuffle_state_x1(k2);
   return k1, k2;
 }
 
 
 
-fn diagonal_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
+inline fn __diagonal_round_x2(reg u128[4] k1 k2, reg u128 r16 r8) -> reg u128[4], reg u128[4]
 {
-  k1, k2 = shuffle_state_x2(k1, k2);
-  k1, k2 = inlined_round_x2(k1, k2, r16, r8);
-  k1, k2 = reverse_shuffle_state_x2(k1, k2);
+  k1, k2 = __shuffle_state_x2(k1, k2);
+  k1, k2 = __inlined_round_x2(k1, k2, r16, r8);
+  k1, k2 = __reverse_shuffle_state_x2(k1, k2);
   return k1, k2;
 }
 
 
 
-fn rounds_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
+inline fn __rounds_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
 {
   reg u64 c;
   reg u128 r16 r8;
@@ -713,8 +713,8 @@ fn rounds_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
   // it decreases the performance here.
   c = 0;
   while(c < 10) {
-    k1, k2 = column_round_x2(k1, k2, r16, r8);
-    k1, k2 = diagonal_round_x2(k1, k2, r16, r8);
+    k1, k2 = __column_round_x2(k1, k2, r16, r8);
+    k1, k2 = __diagonal_round_x2(k1, k2, r16, r8);
     c += 1;
   }
 
@@ -723,7 +723,7 @@ fn rounds_x2(reg u128[4] k1 k2) -> reg u128[4], reg u128[4]
 
 
 
-fn rotate_x4_s(reg u128[16] k, inline int i r, stack u128 r16 r8) -> reg u128[16]
+inline fn __rotate_x4_s(reg u128[16] k, inline int i r, stack u128 r16 r8) -> reg u128[16]
 {
   reg u128 t;
 
@@ -745,8 +745,10 @@ fn rotate_x4_s(reg u128[16] k, inline int i r, stack u128 r16 r8) -> reg u128[16
 
 
 
-fn line_x4_v(reg u128[16] k, inline int a0 b0 c0 r0
-                                        a1 b1 c1 r1, stack u128 r16 r8) -> reg u128[16]
+inline fn __line_x4_v(reg u128[16] k,
+                      inline int a0 b0 c0 r0
+                                 a1 b1 c1 r1,
+                      stack u128 r16 r8) -> reg u128[16]
 {
   k[a0] +4u32= k[b0];
   k[a1] +4u32= k[b1];
@@ -754,60 +756,62 @@ fn line_x4_v(reg u128[16] k, inline int a0 b0 c0 r0
   k[c0] ^= k[a0];
   k[c1] ^= k[a1];
 
-  k = rotate_x4_s(k, c0, r0, r16, r8);
-  k = rotate_x4_s(k, c1, r1, r16, r8);
+  k = __rotate_x4_s(k, c0, r0, r16, r8);
+  k = __rotate_x4_s(k, c1, r1, r16, r8);
 
   return k;
 }
 
 
 
-fn double_quarter_round_x4(reg u128[16] k, inline int a0 b0 c0 d0
-                                                      a1 b1 c1 d1, stack u128 r16 r8) -> reg u128[16]
+inline fn __double_quarter_round_x4(reg u128[16] k,
+                                    inline int a0 b0 c0 d0
+                                               a1 b1 c1 d1,
+                                    stack u128 r16 r8) -> reg u128[16]
 {
-  k = line_x4_v(k, a0, b0, d0, 16, a1, b1, d1, 16, r16, r8);
-  k = line_x4_v(k, c0, d0, b0, 12, c1, d1, b1, 12, r16, r8);
-  k = line_x4_v(k, a0, b0, d0, 8,  a1, b1, d1, 8,  r16, r8);
-  k = line_x4_v(k, c0, d0, b0, 7,  c1, d1, b1, 7,  r16, r8);
+  k = __line_x4_v(k, a0, b0, d0, 16, a1, b1, d1, 16, r16, r8);
+  k = __line_x4_v(k, c0, d0, b0, 12, c1, d1, b1, 12, r16, r8);
+  k = __line_x4_v(k, a0, b0, d0, 8,  a1, b1, d1, 8,  r16, r8);
+  k = __line_x4_v(k, c0, d0, b0, 7,  c1, d1, b1, 7,  r16, r8);
 
   return k;
 }
 
 
 
-fn column_round_x4(reg u128[16] k, stack u128 k15 s_r16 s_r8) -> reg u128[16], stack u128
+inline fn __column_round_x4(reg u128[16] k, stack u128 k15 s_r16 s_r8) -> reg u128[16], stack u128
 {
   stack u128 k_;
 
-  k = double_quarter_round_x4(k, 0, 4, 8,  12,
-                                 2, 6, 10, 14, s_r16, s_r8);
+  k = __double_quarter_round_x4(k, 0, 4, 8,  12,
+                                   2, 6, 10, 14, s_r16, s_r8);
   k[15] = k15;
   k_ = k[14];
 
-  k = double_quarter_round_x4(k, 1, 5, 9,  13,
-                                 3, 7, 11, 15, s_r16, s_r8);
+  k = __double_quarter_round_x4(k, 1, 5, 9,  13,
+                                   3, 7, 11, 15, s_r16, s_r8);
   return k, k_;
 }
 
 
 
-fn diagonal_round_x4(reg u128[16] k, stack u128 k14 s_r16 s_r8) -> reg u128[16], stack u128
+inline fn __diagonal_round_x4(reg u128[16] k, stack u128 k14 s_r16 s_r8) -> reg u128[16], stack u128
 {
   stack u128 k_;
 
-  k = double_quarter_round_x4(k, 1, 6, 11, 12,
-                                 0, 5, 10, 15, s_r16, s_r8);
+  k = __double_quarter_round_x4(k, 1, 6, 11, 12,
+                                   0, 5, 10, 15, s_r16, s_r8);
   k[14] = k14;
   k_ = k[15];
 
-  k = double_quarter_round_x4(k, 2, 7, 8, 13,
-                                 3, 4, 9, 14, s_r16, s_r8);
+  k = __double_quarter_round_x4(k, 2, 7, 8, 13,
+                                   3, 4, 9, 14, s_r16, s_r8);
   return k, k_;
 }
 
 
 
-fn rounds_x4(reg u128[16] k, stack u128 s_r16 s_r8) -> reg u128[16]
+inline fn __rounds_x4(reg u128[16] k, stack u128 s_r16 s_r8) -> reg u128[16]
 {
   reg u64 c;
   reg bool zf;
@@ -820,8 +824,8 @@ fn rounds_x4(reg u128[16] k, stack u128 s_r16 s_r8) -> reg u128[16]
 
   c = 10;
   align while {
-    k, k14 = column_round_x4(k, k15, s_r16, s_r8);
-    k, k15 = diagonal_round_x4(k, k14, s_r16, s_r8);
+    k, k14 = __column_round_x4(k, k15, s_r16, s_r8);
+    k, k15 = __diagonal_round_x4(k, k14, s_r16, s_r8);
     (_,_,_,zf,c) = #DEC(c);
   } (!zf)
 
@@ -835,57 +839,57 @@ fn rounds_x4(reg u128[16] k, stack u128 s_r16 s_r8) -> reg u128[16]
 
 
 
-fn chacha20_more_than_128(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+inline fn __chacha20_more_than_128(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
 {
   stack u128[16] st;
   reg   u128[16]  k;
   stack u128 s_r16 s_r8;
 
-  s_r16, s_r8 = load_shufb_cmd();
+  s_r16, s_r8 = __load_shufb_cmd();
 
-  st = init_x4(key, nonce, counter);
+  st = __init_x4(key, nonce, counter);
 
   while(len >= 256)
   {
-    k = copy_state_x4(st);
-    k = rounds_x4(k, s_r16, s_r8);
-    k = sum_states_x4(k, st);
-    output, plain, len = store_x4(output, plain, len, k);
-    st = increment_counter_x4(st);
+    k = __copy_state_x4(st);
+    k = __rounds_x4(k, s_r16, s_r8);
+    k = __sum_states_x4(k, st);
+    output, plain, len = __store_x4(output, plain, len, k);
+    st = __increment_counter_x4(st);
   }
 
   if(len > 0)
   {
-    k = copy_state_x4(st);
-    k = rounds_x4(k, s_r16, s_r8);
-    k = sum_states_x4(k, st);
-    store_x4_last(output, plain, len, k);
+    k = __copy_state_x4(st);
+    k = __rounds_x4(k, s_r16, s_r8);
+    k = __sum_states_x4(k, st);
+    __store_x4_last(output, plain, len, k);
   }
 }
 
 
 
-fn chacha20_less_than_129(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+inline fn __chacha20_less_than_129(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
 {
   reg u128[4] st k1, k2;
 
-  st = init_x1(key, nonce, counter); 
+  st = __init_x1(key, nonce, counter); 
 
   if(len > 64)
   {
-    k1, k2 = copy_state_x2(st);
-    k1, k2 = rounds_x2(k1, k2);
-    k1, k2 = sum_states_x2(k1, k2, st);
+    k1, k2 = __copy_state_x2(st);
+    k1, k2 = __rounds_x2(k1, k2);
+    k1, k2 = __sum_states_x2(k1, k2, st);
 
-    output, plain, len, k1 = store_x1(output, plain, len, k1);
-                             store_x1_last(output, plain, len, k2);
+    output, plain, len, k1 = __store_x1(output, plain, len, k1);
+                             __store_x1_last(output, plain, len, k2);
   }
   else
   {
-    k1 = copy_state_x1(st);
-    k1 = rounds_x1(k1);
-    k1 = sum_states_x1(k1, st);
-    store_x1_last(output, plain, len, k1);
+    k1 = __copy_state_x1(st);
+    k1 = __rounds_x1(k1);
+    k1 = __sum_states_x1(k1, st);
+    __store_x1_last(output, plain, len, k1);
   }
 }
 
@@ -894,7 +898,7 @@ fn chacha20_less_than_129(reg u64 output plain, reg u32 len, reg u64 key nonce, 
 export fn chacha20_avx(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
 {
   if(len < 129)
-  { chacha20_less_than_129(output, plain, len, key, nonce, counter); }
+  { __chacha20_less_than_129(output, plain, len, key, nonce, counter); }
   else
-  { chacha20_more_than_128(output, plain, len, key, nonce, counter); }
+  { __chacha20_more_than_128(output, plain, len, key, nonce, counter); }
 }
