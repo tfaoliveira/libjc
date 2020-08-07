@@ -1,5 +1,5 @@
 
-default: chacha20.japp chacha20.s
+default: chacha20_export.japp chacha20_export.s
 	@true
 
 include ../../../Makefile.common

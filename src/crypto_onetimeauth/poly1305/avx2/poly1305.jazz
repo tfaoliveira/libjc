@@ -1,38 +1,42 @@
-#include "../ref3/poly1305.jazz"
+#ifndef POLY1305_AVX2
+#define POLY1305_AVX2
 
-#ifndef INLINE_U
-#define INLINE_U 1
-#endif
+#include "crypto_onetimeauth/poly1305/ref3/poly1305.jazz"
 
 u64 zero_u64 = 0;
 u64 five_u64 = 5;
 u64 mask26_u64 = 0x3ffffff;
 u64 bit25_u64 = 0x1000000;
 
-#define inlined_unpack(r1234,rt, o) \
-    mask26 = 0x3ffffff;\
-    l = rt[0];\
-    l &= mask26;\
-    r1234[u64 o + 0] = l;\
-    l = rt[0];\
-    l >>= 26;\
-    l &= mask26;\
-    r1234[u64 o + 4] = l;\
-    l = rt[0];\
-    l = #SHRD(l, rt[1], 52);\
-    h = l;\
-    l &= mask26;\
-    r1234[u64 o + 8] = l;\
-    l = h;\
-    l >>= 26;\
-    l &= mask26;\
-    r1234[u64 o + 12] = l;\
-    l = rt[1];\
-    l = #SHRD(l, rt[2], 40);\
-    r1234[u64 o + 16] = l;
 
-#if !INLINE_U
-fn unpack(stack u256[5] r1234, reg u64[3] rt, inline int o) -> stack u256[5]
+
+#if 0
+#define __inlined_unpack(r1234, rt, o) \
+  mask26 = 0x3ffffff;\
+  l = rt[0];\
+  l &= mask26;\
+  r1234[u64 o + 0] = l;\
+  l = rt[0];\
+  l >>= 26;\
+  l &= mask26;\
+  r1234[u64 o + 4] = l;\
+  l = rt[0];\
+  _,_,_,_,_,l = #SHRD(l, rt[1], 52);\
+  h = l;\
+  l &= mask26;\
+  r1234[u64 o + 8] = l;\
+  l = h;\
+  l >>= 26;\
+  l &= mask26;\
+  r1234[u64 o + 12] = l;\
+  l = rt[1];\
+  _,_,_,_,_,l = #SHRD(l, rt[2], 40);\
+  r1234[u64 o + 16] = l;
+#endif
+
+
+
+inline fn __unpack(stack u256[5] r1234, reg u64[3] rt, inline int o) -> stack u256[5]
 {
   inline int mask26;
   reg u64 h, l;
@@ -49,7 +53,7 @@ fn unpack(stack u256[5] r1234, reg u64[3] rt, inline int o) -> stack u256[5]
   r1234[u64 o + 4] = l;
 
   l = rt[0];
-  l = #SHRD(l, rt[1], 52);
+  _,_,_,_,_,l = #SHRD(l, rt[1], 52);
   h = l;
   l &= mask26;
   r1234[u64 o + 8] = l; // 12 bits from rt[0] and 14 bits from rt[1] 
@@ -65,15 +69,15 @@ fn unpack(stack u256[5] r1234, reg u64[3] rt, inline int o) -> stack u256[5]
   //   - total number of bits to copy should be at most 24+5 = 29 bits 
 
   l = rt[1];
-  l = #SHRD(l, rt[2], 40);
+    _,_,_,_,_,l = #SHRD(l, rt[2], 40);
   r1234[u64 o + 16] = l;
 
   return r1234;
 }
-#endif
 
 
-fn times_5(stack u256[5] r1234) -> stack u256[4]
+
+inline fn __times_5(stack u256[5] r1234) -> stack u256[4]
 {
   inline int i;
   stack u256[4] r1234x5;
@@ -88,7 +92,7 @@ fn times_5(stack u256[5] r1234) -> stack u256[4]
 
 
 
-fn broadcast_r4(stack u256[5] r1234, stack u256[4] r1234x5) -> stack u256[5], stack u256[4]
+inline fn __broadcast_r4(stack u256[5] r1234, stack u256[4] r1234x5) -> stack u256[5], stack u256[4]
 {
   inline int i;
   stack u256[5] r4444;
@@ -108,7 +112,7 @@ fn broadcast_r4(stack u256[5] r1234, stack u256[4] r1234x5) -> stack u256[5], st
 
 
 
-fn poly1305_avx2_setup(reg u64[3] r) ->
+inline fn __poly1305_avx2_setup(reg u64[3] r) ->
   stack u256[5], stack u256[4],
   stack u256[5], stack u256[4]
 {
@@ -122,28 +126,19 @@ fn poly1305_avx2_setup(reg u64[3] r) ->
   // rt = r; store rt
   for i=0 to 2 { rt[i] = r[i]; } rt[2] = 0;
   // r^1
-  #if INLINE_U
-    inlined_unpack(r1234, rt, 3)
-  #else
-    r1234 = unpack(r1234, rt, 3);
-  #endif
-
+  r1234 = __unpack(r1234, rt, 3);
 
   // precompute r^2 r^3 r^4
   for i=0 to 3
-  { rt = mulmod(rt, r);
-    #if INLINE_U
-      inlined_unpack(r1234, rt, (2-i))
-    #else
-      r1234 = unpack(r1234, rt, 2-i);
-    #endif
+  { rt = __mulmod(rt, r);
+    r1234 = __unpack(r1234, rt, 2-i);
   }
 
   // compute r1234x5
-  r1234x5 = times_5(r1234);
+  r1234x5 = __times_5(r1234);
 
   // broadcast r^4 and r^4*5 from r1234 r1234x5 into r4444 and r4444x5
-  r4444, r4444x5 = broadcast_r4(r1234, r1234x5);
+  r4444, r4444x5 = __broadcast_r4(r1234, r1234x5);
 
   return r4444, r4444x5, r1234, r1234x5;
 }
@@ -153,7 +148,7 @@ fn poly1305_avx2_setup(reg u64[3] r) ->
 // very close (pratically the same except the first 5 lines) adaptation of the
 // strategy used by OpenSSL's AVX2 codepath to load 64 bytes for poly1305
 // it includes some annotations to easy out the correction proof
-fn load_avx2(reg u64 in, reg u256 mask26, stack u256 s_bit25) -> reg u256[5], reg u64
+inline fn __load_avx2(reg u64 in, reg u256 mask26, stack u256 s_bit25) -> reg u256[5], reg u64
 {
   reg u256[5] m;
   reg u256 t;
@@ -216,7 +211,7 @@ fn load_avx2(reg u64 in, reg u256 mask26, stack u256 s_bit25) -> reg u256[5], re
 
 
 
-fn pack_avx2(reg u256[5] h) -> reg u64[3]
+inline fn __pack_avx2(reg u256[5] h) -> reg u64[3]
 {
   reg bool cf;
   inline int i;
@@ -309,7 +304,7 @@ fn pack_avx2(reg u256[5] h) -> reg u64[3]
 
 
 
-fn carry_reduce_avx2(reg u256[5] x, reg u256 mask26) -> reg u256[5]
+inline fn __carry_reduce_avx2(reg u256[5] x, reg u256 mask26) -> reg u256[5]
 {
   reg u256[2] z;
   reg u256 t;
@@ -401,7 +396,7 @@ fn carry_reduce_avx2(reg u256[5] x, reg u256 mask26) -> reg u256[5]
 //  (h3*r0 + h2*r1 + h4*r4*5 + h1*r2   +         + h0*r3                    ) * 2^78 +
 //  (h4*r0 + h3*r1 +           h2*r2   +         + h1*r3 +           h0*r4  ) * 2^104
 
-fn add_mulmod_avx2(
+inline fn __add_mulmod_avx2(
   reg u256[5] h,
   reg u256[5] m,
   stack u256[5] s_r,
@@ -536,7 +531,7 @@ fn add_mulmod_avx2(
 
 
 
-fn mainloop_avx2_v0(
+inline fn __mainloop_avx2_v0(
   reg u256[5] h,
   reg u256[5] m,
   reg u64 in,
@@ -550,17 +545,17 @@ fn mainloop_avx2_v0(
 {
   reg u256 mask26;
 
-  h = add_mulmod_avx2(h, m, s_r, s_rx5, s_mask26, s_bit25);
+  h = __add_mulmod_avx2(h, m, s_r, s_rx5, s_mask26, s_bit25);
   mask26 = s_mask26;
-  h = carry_reduce_avx2(h, mask26);
-  m, in = load_avx2(in, mask26, s_bit25);
+  h = __carry_reduce_avx2(h, mask26);
+  m, in = __load_avx2(in, mask26, s_bit25);
 
   return h, m, in;
 }
 
 
 // full inline and instruction permutation of mainloop_avx2_v0
-fn mainloop_avx2_v1(
+inline fn __mainloop_avx2_v1(
   reg u256[5] h,
   reg u256[5] m,
   reg u64 in,
@@ -650,7 +645,7 @@ fn mainloop_avx2_v1(
   h[2] = #VPMULU_256(h[4], r3x5); m[2] = #VPSRLDQ_256(m[0], 6);
 
 
-  t[0] +4u64= u[0];                   m[3] = #VPSRLDQ_256(m[1], 6);
+  t[0] +4u64= u[0];               m[3] = #VPSRLDQ_256(m[1], 6);
   t[1] +4u64= u[1];
   h[2] +4u64= t[2]; // t2 dead // h[2] contains final h2
 
@@ -741,20 +736,18 @@ fn mainloop_avx2_v1(
 
 
 
-fn final_avx2_v0(
-  reg u256[5] h,
-  reg u256[5] m,
+inline fn __final_avx2_v0(
+  reg u256[5] h m,
   stack u256[5] s_r,
   stack u256[4] s_rx5,
-  stack u256 s_mask26,
-  stack u256 s_bit25
+  stack u256 s_mask26 s_bit25
 ) -> reg u256[5]
 {
   reg u256 mask26;
 
-  h = add_mulmod_avx2(h, m, s_r, s_rx5, s_mask26, s_bit25);
+  h = __add_mulmod_avx2(h, m, s_r, s_rx5, s_mask26, s_bit25);
   mask26 = s_mask26;
-  h = carry_reduce_avx2(h, mask26);
+  h = __carry_reduce_avx2(h, mask26);
 
   return h;
 }
@@ -762,8 +755,8 @@ fn final_avx2_v0(
 
 
 // update AVX2
-fn poly1305_avx2_update(
-  reg u64 in, reg u64 len,
+inline fn __poly1305_avx2_update(
+  reg u64 in len,
   stack u256[5] r4444,  
   stack u256[4] r4444x5,
   stack u256[5] r1234,
@@ -782,48 +775,52 @@ fn poly1305_avx2_update(
   t = #VPBROADCAST_4u64(bit25_u64); s_bit25 = t;
 
   // load first 64 bytes of input
-  m, in = load_avx2(in, mask26, s_bit25);
+  m, in = __load_avx2(in, mask26, s_bit25);
 
   while(len >= 128)
-  { h, m, in = mainloop_avx2_v1(h, m, in, r4444, r4444x5, s_mask26, s_bit25);
+  { h, m, in = __mainloop_avx2_v1(h, m, in, r4444, r4444x5, s_mask26, s_bit25);
     len -= 64;
   }
   len -= 64;
 
-  h = final_avx2_v0(h, m, r1234, r1234x5, s_mask26, s_bit25);
-  h64 = pack_avx2(h);
+  h = __final_avx2_v0(h, m, r1234, r1234x5, s_mask26, s_bit25);
+  h64 = __pack_avx2(h);
 
   return in, len, h64;
 }
 
 
 
-fn poly1305_avx2_wrapper(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
+inline fn __poly1305_avx2(reg u64 out in inlen k)
 {
-  reg u64[3] h;
-  reg u64[3] r;
+  reg u64[3] h r;
   reg u64 len;
   stack u256[5] r4444   r1234;
   stack u256[4] r4444x5 r1234x5;
 
   len = inlen;
 
-  h, r, k = poly1305_ref3_setup(k);
-  r4444, r4444x5, r1234, r1234x5 = poly1305_avx2_setup(r);
+  h, r, k = __poly1305_ref3_setup(k);
+  r4444, r4444x5, r1234, r1234x5 = __poly1305_avx2_setup(r);
 
-  in, len, h = poly1305_avx2_update(in, len, r4444, r4444x5, r1234, r1234x5);
-  in, len, h = poly1305_ref3_update(in, len, h, r);
+  in, len, h = __poly1305_avx2_update(in, len, r4444, r4444x5, r1234, r1234x5);
+  in, len, h = __poly1305_ref3_update(in, len, h, r);
 
-  poly1305_ref3_last(out, in, len, k, h, r);
+ __poly1305_ref3_last(out, in, len, k, h, r);
 }
 
 
 
-export fn poly1305_avx2(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
+#ifdef EXPORT
+
+export fn poly1305_avx2(reg u64 out in inlen k)
 {
   if(inlen < 257)
-  { poly1305_ref3_local(out, in, inlen, k); }
+  { __poly1305_ref3(out, in, inlen, k); }
   else
-  { poly1305_avx2_wrapper(out, in, inlen, k); }
+  { __poly1305_avx2(out, in, inlen, k); }
 }
+
+#endif
+#endif
 

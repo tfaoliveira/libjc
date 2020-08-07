@@ -1,5 +1,8 @@
+#ifndef POLY1305_REF3
+#define POLY1305_REF3
+
 // little endian for loads and stores
-fn load2(reg u64 p) -> reg u64[2]
+inline fn __load2(reg u64 p) -> reg u64[2]
 {
   reg u64[2] x;
   x[0] = [p + 0];
@@ -9,7 +12,7 @@ fn load2(reg u64 p) -> reg u64[2]
 
 
 
-fn load_add(reg u64[3] h, reg u64 in) -> reg u64[3]
+inline fn __load_add(reg u64[3] h, reg u64 in) -> reg u64[3]
 {
   reg bool cf;
   cf, h[0] += [in + 0];
@@ -20,7 +23,7 @@ fn load_add(reg u64[3] h, reg u64 in) -> reg u64[3]
 
 
 
-fn load_last_add(reg u64[3] h, reg u64 in, reg u64 len) -> reg u64[3]
+inline fn __load_last_add(reg u64[3] h, reg u64 in, reg u64 len) -> reg u64[3]
 {
   reg bool cf;
   reg   u64    j;
@@ -48,7 +51,7 @@ fn load_last_add(reg u64[3] h, reg u64 in, reg u64 len) -> reg u64[3]
 
 
 
-fn store2(reg u64 p, reg u64[2] x)
+inline fn __store2(reg u64 p, reg u64[2] x)
 {
   [p + 0] = x[0];
   [p + 8] = x[1];
@@ -56,7 +59,7 @@ fn store2(reg u64 p, reg u64[2] x)
 
 
 
-fn clamp(reg u64 k) -> reg u64[3]
+inline fn __clamp(reg u64 k) -> reg u64[3]
 {
   reg u64[3] r;
   r[0] = [k + 0];
@@ -72,7 +75,7 @@ fn clamp(reg u64 k) -> reg u64[3]
 
 
 // h += s
-fn add2(reg u64[2] h, reg u64[2] s) -> reg u64[2]
+inline fn __add2(reg u64[2] h, reg u64[2] s) -> reg u64[2]
 {
   reg bool cf;
   cf, h[0] += s[0];
@@ -82,7 +85,7 @@ fn add2(reg u64[2] h, reg u64[2] s) -> reg u64[2]
 
 
 
-fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
+inline fn __mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
 {
   reg bool cf;
   reg u64 t0 t1 t2;
@@ -133,7 +136,7 @@ fn mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
 
 
 
-fn freeze(reg u64[3] h) -> reg u64[2]
+inline fn __freeze(reg u64[3] h) -> reg u64[2]
 {
   reg bool cf;
   reg u64[2] g;
@@ -174,7 +177,7 @@ fn freeze(reg u64[3] h) -> reg u64[2]
 
 
 
-fn poly1305_ref3_setup(reg u64 k) -> reg u64[3], reg u64[3], reg u64
+inline fn __poly1305_ref3_setup(reg u64 k) -> reg u64[3], reg u64[3], reg u64
 {
   inline int i;
   reg u64[3] h;
@@ -182,22 +185,22 @@ fn poly1305_ref3_setup(reg u64 k) -> reg u64[3], reg u64[3], reg u64
   reg u64 len;
 
   for i=0 to 3 { h[i] = 0; }
-  r = clamp(k);
+  r = __clamp(k);
   k += 16;
   return h, r, k;
 }
 
 
 
-fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -> reg u64, reg u64, reg u64[3]
+inline fn __poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -> reg u64, reg u64, reg u64[3]
 {
   reg bool cf;
   reg u64[2] m;
 
   while(inlen >= 16)
   {
-    h = load_add(h, in);
-    h = mulmod(h, r);
+    h = __load_add(h, in);
+    h = __mulmod(h, r);
     in += 16;
     inlen -= 16;
   }
@@ -207,36 +210,46 @@ fn poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -
 
 
 
-fn poly1305_ref3_last(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k, reg u64[3] h, reg u64[3] r)
+inline fn __poly1305_ref3_last(reg u64 out in inlen k, reg u64[3] h, reg u64[3] r)
 {
   reg u64[2] m, s;
   reg u64[2] h2;
 
   if(inlen > 0)
-  { h = load_last_add(h, in, inlen);
-    h = mulmod(h, r);
+  { h = __load_last_add(h, in, inlen);
+    h = __mulmod(h, r);
   }
 
-  h2 = freeze(h);
-  s = load2(k);
-  h2 = add2(h2, s);
+  h2 = __freeze(h);
+  s = __load2(k);
+  h2 = __add2(h2, s);
 
-  store2(out, h2);
+  __store2(out, h2);
 }
 
 
 
-fn poly1305_ref3_local(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
+inline fn __poly1305_ref3(reg u64 out in inlen k)
 {
   reg u64[3] h;
   reg u64[3] r;
   reg u64 len;
 
-  h, r, k = poly1305_ref3_setup(k);
+  h, r, k = __poly1305_ref3_setup(k);
   len = inlen;
-  in, len, h = poly1305_ref3_update(in, len, h, r);
-  poly1305_ref3_last(out, in, len, k, h, r);
+  in, len, h = __poly1305_ref3_update(in, len, h, r);
+  __poly1305_ref3_last(out, in, len, k, h, r);
 }
 
 
+
+#ifdef EXPORT
+
+export fn poly1305_ref3(reg u64 out in inlen k)
+{
+  __poly1305_ref3(out, in, inlen, k);
+}
+
+#endif
+#endif
 

@@ -1,3 +1,6 @@
+#ifndef CHACHA20_REF
+#define CHACHA20_REF
+
 inline fn __init(reg u64 key nonce, reg u32 counter) -> stack u32[16]
 {
   inline int i;
@@ -361,7 +364,7 @@ inline fn __increment_counter(stack u32[16] st) -> stack u32[16]
 
 
 
-export fn chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+inline fn __chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
 {
   stack u64 s_output, s_plain;
   stack u32 s_len;
@@ -394,4 +397,16 @@ export fn chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg
     __store_last(s_output, s_plain, s_len, k, k15);
   }
 }
+
+
+
+#ifdef EXPORT
+
+export fn chacha20_ref(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+{
+  __chacha20_ref(output, plain, len, key, nonce, counter);
+}
+
+#endif
+#endif
 

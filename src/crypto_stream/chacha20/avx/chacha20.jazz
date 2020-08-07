@@ -1,3 +1,6 @@
+#ifndef CHACHA20_AVX
+#define CHACHA20_AVX
+
 // note: explicitly aligning the stack pointer causes some spikes in the plots
 // for inputs between 64 and 128 bytes
 
@@ -895,10 +898,21 @@ inline fn __chacha20_less_than_129(reg u64 output plain, reg u32 len, reg u64 ke
 
 
 
-export fn chacha20_avx(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+inline fn __chacha20_avx(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
 {
   if(len < 129)
   { __chacha20_less_than_129(output, plain, len, key, nonce, counter); }
   else
   { __chacha20_more_than_128(output, plain, len, key, nonce, counter); }
 }
+
+#ifdef EXPORT
+
+export fn chacha20_avx(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+{
+  __chacha20_avx(output, plain, len, key, nonce, counter);
+}
+
+#endif
+#endif
+

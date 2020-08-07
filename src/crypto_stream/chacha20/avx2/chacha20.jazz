@@ -1,3 +1,6 @@
+#ifndef CHACHA20_AVX2
+#define CHACHA20_AVX2
+
 u256 g_r16      = (32u8)[13,12,15,14, 9,8,11,10, 5,4,7,6, 1,0,3,2, 13,12,15,14, 9,8,11,10, 5,4,7,6, 1,0,3,2];
 u256 g_r8       = (32u8)[14,13,12,15, 10,9,8,11, 6,5,4,7, 2,1,0,3, 14,13,12,15, 10,9,8,11, 6,5,4,7, 2,1,0,3];
 u256 g_cnt      = (8u32)[7,6,5,4,3,2,1,0];
@@ -1001,10 +1004,21 @@ inline fn __chacha20_less_than_257(reg u64 output plain, reg u32 len, reg u64 ke
 
 
 
-export fn chacha20_avx2(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+inline fn __chacha20_avx2(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
 {
   if(len < 257)
   { __chacha20_less_than_257(output, plain, len, key, nonce, counter); }
   else
   { __chacha20_more_than_256(output, plain, len, key, nonce, counter); }
 }
+
+#ifdef EXPORT
+
+export fn chacha20_avx2(reg u64 output plain, reg u32 len, reg u64 key nonce, reg u32 counter)
+{
+  __chacha20_avx2(output, plain, len, key, nonce, counter);
+}
+
+#endif
+#endif
+
