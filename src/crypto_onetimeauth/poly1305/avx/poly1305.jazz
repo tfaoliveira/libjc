@@ -1,5 +1,5 @@
-#ifndef POLY1305_AVX
-#define POLY1305_AVX
+#ifndef CRYPTO_ONETIMEAUTH_POLY1305_AVX
+#define CRYPTO_ONETIMEAUTH_POLY1305_AVX
 
 #include "crypto_onetimeauth/poly1305/ref3/poly1305.jazz"
 
@@ -759,7 +759,7 @@ inline fn __final_avx_v0(
 
 
 inline fn __poly1305_avx_update(
-  reg u64 in len,
+  reg u64 in inlen,
   stack u128[5] r44,  
   stack u128[4] r44x5,
   stack u128[5] r22,  
@@ -779,43 +779,45 @@ inline fn __poly1305_avx_update(
   t = #VPBROADCAST_2u64(mask26_u64); s_mask26 = t; mask26 = t;
   t = #VPBROADCAST_2u64(bit25_u64); s_bit25 = t;
 
-  while(len >= 64)
+  while(inlen >= 64)
   { 
     h, in = __mainloop_avx_v1(h, in, r44, r44x5, r22, r22x5, s_mask26, s_bit25);
-    len -= 64;
+    inlen -= 64;
   }
 
   h = __final_avx_v0(h, r12, r12x5, s_mask26, s_bit25);
   h64 = __pack_avx(h);
 
-  return in, len, h64;
+  return in, inlen, h64;
 }
 
 
 inline fn __poly1305_avx(reg u64 out in inlen k)
 {
   reg u64[3] h r;
-  reg u64 len;
   stack u128[5] r44   r22   r12;
   stack u128[4] r44x5 r22x5 r12x5;
-
-  len = inlen;
 
   h, r, k = __poly1305_ref3_setup(k);
   r44, r44x5, r22, r22x5, r12, r12x5 = __poly1305_avx_setup(r);
 
-  in, len, h = __poly1305_avx_update(in, len, r44, r44x5, r22, r22x5, r12, r12x5);
-  in, len, h = __poly1305_ref3_update(in, len, h, r);
+  in, inlen, h = __poly1305_avx_update(in, inlen, r44, r44x5, r22, r22x5, r12, r12x5);
+  in, inlen, h = __poly1305_ref3_update(in, inlen, h, r);
 
-  __poly1305_ref3_last(out, in, len, k, h, r);
+  __poly1305_ref3_last(out, in, inlen, k, h, r);
 }
 
 
 
 #ifdef EXPORT
 
-export fn poly1305_avx(reg u64 out, reg u64 in, reg u64 inlen, reg u64 k)
+export fn poly1305_avx(reg u64 out in _inlen _k)
 {
+  reg u64 inlen k;
+
+  inlen = _inlen;
+  k = _k;
+
   if(inlen < 1024)
   { __poly1305_ref3(out, in, inlen, k); }
   else

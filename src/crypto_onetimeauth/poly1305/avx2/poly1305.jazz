@@ -1,5 +1,5 @@
-#ifndef POLY1305_AVX2
-#define POLY1305_AVX2
+#ifndef CRYPTO_ONETIMEAUTH_POLY1305_AVX2
+#define CRYPTO_ONETIMEAUTH_POLY1305_AVX2
 
 #include "crypto_onetimeauth/poly1305/ref3/poly1305.jazz"
 
@@ -756,7 +756,7 @@ inline fn __final_avx2_v0(
 
 // update AVX2
 inline fn __poly1305_avx2_update(
-  reg u64 in len,
+  reg u64 in inlen,
   stack u256[5] r4444,  
   stack u256[4] r4444x5,
   stack u256[5] r1234,
@@ -777,16 +777,16 @@ inline fn __poly1305_avx2_update(
   // load first 64 bytes of input
   m, in = __load_avx2(in, mask26, s_bit25);
 
-  while(len >= 128)
+  while(inlen >= 128)
   { h, m, in = __mainloop_avx2_v1(h, m, in, r4444, r4444x5, s_mask26, s_bit25);
-    len -= 64;
+    inlen -= 64;
   }
-  len -= 64;
+  inlen -= 64;
 
   h = __final_avx2_v0(h, m, r1234, r1234x5, s_mask26, s_bit25);
   h64 = __pack_avx2(h);
 
-  return in, len, h64;
+  return in, inlen, h64;
 }
 
 
@@ -794,27 +794,29 @@ inline fn __poly1305_avx2_update(
 inline fn __poly1305_avx2(reg u64 out in inlen k)
 {
   reg u64[3] h r;
-  reg u64 len;
   stack u256[5] r4444   r1234;
   stack u256[4] r4444x5 r1234x5;
-
-  len = inlen;
 
   h, r, k = __poly1305_ref3_setup(k);
   r4444, r4444x5, r1234, r1234x5 = __poly1305_avx2_setup(r);
 
-  in, len, h = __poly1305_avx2_update(in, len, r4444, r4444x5, r1234, r1234x5);
-  in, len, h = __poly1305_ref3_update(in, len, h, r);
+  in, inlen, h = __poly1305_avx2_update(in, inlen, r4444, r4444x5, r1234, r1234x5);
+  in, inlen, h = __poly1305_ref3_update(in, inlen, h, r);
 
- __poly1305_ref3_last(out, in, len, k, h, r);
+ __poly1305_ref3_last(out, in, inlen, k, h, r);
 }
 
 
 
 #ifdef EXPORT
 
-export fn poly1305_avx2(reg u64 out in inlen k)
+export fn poly1305_avx2(reg u64 out in _inlen _k)
 {
+  reg u64 inlen k;
+
+  inlen = _inlen;
+  k = _k;
+
   if(inlen < 257)
   { __poly1305_ref3(out, in, inlen, k); }
   else

@@ -1,5 +1,5 @@
-#ifndef POLY1305_REF3
-#define POLY1305_REF3
+#ifndef CRYPTO_ONETIMEAUTH_POLY1305_REF3
+#define CRYPTO_ONETIMEAUTH_POLY1305_REF3
 
 // little endian for loads and stores
 inline fn __load2(reg u64 p) -> reg u64[2]
@@ -22,7 +22,7 @@ inline fn __load_add(reg u64[3] h, reg u64 in) -> reg u64[3]
 }
 
 
-
+#if 0
 inline fn __load_last_add(reg u64[3] h, reg u64 in, reg u64 len) -> reg u64[3]
 {
   reg bool cf;
@@ -33,21 +33,94 @@ inline fn __load_last_add(reg u64[3] h, reg u64 in, reg u64 len) -> reg u64[3]
   s[0] = 0;
   s[1] = 0;
 
+  #if 0
   j = 0;
   while(j < len)
   { c = (u8)[in + j];
     s[u8 (int)j] = c;
     j += 1;
   }
+  #endif
+
+  #if 1
+  j = 0;
+  while(j < len)
+  { c = (u8)[in];
+    s[u8 (int)j] = c;
+    in += 1;
+    j += 1;
+  }
+  #endif
 
   s[u8 (int)j] = 0x1;
 
   cf, h[0] += s[0];
   cf, h[1] += s[1] + cf;
    _, h[2] +=    0 + cf;
+
+  return h;
+}
+#else
+
+// @pre: 0 <= len <= 15
+inline fn __load_last_add_mask(reg u64 len) -> reg u64[2], reg u64[2]
+{
+  reg bool cf;
+  reg   u64 s0 s1 s2;
+  reg   u64[2] m1 m2;
+
+  s0 = 15;
+  s0 -= len; // [0-15] -> [15-0]
+  s0 <<= 3;
+
+  s1  =  s0;
+  s1 &=  7*8;  // first 3 bits s1 in [0-7]*8
+  s2  =  s0;
+  s2 &=  -8*8; // bit 4 s2 in [0,8]*8
+  s0  =  s2;
+
+  s0 >>= 4;    // avoid s's being 64
+  s1 += s0;
+  s2 -= s0;
+
+  m1[0] = -1;
+  m1[1] = (1 << 64 - 8) - 1;
+
+  _,_,_,_,_, m1[0] = #SHRD(m1[0], m1[1], s1);
+  m1[1] >>= s1;
+  s1   = s2; // rcx
+  _,_,_,_,_, m1[0] = #SHRD(m1[0], m1[1], s1);
+  m1[1] >>= s1;
+
+  m2 = m1;
+
+  cf, m2[0] += 1;
+   _, m2[1] += 0 + cf;
+
+  return m1, m2;
+}
+
+inline fn __load_last_add(reg u64[3] h, reg u64 in len) -> reg u64[3]
+{
+  inline int i;
+  reg bool cf;
+  reg   u64[2] v m1 m2;
+
+  m1, m2 = __load_last_add_mask(len);
+
+  for i=0 to 2
+  { v[i] = [in + 8*i];
+    v[i] &= m1[i];
+    v[i] |= m2[i];
+  }
+
+  cf, h[0] += v[0];
+  cf, h[1] += v[1] + cf;
+   _, h[2] +=    0 + cf;
  
   return h;
-} 
+}
+#endif
 
 
 
@@ -75,7 +148,7 @@ inline fn __clamp(reg u64 k) -> reg u64[3]
 
 
 // h += s
-inline fn __add2(reg u64[2] h, reg u64[2] s) -> reg u64[2]
+inline fn __add2(reg u64[2] h s) -> reg u64[2]
 {
   reg bool cf;
   cf, h[0] += s[0];
@@ -85,7 +158,7 @@ inline fn __add2(reg u64[2] h, reg u64[2] s) -> reg u64[2]
 
 
 
-inline fn __mulmod(reg u64[3] h, reg u64[3] r) -> reg u64[3]
+inline fn __mulmod(reg u64[3] h r) -> reg u64[3]
 {
   reg bool cf;
   reg u64 t0 t1 t2;
@@ -192,7 +265,7 @@ inline fn __poly1305_ref3_setup(reg u64 k) -> reg u64[3], reg u64[3], reg u64
 
 
 
-inline fn __poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u64[3] r) -> reg u64, reg u64, reg u64[3]
+inline fn __poly1305_ref3_update(reg u64 in inlen, reg u64[3] h r) -> reg u64, reg u64, reg u64[3]
 {
   reg bool cf;
   reg u64[2] m;
@@ -210,10 +283,9 @@ inline fn __poly1305_ref3_update(reg u64 in, reg u64 inlen, reg u64[3] h, reg u6
 
 
 
-inline fn __poly1305_ref3_last(reg u64 out in inlen k, reg u64[3] h, reg u64[3] r)
+inline fn __poly1305_ref3_last(reg u64 out in inlen k, reg u64[3] h r)
 {
-  reg u64[2] m, s;
-  reg u64[2] h2;
+  reg u64[2] m s h2;
 
   if(inlen > 0)
   { h = __load_last_add(h, in, inlen);
@@ -231,22 +303,23 @@ inline fn __poly1305_ref3_last(reg u64 out in inlen k, reg u64[3] h, reg u64[3] 
 
 inline fn __poly1305_ref3(reg u64 out in inlen k)
 {
-  reg u64[3] h;
-  reg u64[3] r;
-  reg u64 len;
+  reg u64[3] h r;
 
   h, r, k = __poly1305_ref3_setup(k);
-  len = inlen;
-  in, len, h = __poly1305_ref3_update(in, len, h, r);
-  __poly1305_ref3_last(out, in, len, k, h, r);
+  in, inlen, h = __poly1305_ref3_update(in, inlen, h, r);
+  __poly1305_ref3_last(out, in, inlen, k, h, r);
 }
 
 
 
 #ifdef EXPORT
 
-export fn poly1305_ref3(reg u64 out in inlen k)
+export fn poly1305_ref3(reg u64 out in _inlen _k)
 {
+  reg u64 inlen k;
+
+  inlen = _inlen;
+  k = _k;
   __poly1305_ref3(out, in, inlen, k);
 }
 
