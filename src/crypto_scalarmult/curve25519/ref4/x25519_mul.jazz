@@ -1,0 +1,241 @@
+#ifndef CRYPTO_SCALARMULT_X25519_REF4_MUL
+#define CRYPTO_SCALARMULT_X25519_REF4_MUL
+
+#include "crypto_scalarmult/curve25519/ref4/x25519_reduce.jazz"
+
+inline fn __mul_rss
+( stack u64[4] xa,
+  stack u64[4] ya
+) -> reg u64[4]
+{
+  reg u64[8] z;
+  reg u64[4] r x y;
+  reg u64 h l hprev;
+  reg bool cf;
+  inline int i j;
+
+  for i = 2 to 8 { z[i] = #MOV(0); }
+
+  x[0] = xa[0];
+  for j = 0 to 4 {
+    y[j] = ya[j];
+    h, l = y[j] * x[0];
+    if (j == 0) {
+      z[0] = l;
+      z[1] = h;
+    } else {
+      cf, z[j] += l;
+      _, z[j + 1] += h + cf;
+    }
+  }
+
+  for i = 1 to 4 {
+    x[i] = xa[i];
+    for j = 0 to 4 {
+      y[j] = ya[j];
+      h, l = y[j] * x[i];
+      cf, z[i+j] += l;
+      if (j == 0) {
+        hprev = #MOV(0);
+        _, hprev += h + cf;
+      } else {
+        _, h += 0 + cf;
+        cf, z[i+j] += hprev;
+        if (1 <= j && j < 4 - 1) {
+          hprev = #MOV(0);
+          _, hprev += h + cf;
+        } else { /* j = 4 */
+          cf, z[i + j + 1] += h + cf;
+        }
+      }
+    }
+  }
+
+  r = __reduce(z);
+
+  return r;
+}
+
+inline fn __mul_rgs
+( reg ptr u64[252*4] xa,
+  stack u64 offset,
+  stack u64[4] ya
+) -> reg u64[4]
+{
+  reg u64[8] z;
+  reg u64[4] r x y;
+  reg u64 o h l hprev;
+  reg bool cf;
+  inline int i j;
+
+  o = offset;
+  o <<= 2;
+
+  for i = 2 to 8 { z[i] = #MOV(0); }
+
+  x[0] = xa[(int)o];
+  o = #LEA(o + 1);
+  for j = 0 to 4 {
+    y[j] = ya[j];
+    h, l = y[j] * x[0];
+    if (j == 0) {
+      z[0] = l;
+      z[1] = h;
+    } else {
+      cf, z[j] += l;
+      _, z[j + 1] += h + cf;
+    }
+  }
+
+  for i = 1 to 4 {
+    x[i] = xa[(int)o];
+    o = #LEA(o + 1);
+    for j = 0 to 4 {
+      y[j] = ya[j];
+      h, l = y[j] * x[i];
+      cf, z[i+j] += l;
+      if (j == 0) {
+        hprev = #MOV(0);
+        _, hprev += h + cf;
+      } else {
+        _, h += 0 + cf;
+        cf, z[i+j] += hprev;
+        if (1 <= j && j < 4 - 1) {
+          hprev = #MOV(0);
+          _, hprev += h + cf;
+        } else { /* j = 4 */
+          cf, z[i + j + 1] += h + cf;
+        }
+      }
+    }
+  }
+
+  r = __reduce(z);
+
+  return r;
+}
+
+inline fn __mul_rms
+( reg u64 xa,
+  stack u64 offset,
+  stack u64[4] ya
+) -> reg u64[4]
+{
+  reg u64[8] z;
+  reg u64[4] r x y;
+  reg u64 o h l hprev;
+  reg bool cf;
+  inline int i j;
+
+  o = offset;
+  o <<= 2;
+
+  for i = 2 to 8 { z[i] = #MOV(0); }
+
+  x[0] = [xa + o*8];
+  o = #LEA(o + 1);
+  for j = 0 to 4 {
+    y[j] = ya[j];
+    h, l = y[j] * x[0];
+    if (j == 0) {
+      z[0] = l;
+      z[1] = h;
+    } else {
+      cf, z[j] += l;
+      _, z[j + 1] += h + cf;
+    }
+  }
+
+  for i = 1 to 4 {
+    x[i] = [xa + o*8];
+    o = #LEA(o + 1);
+    for j = 0 to 4 {
+      y[j] = ya[j];
+      h, l = y[j] * x[i];
+      cf, z[i+j] += l;
+      if (j == 0) {
+        hprev = #MOV(0);
+        _, hprev += h + cf;
+      } else {
+        _, h += 0 + cf;
+        cf, z[i+j] += hprev;
+        if (1 <= j && j < 4 - 1) {
+          hprev = #MOV(0);
+          _, hprev += h + cf;
+        } else { /* j = 4 */
+          cf, z[i + j + 1] += h + cf;
+        }
+      }
+    }
+  }
+
+  r = __reduce(z);
+
+  return r;
+}
+
+inline fn __mul_sss(stack u64[4] fs gs) -> stack u64[4]
+{
+  stack u64[4] hs;
+  reg u64[4] h;
+
+  h = __mul_rss(fs, gs);
+  hs = h;
+
+  return hs;
+}
+
+#if 0
+#ifdef EXPORT
+
+export fn mul_rss(reg u64 zp xp yp)
+{
+  inline int i;
+  reg u64 v;
+  stack u64 zps;
+  stack u64[4] xa ya;
+  reg u64[4] za;
+
+  zps = zp;
+  for i=0 to 4
+  { v = [xp + i*8];
+    xa[i] = v;
+    v = [yp + i*8];
+    ya[i] = v;
+  }
+
+  za = __mul_rss(xa, ya);
+
+  zp = zps;
+  for i=0 to 4
+  { [zp + i*8] = za[i]; }
+}
+
+export fn mul_rms(reg u64 zp _xp yp)
+{
+  inline int i;
+  reg u64 o v xp;
+  stack u64 zps;
+  stack u64[4] ya;
+  reg u64[4] za;
+
+  zps = zp;
+  xp = _xp;
+
+  for i=0 to 4
+  { v = [yp + i*8];
+    ya[i] = v;
+  }
+
+  o  = 0;
+  za = __mul_rms(xp, o, ya);
+
+  zp = zps;
+  for i=0 to 4
+  { [zp + i*8] = za[i]; }
+}
+
+#endif
+#endif
+
+#endif 

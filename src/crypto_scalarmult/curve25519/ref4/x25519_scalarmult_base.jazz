@@ -1,0 +1,7 @@
+#ifndef CRYPTO_SCALARMULT_X25519_MULX_SCALARMULT_BASE
+#define CRYPTO_SCALARMULT_X25519_MULX_SCALARMULT_BASE
+
+//SWAP to x25519_scalarmult_base1.jazz to use global arrays
+#include "crypto_scalarmult/curve25519/ref4/x25519_scalarmult_base2.jazz"
+
+#endif

@@ -1,0 +1,74 @@
+#ifndef CRYPTO_SCALARMULT_X25519_REF4_INVERT
+#define CRYPTO_SCALARMULT_X25519_REF4_INVERT
+
+#include "crypto_scalarmult/curve25519/ref4/x25519_sqr.jazz"
+#include "crypto_scalarmult/curve25519/ref4/x25519_mul.jazz"
+
+inline fn __invert_ss(stack u64[4] xa) -> stack u64[4]
+{
+  stack u64[4] t z2 z9 z11 z2_5_0 z2_10_0 z2_20_0 z2_50_0 z2_100_0;
+  stack u64 k;
+
+  z2     = __sqr_ss(xa);
+  t      = __sqr_ss(z2);
+  t      = __sqr_ss(t);
+  z9     = __mul_sss(t, xa);
+  z11    = __mul_sss(z9, z2);
+  t      = __sqr_ss(z11);
+  z2_5_0 = __mul_sss(t, z9);
+
+  t = __sqr_ss(z2_5_0);
+
+  /* 4 times */
+  k = 3;
+  t = __it_sqr_x1(t, k);
+  z2_10_0 = __mul_sss(t, z2_5_0);
+  t = __sqr_ss(z2_10_0);
+
+  /* 9 times */
+  k = 8;
+  t = __it_sqr_x1(t, k);
+  z2_20_0 = __mul_sss(t, z2_10_0);
+  t = __sqr_ss(z2_20_0);
+
+  /* 19 times */
+  k = 18;
+  t = __it_sqr_x1(t, k);
+  t = __mul_sss(t, z2_20_0);
+  t = __sqr_ss(t);
+
+  /* 9 times */
+  k = 8;
+  t = __it_sqr_x1(t, k);
+  z2_50_0 = __mul_sss(t, z2_10_0);
+  t = __sqr_ss(z2_50_0);
+
+  /* 49 times */
+  k = 48;
+  t = __it_sqr_x1(t, k);
+  z2_100_0 = __mul_sss(t, z2_50_0);
+  t = __sqr_ss(z2_100_0);
+
+  /* 99 times */
+  k = 98;
+  t = __it_sqr_x1(t, k);
+  t = __mul_sss(t, z2_100_0);
+  t = __sqr_ss(t);
+
+  /* 49 times */
+  k = 48;
+  t = __it_sqr_x1(t, k);
+  t = __mul_sss(t, z2_50_0);
+
+  t = __sqr_ss(t);
+  t = __sqr_ss(t);
+  t = __sqr_ss(t);
+  t = __sqr_ss(t);
+
+  t  = __sqr_ss(t);
+  xa = __mul_sss(t, z11);
+
+  return xa;
+}
+
+#endif

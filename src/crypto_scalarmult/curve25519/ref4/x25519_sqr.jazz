@@ -1,0 +1,218 @@
+#ifndef CRYPTO_SCALARMULT_X25519_REF4_SQR
+#define CRYPTO_SCALARMULT_X25519_REF4_SQR
+
+#include "crypto_scalarmult/curve25519/ref4/x25519_reduce.jazz"
+
+inline fn __sqr_rs(stack u64[4] xa) -> reg u64[4]
+{
+  reg u64 zero rax rdx;
+  reg u64[8] z;
+  reg u64[4] r;
+  reg u64[5] t;
+  reg bool cf;
+
+  z[7] = #MOV(0);
+  zero = #MOV(0);
+
+  /*   2*x01 + 2*x02 + 2*x03 + 2*x12 + 2*x13 + 2*x23
+     + x00 + x11 + x22 + x33 */
+
+  rax = xa[1];
+  rdx, rax = rax * xa[0];
+  z[1] = rax;
+  z[2] = rdx;
+
+  rax = xa[2];
+  rdx, rax = rax * xa[1];
+  z[3] = rax;
+  z[4] = rdx;
+
+  rax = xa[3];
+  rdx, rax = rax * xa[2];
+  z[5] = rax;
+  z[6] = rdx;
+
+  /*   [2*]x01 + 2*x02 + 2*x03 + [2*]x12 + 2*x13 + [2*]x23
+     + x00 + x11 + x22 + x33 */
+
+  rax = xa[2];
+  rdx, rax = rax * xa[0];
+  cf, z[2] += rax;
+  cf, z[3] += rdx + cf;
+   _, z[4] += zero   + cf;
+
+  rax = xa[3];
+  rdx, rax = rax * xa[1];
+  cf, z[4] += rax;
+  cf, z[5] += rdx + cf;
+   _, z[6] += zero   + cf;
+
+  /*   [2*]x01 + [2*]x02 + 2*x03 + [2*]x12 + [2*]x13 + [2*]x23
+     + x00 + x11 + x22 + x33 */
+
+  rax = xa[3];
+  rdx, rax = rax * xa[0];
+  cf, z[3] += rax;
+  cf, z[4] += rdx + cf;
+  cf, z[5] += zero   + cf;
+  cf, z[6] += zero   + cf;
+  _,  z[7] += zero   + cf;
+
+  /*   x01 + x02 + x03 + x12 + x13 + x23
+     + x00 + x11 + x22 + x33 */
+
+  /* set z<1..2n+1> = 2*z<1..2n+1> since
+     we have summed all x_i*x_j with i<>j
+     so far and these occur twice */
+  cf, z[1] += z[1];
+  cf, z[2] += z[2] + cf;
+  cf, z[3] += z[3] + cf;
+  cf, z[4] += z[4] + cf;
+  cf, z[5] += z[5] + cf;
+  cf, z[6] += z[6] + cf;
+  cf, z[7] += z[7] + cf;
+
+  /* x00 + x11 + x22 + x33 */
+
+  rax = xa[0];
+  rdx, rax = rax * xa[0];
+  z[0] = rax;
+  t[0] = rdx;
+
+  rax = xa[1];
+  rdx, rax = rax * xa[1];
+  t[1] = rax;
+  t[2] = rdx;
+
+  rax = xa[2];
+  rdx, rax = rax * xa[2];
+  t[3] = rax;
+  t[4] = rdx;
+
+  cf, z[1] += t[0];
+  cf, z[2] += t[1] + cf;
+  cf, z[3] += t[2] + cf;
+  cf, z[4] += t[3] + cf;
+  cf, z[5] += t[4] + cf;
+  cf, z[6] += 0 + cf;
+   _, z[7] += 0 + cf;
+
+  rax = xa[3];
+  rdx, rax = rax * xa[3];
+  cf, z[6] += rax;
+   _, z[7] += rdx + cf;
+
+  r = __reduce(z);
+
+  return r;
+}
+
+inline fn __it_sqr_x1(stack u64[4] xa, stack u64 n) -> stack u64[4]
+{
+  reg u64 xa0 xa1 xa2 rax rdx n_r;
+  reg u64[8] z;
+  reg u64[4] r;
+  reg u64[5] t;
+  reg bool cf;
+
+  while {
+    xa0 = xa[0];
+    xa1 = xa[1];
+    xa2 = xa[2];
+
+    rax = xa1;
+    rdx, rax = rax * xa0;
+    z[1] = rax;
+    z[2] = rdx;
+
+    rax = xa2;
+    rdx, rax = rax * xa1;
+    z[3] = rax;
+    z[4] = rdx;
+
+    rax = xa[3];
+    rdx, rax = rax * xa2;
+    z[5] = rax;
+    z[6] = rdx;
+    z[7] = #MOV(0);
+
+    rax = xa[2];
+    rdx, rax = rax * xa0;
+    cf, z[2] += rax;
+    cf, z[3] += rdx + cf;
+     _, z[4] += 0   + cf;
+
+    rax = xa[3];
+    rdx, rax = rax * xa1;
+    cf, z[4] += rax;
+    cf, z[5] += rdx + cf;
+     _, z[6] += 0   + cf;
+
+    rax = xa[3];
+    rdx, rax = rax * xa0;
+    cf, z[3] += rax;
+    cf, z[4] += rdx + cf;
+    cf, z[5] += 0   + cf;
+    cf, z[6] += 0   + cf;
+    _,  z[7] += 0   + cf;
+
+    cf, z[1] += z[1];
+    cf, z[2] += z[2] + cf;
+    cf, z[3] += z[3] + cf;
+    cf, z[4] += z[4] + cf;
+    cf, z[5] += z[5] + cf;
+    cf, z[6] += z[6] + cf;
+    cf, z[7] += z[7] + cf;
+
+    rax = xa0;
+    rdx, rax = rax * xa0;
+    z[0] = rax;
+    t[0] = rdx;
+
+    rax = xa1;
+    rdx, rax = rax * xa1;
+    t[1] = rax;
+    t[2] = rdx;
+
+    rax = xa[2];
+    rdx, rax = rax * xa[2];
+    t[3] = rax;
+    t[4] = rdx;
+
+    cf, z[1] += t[0];
+    cf, z[2] += t[1] + cf;
+    cf, z[3] += t[2] + cf;
+    cf, z[4] += t[3] + cf;
+    cf, z[5] += t[4] + cf;
+    cf, z[6] += 0 + cf;
+     _, z[7] += 0 + cf;
+
+    rax = xa[3];
+    rdx, rax = rax * xa[3];
+    cf, z[6] += rax;
+     _, z[7] += rdx + cf;
+
+    r = __reduce(z);
+    xa = r;
+
+    n_r = n;  
+  }(n_r > 0){
+    n_r -= 1;
+    n = n_r;
+  }
+
+  return xa;
+}
+
+inline fn __sqr_ss(stack u64[4] fs) -> stack u64[4]
+{
+  stack u64[4] hs;
+  reg u64[4] h;
+
+  h = __sqr_rs(fs);
+  hs = h;
+
+  return hs;
+}
+
+#endif
