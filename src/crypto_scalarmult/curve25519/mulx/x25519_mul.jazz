@@ -464,6 +464,7 @@ inline fn __fe64_mul_rsr
   return h;
 }
 
+#if 0
 inline fn __fe64_mul_rgr
 ( reg ptr u64[252*4] fp,
   stack u64 i,
@@ -502,7 +503,46 @@ inline fn __fe64_mul_rgr
 
   return h;
 }
+#endif
 
+inline fn __fe64_mul_rmr
+( reg u64 fp,
+  stack u64 i,
+  reg u64[4] g
+) -> reg u64[4]
+{
+  reg bool cf of;
+  reg u64[4] h r;
+  reg u64 _38 f o z;
+  stack u64 os;
+
+  o = i;
+  o <<= 2;
+
+  of, cf, _, _, _, z = #set0();
+
+  f = [fp + o*8];
+  o = #LEA(o + 1); /* o += 1; */
+  h, r, cf, of = __fe64_mul_c0(      f, g, z, cf, of);
+
+  f = [fp + o*8];
+  o = #LEA(o + 1); /* o += 1; */
+  h, r, cf, of = __fe64_mul_c1(h, r, f, g, z, cf, of);
+
+  f = [fp + o*8];
+  o = #LEA(o + 1); /* o += 1; */
+  os = o;
+  h, r, cf, of = __fe64_mul_c2(h, r, f, g, z, cf, of);
+
+  o = os;
+  f = [fp + o*8];
+  h, r, cf, of = __fe64_mul_c3(h, r, f, g, z, cf, of);
+
+  _38 = 38;
+  h = __fe64_reduce(h, r, _38, z, cf, of);
+
+  return h;
+}
 
 inline fn __fe64_mul_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
 {
@@ -515,12 +555,24 @@ inline fn __fe64_mul_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
   return hs;
 }
 
+#if 0
 inline fn __fe64_mul_rgs(reg ptr u64[252*4] fp, stack u64 i, stack u64[4] gs) -> reg u64[4]
 {
   reg u64[4] h g;
 
   g = gs;
   h = __fe64_mul_rgr(fp, i, g);
+
+  return h;
+}
+#endif
+
+inline fn __fe64_mul_rms(reg u64 fp, stack u64 i, stack u64[4] gs) -> reg u64[4]
+{
+  reg u64[4] h g;
+
+  g = gs;
+  h = __fe64_mul_rmr(fp, i, g);
 
   return h;
 }
