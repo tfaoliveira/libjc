@@ -166,30 +166,33 @@ inline fn __montgomery_ladder(reg u64[4] initr, stack u64[4] k) -> stack u64[4],
 {
   stack u64[4] init x2 x3 z3;
   reg u64[4] z2r;
-  stack u64 ki i j swapped;
-  reg u64 t ir;
+  stack u64 ki is js swapped;
+  reg u64 t i j;
 
   (x2,z2r,x3,z3) = __init_points(initr); 
   init = initr;
 
   swapped = 0;
-  i = 3;
+  i = 4;
   j = 63;
   while
   {
-    ir = i;
-    t = k[(int) ir];
+    i -= 1;
+    t  = k[(int) i];
+    is = i;
     ki = t;
 
     while
     {
-      (ki, x2, z2r, x3, z3, swapped) = __montgomery_ladder_step(ki, init, x2, z2r, x3, z3, swapped);
       j -= 1;
+      js = j;
+      (ki, x2, z2r, x3, z3, swapped) = __montgomery_ladder_step(ki, init, x2, z2r, x3, z3, swapped);
+      j = js;
     }(j > 0)
 
     j = 64;
-    i -= 1;
-  }(i >=s 0)
+    i = is;
+  }(i > 0)
 
   return x2, z2r, x3, z3;
 }

@@ -434,10 +434,11 @@ inline fn __iterated_square(stack u64[4] xa, stack u64 n) -> stack u64[4]
     r = __reduce(z);
     xa = r;
 
-  n_r = n;
-  cf, n_r -= 1;
-  n = n_r;
-  }(!cf)
+    n_r = n;  
+  }(n_r > 0){
+    n_r -= 1;
+    n = n_r;
+  }
 
   return xa;
 }
@@ -542,6 +543,7 @@ inline fn __cswap(stack u64[4] x2p z2p x3p z3p, reg u64 swap)
 // ** montgomery ladder
 // ************************************************************************
 
+#if 1
 inline fn __mladder(stack u64[4] x2 z2 xr, reg u64 sp)
        -> stack u64[4],
           stack u64[4]
@@ -558,12 +560,16 @@ inline fn __mladder(stack u64[4] x2 z2 xr, reg u64 sp)
   z3[0] = 1;       z3[1] = #MOV(0); z3[2] = #MOV(0); z3[3] = #MOV(0);
 
 
-  j = 62; i = 3; prevbit = #MOV(0);
-  while {
+  j = 63; i = 4; prevbit = #MOV(0);
+  while
+  {
+    i -= 1;
     tmp1 = [sp + 8*i];
     is = i;
     s = tmp1;
-    while {
+    while
+    {
+      j -= 1;
       tmp2 = s;
       bit = tmp2 >> j;
       js = j;
@@ -575,14 +581,16 @@ inline fn __mladder(stack u64[4] x2 z2 xr, reg u64 sp)
       x2r,z2,x3,z3 = __ladderstep(x1,x2r,z2,x3,z3);
       x2 = x2r;
       j = js;
-      j -= 1;
-    } (j >=s 0)
-    j = 63;
+    } (j > 0)
+    j = 64;
     i = is;
-    i -= 1;
-  } (i >=s 0)
+  } (i > 0)
   return x2, z2;
 }
+#else
+
+#endif
+
 
 // ** inversion
 // ************************************************************************

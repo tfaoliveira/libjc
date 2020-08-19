@@ -162,18 +162,18 @@ inline fn __montgomery_ladder(reg u64[4] initr, stack u8[32] k) -> stack u64[4],
   (x2,z2r,x3,z3) = __init_points(initr); 
   init = initr;
 
-  ctr = 254;
+  ctr = 255;
   swapped = 0;
 
   while
   {
+    ctr -= 1;
     ctrs = ctr;
 
     (x2, z2r, x3, z3, swapped) = __montgomery_ladder_step(k, init, x2, z2r, x3, z3, swapped, ctr);
 
     ctr = ctrs;
-    ctr -= 1;
-  } (ctr >=s 0)
+  } (ctr > 0)
 
   return x2, z2r, x3, z3;
 }
