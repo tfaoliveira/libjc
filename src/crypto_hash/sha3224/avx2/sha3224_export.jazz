@@ -1,6 +1,0 @@
-#include "crypto_hash/sha3224/avx2/sha3224.jazz"
-
-export fn sha3224_avx2(reg u64 out in inlen)
-{
-  __sha3224_avx2(out, in, inlen);
-}

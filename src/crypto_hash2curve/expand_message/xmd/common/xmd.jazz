@@ -1,6 +1,3 @@
-#ifndef XMD_COMMON
-#define XMD_COMMON
-
 // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-09
 
 #include "utils/memory.jazz"
@@ -10,9 +7,9 @@
 // - HASHSIZE (e.g. 32)
 // - HASHRATE (e.g. 64)
 //
-// - hash_init (e.g. sha256_init_ref0c)
-// - hash_update (e.g. sha256_update_ref0c)
-// - hash_finish (e.g. sha256_finish_ref0c)
+// - hash_init (e.g. sha256_init_ref0)
+// - hash_update (e.g. sha256_update_ref0)
+// - hash_finish (e.g. sha256_finish_ref0)
 // - hash_get_buffer (sha256_get_buffer - internal function - no need to append _IMPL)
 //
 // #pre: ceil(outlen,HASHSIZE) <= 255
@@ -92,3 +89,4 @@ fn expand_message_xmd(reg u64 out outlen msg msglen DST DSTlen ctx)
     i += 1;
   }
 }
+

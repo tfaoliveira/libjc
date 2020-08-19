@@ -1,8 +1,8 @@
-#ifndef SHA3512_AVX2
-#define SHA3512_AVX2
+#ifndef CRYPTO_HASH_SHA3512_AVX2
+#define CRYPTO_HASH_SHA3512_AVX2
 
 #define KECCAK1600_ADD_FULL_BLOCK_IMPLEMENTATION 1
-fn add_full_block(
+inline fn __add_full_block(
   reg u256[7] state,
   stack u64[28] s_state,
   reg ptr u64[25] _not_used_,
@@ -24,10 +24,10 @@ fn add_full_block(
   state[0] ^= a00;
   state[1] ^= a01;
 
-  a01 = #VPBLENDD_256(a10, zero, (8u1)[1,1,0,0,1,1,1,1]); //  ___  (1,0)  ___   ___
-  t12 = #VPBLENDD_256(a11, zero, (8u1)[1,1,1,1,0,0,1,1]); //  ___   ___  (1,2)  ___
-  t13 = #VPBLENDD_256(a11, zero, (8u1)[1,1,0,0,1,1,1,1]); //  ___  (1,3)  ___   ___
-  t11 = #VPBLENDD_256(a11, zero, (8u1)[1,1,1,1,1,1,0,0]); //  ___   ___   ___  (1,1)
+  a01 = #VPBLEND_8u32(a10, zero, (8u1)[1,1,0,0,1,1,1,1]); //  ___  (1,0)  ___   ___
+  t12 = #VPBLEND_8u32(a11, zero, (8u1)[1,1,1,1,0,0,1,1]); //  ___   ___  (1,2)  ___
+  t13 = #VPBLEND_8u32(a11, zero, (8u1)[1,1,0,0,1,1,1,1]); //  ___  (1,3)  ___   ___
+  t11 = #VPBLEND_8u32(a11, zero, (8u1)[1,1,1,1,1,1,0,0]); //  ___   ___   ___  (1,1)
 
   state[2] ^= a01;
   state[3] ^= t12;
@@ -42,9 +42,25 @@ fn add_full_block(
 
 #include "crypto_hash/keccak1600/avx2/keccak1600.jazz"
 
-fn __sha3512_avx2(reg u64 out in inlen)
+inline fn __sha3512_avx2(reg u64 out in inlen)
 {
-  __keccak1600_avx2(out, (512/8), in, inlen, 0x06, (576/8));
+  reg u64 outlen rate;
+  reg u8 trail_byte;
+
+  outlen = (512/8);
+  trail_byte = 0x6;
+  rate = (576/8);
+
+  __keccak1600_avx2(out, outlen, in, inlen, trail_byte, rate);
 }
+
+#ifdef EXPORT
+
+export fn sha3512_avx2(reg u64 out in inlen)
+{
+  __sha3512_avx2(out, in, inlen);
+}
+
+#endif
 
 #endif

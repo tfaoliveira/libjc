@@ -1,5 +1,5 @@
-#ifndef X25519_MULX_INVERT
-#define X25519_MULX_INVERT
+#ifndef CRYPTO_SCALARMULT_X25519_MULX_INVERT
+#define CRYPTO_SCALARMULT_X25519_MULX_INVERT
 
 #include "crypto_scalarmult/curve25519/mulx/x25519_sqr.jazz"
 #include "crypto_scalarmult/curve25519/mulx/x25519_mul.jazz"

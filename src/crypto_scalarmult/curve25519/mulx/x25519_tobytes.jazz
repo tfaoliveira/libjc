@@ -1,13 +1,14 @@
-#ifndef X25519_MULX_TOBYTES
-#define X25519_MULX_TOBYTES
+#ifndef CRYPTO_SCALARMULT_X25519_MULX_TOBYTES
+#define CRYPTO_SCALARMULT_X25519_MULX_TOBYTES
 
 // OpenSSL
 inline fn __fe64_tobytes(reg u64[4] f) -> reg u64[4]
 {
   reg bool cf;
   reg u64 t;
-
-  t = f[3] + f[3];
+  
+  /* t = f[3] + f[3]; // requires -lea */
+  t = #LEA(f[3] + f[3]);
   f[3] = #SAR(f[3], 63);
   t >>= 1;
   f[3] &= 19;
@@ -18,8 +19,9 @@ inline fn __fe64_tobytes(reg u64[4] f) -> reg u64[4]
   cf, f[2] += 0 + cf;
   cf, t    += 0 + cf;
 
-  f[3] = t + t;
-  t    = #SAR(t, 63);
+  /* f[3] = t + t; // requires -lea */
+  f[3] = #LEA(t + t);
+  t = #SAR(t, 63);
   f[3] >>= 1;
   t = !t;
   t &= 19;

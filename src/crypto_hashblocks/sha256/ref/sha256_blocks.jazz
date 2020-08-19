@@ -1,9 +1,9 @@
-#ifndef SHA256_BLOCKS_REF
-#define SHA256_BLOCKS_REF
+#ifndef CRYPTO_HASHBLOCKS_SHA256_REF
+#define CRYPTO_HASHBLOCKS_SHA256_REF
 
 #include "crypto_hashblocks/sha256/ref0/sha256_blocks.jazz"
 
-inline fn M(stack u32[16] W, inline int i0 i14 i9 i1) -> stack u32[16]
+inline fn __M(stack u32[16] W, inline int i0 i14 i9 i1) -> stack u32[16]
 {
   reg u32 t w0 w14 w1;
 
@@ -11,12 +11,12 @@ inline fn M(stack u32[16] W, inline int i0 i14 i9 i1) -> stack u32[16]
   w0  = W[i0];
 
   w14 = W[i14];
-  t   = SSIG1(w14);
+  t   = __sha256_SSIG1(w14);
   w0 += t;
 
   w0 += W[i9];
 
-  t   = SSIG0(W[i1]);
+  t   = __sha256_SSIG0(W[i1]);
   w0 += t;
 
   W[i0] = w0;
@@ -24,34 +24,35 @@ inline fn M(stack u32[16] W, inline int i0 i14 i9 i1) -> stack u32[16]
   return W;
 }
 
-inline fn EXPAND(stack u32[16] W) -> stack u32[16]
+inline fn __EXPAND(stack u32[16] W) -> stack u32[16]
 {
   inline int i;
 
   for i=0 to 16
-  { W = M(W, i, (i+14)%16, (i+9)%16, (i+1)%16); }
+  { W = __M(W, i, (i+14)%16, (i+9)%16, (i+1)%16); }
 
   return W;
 }
 
-inline fn F(reg u32[8] r, stack u32[16] W, inline int wi ki) -> reg u32[8]
+// TODO: CHECKME warning extra assignment. For instance: __sha256_BSIG1(r[4]); const in reg?
+inline fn __F(reg u32[8] r, stack u32[16] W, inline int wi ki) -> reg u32[8]
 {
   reg u32 t T1 T2;
   stack u32 T1s;
 
   //T1 = h + BSIG1(e) + CH(e,f,g) + Kt + Wt
   T1  = r[7];
-  t   = BSIG1(r[4]);
+  t   = __sha256_BSIG1(r[4]);
   T1 += t;
-  t   = CH(r[4],r[5],r[6]);
+  t   = __sha256_CH(r[4],r[5],r[6]);
   T1 += t;
-  T1 += K[ki];
+  T1 += SHA256_K[ki];
   T1 += W[wi];
   T1s = T1;
 
   //T2 = BSIG0(a) + MAJ(a,b,c)
-  T2  = BSIG0(r[0]);
-  t   = MAJ(r[0],r[1],r[2]);
+  T2  = __sha256_BSIG0(r[0]);
+  t   = __sha256_MAJ(r[0],r[1],r[2]);
   T2 += t;
 
   r[7]  = r[6];
@@ -68,19 +69,21 @@ inline fn F(reg u32[8] r, stack u32[16] W, inline int wi ki) -> reg u32[8]
   return r;
 }
 
-inline fn G(reg u32[8] r, stack u32[16] W, inline int kb) -> reg u32[8]
+inline fn __G(reg u32[8] r, stack u32[16] W, inline int kb) -> reg u32[8]
 {
   inline int i;
 
   for i=0 to 16
-  { r = F(r, W, i, kb+i); }
+  { r = __F(r, W, i, kb+i); }
 
   return r;
 }
 
-inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
+#if 0
+inline fn __sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
 {
   inline int i;
+  reg u32 v;
   reg u32[8] r;
   stack u32[16] W;
   stack u64 in_s;
@@ -92,13 +95,16 @@ inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], 
   {
     in = in_s;
     for i=0 to 16
-    { W[i] = load_bigendian(in, i*4); }
-    //in_s = in;//
+    { v = (u32)[in + i*4];
+      v = #BSWAP_32(v);
+      W[i] = v;
+    }
+    //in_s = in;
 
     for i=0 to 4
-    { r = G(r, W, 16*i);
+    { r = __G(r, W, 16*i);
       if(i < 3)
-      { W = EXPAND(W); }
+      { W = __EXPAND(W); }
     }
 
     for i=0 to 8
@@ -106,8 +112,8 @@ inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], 
 
     H = r;
 
-    //in = in_s;//
-    //in += 64;//
+    //in = in_s;
+    //in += 64;
     in_s += 64;
     inlen -= 64;
   }
@@ -115,5 +121,78 @@ inline fn _sha256_blocks_ref(stack u32[8] H, reg u64 in inlen) -> stack u32[8], 
   in = in_s;
   return H, in, inlen;
 }
+#endif
+
+#[returnaddress="stack"]
+fn _sha256_blocks_ref(reg ptr u32[8] H, reg u64 in inlen) -> reg ptr u32[8], reg u64, reg u64
+{
+  inline int i;
+  reg u32 v;
+  reg u32[8] r;
+  stack u32[16] W;
+  stack ptr u32[8] Hp;
+  stack u64 in_s;
+
+  Hp = H;
+  r = H;
+
+  in_s = in;
+  while(inlen >= 64)
+  {
+    in = in_s;
+    for i=0 to 16
+    { v = (u32)[in + i*4];
+      v = #BSWAP_32(v);
+      W[i] = v;
+    }
+    //in_s = in;
+
+    for i=0 to 4
+    { r = __G(r, W, 16*i);
+      if(i < 3)
+      { W = __EXPAND(W); }
+    }
+
+    H = Hp;
+    for i=0 to 8
+    { r[i] += H[i]; }
+
+    H = r;
+    Hp = H;
+
+    //in = in_s;
+    //in += 64;
+    in_s += 64;
+    inlen -= 64;
+  }
+
+  in = in_s;
+  return H, in, inlen;
+}
+
+#ifdef EXPORT
+
+export fn sha256_blocks_ref(reg u64 pH in _inlen) -> reg u64
+{
+  stack u32[8] H;
+  stack u64 pHs;
+  reg u64 inlen;
+
+  // load H
+  pHs = pH;
+  H = __sha256_load_H_mem(pH);
+
+  // swap inlen register
+  inlen = _inlen;
+  H, in, inlen = _sha256_blocks_ref(H, in, inlen);
+
+  // restore pointer
+  pH = pHs;
+  __sha256_store_H_mem(pH, H);
+
+  return inlen;
+}
+
+#endif
 
 #endif

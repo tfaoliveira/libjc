@@ -1,6 +1,0 @@
-#include "crypto_hash/sha3256/avx2/sha3256.jazz"
-
-export fn sha3256_avx2(reg u64 out in inlen)
-{
-  __sha3256_avx2(out, in, inlen);
-}

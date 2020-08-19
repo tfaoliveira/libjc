@@ -1,9 +1,9 @@
-#ifndef HMACSHA256_COMMON
-#define HMACSHA256_COMMON
+#ifndef CRYPTO_AUTH_HMACSHA256_COMMON
+#define CRYPTO_AUTH_HMACSHA256_COMMON
 
 #include "utils/spill.jazz"
 
-inline fn hmacsha256_pad(reg u64 padded k klen, inline u8 pad)
+inline fn __hmacsha256_pad(reg u64 padded k klen, inline u8 pad)
 {
   reg u64 i;
   reg u8 v;
@@ -21,13 +21,13 @@ inline fn hmacsha256_pad(reg u64 padded k klen, inline u8 pad)
   }
 }
 
-inline fn hmacsha256_last(reg u64 padded, stack u32[8] H)
+inline fn __hmacsha256_last(reg u64 padded, stack u32[8] H)
 {
   inline int t;
   reg u64 p;
 
   p = #LEA_64(padded+64);
-  store_H_mem(p, H);
+  __sha256_store_H_mem(p, H);
 
   (u8)[padded + 96] = 0x80;
   for t=1 to 30
@@ -37,12 +37,15 @@ inline fn hmacsha256_last(reg u64 padded, stack u32[8] H)
   (u8)[padded + 127] = 0x00; // 0x300 = 768; 768/8 = 96 bytes (64 + 32) 
 }
 
+#endif
+
 // expects hkpadded to have 32 bytes (H(k)) + 128 bytes (for input with padding and length in bits)
-fn hmacsha256(reg u64 out in inlen k klen hkpadded)
+#[returnaddress="stack"]
+fn _hmacsha256(reg u64 out in inlen k klen hkpadded)
 {
   inline int t;
   stack u32[8] H;
-  reg u64 hk padded bits;
+  reg u64 len hk padded bits;
   stack u64 out_s in_s inlen_s k_s klen_s hk_s padded_s bits_s;
 
   // calculate padded and bit length 
@@ -54,42 +57,46 @@ fn hmacsha256(reg u64 out in inlen k klen hkpadded)
 
   // store variables in the stack
   (out_s, in_s, inlen_s, k_s, klen_s, hk_s, padded_s, bits_s) =
-    r2s_x8(out, in, inlen, k, klen, hkpadded, padded, bits);
+    __r2s_x8(out, in, inlen, k, klen, hkpadded, padded, bits);
 
   // rfc2104 "Applications that use keys longer than B bytes
   //          will first hash the key using H and then use the
   //          resultant L byte string as the actual key to HMAC."
   if( klen > 64 )
-  { (hk, k, padded) = s2r_x3(hk_s, k_s, padded_s);
-    sha256(hk, k, klen, padded);
-    (k_s, klen_s) = r2s_x2(hk, 32); // k now points to hk (hash of k);
+  { (hk, k, padded) = __s2r_x3(hk_s, k_s, padded_s);
+    _sha256(hk, k, klen, padded);
+    hk = hk_s;
+    len = 32;
+    (k_s, klen_s) = __r2s_x2(hk, len); // k now points to hk (hash of k);
   }
 
   // H(K XOR ipad, text)
-  (padded, k, klen) = s2r_x3(padded_s, k_s, klen_s);
-  hmacsha256_pad(padded, k, klen, 0x36);
+  (padded, k, klen) = __s2r_x3(padded_s, k_s, klen_s);
+  __hmacsha256_pad(padded, k, klen, 0x36);
 
-  H = initH();
-  H, _, _ = sha256_blocks(H, padded, 64);
+  H = __sha256_initH();
+  len = 64;
+  H, _, _ = _sha256_blocks(H, padded, len);
 
-  (in, inlen) = s2r_x2(in_s, inlen_s);
-  H, in, inlen = sha256_blocks(H, in, inlen);
+  (in, inlen) = __s2r_x2(in_s, inlen_s);
+  H, in, inlen = _sha256_blocks(H, in, inlen);
 
-  (padded, bits) = s2r_x2(padded_s, bits_s);
-  inlen = sha256_lastblock1(in, inlen, padded, bits);
-  H, _, _ = sha256_blocks(H, padded, inlen);
+  (padded, bits) = __s2r_x2(padded_s, bits_s);
+  inlen = __sha256_lastblock1(in, inlen, padded, bits);
+  padded = padded_s;
+  H, _, _ = _sha256_blocks(H, padded, inlen);
 
   // H(K XOR opad, ...)
-  (padded, k, klen) = s2r_x3(padded_s, k_s, klen_s);
-  hmacsha256_pad(padded, k, klen, 0x5c);
-  hmacsha256_last(padded, H);
+  (padded, k, klen) = __s2r_x3(padded_s, k_s, klen_s);
+  __hmacsha256_pad(padded, k, klen, 0x5c);
+  __hmacsha256_last(padded, H);
 
   // call sha256 blocks
-  H = initH();
-  H, _, _ = sha256_blocks(H, padded, 128);
+  H = __sha256_initH();
+  len = 128;
+  H, _, _ = _sha256_blocks(H, padded, len);
 
   out = out_s;
-  store_H_mem(out, H);
+  __sha256_store_H_mem(out, H);
 }
 
-#endif

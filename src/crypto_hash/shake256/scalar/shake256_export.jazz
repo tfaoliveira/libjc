@@ -1,6 +1,0 @@
-#include "crypto_hash/shake256/scalar/shake256.jazz"
-
-export fn shake256_scalar(reg u64 out outlen in inlen)
-{
-  __shake256_scalar(out, outlen, in, inlen);
-}

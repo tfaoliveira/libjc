@@ -1,11 +1,39 @@
-#ifndef HKDFSHA256_REF0
-#define HKDFSHA256_REF0
+#ifndef CRYPTO_KDF_HKDFSHA256_REF0
+#define CRYPTO_KDF_HKDFSHA256_REF0
 
 #include "crypto_auth/hmacsha256/ref0/hmacsha256.jazz"
 
-#define hkdfsha256_extract _hkdfsha256_extract_ref0
-#define hkdfsha256_expand _hkdfsha256_expand_ref0
+#define _hmacsha256 _hmacsha256_ref0
+#define __hkdfsha256_extract __hkdfsha256_extract_ref0
+#define _hkdfsha256_expand _hkdfsha256_expand_ref0
 #include "crypto_kdf/hkdfsha256/common/hkdfsha256.jazz"
+#undef _hmacsha256
+#undef __hkdfsha256_extract
+#undef _hkdfsha256_expand
+
+#ifdef EXPORT
+
+export fn hkdfsha256_extract_ref0(reg u64 PRK salt saltlen IKM _IKMlen hkpadded)
+{
+  reg u64 IKMlen;
+
+  IKMlen = _IKMlen;
+
+  __hkdfsha256_extract_ref0(PRK, salt, saltlen, IKM, IKMlen, hkpadded);
+}
+
+export fn hkdfsha256_expand_ref0(reg u64 _OKM _PRK info infolen L _hkpadded_Tinfoc)
+{
+  reg u64 OKM PRK hkpadded_Tinfoc;
+
+  OKM = _OKM;
+  PRK = _PRK;
+  hkpadded_Tinfoc = _hkpadded_Tinfoc;
+
+  _hkdfsha256_expand_ref0(OKM, PRK, info, infolen, L, hkpadded_Tinfoc);
+}
+
+#endif
 
 #endif
 

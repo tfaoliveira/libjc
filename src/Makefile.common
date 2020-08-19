@@ -4,13 +4,13 @@ JFLAGS ?=
 JASMINC ?= jasminc
 
 %_export.japp: %.jazz
-	gpp -I. -I$(TOP) $(GFLAGS) -DEXPORT -o $@ $<
+	@gpp -I. -I$(TOP) $(GFLAGS) -DEXPORT -o $@ $<
 
 %.japp: %.jazz
-	gpp -I. -I$(TOP) $(GFLAGS) -o $@ $<
+	@gpp -I. -I$(TOP) $(GFLAGS) -o $@ $<
 
 %.s: %.japp
-	$(JASMINC) $(JFLAGS) -o $@ $< || (rm -f $@ && touch fail)
+	@$(JASMINC) $(JFLAGS) -o $@ $< || (rm -f $@ && touch fail && echo "\033[1;31m FAIL \033[0m")
 
 clean:
-	@rm -f fail *.japp *.s
+	@rm -f log fail *.japp *.s

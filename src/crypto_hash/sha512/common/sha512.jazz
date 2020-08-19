@@ -1,11 +1,11 @@
-#ifndef SHA512_COMMON
-#define SHA512_COMMON
+#ifndef CRYPTO_HASH_SHA512_COMMON
+#define CRYPTO_HASH_SHA512_COMMON
 
 #include "utils/memory.jazz"
 #include "utils/spill.jazz"
 #include "utils/math.jazz"
 
-u64[8] H0 = {
+u64[8] SHA512_H0 = {
  0x6a09e667f3bcc908,
  0xbb67ae8584caa73b,
  0x3c6ef372fe94f82b,
@@ -16,15 +16,14 @@ u64[8] H0 = {
  0x5be0cd19137e2179
 };
 
-
-inline fn initH() -> stack u64[8]
+inline fn __sha512_initH() -> stack u64[8]
 {
   inline int i;
   stack u64[8] H;
   reg u64 v;
 
   for i=0 to 8
-  { v = H0[i]; 
+  { v = SHA512_H0[i]; 
     H[i] = v;
   }
 
@@ -32,7 +31,7 @@ inline fn initH() -> stack u64[8]
 }
 
 // p should be 128 or 256
-inline fn sha512_lastblock0(reg u64 padded i bits, inline int p)
+inline fn __sha512_lastblock0(reg u64 padded i bits, inline int p)
 {
   inline int t;
 
@@ -48,7 +47,7 @@ inline fn sha512_lastblock0(reg u64 padded i bits, inline int p)
 }
 
 // writes in 'padded' the data for the last block
-inline fn sha512_lastblock1(reg u64 in inlen padded bits) -> reg u64
+inline fn __sha512_lastblock1(reg u64 in inlen padded bits) -> reg u64
 {
   reg u64 i;
   reg u8 v;
@@ -66,181 +65,14 @@ inline fn sha512_lastblock1(reg u64 in inlen padded bits) -> reg u64
 
   // set remaining space with '0's and bit length at the end
   if(inlen < 112)
-  { sha512_lastblock0(padded, i, bits, 128); inlen = 128; }
+  { __sha512_lastblock0(padded, i, bits, 128); inlen = 128; }
   else
-  { sha512_lastblock0(padded, i, bits, 256); inlen = 256; }
+  { __sha512_lastblock0(padded, i, bits, 256); inlen = 256; }
 
   return inlen;
 }
 
-fn sha512(reg u64 out in inlen padded)
-{
-  inline int t;
-  reg u64 bits;
-  stack u64 outs bitss paddeds;
-  stack u64[8] H;
-
-  outs = out;
-
-  bits = inlen;
-  bits <<= 3;
-
-  bitss, paddeds = r2s_x2(bits, padded);
-
-  H = initH();
-  H, in, inlen = sha512_blocks(H, in, inlen);
-
-  bits, padded = s2r_x2(bitss, paddeds);
-  inlen = sha512_lastblock1(in, inlen, padded, bits); // ideally it should return padded (as stack)
-  H, _, _ = sha512_blocks(H, padded, inlen);
-
-  out = outs;
-  store_H_mem(out, H);
-}
-
-////////////////////////////////
-// ctx -> u64[8]  -> H
-//        u8[256] -> padded (also used as buffer)
-//        u64     -> paddedLen (how many bytes from prev. inputs are in padded)
-//        u64     -> length (total processed length)
-//        u8[256] -> buffer (for jazz functions that cannot allocate space)
-
-inline fn sha512_get_H(reg u64 ctx) -> reg u64
-{
-  return ctx;
-}
-
-inline fn sha512_get_padded(reg u64 ctx) -> reg u64
-{
-  reg u64 padded;
-  padded = #LEA(ctx + (8*8));
-  return padded;
-}
-
-inline fn sha512_get_paddedLen(reg u64 ctx) -> reg u64
-{
-  reg u64 paddedLen;
-  paddedLen = (u64)[ctx + (8*8 + 256)];
-  return paddedLen;
-}
-
-inline fn sha512_get_length(reg u64 ctx) -> reg u64
-{
-  reg u64 length;
-  length = (u64)[ctx + (8*8 + 256 + 8)];
-  return length;
-}
-
-inline fn sha512_get_buffer(reg u64 ctx) -> reg u64
-{
-  reg u64 buffer;
-  buffer = #LEA(ctx + (8*8 + 256 + 8 + 8));
-  return buffer;
-}
-
-inline fn sha512_set_paddedLen(reg u64 ctx paddedLen)
-{
-  (u64)[ctx + (8*8 + 256)] = paddedLen;
-}
-
-inline fn sha512_set_length(reg u64 ctx length)
-{
-  (u64)[ctx + (8*8 + 256 + 8)] = length;
-}
-
-inline fn sha512_add_length(reg u64 ctx length)
-{
-  (u64)[ctx + (8*8 + 256 + 8)] += length;
-}
-
-fn sha512_ctx_size() -> reg u64
-{
-  reg u64 r;
-  r = 8*8 + 256 + 8 + 8 + 256;
-  return r;
-}
-
-fn sha512_init(reg u64 ctx)
-{
-  stack u64[8] H;
-  reg u64 H_p z;
-
-  H = initH();
-  H_p = sha512_get_H(ctx);
-  store_H_mem(H_p, H);
-
-  z = #set0();
-  sha512_set_paddedLen(ctx, z);
-  sha512_set_length(ctx, z);
-}
-
-// TODO: CHECK COMMENTS
-fn sha512_update(reg u64 in inlen ctx)
-{
-  stack u64[8] H;
-  stack u64 in_s inlen_s ctx_s;
-  reg u64 H_p padded paddedO paddedLen length;
-
-  // update length (bytes)
-  sha512_add_length(ctx, inlen);
-
-  // load H
-  H_p = sha512_get_H(ctx);
-  H = load_H_mem(H_p);
-
-  // sha512_get_padded 
-  padded = sha512_get_padded(ctx);
-  paddedLen = sha512_get_paddedLen(ctx);
-
-  // @pre : 0 <= paddedLen < 128'
-  //
-  // if 0 < paddedLen
-  // then copy 'min (128-paddedLen) inlen' bytes
-  // else copy '0' bytes
-  // <=> 
-  // copy 'min ((128-paddedLen)%128) inlen' bytes
-  length = 128;
-  length -= paddedLen;
-  length &= 0x7F;
-  length = min(length, inlen);
-
-  // copy 'length' bytes into 'padded'
-  paddedO = #LEA(padded + paddedLen);
-  memcpy_u8(paddedO, in, length);
-
-  // update paddedLen/inlen/in
-  paddedLen += length;
-  // 0 <= paddedLen <= 128
-  inlen -= length;
-  in += length;
-
-  in_s, inlen_s, ctx_s = r2s_x3(in, inlen, ctx);
-
-  // digest padded
-  H, _, paddedLen = sha512_blocks(H, padded, paddedLen);
-  // 0 <= paddedLen < 128
-  ctx = ctx_s;
-  sha512_set_paddedLen(ctx, paddedLen);
-
-  in, inlen = s2r_x2(in_s, inlen_s);
-
-  // paddedLen /= 0 ==> inlen == 0
-  H, in, inlen = sha512_blocks(H, in, inlen);
-
-  ctx = ctx_s;
-  padded = sha512_get_padded(ctx);
-  paddedLen = sha512_get_paddedLen(ctx);
-
-  // 0 <= inlen < 128 /\  0 < inlen ==> paddedLen == 0
-  memcpy_u8(padded, in, inlen);
-  paddedLen = max(paddedLen, inlen);
-  sha512_set_paddedLen(ctx, paddedLen);
-
-  H_p = sha512_get_H(ctx);
-  store_H_mem(H_p, H);
-}
-
-inline fn sha512_lastblock2(reg u64 padded paddedLen bits) -> reg u64
+inline fn __sha512_lastblock2(reg u64 padded paddedLen bits) -> reg u64
 {
   reg u64 i;
 
@@ -252,14 +84,186 @@ inline fn sha512_lastblock2(reg u64 padded paddedLen bits) -> reg u64
 
   // set remaining space with '0's and bit length at the end
   if(paddedLen < 112)
-  { sha512_lastblock0(padded, i, bits, 128); paddedLen = 128; }
+  { __sha512_lastblock0(padded, i, bits, 128); paddedLen = 128; }
   else
-  { sha512_lastblock0(padded, i, bits, 256); paddedLen = 256; }
+  { __sha512_lastblock0(padded, i, bits, 256); paddedLen = 256; }
 
   return paddedLen;
 }
 
-fn sha512_finish(reg u64 out ctx)
+////////////////////////////////
+// ctx -> u64[8]  -> H
+//        u8[256] -> padded (also used as buffer)
+//        u64     -> paddedLen (how many bytes from prev. inputs are in padded)
+//        u64     -> length (total processed length)
+//        u8[256] -> buffer (for jazz functions that cannot allocate space)
+
+inline fn __sha512_get_H(reg u64 ctx) -> reg u64
+{
+  return ctx;
+}
+
+inline fn __sha512_get_padded(reg u64 ctx) -> reg u64
+{
+  reg u64 padded;
+  padded = #LEA(ctx + (8*8));
+  return padded;
+}
+
+inline fn __sha512_get_paddedLen(reg u64 ctx) -> reg u64
+{
+  reg u64 paddedLen;
+  paddedLen = (u64)[ctx + (8*8 + 256)];
+  return paddedLen;
+}
+
+inline fn __sha512_get_length(reg u64 ctx) -> reg u64
+{
+  reg u64 length;
+  length = (u64)[ctx + (8*8 + 256 + 8)];
+  return length;
+}
+
+inline fn __sha512_get_buffer(reg u64 ctx) -> reg u64
+{
+  reg u64 buffer;
+  buffer = #LEA(ctx + (8*8 + 256 + 8 + 8));
+  return buffer;
+}
+
+inline fn __sha512_set_paddedLen(reg u64 ctx paddedLen)
+{
+  (u64)[ctx + (8*8 + 256)] = paddedLen;
+}
+
+inline fn __sha512_set_length(reg u64 ctx length)
+{
+  (u64)[ctx + (8*8 + 256 + 8)] = length;
+}
+
+inline fn __sha512_add_length(reg u64 ctx length)
+{
+  (u64)[ctx + (8*8 + 256 + 8)] += length;
+}
+
+inline fn __sha512_ctx_size() -> reg u64
+{
+  reg u64 r;
+  r = 8*8 + 256 + 8 + 8 + 256;
+  return r;
+}
+
+#endif
+
+#[returnaddress="stack"]
+fn _sha512(reg u64 out in inlen padded)
+{
+  inline int t;
+  reg u64 bits;
+  stack u64 out_s bits_s padded_s;
+  stack u64[8] H;
+
+  out_s = out;
+
+  bits = inlen;
+  bits <<= 3;
+
+  bits_s, padded_s = __r2s_x2(bits, padded);
+
+  H = __sha512_initH();
+  H, in, inlen = _sha512_blocks(H, in, inlen);
+
+  bits, padded = __s2r_x2(bits_s, padded_s);
+  inlen = __sha512_lastblock1(in, inlen, padded, bits); // ideally it should return padded (as stack)
+  padded = padded_s;
+  H, _, _ = _sha512_blocks(H, padded, inlen);
+
+  out = out_s;
+  __sha512_store_H_mem(out, H);
+}
+
+fn _sha512_init(reg u64 ctx)
+{
+  stack u64[8] H;
+  reg u64 H_p z;
+
+  H = __sha512_initH();
+  H_p = __sha512_get_H(ctx);
+  __sha512_store_H_mem(H_p, H);
+
+  _,_,_,_,_,z = #set0();
+  __sha512_set_paddedLen(ctx, z);
+  __sha512_set_length(ctx, z);
+}
+
+#[returnaddress="stack"]
+fn _sha512_update(reg u64 in inlen ctx)
+{
+  stack u64[8] H;
+  stack u64 in_s inlen_s ctx_s;
+  reg u64 H_p padded paddedO paddedLen length;
+
+  // update length (bytes)
+  __sha512_add_length(ctx, inlen);
+
+  // load H
+  H_p = __sha512_get_H(ctx);
+  H = __sha512_load_H_mem(H_p);
+
+  // sha512_get_padded 
+  padded = __sha512_get_padded(ctx);
+  paddedLen = __sha512_get_paddedLen(ctx);
+
+  // @pre : 0 <= paddedLen < 128'
+  //
+  // if 0 < paddedLen
+  // then copy 'min (128-paddedLen) inlen' bytes
+  // else copy '0' bytes
+  // <=> 
+  // copy 'min ((128-paddedLen)%128) inlen' bytes
+  length = 128;
+  length -= paddedLen;
+  length &= 0x7F;
+  length = __min(length, inlen);
+
+  // copy 'length' bytes into 'padded'
+  paddedO = #LEA(padded + paddedLen);
+  __memcpy_u8(paddedO, in, length);
+
+  // update paddedLen/inlen/in
+  paddedLen += length;
+  // 0 <= paddedLen <= 128
+  inlen -= length;
+  in += length;
+
+  in_s, inlen_s, ctx_s = __r2s_x3(in, inlen, ctx);
+
+  // digest padded
+  H, _, paddedLen = _sha512_blocks(H, padded, paddedLen);
+  // 0 <= paddedLen < 128
+  ctx = ctx_s;
+  __sha512_set_paddedLen(ctx, paddedLen);
+
+  in, inlen = __s2r_x2(in_s, inlen_s);
+
+  // paddedLen /= 0 ==> inlen == 0
+  H, in, inlen = _sha512_blocks(H, in, inlen);
+
+  ctx = ctx_s;
+  padded = __sha512_get_padded(ctx);
+  paddedLen = __sha512_get_paddedLen(ctx);
+
+  // 0 <= inlen < 128 /\  0 < inlen ==> paddedLen == 0
+  __memcpy_u8(padded, in, inlen);
+  paddedLen = __max(paddedLen, inlen);
+  __sha512_set_paddedLen(ctx, paddedLen);
+
+  H_p = __sha512_get_H(ctx);
+  __sha512_store_H_mem(H_p, H);
+}
+
+#[returnaddress="stack"]
+fn _sha512_finish(reg u64 out ctx)
 {
   stack u64[8] H;
   stack u64 out_s;
@@ -268,25 +272,19 @@ fn sha512_finish(reg u64 out ctx)
   out_s = out;
 
   // load H
-  H_p = sha512_get_H(ctx);
-  H = load_H_mem(H_p);
+  H_p = __sha512_get_H(ctx);
+  H = __sha512_load_H_mem(H_p);
 
   // get padded paddedLen and bits 
-  padded = sha512_get_padded(ctx);
-  paddedLen = sha512_get_paddedLen(ctx);
-  bits = sha512_get_length(ctx);
+  padded = __sha512_get_padded(ctx);
+  paddedLen = __sha512_get_paddedLen(ctx);
+  bits = __sha512_get_length(ctx);
   bits <<= 3;
 
-  paddedLen = sha512_lastblock2(padded, paddedLen, bits);
-  H, _, _ = sha512_blocks(H, padded, paddedLen);
+  paddedLen = __sha512_lastblock2(padded, paddedLen, bits);
+  H, _, _ = _sha512_blocks(H, padded, paddedLen);
 
   out = out_s;
-  store_H_mem(out, H);
+  __sha512_store_H_mem(out, H);
 }
-
-#endif
-
-
-
-
 

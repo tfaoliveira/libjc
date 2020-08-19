@@ -1,5 +1,5 @@
-#ifndef X25519_MULX_MUL
-#define X25519_MULX_MUL
+#ifndef CRYPTO_SCALARMULT_X25519_MULX_MUL
+#define CRYPTO_SCALARMULT_X25519_MULX_MUL
 
 #include "crypto_scalarmult/curve25519/mulx/x25519_reduce.jazz"
 
@@ -480,13 +480,17 @@ inline fn __fe64_mul_rgr
 
   of, cf, _, _, _, z = #set0();
 
-  f = fp[(int)o]; o += 1;
+  f = fp[(int)o];
+  o = #LEA(o + 1); /* o += 1; */
   h, r, cf, of = __fe64_mul_c0(      f, g, z, cf, of);
 
-  f = fp[(int)o]; o += 1;
+  f = fp[(int)o];
+  o = #LEA(o + 1); /* o += 1; */
   h, r, cf, of = __fe64_mul_c1(h, r, f, g, z, cf, of);
 
-  f = fp[(int)o]; o += 1; os = o;
+  f = fp[(int)o];
+  o = #LEA(o + 1); /* o += 1; */
+  os = o;
   h, r, cf, of = __fe64_mul_c2(h, r, f, g, z, cf, of);
 
   o = os;

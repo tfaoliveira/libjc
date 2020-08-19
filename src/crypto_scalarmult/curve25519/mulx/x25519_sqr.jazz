@@ -1,5 +1,5 @@
-#ifndef X25519_MULX_SQR
-#define X25519_MULX_SQR
+#ifndef CRYPTO_SCALARMULT_X25519_MULX_SQR
+#define CRYPTO_SCALARMULT_X25519_MULX_SQR
 
 #include "crypto_scalarmult/curve25519/mulx/x25519_reduce.jazz"
 

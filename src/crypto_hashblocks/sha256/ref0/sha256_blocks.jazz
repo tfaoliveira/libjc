@@ -1,5 +1,5 @@
-#ifndef SHA256_BLOCKS_REF0
-#define SHA256_BLOCKS_REF0
+#ifndef CRYPTO_HASHBLOCKS_SHA256_REF0
+#define CRYPTO_HASHBLOCKS_SHA256_REF0
 
 u32[64] SHA256_K = {
   0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,
@@ -419,5 +419,29 @@ fn _sha256_blocks_ref0(reg ptr u32[8] H, reg u64 in inlen) -> reg ptr u32[8], re
   return H, in, inlen;
 }
 
+#ifdef EXPORT
+
+export fn sha256_blocks_ref0(reg u64 pH in _inlen) -> reg u64
+{
+  stack u32[8] H;
+  stack u64 pHs;
+  reg u64 inlen;
+
+  // load H
+  pHs = pH;
+  H = __sha256_load_H_mem(pH);
+
+  // swap inlen register
+  inlen = _inlen;
+  H, in, inlen = _sha256_blocks_ref0(H, in, inlen);
+
+  // restore pointer
+  pH = pHs;
+  __sha256_store_H_mem(pH, H);
+
+  return inlen;
+}
+
+#endif
 
 #endif

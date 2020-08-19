@@ -1,11 +1,26 @@
-#ifndef SHAKE128_SCALAR
-#define SHAKE128_SCALAR
+#ifndef CRYPTO_HASH_SHAKE128_SCALAR
+#define CRYPTO_HASH_SHAKE128_SCALAR
 
 #include "crypto_hash/keccak1600/scalar/keccak1600.jazz"
 
-fn __shake128_scalar(reg u64 out outlen in inlen)
+inline fn __shake128_scalar(reg u64 out outlen in inlen)
 {
-  __keccak1600_scalar(out, outlen, in, inlen, 0x1F, (1344/8));
+  reg u64 rate;
+  reg u8 trail_byte;
+
+  trail_byte = 0x1F;
+  rate = (1344/8);
+
+  __keccak1600_scalar(out, outlen, in, inlen, trail_byte, rate);
 }
+
+#ifdef EXPORT
+
+export fn shake128_scalar(reg u64 out outlen in inlen)
+{
+  __shake128_scalar(out, outlen, in, inlen);
+}
+
+#endif
 
 #endif

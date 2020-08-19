@@ -1,10 +1,10 @@
-#ifndef KECCAK1600_SCALAR
-#define KECCAK1600_SCALAR
+#ifndef CRYPTO_HASH_KECCAK1600_SCALAR
+#define CRYPTO_HASH_KECCAK1600_SCALAR
 
 #include "crypto_core/keccakf160064bits/scalar/keccakf1600.jazz"
 
 //TODO include utils and use s2r/r2s; check proof first 
-fn spill_2(reg u64 a b) -> stack u64, stack u64
+inline fn __spill_2(reg u64 a b) -> stack u64, stack u64
 {
   stack u64 sa sb;
   sa = a;
@@ -13,7 +13,7 @@ fn spill_2(reg u64 a b) -> stack u64, stack u64
 }
 
 
-fn spill_3(reg u64 a b c) -> stack u64, stack u64, stack u64
+inline fn __spill_3(reg u64 a b c) -> stack u64, stack u64, stack u64
 {
   stack u64 sa sb sc;
   sa = a;
@@ -23,7 +23,7 @@ fn spill_3(reg u64 a b c) -> stack u64, stack u64, stack u64
 }
 
 
-fn load_2(stack u64 sa sb) -> reg u64, reg u64
+inline fn __load_2(stack u64 sa sb) -> reg u64, reg u64
 {
   reg u64 a b;
   a = sa;
@@ -32,7 +32,7 @@ fn load_2(stack u64 sa sb) -> reg u64, reg u64
 }
 
 
-fn load_3(stack u64 sa sb sc) -> reg u64, reg u64, reg u64
+inline fn __load_3(stack u64 sa sb sc) -> reg u64, reg u64, reg u64
 {
   reg u64 a b c;
   a = sa;
@@ -42,7 +42,7 @@ fn load_3(stack u64 sa sb sc) -> reg u64, reg u64, reg u64
 }
 
 
-fn keccak_init() -> stack u64[25]
+inline fn __keccak_init() -> stack u64[25]
 {
   stack u64[25] state;
   reg u64 i t;
@@ -58,7 +58,7 @@ fn keccak_init() -> stack u64[25]
 }
 
 
-fn add_full_block(
+inline fn __add_full_block(
   stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
@@ -85,7 +85,7 @@ fn add_full_block(
 
 
 // obs: @pre: inlen < rate_in_bytes
-fn add_final_block(
+inline fn __add_final_block(
   stack u64[25] state,
   reg   u64 in,
   reg   u64 inlen,
@@ -124,7 +124,7 @@ fn add_final_block(
 }
 
 
-fn absorb(
+inline fn __absorb(
   stack u64[25] state,
   reg   u64 in inlen,
   stack u8  s_trail_byte,
@@ -138,23 +138,23 @@ fn absorb(
   // intermediate blocks
   while ( inlen >= rate )
   {
-    state, in, inlen = add_full_block(state, in, inlen, rate);
-    s_in, s_inlen, s_rate = spill_3(in, inlen, rate);
+    state, in, inlen = __add_full_block(state, in, inlen, rate);
+    s_in, s_inlen, s_rate = __spill_3(in, inlen, rate);
 
     state = __keccakf1600_scalar(state);
-    in, inlen, rate = load_3(s_in, s_inlen, s_rate);
+    in, inlen, rate = __load_3(s_in, s_inlen, s_rate);
   }
 
   // final block
   trail_byte = s_trail_byte;
 
-  state = add_final_block(state, in, inlen, trail_byte, rate);
+  state = __add_final_block(state, in, inlen, trail_byte, rate);
 
   return state, rate;
 }
 
 
-fn xtr_full_block(
+inline fn __xtr_full_block(
   stack u64[25] state,
   reg u64 out,
   reg u64 outlen,
@@ -180,7 +180,7 @@ fn xtr_full_block(
 }
 
 
-fn xtr_bytes(
+inline fn __xtr_bytes(
   stack u64[25] state,
   reg u64 out,
   reg u64 outlen
@@ -212,7 +212,7 @@ fn xtr_bytes(
 }
 
 
-fn squeeze(
+inline fn __squeeze(
   stack u64[25] state,
   stack u64 s_out,
   reg   u64 outlen,
@@ -225,23 +225,23 @@ fn squeeze(
   // intermediate blocks
   while ( outlen > rate )
   {
-    s_outlen, s_rate = spill_2(outlen, rate);
+    s_outlen, s_rate = __spill_2(outlen, rate);
     state = __keccakf1600_scalar(state);
-    out, outlen, rate = load_3(s_out, s_outlen, s_rate);
+    out, outlen, rate = __load_3(s_out, s_outlen, s_rate);
 
-    out, outlen = xtr_full_block(state, out, outlen, rate);
+    out, outlen = __xtr_full_block(state, out, outlen, rate);
     s_out = out;
   }
 
   s_outlen = outlen;
   state = __keccakf1600_scalar(state);
-  out, outlen = load_2(s_out, s_outlen);
+  out, outlen = __load_2(s_out, s_outlen);
 
-  out = xtr_bytes(state, out, outlen);
+  out = __xtr_bytes(state, out, outlen);
 }
 
 
-fn __keccak1600_scalar(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
+inline fn __keccak1600_scalar(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
 {
   stack u64[25] state;
   stack u64 s_out s_outlen;
@@ -251,14 +251,23 @@ fn __keccak1600_scalar(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 r
   s_outlen = outlen;
   s_trail_byte = trail_byte;
 
-  state = keccak_init();
+  state = __keccak_init();
 
   // absorb
-  state, rate = absorb(state, in, inlen, s_trail_byte, rate);
+  state, rate = __absorb(state, in, inlen, s_trail_byte, rate);
 
   // squeeze
   outlen = s_outlen;
-  squeeze(state, s_out, outlen, rate);
+  __squeeze(state, s_out, outlen, rate);
 }
+
+#ifdef EXPORT
+
+export fn keccak1600_scalar(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
+{
+  __keccak1600_scalar(out, outlen, in, inlen, trail_byte, rate);
+}
+
+#endif
 
 #endif

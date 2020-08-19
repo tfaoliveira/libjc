@@ -1,6 +1,5 @@
-JFLAGS:= -lea
 
-default: x25519_scalarmult_export.japp x25519_scalarmult_export.s
+default: x25519_export.japp x25519_export.s
 	@true
 
 include ../../../Makefile.common

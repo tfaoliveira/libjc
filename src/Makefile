@@ -9,38 +9,36 @@ SUBDIRS := \
   crypto_core/keccakf160064bits/ref \
   crypto_core/keccakf160064bits/scalar \
   crypto_core/keccakf160064bits/avx2 \
-  crypto_core/keccakf160064bits/avx2_openssl \
-  \
-  crypto_hash/sha256/ref0 \
-  crypto_hash/sha256/ref \
-  crypto_hash/sha256/inplace \
-  \
-  crypto_hash/keccak1600/ref \
-  crypto_hash/keccak1600/scalar \
-  crypto_hash/keccak1600/avx2 \
-  \
-  crypto_hash/sha3224/scalar \
-  crypto_hash/sha3224/avx2 \
-  \
-  crypto_hash/sha3256/scalar \
-  crypto_hash/sha3256/avx2 \
-  \
-  crypto_hash/sha3384/scalar \
-  crypto_hash/sha3384/avx2 \
-  \
-  crypto_hash/sha3512/scalar \
-  crypto_hash/sha3512/avx2 \
-  \
-  crypto_hash/shake128/scalar \
-  crypto_hash/shake128/avx2 \
-  \
-  crypto_hash/shake256/ref \
-  crypto_hash/shake256/scalar \
-  crypto_hash/shake256/avx2 \
+ \
+  crypto_hash2curve/expand_message/xmd/sha256/ref0 \
+  crypto_hash2curve/expand_message/xmd/sha512/ref0 \
   \
   crypto_hashblocks/sha256/ref0 \
   crypto_hashblocks/sha256/ref \
   crypto_hashblocks/sha256/inplace \
+  crypto_hashblocks/sha512/ref0 \
+  \
+  crypto_hash/sha256/ref0 \
+  crypto_hash/sha256/ref \
+  crypto_hash/sha256/inplace \
+  crypto_hash/sha512/ref0 \
+  \
+  crypto_hash/keccak1600/ref \
+  crypto_hash/keccak1600/scalar \
+  crypto_hash/keccak1600/avx2 \
+  crypto_hash/sha3224/scalar \
+  crypto_hash/sha3224/avx2 \
+  crypto_hash/sha3256/scalar \
+  crypto_hash/sha3256/avx2 \
+  crypto_hash/sha3384/scalar \
+  crypto_hash/sha3384/avx2 \
+  crypto_hash/sha3512/scalar \
+  crypto_hash/sha3512/avx2 \
+  crypto_hash/shake128/scalar \
+  crypto_hash/shake128/avx2 \
+  crypto_hash/shake256/ref \
+  crypto_hash/shake256/scalar \
+  crypto_hash/shake256/avx2 \
   \
   crypto_kdf/hkdfsha256/ref0 \
   crypto_kdf/hkdfsha256/ref \
@@ -72,7 +70,7 @@ CFLAGS := -Wall -Ofast
 default: libjc.a
 
 jasmin:
-	for i in $(SUBDIRS); do $(MAKE) -C $$i; done
+	@for i in $(SUBDIRS); do $(MAKE) -C $$i; done
 
 libjc.a: jasmin __force
 	$(MAKE) __real_libjc

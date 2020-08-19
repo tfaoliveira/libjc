@@ -1,11 +1,27 @@
-#ifndef SHA3256_SCALAR
-#define SHA3256_SCALAR
+#ifndef CRYPTO_HASH_SHA3256_SCALAR
+#define CRYPTO_HASH_SHA3256_SCALAR
 
 #include "crypto_hash/keccak1600/scalar/keccak1600.jazz"
 
-fn __sha3256_scalar(reg u64 out in inlen)
+inline fn __sha3256_scalar(reg u64 out in inlen)
 {
-  __keccak1600_scalar(out, (256/8), in, inlen, 0x06, (1088/8));
+  reg u64 outlen rate;
+  reg u8 trail_byte;
+
+  outlen = (256/8);
+  trail_byte = 0x6;
+  rate = (1088/8);
+
+  __keccak1600_scalar(out, outlen, in, inlen, trail_byte, rate);
 }
+
+#ifdef EXPORT
+
+export fn sha3256_scalar(reg u64 out in inlen)
+{
+  __sha3256_scalar(out, in, inlen);
+}
+
+#endif
 
 #endif

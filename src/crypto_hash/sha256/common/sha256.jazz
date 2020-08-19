@@ -1,5 +1,5 @@
-#ifndef SHA256_COMMON
-#define SHA256_COMMON
+#ifndef CRYPTO_HASH_SHA256_COMMON
+#define CRYPTO_HASH_SHA256_COMMON
 
 #include "utils/memory.jazz"
 #include "utils/spill.jazz"
@@ -63,31 +63,23 @@ inline fn __sha256_lastblock1(reg u64 in inlen padded bits) -> reg u64
   return inlen;
 }
 
-#[returnaddress="stack"]
-fn _sha256(reg u64 out in inlen padded)
+inline fn __sha256_lastblock2(reg u64 padded paddedLen bits) -> reg u64
 {
-  inline int t;
-  reg u64 bits;
-  stack u64 outs bits_s padded_s;
-  stack u32[8] H;
+  reg u64 i;
 
-  outs = out;
+  i = paddedLen;
 
-  bits = inlen;
-  bits <<= 3;
+  // set 0x80 after message
+  (u8)[padded + i] = 0x80;
+  i += 1;
 
-  bits_s, padded_s = __r2s_x2(bits, padded);
+  // set remaining space with '0's and bit length at the end
+  if(paddedLen < 56)
+  { __sha256_lastblock0(padded, i, bits, 64);  paddedLen = 64;  }
+  else
+  { __sha256_lastblock0(padded, i, bits, 128); paddedLen = 128; }
 
-  H = __sha256_initH();
-  H, in, inlen = _sha256_blocks(H, in, inlen);
-
-  bits, padded = __s2r_x2(bits_s, padded_s);
-  inlen = __sha256_lastblock1(in, inlen, padded, bits);
-  padded = padded_s;
-  H, _, _ = _sha256_blocks(H, padded, inlen);
-
-  out = outs;
-  __sha256_store_H_mem(out, H);
+  return paddedLen;
 }
 
 ////////////////////////////////
@@ -150,6 +142,35 @@ inline fn __sha256_ctx_size() -> reg u64
   reg u64 r;
   r = 8*4 + 128 + 8 + 8 + 128;
   return r;
+}
+
+#endif
+
+#[returnaddress="stack"]
+fn _sha256(reg u64 out in inlen padded)
+{
+  inline int t;
+  reg u64 bits;
+  stack u64 outs bits_s padded_s;
+  stack u32[8] H;
+
+  outs = out;
+
+  bits = inlen;
+  bits <<= 3;
+
+  bits_s, padded_s = __r2s_x2(bits, padded);
+
+  H = __sha256_initH();
+  H, in, inlen = _sha256_blocks(H, in, inlen);
+
+  bits, padded = __s2r_x2(bits_s, padded_s);
+  inlen = __sha256_lastblock1(in, inlen, padded, bits);
+  padded = padded_s;
+  H, _, _ = _sha256_blocks(H, padded, inlen);
+
+  out = outs;
+  __sha256_store_H_mem(out, H);
 }
 
 fn _sha256_init(reg u64 ctx)
@@ -232,25 +253,6 @@ fn _sha256_update(reg u64 in inlen ctx)
   __sha256_store_H_mem(H_p, H);
 }
 
-inline fn __sha256_lastblock2(reg u64 padded paddedLen bits) -> reg u64
-{
-  reg u64 i;
-
-  i = paddedLen;
-
-  // set 0x80 after message
-  (u8)[padded + i] = 0x80;
-  i += 1;
-
-  // set remaining space with '0's and bit length at the end
-  if(paddedLen < 56)
-  { __sha256_lastblock0(padded, i, bits, 64);  paddedLen = 64;  }
-  else
-  { __sha256_lastblock0(padded, i, bits, 128); paddedLen = 128; }
-
-  return paddedLen;
-}
-
 #[returnaddress="stack"]
 fn _sha256_finish(reg u64 out ctx)
 {
@@ -276,10 +278,4 @@ fn _sha256_finish(reg u64 out ctx)
   out = out_s;
   __sha256_store_H_mem(out, H);
 }
-
-#endif
-
-
-
-
 

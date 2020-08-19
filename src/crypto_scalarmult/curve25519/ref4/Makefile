@@ -1,4 +1,5 @@
-default: curve25519.japp curve25519.s
+
+default: x25519_export.japp x25519_export.s
 	@true
 
 include ../../../Makefile.common

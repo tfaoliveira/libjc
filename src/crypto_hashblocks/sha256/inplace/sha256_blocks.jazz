@@ -1,10 +1,10 @@
-#ifndef SHA256_BLOCKS_INPLACE
-#define SHA256_BLOCKS_INPLACE
+#ifndef CRYPTO_HASHBLOCKS_SHA256_INPLACE
+#define CRYPTO_HASHBLOCKS_SHA256_INPLACE
 
 #include "crypto_hashblocks/sha256/ref0/sha256_blocks.jazz"
 #include "crypto_hashblocks/sha256/ref/sha256_blocks.jazz"
 
-inline fn F1(reg u32[8] r, stack u32[16] W, inline int rb wb kb) -> reg u32[8]
+inline fn __F1(reg u32[8] r, stack u32[16] W, inline int rb wb kb) -> reg u32[8]
 {
   inline int i0 i1 i2 i3 i4 i5 i6 i7;
   reg u32 t;
@@ -20,39 +20,41 @@ inline fn F1(reg u32[8] r, stack u32[16] W, inline int rb wb kb) -> reg u32[8]
   i7 = (rb + 7) % 8;
 
   // r7 += BSIG1(r4) + CH(r4,r5,r6) + K[kb] + W[wb];
-  t = BSIG1(r[i4]);
+  t = __sha256_BSIG1(r[i4]);
   r[i7] += t;
-  t = CH(r[i4], r[i5], r[i6]);
+  t = __sha256_CH(r[i4], r[i5], r[i6]);
   r[i7] += t;
-  r[i7] += K[kb];
+  r[i7] += SHA256_K[kb];
   r[i7] += W[wb];
 
   // r3 += r7;
   r[i3] += r[i7];
 
   // r7 += BSIG0(r0) + MAJ(r0,r1,r2);
-  t = BSIG0(r[i0]);
+  t = __sha256_BSIG0(r[i0]);
   r[i7] += t;
 
-  t = MAJ(r[i0], r[i1], r[i2]);
+  t = __sha256_MAJ(r[i0], r[i1], r[i2]);
   r[i7] += t;
 
   return r;
 }
 
-inline fn G1(reg u32[8] r, stack u32[16] W, inline int kb) -> reg u32[8]
+inline fn __G1(reg u32[8] r, stack u32[16] W, inline int kb) -> reg u32[8]
 {
   inline int i;
 
   for i=0 to 16
-  { r = F1(r, W, ((16-i) % 8), i, kb+i); }
+  { r = __F1(r, W, ((16-i) % 8), i, kb+i); }
 
   return r;
 }
 
-inline fn _sha256_blocks_inplace(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
+#if 0
+inline fn __sha256_blocks_inplace(stack u32[8] H, reg u64 in inlen) -> stack u32[8], reg u64, reg u64
 {
   inline int i, j;
+  reg u32 v;
   reg u32[8] r;
   stack u32[16] W;
 
@@ -61,13 +63,16 @@ inline fn _sha256_blocks_inplace(stack u32[8] H, reg u64 in inlen) -> stack u32[
   while(inlen >= 64)
   {
     for i=0 to 16
-    { W[i] = load_bigendian(in, i*4); }
+    { v = (u32)[in + i*4];
+      v = #BSWAP_32(v);
+      W[i] = v;
+    }
 
     for i=0 to 4
     { 
-      r = G1(r, W, 16*i);
+      r = __G1(r, W, 16*i);
       if(i < 3)
-      { W = EXPAND(W); }
+      { W = __EXPAND(W); }
     }
 
     for i=0 to 8
@@ -81,5 +86,72 @@ inline fn _sha256_blocks_inplace(stack u32[8] H, reg u64 in inlen) -> stack u32[
 
   return H, in, inlen;
 }
+#endif
+
+fn _sha256_blocks_inplace(reg ptr u32[8] H, reg u64 in inlen) -> reg ptr u32[8], reg u64, reg u64
+{
+  inline int i, j;
+  reg u32 v;
+  reg u32[8] r;
+  stack u32[16] W;
+  stack ptr u32[8] Hp;
+
+  Hp = H;
+  r = H;
+
+  while(inlen >= 64)
+  {
+    for i=0 to 16
+    { v = (u32)[in + i*4];
+      v = #BSWAP_32(v);
+      W[i] = v;
+    }
+
+    for i=0 to 4
+    { 
+      r = __G1(r, W, 16*i);
+      if(i < 3)
+      { W = __EXPAND(W); }
+    }
+
+    H = Hp;
+    for i=0 to 8
+    { r[i] += H[i]; }
+
+    H = r;
+    Hp = H;
+
+    in += 64;
+    inlen -= 64;
+  }
+
+  H = Hp;
+  return H, in, inlen;
+}
+
+#ifdef EXPORT
+
+export fn sha256_blocks_inplace(reg u64 pH in _inlen) -> reg u64
+{
+  stack u32[8] H;
+  stack u64 pHs;
+  reg u64 inlen;
+
+  // load H
+  pHs = pH;
+  H = __sha256_load_H_mem(pH);
+
+  // swap inlen register
+  inlen = _inlen;
+  H, in, inlen = _sha256_blocks_inplace(H, in, inlen);
+
+  // restore pointer
+  pH = pHs;
+  __sha256_store_H_mem(pH, H);
+
+  return inlen;
+}
+
+#endif
 
 #endif

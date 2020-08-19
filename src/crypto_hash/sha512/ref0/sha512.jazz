@@ -1,10 +1,61 @@
-#ifndef SHA512_REF0
-#define SHA512_REF0
+#ifndef CRYPTO_HASH_SHA512_REF0
+#define CRYPTO_HASH_SHA512_REF0
 
 #include "crypto_hashblocks/sha512/ref0/sha512_blocks.jazz"
 
-#define sha512 _sha512_ref0
-#define sha512_blocks _sha512_blocks_ref0
+#define _sha512_blocks _sha512_blocks_ref0
+#define _sha512 _sha512_ref0
+#define _sha512_init _sha512_init_ref0
+#define _sha512_update _sha512_update_ref0
+#define _sha512_finish _sha512_finish_ref0
 #include "crypto_hash/sha512/common/sha512.jazz"
+#undef _sha512_blocks
+#undef _sha512
+#undef _sha512_init
+#undef _sha512_update
+#undef _sha512_finish
+
+#ifdef EXPORT
+
+export fn sha512_ref0(reg u64 out in _inlen padded)
+{
+  reg u64 inlen;
+
+  inlen = _inlen;
+  _sha512_ref0(out, in, inlen, padded);
+}
+
+export fn sha512_ctx_size_ref0() -> reg u64
+{
+  reg u64 r;
+  r = __sha512_ctx_size();
+  return r;
+}
+
+export fn sha512_init_ref0(reg u64 _ctx)
+{
+  reg u64 ctx;
+  ctx = _ctx;
+  _sha512_init_ref0(ctx);
+}
+
+export fn sha512_update_ref0(reg u64 _in _inlen _ctx)
+{
+  reg u64 in inlen ctx;
+  in = _in;
+  inlen = _inlen;
+  ctx = _ctx;
+  _sha512_update_ref0(in, inlen, ctx);
+}
+
+export fn sha512_finish_ref0(reg u64 _out _ctx)
+{
+  reg u64 out ctx;
+  out = _out;
+  ctx = _ctx;
+  _sha512_finish_ref0(out, ctx);
+}
+
+#endif
 
 #endif

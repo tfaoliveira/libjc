@@ -1,10 +1,61 @@
-#ifndef SHA256_INPLACE
-#define SHA256_INPLACE
+#ifndef CRYPTO_HASH_SHA256_INPLACE
+#define CRYPTO_HASH_SHA256_INPLACE
 
 #include "crypto_hashblocks/sha256/inplace/sha256_blocks.jazz"
 
-#define sha256 _sha256_inplace
-#define sha256_blocks _sha256_blocks_inplace
+#define _sha256_blocks _sha256_blocks_inplace
+#define _sha256 _sha256_inplace
+#define _sha256_init _sha256_init_inplace
+#define _sha256_update _sha256_update_inplace
+#define _sha256_finish _sha256_finish_inplace
 #include "crypto_hash/sha256/common/sha256.jazz"
+#undef _sha256_blocks
+#undef _sha256
+#undef _sha256_init
+#undef _sha256_update
+#undef _sha256_finish
+
+#ifdef EXPORT
+
+export fn sha256_inplace(reg u64 out in _inlen padded)
+{
+  reg u64 inlen;
+
+  inlen = _inlen;
+  _sha256_inplace(out, in, inlen, padded);
+}
+
+export fn sha256_ctx_size_inplace() -> reg u64
+{
+  reg u64 r;
+  r = __sha256_ctx_size();
+  return r;
+}
+
+export fn sha256_init_inplace(reg u64 _ctx)
+{
+  reg u64 ctx;
+  ctx = _ctx;
+  _sha256_init_inplace(ctx);
+}
+
+export fn sha256_update_inplace(reg u64 _in _inlen _ctx)
+{
+  reg u64 in inlen ctx;
+  in = _in;
+  inlen = _inlen;
+  ctx = _ctx;
+  _sha256_update_inplace(in, inlen, ctx);
+}
+
+export fn sha256_finish_inplace(reg u64 _out _ctx)
+{
+  reg u64 out ctx;
+  out = _out;
+  ctx = _ctx;
+  _sha256_finish_inplace(out, ctx);
+}
+
+#endif
 
 #endif

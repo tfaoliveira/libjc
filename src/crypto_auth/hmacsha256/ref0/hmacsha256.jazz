@@ -1,9 +1,32 @@
-#ifndef HMACSHA256_REF0
-#define HMACSHA256_REF0
+#ifndef CRYPTO_AUTH_HMACSHA256_REF0
+#define CRYPTO_AUTH_HMACSHA256_REF0
 
 #include "crypto_hash/sha256/ref0/sha256.jazz"
 
-#define hmacsha256 _hmacsha256_ref0
+#define _sha256_blocks _sha256_blocks_ref0
+#define _sha256 _sha256_ref0
+#define _hmacsha256 _hmacsha256_ref0
 #include "crypto_auth/hmacsha256/common/hmacsha256.jazz"
+#undef _sha256_blocks
+#undef _sha256
+#undef _hmacsha256
+
+#ifdef EXPORT
+
+export fn hmacsha256_ref0(reg u64 _out _in _inlen _k _klen _hkpadded)
+{
+  reg u64 out in inlen k klen hkpadded;
+
+  out = _out;
+  in = _in;
+  inlen = _inlen;
+  k = _k;
+  klen = _klen;
+  hkpadded = _hkpadded;
+
+  _hmacsha256_ref0(out, in, inlen, k, klen, hkpadded);
+}
+
+#endif
 
 #endif

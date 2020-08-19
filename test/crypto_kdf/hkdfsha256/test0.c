@@ -7,7 +7,7 @@
 #include "common/test.c"
 
 // functions to be tested
-extern void hkdfsha256_extract(uint8_t *PRK, uint8_t *salt, uint64_t saltlen, uint8_t *IKM, uint64_t IKMlen, uint8_t *hkpadded);
+extern void hkdfsha256_extract(uint8_t *PRK, uint8_t *IKM, uint64_t IKMlen, uint8_t *salt, uint64_t saltlen, uint8_t *hkpadded);
 extern void hkdfsha256_expand(uint8_t *OKM, uint8_t *PRK, uint8_t *info, uint64_t infolen, uint64_t L, uint8_t *hkpadded_Tinfoc);
 
 
@@ -27,7 +27,7 @@ int test_run(
   uint8_t *cOKM = (uint8_t*) calloc(L,1);
   assert(NULL != hkpaddedtinfoc && NULL != cPRK && NULL != cOKM);
 
-  hkdfsha256_extract(cPRK, salt, saltlen, IKM, IKMlen, hkpaddedtinfoc);
+  hkdfsha256_extract(cPRK, IKM, IKMlen, salt, saltlen, hkpaddedtinfoc);
   r = (memcmp(PRK, cPRK, PRKlen) == 0) ? TEST_OK : TEST_ERR;
 
   hkdfsha256_expand(cOKM, cPRK, info, infolen, L, hkpaddedtinfoc);

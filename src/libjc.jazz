@@ -1,0 +1,61 @@
+#ifndef LIBJC
+#define LIBJC
+
+#define EXPORT
+
+#include "crypto_hashblocks/sha256/ref0/sha256_blocks.jazz"
+#include "crypto_hashblocks/sha256/ref/sha256_blocks.jazz"
+#include "crypto_hashblocks/sha256/inplace/sha256_blocks.jazz"
+#include "crypto_hashblocks/sha512/ref0/sha512_blocks.jazz"
+
+#include "crypto_hash/sha256/ref/sha256.jazz"
+#include "crypto_hash/sha256/ref0/sha256.jazz"
+#include "crypto_hash/sha256/inplace/sha256.jazz"
+#include "crypto_hash/sha512/ref0/sha512.jazz"
+
+#if 0
+//TODO FIX JOINT COMPILATION
+#include "crypto_core/keccakf160064bits/avx2/keccakf1600.jazz"
+#include "crypto_core/keccakf160064bits/ref/keccakf1600.jazz"
+#include "crypto_core/keccakf160064bits/scalar/keccakf1600.jazz"
+#include "crypto_hash/keccak1600/avx2/keccak1600.jazz"
+#include "crypto_hash/keccak1600/scalar/keccak1600.jazz"
+#include "crypto_hash/sha3224/avx2/sha3224.jazz"
+#include "crypto_hash/sha3224/scalar/sha3224.jazz"
+#include "crypto_hash/sha3256/avx2/sha3256.jazz"
+#include "crypto_hash/sha3256/scalar/sha3256.jazz"
+#include "crypto_hash/sha3384/avx2/sha3384.jazz"
+#include "crypto_hash/sha3384/scalar/sha3384.jazz"
+#include "crypto_hash/sha3512/avx2/sha3512.jazz"
+#include "crypto_hash/sha3512/scalar/sha3512.jazz"
+#include "crypto_hash/shake128/avx2/shake128.jazz"
+#include "crypto_hash/shake128/scalar/shake128.jazz"
+#include "crypto_hash/shake256/avx2/shake256.jazz"
+#include "crypto_hash/shake256/ref/shake256.jazz"
+#include "crypto_hash/shake256/scalar/shake256.jazz"
+#endif
+
+#include "crypto_auth/hmacsha256/ref/hmacsha256.jazz"
+#include "crypto_auth/hmacsha256/ref0/hmacsha256.jazz"
+#include "crypto_auth/hmacsha256/inplace/hmacsha256.jazz"
+
+#include "crypto_hash2curve/expand_message/xmd/sha256/ref0/xmd.jazz"
+#include "crypto_hash2curve/expand_message/xmd/sha512/ref0/xmd.jazz"
+
+#include "crypto_kdf/hkdfsha256/inplace/hkdfsha256.jazz"
+#include "crypto_kdf/hkdfsha256/ref0/hkdfsha256.jazz"
+#include "crypto_kdf/hkdfsha256/ref/hkdfsha256.jazz"
+
+#include "crypto_onetimeauth/poly1305/ref3/poly1305.jazz"
+#include "crypto_onetimeauth/poly1305/avx/poly1305.jazz"
+#include "crypto_onetimeauth/poly1305/avx2/poly1305.jazz"
+
+#include "crypto_scalarmult/curve25519/avx2/x25519_scalarmult.jazz"
+#include "crypto_scalarmult/curve25519/mulx/x25519.jazz"
+#include "crypto_scalarmult/curve25519/ref4/curve25519.jazz"
+
+#include "crypto_stream/chacha20/avx2/chacha20.jazz"
+#include "crypto_stream/chacha20/avx/chacha20.jazz"
+#include "crypto_stream/chacha20/ref/chacha20.jazz"
+
+#endif

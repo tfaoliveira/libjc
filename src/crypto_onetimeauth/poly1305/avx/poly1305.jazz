@@ -11,7 +11,7 @@ u64 bit25_u64 = 0x1000000;
 
 
 #if 0
-#define __inlined_unpack(r12, rt, o) \
+#define __inlined_unpack_avx(r12, rt, o) \
   mask26 = 0x3ffffff;\
   l = rt[0];\
   l &= mask26;\
@@ -36,7 +36,7 @@ u64 bit25_u64 = 0x1000000;
 
 
 
-inline fn __unpack(stack u128[5] r12, reg u64[3] rt, inline int o) -> stack u128[5]
+inline fn __unpack_avx(stack u128[5] r12, reg u64[3] rt, inline int o) -> stack u128[5]
 {
   inline int mask26;
   reg u64 h l;
@@ -76,7 +76,7 @@ inline fn __unpack(stack u128[5] r12, reg u64[3] rt, inline int o) -> stack u128
 
 
 
-inline fn __times_5(stack u128[5] r12) -> stack u128[4]
+inline fn __times_5_avx(stack u128[5] r12) -> stack u128[4]
 {
   inline int i;
   stack u128[4] r12x5;
@@ -90,7 +90,7 @@ inline fn __times_5(stack u128[5] r12) -> stack u128[4]
 }
 
 
-inline fn __broadcast_r2(stack u128[5] r12, stack u128[4] r12x5) -> stack u128[5], stack u128[4]
+inline fn __broadcast_r2_avx(stack u128[5] r12, stack u128[4] r12x5) -> stack u128[5], stack u128[4]
 {
   inline int i;
   stack u128[5] r22;
@@ -109,7 +109,7 @@ inline fn __broadcast_r2(stack u128[5] r12, stack u128[4] r12x5) -> stack u128[5
 }
 
 
-inline fn __broadcast_r4(reg u64[3] r4) -> stack u128[5], stack u128[4]
+inline fn __broadcast_r4_avx(reg u64[3] r4) -> stack u128[5], stack u128[4]
 {
   inline int i mask26;
   stack u128[5] r44;
@@ -117,12 +117,12 @@ inline fn __broadcast_r4(reg u64[3] r4) -> stack u128[5], stack u128[4]
   reg u64[5] t;
   reg u64 h l;
 
-  r44 = __unpack(r44, r4, 0);
+  r44 = __unpack_avx(r44, r4, 0);
 
   for i=0 to 5
   { t[i] = r44[u64 2*i]; r44[u64 1+2*i] = t[i]; }
 
-  r44x5 = __times_5(r44);
+  r44x5 = __times_5_avx(r44);
 
   return r44, r44x5;
 }
@@ -143,18 +143,18 @@ inline fn __poly1305_avx_setup(reg u64[3] r) ->
 
   // rt = r; store rt
   for i=0 to 2 { rt[i] = r[i]; } rt[2] = 0;
-  r12 = __unpack(r12, rt, 1); // r^1
+  r12 = __unpack_avx(r12, rt, 1); // r^1
 
   rt = __mulmod(rt, r); // r^2
-  r12 = __unpack(r12, rt, 0);
+  r12 = __unpack_avx(r12, rt, 0);
 
-  r12x5 = __times_5(r12);
-  r22, r22x5 = __broadcast_r2(r12, r12x5);
+  r12x5 = __times_5_avx(r12);
+  r22, r22x5 = __broadcast_r2_avx(r12, r12x5);
 
   rt = __mulmod(rt, r); // r^3
   rt = __mulmod(rt, r); // r^4
 
-  r44, r44x5 = __broadcast_r4(rt);
+  r44, r44x5 = __broadcast_r4_avx(rt);
 
   return r44, r44x5, r22, r22x5, r12, r12x5;
 }

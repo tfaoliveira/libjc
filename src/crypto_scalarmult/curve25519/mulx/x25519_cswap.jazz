@@ -1,5 +1,5 @@
-#ifndef X25519_MULX_CSWAP
-#define X25519_MULX_CSWAP
+#ifndef CRYPTO_SCALARMULT_X25519_MULX_CSWAP
+#define CRYPTO_SCALARMULT_X25519_MULX_CSWAP
 
 inline fn __fe64_cswap(stack u64[4] x2,
                        reg   u64[4] z2r,

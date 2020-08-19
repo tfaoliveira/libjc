@@ -1,6 +1,0 @@
-#include "crypto_hash/sha512/ref0/sha512.jazz"
-
-export fn sha512_ref0(reg u64 out in inlen padded)
-{
-  _sha512_ref0(out, in, inlen, padded);
-}

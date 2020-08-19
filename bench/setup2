@@ -4,9 +4,6 @@ version=`cat config/version`
 
 cp ./patch/$version/do-part supercop-$version/do-part
 cp ./patch/$version/measure-anything.c supercop-$version/measure-anything.c
-cp ./patch/$version/crypto_stream/measure.c supercop-$version/crypto_stream/measure.c
-cp ./patch/$version/crypto_onetimeauth/measure.c supercop-$version/crypto_onetimeauth/measure.c
-cp ./patch/$version/crypto_hash/measure.c supercop-$version/crypto_hash/measure.c
 
 cp ./patch/$version/crypto_hash/shake128/checksumbig supercop-$version/crypto_hash/shake128/checksumbig
 cp ./patch/$version/crypto_hash/shake128/checksumsmall supercop-$version/crypto_hash/shake128/checksumsmall
@@ -20,7 +17,6 @@ cp ./patch/$version/crypto_hash/sha3256/checksumbig supercop-$version/crypto_has
 cp ./patch/$version/crypto_hash/sha3256/checksumsmall supercop-$version/crypto_hash/sha3256/checksumsmall
 cp ./patch/$version/crypto_hash/sha3224/checksumbig supercop-$version/crypto_hash/sha3224/checksumbig
 cp ./patch/$version/crypto_hash/sha3224/checksumsmall supercop-$version/crypto_hash/sha3224/checksumsmall
-
 cp ./patch/$version/crypto_core/keccakf160064bits/checksumbig supercop-$version/crypto_core/keccakf160064bits/checksumbig
 cp ./patch/$version/crypto_core/keccakf160064bits/checksumsmall supercop-$version/crypto_core/keccakf160064bits/checksumsmall
 

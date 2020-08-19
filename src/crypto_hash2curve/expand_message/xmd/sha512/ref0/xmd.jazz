@@ -1,0 +1,37 @@
+#ifndef CRYPTO_HASH2CURVE_XMD_SHA512_REF0
+#define CRYPTO_HASH2CURVE_XMD_SHA512_REF0
+
+#include "crypto_hash/sha512/ref0/sha512.jazz"
+
+#define HASHSIZE 64
+#define HASHRATE 128
+
+#define hash_init _sha512_init_ref0
+#define hash_update _sha512_update_ref0
+#define hash_finish _sha512_finish_ref0
+#define hash_get_buffer __sha512_get_buffer
+#define expand_message_xmd _expand_message_xmd_sha512_ref0
+#include "crypto_hash2curve/expand_message/xmd/common/xmd.jazz"
+#undef hash_init
+#undef hash_update
+#undef hash_finish
+#undef hash_get_buffer
+#undef expand_message_xmd
+
+#ifdef EXPORT
+
+export fn expand_message_xmd_sha512_ref0(reg u64 out outlen _param ctx)
+{
+  reg u64 msg msglen DST DSTlen;
+
+  msg    = (u64)[_param + 8*0];
+  msglen = (u64)[_param + 8*1];
+  DST    = (u64)[_param + 8*2];
+  DSTlen = (u64)[_param + 8*3];
+
+  _expand_message_xmd_sha512_ref0(out, outlen, msg, msglen, DST, DSTlen, ctx);
+}
+
+#endif
+
+#endif

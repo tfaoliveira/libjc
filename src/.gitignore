@@ -2,4 +2,5 @@ _build/
 *.japp
 *.s
 *.a
+*.o
 fail

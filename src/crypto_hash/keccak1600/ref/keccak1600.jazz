@@ -1,9 +1,9 @@
-#ifndef KECCAK1600_REF
-#define KECCAK1600_REF
+#ifndef CRYPTO_HASH_KECCAK1600_REF
+#define CRYPTO_HASH_KECCAK1600_REF
 
 #include "crypto_core/keccakf160064bits/ref/keccakf1600.jazz"
 
-fn st0() -> stack u64[25] 
+inline fn __st0() -> stack u64[25] 
 {
   inline int i;
   stack u64[25] state;
@@ -15,7 +15,7 @@ fn st0() -> stack u64[25]
 }
 
 
-fn add_full_block(
+inline fn __add_full_block(
   stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
@@ -41,7 +41,7 @@ fn add_full_block(
 }
 
 
-fn add_final_block(
+inline fn __add_final_block(
   stack u64[25] state,
   reg u64 in,
   reg u64 inlen,
@@ -80,7 +80,7 @@ fn add_final_block(
 }
 
 
-fn xtr_full_block(
+inline fn __xtr_full_block(
   stack u64[25] state,
   reg u64 out,
   reg u64 outlen,
@@ -106,7 +106,7 @@ fn xtr_full_block(
 }
 
 
-fn xtr_bytes(
+inline fn __xtr_bytes(
   stack u64[25] state,
   reg u64 out,
   reg u64 outlen
@@ -135,7 +135,7 @@ fn xtr_bytes(
 }
 
 
-fn __keccak1600_ref(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
+inline fn __keccak1600_ref(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
 {
   stack u64[25] state;
   stack u64 s_out, s_outlen, s_in, s_inlen, s_rate;
@@ -145,11 +145,11 @@ fn __keccak1600_ref(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate
   s_outlen = outlen;
   s_trail_byte = trail_byte;
 
-  state = st0();
+  state = __st0();
 
   while ( inlen >= rate )
   {
-    state, in, inlen = add_full_block(state, in, inlen, rate);
+    state, in, inlen = __add_full_block(state, in, inlen, rate);
 
     s_in = in;
     s_inlen = inlen;
@@ -163,7 +163,7 @@ fn __keccak1600_ref(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate
   }
 
   trail_byte = s_trail_byte;
-  state = add_final_block(state, in, inlen, trail_byte, rate);
+  state = __add_final_block(state, in, inlen, trail_byte, rate);
 
   outlen = s_outlen;
 
@@ -178,7 +178,7 @@ fn __keccak1600_ref(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate
     outlen = s_outlen;
     rate = s_rate;
 
-    out, outlen = xtr_full_block(state, out, outlen, rate);
+    out, outlen = __xtr_full_block(state, out, outlen, rate);
     s_outlen = outlen;
     s_out = out;
   }
@@ -187,7 +187,16 @@ fn __keccak1600_ref(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate
   out = s_out;
   outlen = s_outlen;
 
-  xtr_bytes(state, out, outlen);
+  __xtr_bytes(state, out, outlen);
 }
+
+#ifdef EXPORT
+
+export fn keccak1600_ref(reg u64 out outlen in inlen, reg u8 trail_byte, reg u64 rate)
+{
+  __keccak1600_ref(out, outlen, in, inlen, trail_byte, rate);
+}
+
+#endif
 
 #endif

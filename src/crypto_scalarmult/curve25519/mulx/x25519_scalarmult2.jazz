@@ -1,5 +1,5 @@
-#ifndef X25519_MULX_SCALARMULT
-#define X25519_MULX_SCALARMULT
+#ifndef CRYPTO_SCALARMULT_X25519_MULX_SCALARMULT2
+#define CRYPTO_SCALARMULT_X25519_MULX_SCALARMULT2
 
 #include "crypto_scalarmult/curve25519/mulx/x25519_add.jazz"
 #include "crypto_scalarmult/curve25519/mulx/x25519_sub.jazz"
@@ -229,5 +229,14 @@ inline fn __x25519_scalarmult_mulx(
   for i=0 to 4
   { [rp + 8*i] = r[i]; }
 }
+
+#ifdef EXPORT
+
+export fn curve25519_mulx(reg u64 out scalar point)
+{
+  __x25519_scalarmult_mulx(out, scalar, point);
+}
+
+#endif
 
 #endif

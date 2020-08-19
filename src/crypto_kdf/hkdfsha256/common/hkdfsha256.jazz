@@ -1,30 +1,29 @@
-#ifndef HKDFSHA256_COMMON
-#define HKDFSHA256_COMMON
-
 #include "utils/spill.jazz"
 #include "utils/math.jazz"
 #include "utils/memory.jazz"
 
 // hkpadded with (32 + 128)
-fn hkdfsha256_extract(reg u64 PRK salt saltlen IKM IKMlen hkpadded)
+inline fn __hkdfsha256_extract(reg u64 PRK IKM IKMlen salt saltlen hkpadded)
 {
-  hmacsha256(PRK, IKM, IKMlen, salt, saltlen, hkpadded);
+  _hmacsha256(PRK, IKM, IKMlen, salt, saltlen, hkpadded);
 }
 
 // hkpadded_Tinfoc: hkpadded (32 + 128) + Tinfoc (32 + infolen + 1)
-fn hkdfsha256_expand(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
+#[returnaddress="stack"]
+fn _hkdfsha256_expand(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
 {
   stack u64 N_s L_s OKM_s Tinfoc_s infoc_s Tinfoclen_s infolen_s PRK_s hkpadded_s;
   stack u8 C_s;
 
-  reg u64 N Tlen Tinfoc infoc Tinfoclen hkpadded;
+  reg u64 N _L _PRK Tlen Tinfoc infoc Tinfoclen hkpadded len;
   reg u8 C;
 
   hkpadded = hkpadded_Tinfoc;
   Tinfoc = hkpadded_Tinfoc + (32+128);
 
   // N = ceil(L/HashLen)
-  N = ceil_pow2(L, 5);
+  _L = L;
+  N = __ceil_pow2(_L, 5, 0x1F);
 
   // OKM = first L octets of T
   //  where T = T(1) | T(2) | T(3) | ... | T(N)
@@ -32,7 +31,7 @@ fn hkdfsha256_expand(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
   //        T1 = HMAC-Hash(PRK, T0 | info | 0x01)
   //        T2 = HMAC-Hash(PRK, T1 | info | 0x02)
 
-  memcpy_u8_do(Tinfoc, 32, info, infolen);
+  __memcpy_u8_do(Tinfoc, 32, info, infolen);
 
   Tlen = 0;
   C = 0x1;
@@ -49,21 +48,21 @@ fn hkdfsha256_expand(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
     infoc = #LEA_64(Tinfoc + 32);
     infoc -= Tlen;
 
-    // TODO CHECKME in the future not the most efficient spill but when function
-    // calls are supported this will probably be done automatically... so let it
-    // be for a while
     N_s, L_s, OKM_s, Tinfoc_s, infoc_s, Tinfoclen_s, infolen_s, PRK_s, hkpadded_s = 
-      r2s_x9(N, L, OKM, Tinfoc, infoc, Tinfoclen, infolen, PRK, hkpadded);
+      __r2s_x9(N, L, OKM, Tinfoc, infoc, Tinfoclen, infolen, PRK, hkpadded);
     C_s = C;
 
-    hmacsha256(Tinfoc, infoc, Tinfoclen, PRK, 32, hkpadded);
+    len = 32;
+    _PRK = PRK;
+    _hmacsha256(Tinfoc, infoc, Tinfoclen, _PRK, len, hkpadded);
 
     C = C_s;
     N, L, OKM, Tinfoc, infoc, Tinfoclen, infolen, PRK, hkpadded = 
-      s2r_x9(N_s, L_s, OKM_s, Tinfoc_s, infoc_s, Tinfoclen_s, infolen_s, PRK_s, hkpadded_s);
+      __s2r_x9(N_s, L_s, OKM_s, Tinfoc_s, infoc_s, Tinfoclen_s, infolen_s, PRK_s, hkpadded_s);
 
-    Tlen = min(32, L);
-    memcpy_u8(OKM, Tinfoc, Tlen);
+    len = 32;
+    Tlen = __min(len, L);
+    __memcpy_u8(OKM, Tinfoc, Tlen);
 
     OKM += Tlen;
     L -= Tlen;
@@ -72,6 +71,4 @@ fn hkdfsha256_expand(reg u64 OKM PRK info infolen L hkpadded_Tinfoc)
     C += 1;
   }
 }
-
-#endif
 
