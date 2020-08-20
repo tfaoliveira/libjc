@@ -1,14 +1,14 @@
-#ifndef CRYPTO_SCALARMULT_X25519_MULX_CSWAP
-#define CRYPTO_SCALARMULT_X25519_MULX_CSWAP
+#ifndef CRYPTO_SCALARMULT_X25519_COMMON_CSWAP4
+#define CRYPTO_SCALARMULT_X25519_COMMON_CSWAP4
 
-inline fn __fe64_cswap(stack u64[4] x2,
-                       reg   u64[4] z2r,
-                       stack u64[4] x3,
-                       stack u64[4] z3,
-                       reg   u64    toswap) -> stack u64[4],
-                                               reg   u64[4],
-                                               stack u64[4],
-                                               stack u64[4]
+inline fn __cswap4(stack u64[4] x2,
+                  reg   u64[4] z2r,
+                  stack u64[4] x3,
+                  stack u64[4] z3,
+                  reg   u64    toswap) -> stack u64[4],
+                                          reg   u64[4],
+                                          stack u64[4],
+                                          stack u64[4]
 {
   inline int i;
   reg u64[4] t4 x2r, x3r, z3r;
@@ -42,7 +42,7 @@ inline fn __fe64_cswap(stack u64[4] x2,
   return x2, z2r, x3, z3;
 }
 
-inline fn __fe64_cswap_ssss(
+inline fn __cswap4_ssss(
   stack u64[4] xs,
   stack u64[4] ys,
   reg u64 swap
@@ -76,7 +76,7 @@ inline fn __fe64_cswap_ssss(
   return xs, ys;
 }
 
-inline fn __fe64_cswap_rsrs(
+inline fn __cswap4_rsrs(
   reg   u64[4] x,
   stack u64[4] ys,
   reg u64 swap

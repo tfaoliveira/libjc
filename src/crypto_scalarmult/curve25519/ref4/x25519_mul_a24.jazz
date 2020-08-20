@@ -1,7 +1,7 @@
 #ifndef CRYPTO_SCALARMULT_X25519_REF4_MUL_A24
 #define CRYPTO_SCALARMULT_X25519_REF4_MUL_A24
 
-inline fn __mul_a24(stack u64[4] xa, inline u64 a24) -> reg u64[4]
+inline fn __ref4_mul_a24(stack u64[4] xa, inline u64 a24) -> reg u64[4]
 {
   reg u64 rax rdx holdc t1 t2 t3 t4;
   reg u64[4] z;
@@ -48,12 +48,12 @@ inline fn __mul_a24(stack u64[4] xa, inline u64 a24) -> reg u64[4]
   return z;
 }
 
-inline fn __mul_a24_ss(stack u64[4] fs, inline u64 a24) -> stack u64[4]
+inline fn __ref4_mul_a24_ss(stack u64[4] fs, inline u64 a24) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = __mul_a24(fs, a24);
+  h = __ref4_mul_a24(fs, a24);
   hs = h;
 
   return hs;

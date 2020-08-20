@@ -4,6 +4,8 @@
 // Jasmin version of: https://github.com/armfazh/fld-ecc-vec/
 
 #define EXPORT
+#include "crypto_scalarmult/curve25519/common/x25519.jazz"
+#include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult2.jazz"
 
 #include "crypto_scalarmult/curve25519/avx2/x25519_mul.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_sqr.jazz"
@@ -13,36 +15,6 @@
 #include "crypto_scalarmult/curve25519/avx2/x25519_swap.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_ser.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_ladder.jazz"
-#include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult2.jazz"
-
-inline fn __decode_scalar_sm(reg u64 kp) -> stack u64[4]
-{
-  inline int i;
-  reg u64[4] k;
-  stack u64[4] ks;
-
-  for i=0 to 4
-  { k[i] = [kp + 8*i]; }
-  k[3] <<= 1;
-  k[0] &= 0xfffffffffffffff8;
-  k[3] |= 0x8000000000000000;
-
-  ks = k;
-
-  return ks;
-}
-
-inline fn __decode_u_coordinate_rm(reg u64 up) -> reg u64[4]
-{
-  inline int i;
-  reg u64[4] u;
-
-  for i=0 to 4
-  { u[i] = [up + 8*i]; }
-  u[3] &= 0x7fffffffffffffff;
-
-  return u;
-}
 
 inline fn __x25519_scalarmult_avx2(
   reg u64 rp,
@@ -58,11 +30,11 @@ inline fn __x25519_scalarmult_avx2(
   reg u256[5] QxPx QzPz;
   stack u64 rps;
 
-  //ZEROUPPER;
+  //TODO ZEROUPPER;
   rps = rp;
   
-  k  = __decode_scalar_sm(kp);
-  u  = __decode_u_coordinate_rm(up);
+  k  = __decode_scalar_25519_shl1(kp);
+  u  = __decode_u_coordinate(up);
   X1 = __rrx_unser_rr(u);
 
   /* start with (kP,0P) */
@@ -79,7 +51,7 @@ inline fn __x25519_scalarmult_avx2(
   Z  = __rrx_ser_rs(ZZ);
 
   //ZEROUPPER;
-  r = __encode_point(Xs, Z);
+  r = __encode_point_mulx(Xs, Z);
 
   rp = rps;
   for i=0 to 4

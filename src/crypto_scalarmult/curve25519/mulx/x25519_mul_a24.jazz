@@ -15,7 +15,7 @@
 // h4  = f3*_a24_h
 
 
-inline fn __fe64_mul_a24(stack u64[4] fs, inline u64 a24) -> reg u64[4]
+inline fn __mulx_mul4_a24_rs(stack u64[4] fs, inline u64 a24) -> reg u64[4]
 {
   inline int i;
   reg bool cf;
@@ -54,15 +54,16 @@ inline fn __fe64_mul_a24(stack u64[4] fs, inline u64 a24) -> reg u64[4]
   return h;
 }
 
-inline fn __fe64_mul_a24_ss(stack u64[4] fs, inline u64 a24) -> stack u64[4]
+inline fn __mulx_mul4_a24_ss(stack u64[4] fs, inline u64 a24) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = __fe64_mul_a24(fs, a24);
+  h = __mulx_mul4_a24_rs(fs, a24);
   hs = h;
 
   return hs;
 }
 
 #endif
+

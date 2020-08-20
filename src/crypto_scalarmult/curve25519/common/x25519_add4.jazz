@@ -1,11 +1,11 @@
-#ifndef CRYPTO_SCALARMULT_X25519_MULX_ADD
-#define CRYPTO_SCALARMULT_X25519_MULX_ADD
+#ifndef CRYPTO_SCALARMULT_X25519_COMMON_ADD4
+#define CRYPTO_SCALARMULT_X25519_COMMON_ADD4
 
 // h = f + g
 // h = 2**0*f0 + 2**64*f1 + 2**128*f2 + 2**192*f3 +
 //     2**0*g0 + 2**64*g1 + 2**128*g2 + 2**192*g3
 
-inline fn __fe64_add_rrs
+inline fn __add4_rrs
 ( reg   u64[4] f,
   stack u64[4] g
 ) -> reg u64[4]
@@ -37,34 +37,34 @@ inline fn __fe64_add_rrs
   return h;
 }
 
-inline fn __fe64_add_sss(stack u64[4] fs gs) -> stack u64[4]
+inline fn __add4_sss(stack u64[4] fs gs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h f;
 
   f = fs;
-  h = __fe64_add_rrs(f, gs);
+  h = __add4_rrs(f, gs);
   hs = h;
 
   return hs;
 }
 
-inline fn __fe64_add_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
+inline fn __add4_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = __fe64_add_rrs(g, fs);
+  h = __add4_rrs(g, fs);
   hs = h;
 
   return hs;
 }
 
-inline fn __fe64_add_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
+inline fn __add4_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
 {
   reg u64[4] h;
 
-  h = __fe64_add_rrs(g, fs);
+  h = __add4_rrs(g, fs);
 
   return h;
 }

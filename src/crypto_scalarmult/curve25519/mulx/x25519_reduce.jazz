@@ -36,7 +36,7 @@
 // this function returns the input array but only the first 4 limbs should be
 // considered
 
-inline fn __fe64_reduce
+inline fn __mulx_reduce
 ( reg u64[4] h,
   reg u64[4] r,
   reg u64 _38,

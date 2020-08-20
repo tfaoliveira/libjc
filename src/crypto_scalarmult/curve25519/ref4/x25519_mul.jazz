@@ -3,7 +3,7 @@
 
 #include "crypto_scalarmult/curve25519/ref4/x25519_reduce.jazz"
 
-inline fn __mul_rss
+inline fn __ref4_mul_rss
 ( stack u64[4] xa,
   stack u64[4] ya
 ) -> reg u64[4]
@@ -51,13 +51,13 @@ inline fn __mul_rss
     }
   }
 
-  r = __reduce(z);
+  r = __ref4_reduce(z);
 
   return r;
 }
 
 #if 0
-inline fn __mul_rgs
+inline fn __ref4_mul_rgs
 ( reg ptr u64[252*4] xa,
   stack u64 offset,
   stack u64[4] ya
@@ -111,13 +111,13 @@ inline fn __mul_rgs
     }
   }
 
-  r = __reduce(z);
+  r = __ref4_reduce(z);
 
   return r;
 }
 #endif
 
-inline fn __mul_rms
+inline fn __ref4_mul_rms
 ( reg u64 xa,
   stack u64 offset,
   stack u64[4] ya
@@ -171,17 +171,17 @@ inline fn __mul_rms
     }
   }
 
-  r = __reduce(z);
+  r = __ref4_reduce(z);
 
   return r;
 }
 
-inline fn __mul_sss(stack u64[4] fs gs) -> stack u64[4]
+inline fn __ref4_mul_sss(stack u64[4] fs gs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = __mul_rss(fs, gs);
+  h = __ref4_mul_rss(fs, gs);
   hs = h;
 
   return hs;
@@ -190,7 +190,7 @@ inline fn __mul_sss(stack u64[4] fs gs) -> stack u64[4]
 #if 0
 #ifdef EXPORT
 
-export fn mul_rss(reg u64 zp xp yp)
+export fn ref4_mul_rss(reg u64 zp xp yp)
 {
   inline int i;
   reg u64 v;
@@ -206,14 +206,14 @@ export fn mul_rss(reg u64 zp xp yp)
     ya[i] = v;
   }
 
-  za = __mul_rss(xa, ya);
+  za = __ref4_mul_rss(xa, ya);
 
   zp = zps;
   for i=0 to 4
   { [zp + i*8] = za[i]; }
 }
 
-export fn mul_rms(reg u64 zp _xp yp)
+export fn ref4_mul_rms(reg u64 zp _xp yp)
 {
   inline int i;
   reg u64 o v xp;
@@ -230,7 +230,7 @@ export fn mul_rms(reg u64 zp _xp yp)
   }
 
   o  = 0;
-  za = __mul_rms(xp, o, ya);
+  za = __ref4_mul_rms(xp, o, ya);
 
   zp = zps;
   for i=0 to 4

@@ -1,14 +1,16 @@
 #ifndef CRYPTO_SCALARMULT_X25519_REF4_SCALARMULT_BASE1
 #define CRYPTO_SCALARMULT_X25519_REF4_SCALARMULT_BASE1
 
-#include "crypto_scalarmult/curve25519/ref4/x25519_add.jazz"
-#include "crypto_scalarmult/curve25519/ref4/x25519_sub.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519_add4.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519_cswap4.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519_sub4.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519_tobytes4.jazz"
+
 #include "crypto_scalarmult/curve25519/ref4/x25519_mul_a24.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_mul.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_sqr.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_invert.jazz"
-#include "crypto_scalarmult/curve25519/ref4/x25519_tobytes.jazz"
-#include "crypto_scalarmult/curve25519/ref4/x25519_cswap.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_scalarmult.jazz"
 
 u64[252*4] table_ladder = {
@@ -266,28 +268,6 @@ u64[252*4] table_ladder = {
  0xccdfcf2fc18b6d68, 0xa8ebcba8b7806167, 0x980697f95e2937e3, 0x02fbba1cd0126e8c
 };
 
-inline fn __1_x3() -> stack u64[4], reg u64[4], stack u64[4]
-{
-  inline int i;
-  stack u64[4] f1s f3s;
-  reg   u64[4] f2;
-  reg   u64 z;
-
-  z = #set0();
-
-  f1s[0] = 1;
-  f2[0]  = 1;
-  f3s[0] = 1;
-
-  for i=1 to 4
-  { f1s[i] = z;
-    f2[i]  = z;
-    f3s[i] = z;
-  }
-
-  return f1s, f2, f3s;
-}
-
 // "How to (pre-)compute a ladder"
 // implementation in C: https://github.com/armfazh/rfc7748_precomputed
 inline fn __x25519_scalarmult_base_ref4(
@@ -317,7 +297,7 @@ inline fn __x25519_scalarmult_base_ref4(
   e[31] &= 0x7f;
   e[31] |= 0x40;
 
-  u1, z1r, z2 = __1_x3();
+  u1, z1r, z2 = __init_points_x3();
 
 	u2r[0] = 0x7e94e1fec82faabd;
 	u2r[1] = 0xbbf095ae14b2edf8;
@@ -338,25 +318,25 @@ inline fn __x25519_scalarmult_base_ref4(
 
     swap ^= b;
 
-    u1,  u2 = __cswap_ssss(u1,  u2, swap);
-    z1r, z2 = __cswap_rsrs(z1r, z2, swap);
+    u1,  u2 = __cswap4_ssss(u1,  u2, swap);
+    z1r, z2 = __cswap4_rsrs(z1r, z2, swap);
 
     swaps = b;
 
-    t2    = __sub_ssr(u1, z1r);
-    t1    = __add_ssr(u1, z1r);
+    t2    = __sub4_ssr(u1, z1r);
+    t1    = __add4_ssr(u1, z1r);
 
     table_ladder_p = table_ladder_s;
-    t3r   = __mul_rgs(table_ladder_p, poss, t2);
+    t3r   = __ref4_mul_rgs(table_ladder_p, poss, t2);
 
-    t2    = __sub_ssr(t1, t3r);
-    t1    = __add_ssr(t1, t3r);
+    t2    = __sub4_ssr(t1, t3r);
+    t1    = __add4_ssr(t1, t3r);
 
-    t1    = __sqr_ss(t1);
-    t2    = __sqr_ss(t2);
+    t1    = __ref4_sqr_ss(t1);
+    t2    = __ref4_sqr_ss(t2);
 
-    u1    = __mul_sss(z2, t1);
-    z1r   = __mul_rss(u2, t2);
+    u1    = __ref4_mul_sss(z2, t1);
+    z1r   = __ref4_mul_rss(u2, t2);
 
     pos = poss;
     pos += 1;
@@ -367,26 +347,26 @@ inline fn __x25519_scalarmult_base_ref4(
   {
     poss = pos;
 
-    t1  = __add_ssr(u1, z1r);
-    t2  = __sub_ssr(u1, z1r);
-    t1  = __sqr_ss(t1);
-    t2r = __sqr_rs(t2);
+    t1  = __add4_ssr(u1, z1r);
+    t2  = __sub4_ssr(u1, z1r);
+    t1  = __ref4_sqr_ss(t1);
+    t2r = __ref4_sqr_rs(t2);
     t3  = t2r;
 
-    t2  = __sub_ssr(t1, t2r);
-    t4  = __mul_a24_ss(t2, 121666);
-    t4  = __add_sss(t4, t3);
-    u1  = __mul_sss(t1, t3);
-    z1r = __mul_rss(t2, t4);
+    t2  = __sub4_ssr(t1, t2r);
+    t4  = __ref4_mul_a24_ss(t2, 121666);
+    t4  = __add4_sss(t4, t3);
+    u1  = __ref4_mul_sss(t1, t3);
+    z1r = __ref4_mul_rss(t2, t4);
 
     pos = poss;
     pos += 1;
   } (pos < 3)
 
   z1  = z1r;
-  t1  = __invert_ss(z1);
-  t1r = __mul_rss(u1, t1);
-  t1r = __tobytes(t1r);
+  t1  = __ref4_invert(z1);
+  t1r = __ref4_mul_rss(u1, t1);
+  t1r = __tobytes4(t1r);
 
   out = outs;
   for i=0 to 4

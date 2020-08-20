@@ -1,8 +1,8 @@
-#ifndef CRYPTO_SCALARMULT_X25519_REF4_TOBYTES
-#define CRYPTO_SCALARMULT_X25519_REF4_TOBYTES
+#ifndef CRYPTO_SCALARMULT_X25519_COMMON_TOBYTES4
+#define CRYPTO_SCALARMULT_X25519_COMMON_TOBYTES4
 
 // OpenSSL
-inline fn __tobytes(reg u64[4] f) -> reg u64[4]
+inline fn __tobytes4(reg u64[4] f) -> reg u64[4]
 {
   reg bool cf;
   reg u64 t;

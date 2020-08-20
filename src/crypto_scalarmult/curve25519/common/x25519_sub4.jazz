@@ -1,11 +1,11 @@
-#ifndef CRYPTO_SCALARMULT_X25519_MULX_SUB
-#define CRYPTO_SCALARMULT_X25519_MULX_SUB
+#ifndef CRYPTO_SCALARMULT_X25519_COMMON_SUB4
+#define CRYPTO_SCALARMULT_X25519_COMMON_SUB4
 
 // h = f - g
 // h = (2**0*f0 + 2**64*f1 + 2**128*f2 + 2**192*f3) - 
 //     (2**0*g0 + 2**64*g1 + 2**128*g2 + 2**192*g3)
 
-inline fn __fe64_sub_rrs
+inline fn __sub4_rrs
 ( reg   u64[4] f,
   stack u64[4] gs
 ) -> reg u64[4]
@@ -37,30 +37,30 @@ inline fn __fe64_sub_rrs
   return h;
 }
 
-inline fn __fe64_sub_sss(stack u64[4] fs gs) -> stack u64[4]
+inline fn __sub4_sss(stack u64[4] fs gs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h f;
 
   f = fs;
-  h = __fe64_sub_rrs(f, gs);
+  h = __sub4_rrs(f, gs);
   hs = h;
 
   return hs;
 }
 
-inline fn __fe64_sub_rss(stack u64[4] fs gs) -> reg u64[4]
+inline fn __sub4_rss(stack u64[4] fs gs) -> reg u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h f;
 
   f = fs;
-  h = __fe64_sub_rrs(f, gs);
+  h = __sub4_rrs(f, gs);
 
   return h;
 }
 
-inline fn __fe64_sub_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
+inline fn __sub4_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
 {
   inline int i;
   reg bool cf;
@@ -89,12 +89,12 @@ inline fn __fe64_sub_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
   return h;
 }
 
-inline fn __fe64_sub_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
+inline fn __sub4_ssr(stack u64[4] fs, reg u64[4] g) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = __fe64_sub_rsr(fs, g);
+  h = __sub4_rsr(fs, g);
   hs = h;
 
   return hs;

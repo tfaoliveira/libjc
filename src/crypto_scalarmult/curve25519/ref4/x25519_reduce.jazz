@@ -1,7 +1,7 @@
 #ifndef CRYPTO_SCALARMULT_X25519_REF4_REDUCE
 #define CRYPTO_SCALARMULT_X25519_REF4_REDUCE
 
-inline fn __reduce(reg u64[8] z) -> reg u64[4]
+inline fn __ref4_reduce(reg u64[8] z) -> reg u64[4]
 {
   reg u64 z8 r0 r38 rax h l;
   reg u64[4] r;

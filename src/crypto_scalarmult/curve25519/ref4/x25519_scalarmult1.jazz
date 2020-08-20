@@ -1,137 +1,72 @@
 #ifndef CRYPTO_SCALARMULT_X25519_REF4_SCALARMULT1
 #define CRYPTO_SCALARMULT_X25519_REF4_SCALARMULT1
 
-#include "crypto_scalarmult/curve25519/ref4/x25519_add.jazz"
-#include "crypto_scalarmult/curve25519/ref4/x25519_sub.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519_add4.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519_cswap4.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519_sub4.jazz"
+#include "crypto_scalarmult/curve25519/common/x25519_tobytes4.jazz"
+
 #include "crypto_scalarmult/curve25519/ref4/x25519_mul_a24.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_mul.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_sqr.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_invert.jazz"
-#include "crypto_scalarmult/curve25519/ref4/x25519_tobytes.jazz"
-#include "crypto_scalarmult/curve25519/ref4/x25519_cswap.jazz"
 
-inline fn __ith_bit(stack u8[32] k, reg u64 ctr) -> reg u64
-{
-  reg u64 p bit;
-
-  p = ctr;
-  p >>= 3;
-  bit = (64u) k[(int) p];
-
-  p = ctr;
-  p &= 7;
-  bit >>= p;
-
-  bit &= 1;
-
-  return bit;
-}
-
-inline fn __decode_scalar_25519(reg u64 kp) -> stack u8[32]
-{
-  inline int i;
-  stack u8[32] k;
-  reg u64 t;
-
-  for i=0 to 4
-  { t = [kp + 8*i];
-    k[u64 i] = t; }
-
-  k[0]  &= 0xf8;
-  k[31] &= 0x7f;
-  k[31] |= 0x40;
-
-  return k;
-}
-
-inline fn __decode_u_coordinate(reg u64 up) -> reg u64[4]
-{
-  inline int i;
-  reg u64[4] u;
-
-  for i=0 to 4
-  { u[i] = [up + 8*i]; }
-  u[3] &= 0x7fffffffffffffff;
-
-  return u;
-}
-
-inline fn __init_points(reg u64[4] initr) -> stack u64[4], reg u64[4], stack u64[4], stack u64[4]
-{
-  inline int i;
-  stack u64[4] x2 x3 z3;
-  reg u64[4] z2r;
-  reg u64 z;
-
-  z = #set0();
-
-  x2[0] = 1;
-  z2r[0] = 0;
-  x3 = initr;
-  z3[0] = 1;
-
-  for i=1 to 4
-  { x2[i] = z;
-    z2r[i] = z;
-    z3[i] = z; }
-
-  //     (1,   0, init, 1)
-  return x2, z2r, x3,  z3;
-}
-
-inline fn __add_and_double(stack u64[4] init,
-                           stack u64[4] x2,
-                           reg   u64[4] z2r,
-                           stack u64[4] x3,
-                           stack u64[4] z3) -> stack u64[4],
-                                               reg   u64[4],
-                                               stack u64[4],
-                                               stack u64[4]
+inline fn __add_and_double_ref4(
+  stack u64[4] init,
+  stack u64[4] x2,
+  reg   u64[4] z2r,
+  stack u64[4] x3,
+  stack u64[4] z3) -> stack u64[4],
+                      reg   u64[4],
+                      stack u64[4],
+                      stack u64[4]
 {
   stack u64[4] z2 t0 t1 t2;
   reg u64[4] t1r;
 
-  t0  = __sub_ssr(x2, z2r);
-  x2  = __add_ssr(x2, z2r);
+  t0  = __sub4_ssr(x2, z2r);
+  x2  = __add4_ssr(x2, z2r);
 
-  t1  = __sub_sss(x3, z3);
-  z2  = __add_sss(x3, z3);
+  t1  = __sub4_sss(x3, z3);
+  z2  = __add4_sss(x3, z3);
 
-  z3  = __mul_sss(x2, t1);
-  z2  = __mul_sss(z2, t0);
+  z3  = __ref4_mul_sss(x2, t1);
+  z2  = __ref4_mul_sss(z2, t0);
 
-  t2  = __sqr_ss(x2);
-  t1  = __sqr_ss(t0);
+  t2  = __ref4_sqr_ss(x2);
+  t1  = __ref4_sqr_ss(t0);
 
-  x3  = __add_sss(z3, z2);
-  z2  = __sub_sss(z3, z2);
+  x3  = __add4_sss(z3, z2);
+  z2  = __sub4_sss(z3, z2);
 
-  x2  = __mul_sss(t2, t1);
-  t0  = __sub_sss(t2, t1);
+  x2  = __ref4_mul_sss(t2, t1);
+  t0  = __sub4_sss(t2, t1);
 
-  z2  = __sqr_ss(z2);
-  z3  = __mul_a24_ss(t0, 121665);
-  x3  = __sqr_ss(x3);
+  z2  = __ref4_sqr_ss(z2);
+  z3  = __ref4_mul_a24_ss(t0, 121665);
+  x3  = __ref4_sqr_ss(x3);
 
-  t2  = __add_sss(t2, z3);
-  z3  = __mul_sss(init, z2);
-  z2r = __mul_rss(t0, t2);
+  t2  = __add4_sss(t2, z3);
+  z3  = __ref4_mul_sss(init, z2);
+  z2r = __ref4_mul_rss(t0, t2);
 
   return x2, z2r, x3, z3;
 }
 
-inline fn __montgomery_ladder_step(stack u8[32] k,
-                                   stack u64[4] init,
-                                   stack u64[4] x2,
-                                   reg   u64[4] z2r,
-                                   stack u64[4] x3,
-                                   stack u64[4] z3,
-                                   stack u64    swapped,
-                                   reg   u64    ctr) -> stack u64[4],
-                                                        reg   u64[4],
-                                                        stack u64[4],
-                                                        stack u64[4],
-                                                        stack u64
+inline fn __montgomery_ladder_step_ref4
+  (stack u8[32] k,
+  stack u64[4] init,
+  stack u64[4] x2,
+  reg   u64[4] z2r,
+  stack u64[4] x3,
+  stack u64[4] z3,
+  stack u64    swapped,
+  reg   u64    ctr) -> stack u64[4],
+                       reg   u64[4],
+                       stack u64[4],
+                       stack u64[4],
+                       stack u64
 {
   reg u64 toswap bit;
 
@@ -140,19 +75,20 @@ inline fn __montgomery_ladder_step(stack u8[32] k,
   toswap  = swapped;
   toswap ^= bit;
 
-  x2, z2r, x3, z3 = __cswap(x2, z2r, x3, z3, toswap);
+  x2, z2r, x3, z3 = __cswap4(x2, z2r, x3, z3, toswap);
   swapped = bit;
 
-  x2, z2r, x3, z3 = __add_and_double(init, x2, z2r, x3, z3);
+  x2, z2r, x3, z3 = __add_and_double_ref4(init, x2, z2r, x3, z3);
 
   return x2, z2r, x3, z3, swapped;
 }
 
 
-inline fn __montgomery_ladder(reg u64[4] initr, stack u8[32] k) -> stack u64[4],
-                                                                   reg u64[4],
-                                                                   stack u64[4],
-                                                                   stack u64[4]
+inline fn __montgomery_ladder_ref4(reg u64[4] initr, stack u8[32] k)
+  -> stack u64[4],
+     reg u64[4],
+     stack u64[4],
+     stack u64[4]
 {
   stack u64[4] init x2 x3 z3;
   reg u64[4] z2r;
@@ -170,7 +106,7 @@ inline fn __montgomery_ladder(reg u64[4] initr, stack u8[32] k) -> stack u64[4],
     ctr -= 1;
     ctrs = ctr;
 
-    (x2, z2r, x3, z3, swapped) = __montgomery_ladder_step(k, init, x2, z2r, x3, z3, swapped, ctr);
+    (x2, z2r, x3, z3, swapped) = __montgomery_ladder_step_ref4(k, init, x2, z2r, x3, z3, swapped, ctr);
 
     ctr = ctrs;
   } (ctr > 0)
@@ -178,15 +114,15 @@ inline fn __montgomery_ladder(reg u64[4] initr, stack u8[32] k) -> stack u64[4],
   return x2, z2r, x3, z3;
 }
 
-inline fn __encode_point(stack u64[4] x2, reg u64[4] z2r) -> reg u64[4]
+inline fn __encode_point_ref4(stack u64[4] x2, reg u64[4] z2r) -> reg u64[4]
 {
   stack u64[4] z2;
   reg u64[4] r;
 
   z2 = z2r;
-  z2 = __invert_ss(z2);
-  r = __mul_rss(x2, z2);
-  r = __tobytes(r);
+  z2 = __ref4_invert(z2);
+  r = __ref4_mul_rss(x2, z2);
+  r = __tobytes4(r);
 
   return r;
 }
@@ -208,8 +144,8 @@ inline fn __x25519_scalarmult_ref4(
 
   k = __decode_scalar_25519(kp); // kp dead
   u = __decode_u_coordinate(up); // up dead
-  (x2,z2r,x3,z3) = __montgomery_ladder(u, k);
-  r = __encode_point(x2,z2r);
+  (x2,z2r,x3,z3) = __montgomery_ladder_ref4(u, k);
+  r = __encode_point_ref4(x2,z2r);
 
   rp = rps;
   for i=0 to 4

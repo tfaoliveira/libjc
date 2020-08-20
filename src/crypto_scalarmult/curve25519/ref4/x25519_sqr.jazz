@@ -3,7 +3,7 @@
 
 #include "crypto_scalarmult/curve25519/ref4/x25519_reduce.jazz"
 
-inline fn __sqr_rs(stack u64[4] xa) -> reg u64[4]
+inline fn __ref4_sqr_rs(stack u64[4] xa) -> reg u64[4]
 {
   reg u64 zero rax rdx;
   reg u64[8] z;
@@ -102,12 +102,12 @@ inline fn __sqr_rs(stack u64[4] xa) -> reg u64[4]
   cf, z[6] += rax;
    _, z[7] += rdx + cf;
 
-  r = __reduce(z);
+  r = __ref4_reduce(z);
 
   return r;
 }
 
-inline fn __it_sqr_x1(stack u64[4] xa, stack u64 n) -> stack u64[4]
+inline fn __ref4_it_sqr_x1(stack u64[4] xa, stack u64 n) -> stack u64[4]
 {
   reg u64 xa0 xa1 xa2 rax rdx n_r;
   reg u64[8] z;
@@ -192,7 +192,7 @@ inline fn __it_sqr_x1(stack u64[4] xa, stack u64 n) -> stack u64[4]
     cf, z[6] += rax;
      _, z[7] += rdx + cf;
 
-    r = __reduce(z);
+    r = __ref4_reduce(z);
     xa = r;
 
     n_r = n;  
@@ -204,12 +204,12 @@ inline fn __it_sqr_x1(stack u64[4] xa, stack u64 n) -> stack u64[4]
   return xa;
 }
 
-inline fn __sqr_ss(stack u64[4] fs) -> stack u64[4]
+inline fn __ref4_sqr_ss(stack u64[4] fs) -> stack u64[4]
 {
   stack u64[4] hs;
   reg u64[4] h;
 
-  h = __sqr_rs(fs);
+  h = __ref4_sqr_rs(fs);
   hs = h;
 
   return hs;
