@@ -56,6 +56,7 @@ inline fn __mul_rss
   return r;
 }
 
+#if 0
 inline fn __mul_rgs
 ( reg ptr u64[252*4] xa,
   stack u64 offset,
@@ -114,6 +115,7 @@ inline fn __mul_rgs
 
   return r;
 }
+#endif
 
 inline fn __mul_rms
 ( reg u64 xa,
