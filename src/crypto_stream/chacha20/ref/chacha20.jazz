@@ -119,18 +119,13 @@ inline fn __inlined_double_quarter_round_ref(
 
 inline fn __rounds_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
 {
+  //reg bool zf;
   inline int i;
-  stack u32 c, k14;
-  stack u32 k14;
-  reg bool zf;
-
-  //c = 0;
-  //while(c < 10)
-  //{
+  stack u32 c k14;
 
   c = 10;
-  while {
-
+  while
+  {
     //k = quarter_round(k, 0, 4, 8, 12);
     //k = quarter_round(k, 2, 6, 10, 14);
     k = __inlined_double_quarter_round_ref(k, 0, 4, 8, 12,
@@ -158,11 +153,8 @@ inline fn __rounds_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
     k = __inlined_double_quarter_round_ref(k, 2, 7, 8, 13,
                                               3, 4, 9, 14);
 
-    (_,_,_,zf,c) = #DEC_32(c);
-  } (!zf)
-
-  //  c += 1;
-  //}
+    (_,_,_,_,c) = #DEC_32(c);
+  } (c > 0) // ~ 150 cycles penalty for 4KiB message when compared to !zf
 
   return k, k15;
 }

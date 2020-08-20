@@ -1,9 +1,6 @@
 #ifndef CRYPTO_STREAM_CHACHA20_AVX
 #define CRYPTO_STREAM_CHACHA20_AVX
 
-// note: explicitly aligning the stack pointer causes some spikes in the plots
-// for inputs between 64 and 128 bytes
-
 u128 g_r16 = (16u8)[13,12,15,14, 9,8,11,10, 5,4,7,6, 1,0,3,2];
 u128 g_r8  = (16u8)[14,13,12,15, 10,9,8,11, 6,5,4,7, 2,1,0,3];
 
@@ -817,23 +814,17 @@ inline fn __diagonal_round_x4_avx(reg u128[16] k, stack u128 k14 s_r16 s_r8) -> 
 inline fn __rounds_x4_avx(reg u128[16] k, stack u128 s_r16 s_r8) -> reg u128[16]
 {
   reg u64 c;
-  reg bool zf;
+  //reg bool zf;
   stack u128 k14, k15;
 
   k15 = k[15];
-
-  //c = 0;
-  //while(c < 10) {
 
   c = 10;
   align while {
     k, k14 = __column_round_x4_avx(k, k15, s_r16, s_r8);
     k, k15 = __diagonal_round_x4_avx(k, k14, s_r16, s_r8);
-    (_,_,_,zf,c) = #DEC(c);
-  } (!zf)
-
-  //c += 1;
-  //}
+    (_,_,_,_,c) = #DEC(c);
+  } (c > 0)
 
   k[15] = k15;
 

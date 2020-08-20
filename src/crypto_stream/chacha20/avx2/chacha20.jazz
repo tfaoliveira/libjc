@@ -922,23 +922,17 @@ inline fn __diagonal_round_x8_avx2(reg u256[16] k, stack u256 k14 s_r16 s_r8) ->
 inline fn __rounds_x8_avx2(reg u256[16] k, stack u256 s_r16 s_r8) -> reg u256[16]
 {
   reg u64 c;
-  reg bool zf;
+  //reg bool zf;
   stack u256 k15 k14;
 
   k15 = k[15];
-
-  //c = 0;
-  //while(c < 10)
 
   c = 10;
   align while {
     k, k14 = __column_round_x8_avx2(k, k15, s_r16, s_r8);
     k, k15 = __diagonal_round_x8_avx2(k, k14, s_r16, s_r8);
-    (_,_,_,zf,c) = #DEC(c);
-  } (!zf)
-
-  //c += 1;
-  //}
+    (_,_,_,_,c) = #DEC(c);
+  } (c > 0)
 
   k[15] = k15;
 
