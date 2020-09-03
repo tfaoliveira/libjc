@@ -1,5 +1,5 @@
-#ifndef X25519_AVX2_INTER
-#define X25519_AVX2_INTER
+#ifndef CRYPTO_SCALARMULT_X25519_AVX2_INTER
+#define CRYPTO_SCALARMULT_X25519_AVX2_INTER
 
 #include "crypto_scalarmult/curve25519/avx2/x25519_globals.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_macros.jazz"

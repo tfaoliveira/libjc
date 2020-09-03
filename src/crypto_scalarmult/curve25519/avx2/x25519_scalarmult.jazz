@@ -1,5 +1,5 @@
-#ifndef X25519_AVX2_SCALARMULT
-#define X25519_AVX2_SCALARMULT
+#ifndef CRYPTO_SCALARMULT_X25519_AVX2_SCALARMULT
+#define CRYPTO_SCALARMULT_X25519_AVX2_SCALARMULT
 
 // Jasmin version of: https://github.com/armfazh/fld-ecc-vec/
 
