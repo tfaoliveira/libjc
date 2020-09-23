@@ -4,6 +4,59 @@
 #include "crypto_scalarmult/curve25519/avx2/x25519_globals.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_macros.jazz"
 
+
+inline fn __rrx_add_rrs(reg u256[5] a, stack u256[5] bs) -> reg u256[5]
+{
+  inline int i;
+  reg u256[5] c;
+
+  for i=0 to 5
+  { c[i] = a[i] +4u64 bs[i]; }
+
+  return c;
+}
+
+inline fn __rrx_add_rss(stack u256[5] as bs) -> reg u256[5]
+{
+  inline int i;
+  reg u256[5] c;
+
+  c = as;
+  for i=0 to 5
+  { c[i] +4u64= bs[i]; }
+
+  return c;
+}
+
+inline fn __rrx_sub_rrs(reg u256[5] a, stack u256[5] bs) -> reg u256[5]
+{
+  inline int i;
+  reg u256[5] _2P c;
+
+  _2P = CONST_2P_2P_H0H5;
+  for i=0 to 5
+  { _2P[i] -4u64= bs[i];
+    c[i] = a[i] +4u64 _2P[i];
+  }
+
+  return c;
+}
+
+inline fn __rrx_sub_rss(stack u256[5] as bs) -> reg u256[5]
+{
+  inline int i;
+  reg u256[5] _2P c;
+
+  c = as;
+  _2P = CONST_2P_2P_H0H5;
+  for i=0 to 5
+  { _2P[i] -4u64= bs[i];
+    c[i] +4u64= _2P[i];
+  }
+
+  return c;
+}
+
 inline fn __rrx_addsub_rr(reg u256[5] a b) -> reg u256[5], reg u256[5]
 {
   inline int i;
@@ -87,6 +140,80 @@ inline fn __rrx_addsub_srrr(reg u256[5] a b) -> stack u256[5], reg u256[5]
 }
 
 #ifdef EXPORT
+
+export fn rrx_add_rrs(reg u64 cp ap bp)
+{
+  inline int i;
+  reg u256[5] c a b;
+  stack u256[5] bs;
+
+  for i=0 to 5
+  { a[i] = (u256)[ap + 32*i];
+    b[i] = (u256)[bp + 32*i];
+  }
+  bs = b;
+
+  c = __rrx_add_rrs(a, bs);
+
+  for i=0 to 5
+  { (u256)[cp + 32*i] = c[i]; }
+}
+
+export fn rrx_add_rss(reg u64 cp ap bp)
+{
+  inline int i;
+  reg u256[5] c a b;
+  stack u256[5] as bs;
+
+  for i=0 to 5
+  { a[i] = (u256)[ap + 32*i];
+    b[i] = (u256)[bp + 32*i];
+  }
+  as = a;
+  bs = b;
+
+  c = __rrx_add_rss(as, bs);
+
+  for i=0 to 5
+  { (u256)[cp + 32*i] = c[i]; }
+}
+
+export fn rrx_sub_rrs(reg u64 cp ap bp)
+{
+  inline int i;
+  reg u256[5] c a b;
+  stack u256[5] bs;
+
+  for i=0 to 5
+  { a[i] = (u256)[ap + 32*i];
+    b[i] = (u256)[bp + 32*i];
+  }
+  bs = b;
+
+  c = __rrx_sub_rrs(a, bs);
+
+  for i=0 to 5
+  { (u256)[cp + 32*i] = c[i]; }
+}
+
+export fn rrx_sub_rss(reg u64 cp ap bp)
+{
+  inline int i;
+  reg u256[5] c a b;
+  stack u256[5] as bs;
+
+  for i=0 to 5
+  { a[i] = (u256)[ap + 32*i];
+    b[i] = (u256)[bp + 32*i];
+  }
+  as = a;
+  bs = b;
+
+  c = __rrx_sub_rss(as, bs);
+
+  for i=0 to 5
+  { (u256)[cp + 32*i] = c[i]; }
+}
 
 export fn rrx_addsub_rr(reg u64 ap bp)
 {

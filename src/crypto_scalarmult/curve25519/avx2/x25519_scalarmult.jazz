@@ -4,6 +4,9 @@
 // Jasmin version of: https://github.com/armfazh/fld-ecc-vec/
 
 #define EXPORT
+
+#include "crypto_scalarmult/curve25519/avx2/ed25519.jazz"
+
 #include "crypto_scalarmult/curve25519/common/x25519.jazz"
 #include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult2.jazz"
 

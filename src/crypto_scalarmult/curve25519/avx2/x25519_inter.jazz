@@ -80,6 +80,25 @@ inline fn __rrx_deinter1_sr(reg u256[5] a) -> stack u256[3]
   return a0s;
 }
 
+inline fn __rrx_deinter2_sr(reg u256[5] a) -> stack u256[3]
+{
+  reg u256 t;
+  reg u256[3] a1;
+  stack u256[3] a1s;
+
+  a1[0] = #VPERM2I128(a[0], a[1], (2u4)[3,1]);
+  a1s[0] = a1[0];
+  a1[1] = #VPERM2I128(a[2], a[3], (2u4)[3,1]);
+  a1s[1] = a1[1];
+
+  //TODO: CHECKME bottleneck: cast u128 into u256 with undefined high?
+  t = #set0_256();
+  a1[2] = #VPERM2I128(t, a[4], (2u4)[0,3]);
+  a1s[2] = a1[2];
+
+  return a1s;
+}
+
 #ifdef EXPORT
 
 export fn rrx_inter1_rr(reg u64 cp ap)

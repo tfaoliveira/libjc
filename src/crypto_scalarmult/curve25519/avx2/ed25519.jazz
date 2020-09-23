@@ -1,0 +1,58 @@
+#ifndef CRYPTO_SCALARMULT_ED25519_AVX2
+#define CRYPTO_SCALARMULT_ED25519_AVX2
+
+#include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult2.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_addsub.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_compress.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_inter.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_ser.jazz"
+
+
+inline fn __point_ed2mont(stack u256[10] p) -> reg u64[4]
+{
+  reg u256[5] addZY subZY;
+  stack u256[3] t0 t1;
+  reg u64[4] add sub enc;
+  stack u64[4] adds;
+
+  addZY = __rrx_add_rss(p[5:5], p[0:5]);
+  addZY = __rrx_compress_r(addZY);
+  t0    = __rrx_deinter2_sr(addZY);
+
+  subZY = __rrx_sub_rss(p[5:5], p[0:5]);
+  subZY = __rrx_compress_r(subZY);
+  t1    = __rrx_deinter2_sr(subZY);
+
+  add   = __rrx_ser_rs(t0);
+  adds  = add;
+  sub   = __rrx_ser_rs(t1);
+  enc   = __encode_point_mulx(adds, sub);
+
+  return enc;
+}
+
+#ifdef EXPORT
+
+export fn point_ed2mont(reg u64 rp pp)
+{
+  inline int i;
+  reg u256[10] p;
+  stack u256[10] ps;
+  reg u64[4] r;
+  stack u64 rps;
+
+  rps = rp;
+  for i=0 to 10
+  { p[i] = (u256)[pp + 32*i]; }
+  ps = p;
+
+  r = __point_ed2mont(ps);
+
+  rp = rps;
+  for i=0 to 4
+  { [rp + 8*i] = r[i]; }
+}
+
+#endif
+
+#endif
