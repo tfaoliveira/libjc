@@ -1,7 +1,7 @@
 #ifndef CRYPTO_CORE_KECCAKF160064BITS_AVX2
 #define CRYPTO_CORE_KECCAKF160064BITS_AVX2
 
-u256[24] iotas_g =
+u256[24] KECCAK_IOTAS =
 {  (4u64)[0x0000000000000001, 0x0000000000000001, 0x0000000000000001, 0x0000000000000001]
   ,(4u64)[0x0000000000008082, 0x0000000000008082, 0x0000000000008082, 0x0000000000008082]
   ,(4u64)[0x800000000000808a, 0x800000000000808a, 0x800000000000808a, 0x800000000000808a]
@@ -28,7 +28,7 @@ u256[24] iotas_g =
   ,(4u64)[0x8000000080008008, 0x8000000080008008, 0x8000000080008008, 0x8000000080008008]
 };
 
-u256[6] rhotates_left = 
+u256[6] KECCAK_RHOTATES_LEFT = 
 {
   (4u64)[41, 36, 18,  3],
   (4u64)[27, 28, 62,  1],
@@ -38,7 +38,7 @@ u256[6] rhotates_left =
   (4u64)[14, 21, 43, 44]
 };
 
-u256[6] rhotates_right =
+u256[6] KECCAK_RHOTATES_RIGHT =
 {
   (4u64)[64-41, 64-36, 64-18, 64- 3],
   (4u64)[64-27, 64-28, 64-62, 64- 1],
@@ -48,7 +48,7 @@ u256[6] rhotates_right =
   (4u64)[64-14, 64-21, 64-43, 64-44]
 };
 
-u64[25] a_jagged = 
+u64[25] KECCAK_A_JAGGED = 
 {
    0,  4,  5,  6,  7,
   10, 24, 13, 18, 23,
@@ -69,10 +69,10 @@ inline fn __keccakf1600_avx2(reg u256[7] state) -> reg u256[7]
   reg ptr u256[6] rhotates_left_p;
   reg ptr u256[6] rhotates_right_p;
 
-  iotas_p = iotas_g;
+  iotas_p = KECCAK_IOTAS;
   iotas_o = 0;
-  rhotates_left_p = rhotates_left;
-  rhotates_right_p = rhotates_right;
+  rhotates_left_p = KECCAK_RHOTATES_LEFT;
+  rhotates_right_p = KECCAK_RHOTATES_RIGHT;
 
   r = 24;
   align while
@@ -208,7 +208,7 @@ export fn keccakf1600_avx2(reg u64 out in)
 
   for i=0 to 25
   { t = [in + 8*i];
-    idx = a_jagged[i];
+    idx = KECCAK_A_JAGGED[i];
     state_s[u64 (int)idx] = t;
   }
 
@@ -224,7 +224,7 @@ export fn keccakf1600_avx2(reg u64 out in)
   state_s = state;
 
   for i=0 to 25
-  { idx = a_jagged[i];
+  { idx = KECCAK_A_JAGGED[i];
     t = state_s[u64 (int)idx];
     [out + 8*i] = t;
   }

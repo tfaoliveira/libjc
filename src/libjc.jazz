@@ -13,27 +13,28 @@
 #include "crypto_hash/sha256/inplace/sha256.jazz"
 #include "crypto_hash/sha512/ref0/sha512.jazz"
 
-#if 0
-//TODO FIX JOINT COMPILATION
-#include "crypto_core/keccakf160064bits/avx2/keccakf1600.jazz"
 #include "crypto_core/keccakf160064bits/ref/keccakf1600.jazz"
 #include "crypto_core/keccakf160064bits/scalar/keccakf1600.jazz"
-#include "crypto_hash/keccak1600/avx2/keccak1600.jazz"
+#include "crypto_core/keccakf160064bits/avx2/keccakf1600.jazz"
+
+#include "crypto_hash/keccak1600/ref/keccak1600.jazz"
 #include "crypto_hash/keccak1600/scalar/keccak1600.jazz"
-#include "crypto_hash/sha3224/avx2/sha3224.jazz"
-#include "crypto_hash/sha3224/scalar/sha3224.jazz"
-#include "crypto_hash/sha3256/avx2/sha3256.jazz"
-#include "crypto_hash/sha3256/scalar/sha3256.jazz"
-#include "crypto_hash/sha3384/avx2/sha3384.jazz"
-#include "crypto_hash/sha3384/scalar/sha3384.jazz"
-#include "crypto_hash/sha3512/avx2/sha3512.jazz"
-#include "crypto_hash/sha3512/scalar/sha3512.jazz"
-#include "crypto_hash/shake128/avx2/shake128.jazz"
-#include "crypto_hash/shake128/scalar/shake128.jazz"
-#include "crypto_hash/shake256/avx2/shake256.jazz"
+#include "crypto_hash/keccak1600/avx2/keccak1600.jazz"
+
 #include "crypto_hash/shake256/ref/shake256.jazz"
 #include "crypto_hash/shake256/scalar/shake256.jazz"
-#endif
+#include "crypto_hash/shake256/avx2/shake256.jazz"
+#include "crypto_hash/shake128/scalar/shake128.jazz"
+#include "crypto_hash/shake128/avx2/shake128.jazz"
+
+#include "crypto_hash/sha3224/scalar/sha3224.jazz"
+#include "crypto_hash/sha3224/avx2/sha3224.jazz"
+#include "crypto_hash/sha3256/scalar/sha3256.jazz"
+#include "crypto_hash/sha3256/avx2/sha3256.jazz"
+#include "crypto_hash/sha3384/scalar/sha3384.jazz"
+#include "crypto_hash/sha3384/avx2/sha3384.jazz"
+#include "crypto_hash/sha3512/scalar/sha3512.jazz"
+#include "crypto_hash/sha3512/avx2/sha3512.jazz"
 
 #include "crypto_auth/hmacsha256/ref/hmacsha256.jazz"
 #include "crypto_auth/hmacsha256/ref0/hmacsha256.jazz"

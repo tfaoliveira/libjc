@@ -1,7 +1,7 @@
 #ifndef CRYPTO_CORE_KECCAKF160064BITS_REF
 #define CRYPTO_CORE_KECCAKF160064BITS_REF
 
-u64[24] keccakRoundConstants =
+u64[24] KECCAK_RC =
 {  0x0000000000000001
   ,0x0000000000008082
   ,0x800000000000808a
@@ -28,24 +28,45 @@ u64[24] keccakRoundConstants =
   ,0x8000000080008008
 };
 
-inline fn __index(inline int x, inline int y) -> inline int
+inline fn __index(inline int x y) -> inline int
 {
   inline int r;
   r = (x % 5) + 5 * (y % 5);
   return r;
 }
 
-inline fn __ROL64(reg u64 x, inline int c) -> reg u64
+inline fn __keccak_rho_offsets(inline int i) -> inline int
 {
-  reg u64 y;
-  _, _, y = #ROL_64(x, c);
-  return y;
+  inline int r x y z t;
+
+  r = 0;
+  x = 1;
+  y = 0;
+
+  for t = 0 to 24 {
+    if (i == x + 5 * y) {
+      r = ((t + 1) * (t + 2) / 2) % 64;
+    }
+    z = (2 * x + 3 * y) % 5;
+    x = y;
+    y = z;
+  }
+
+  return r;
 }
 
-inline fn __theta(stack u64[25] a) -> stack u64[25]
+inline fn __rhotates(inline int x y) -> inline int
 {
-  inline int x, y;
-  reg u64[5] c, d;
+  inline int i r;
+  i = __index(x, y);
+  r = __keccak_rho_offsets(i);
+  return r;
+}
+
+inline fn __theta_ref(stack u64[25] a) -> stack u64[25]
+{
+  inline int x y;
+  reg u64[5] c d;
 
   for x = 0 to 5 {
     c[x] = 0;
@@ -55,13 +76,6 @@ inline fn __theta(stack u64[25] a) -> stack u64[25]
   }
 
   for x = 0 to 5 {
-    /* d[x] = ROL64(c[(x + 1) % 5], 1); */
-    /* extraction fails */
-
-    /*    _, _, d[x] = #ROL_64(c[(x + 1) % 5], 1);*/
-    /*    d[x] ^= c[(x + 4) % 5];*/
-    /* does not compile */
-
     d[x] = c[(x + 1) % 5];
     _, _, d[x] = #ROL_64(d[x], 1);
     d[x] ^= c[(x + 4) % 5];
@@ -76,35 +90,14 @@ inline fn __theta(stack u64[25] a) -> stack u64[25]
   return a;
 }
 
-
-inline fn __keccakRhoOffsets(inline int i) -> inline int
+inline fn __rho_ref(stack u64[25] a) -> stack u64[25]
 {
-  inline int r, x, y, z, t;
-
-  r = 0;
-  x = 1;
-  y = 0;
-  for t = 0 to 24 {
-    if (i == x + 5 * y) {
-      r = ((t + 1) * (t + 2) / 2) % 64;
-    }
-    z = (2 * x + 3 * y) % 5;
-    x = y;
-    y = z;
-  }
-
-  return r;
-}
-
-
-inline fn __rho(stack u64[25] a) -> stack u64[25]
-{
-  inline int x, y, i, z;
+  inline int x y i z;
 
   for x = 0 to 5 {
     for y = 0 to 5 {
       i = __index(x, y);
-      z = __keccakRhoOffsets(i);
+      z = __keccak_rho_offsets(i);
       _, _, a[i] = #ROL_64(a[i], z);
     }
   }
@@ -112,12 +105,14 @@ inline fn __rho(stack u64[25] a) -> stack u64[25]
   return a;
 }
 
-
-inline fn __pi(stack u64[25] a) -> stack u64[25] {
+inline fn __pi_ref(stack u64[25] a) -> stack u64[25]
+{
+  inline int x y i;
   stack u64[25] b;
   reg u64 t;
-  inline int x, y, i;
-  for i = 0 to 25 { t = a[i]; b[i] = t; }
+
+  for i = 0 to 25
+  { t = a[i]; b[i] = t; }
 
   for x = 0 to 5 {
     for y = 0 to 5 {
@@ -129,10 +124,11 @@ inline fn __pi(stack u64[25] a) -> stack u64[25] {
   return a;
 }
 
-
-inline fn __chi(stack u64[25] a) -> stack u64[25] {
-  inline int x, y, i;
+inline fn __chi_ref(stack u64[25] a) -> stack u64[25]
+{
+  inline int x y i;
   reg u64[5] c;
+
   for y = 0 to 5 {
     for x = 0 to 5 {
       i = __index(x + 1, y);
@@ -151,44 +147,37 @@ inline fn __chi(stack u64[25] a) -> stack u64[25] {
 }
 
 
-inline fn __iota(stack u64[25] a, reg u64 c) -> stack u64[25] {
+inline fn __iota_ref(stack u64[25] a, reg u64 c) -> stack u64[25]
+{
   a[0] ^= c;
   return a;
 }
 
 
-inline fn __keccakP1600_round(stack u64[25] state, reg u64 c) -> stack u64[25] {
-  state = __theta(state);
-  state = __rho(state);
-  state = __pi(state);
-  state = __chi(state);
-  state = __iota(state, c);
+inline fn __keccakP1600_round_ref(stack u64[25] state, reg u64 c) -> stack u64[25]
+{
+  state = __theta_ref(state);
+  state = __rho_ref(state);
+  state = __pi_ref(state);
+  state = __chi_ref(state);
+  state = __iota_ref(state, c);
   return state;
 }
 
 
 inline fn __keccakf1600_ref(stack u64[25] state) -> stack u64[25]
 {
-  #if 0
-  inline int round;
-  for round = 0 to 24 {
-    // RC get's loaded into a register
-    // with global arrays - 3k cycles/16KiB/shake256 w/ 136 bytes
-    state = keccakP1600_round(state, keccakRoundConstants[round]);
-  }
-  #else
   reg u64 round RC;
   reg ptr u64[24] kRCp;
 
-  kRCp = keccakRoundConstants;
+  kRCp = KECCAK_RC;
   round = 0;
   while(round < 24)
   {
     RC = kRCp[(int) round];
-    state = __keccakP1600_round(state, RC);
+    state = __keccakP1600_round_ref(state, RC);
     round += 1;
   }
-  #endif
 
   return state;
 }

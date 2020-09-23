@@ -1,8 +1,11 @@
 #ifndef CRYPTO_HASH_SHA3256_AVX2
 #define CRYPTO_HASH_SHA3256_AVX2
 
+#ifndef LIBJC
+//to support specific implementations for this function we
+//need a module feature in Jasmin.
 #define KECCAK1600_ADD_FULL_BLOCK_IMPLEMENTATION 1
-inline fn __add_full_block(
+inline fn __add_full_block_avx2(
   reg u256[7] state,
   stack u64[28] s_state,
   reg ptr u64[25] _not_used_,
@@ -59,6 +62,7 @@ inline fn __add_full_block(
 
   return state, s_state, in, inlen;
 }
+#endif
 
 #include "crypto_hash/keccak1600/avx2/keccak1600.jazz"
 

@@ -1,48 +1,11 @@
 #ifndef CRYPTO_HASH_KECCAK1600_SCALAR
 #define CRYPTO_HASH_KECCAK1600_SCALAR
 
+#include "utils/spill.jazz"
 #include "crypto_core/keccakf160064bits/scalar/keccakf1600.jazz"
 
-//TODO include utils and use s2r/r2s; check proof first 
-inline fn __spill_2(reg u64 a b) -> stack u64, stack u64
-{
-  stack u64 sa sb;
-  sa = a;
-  sb = b;
-  return sa, sb;
-}
 
-
-inline fn __spill_3(reg u64 a b c) -> stack u64, stack u64, stack u64
-{
-  stack u64 sa sb sc;
-  sa = a;
-  sb = b;
-  sc = c;
-  return sa, sb, sc;
-}
-
-
-inline fn __load_2(stack u64 sa sb) -> reg u64, reg u64
-{
-  reg u64 a b;
-  a = sa;
-  b = sb;
-  return a, b;
-}
-
-
-inline fn __load_3(stack u64 sa sb sc) -> reg u64, reg u64, reg u64
-{
-  reg u64 a b c;
-  a = sa;
-  b = sb;
-  c = sc;
-  return a, b, c;
-}
-
-
-inline fn __keccak_init() -> stack u64[25]
+inline fn __keccak_init_scalar() -> stack u64[25]
 {
   stack u64[25] state;
   reg u64 i t;
@@ -58,10 +21,9 @@ inline fn __keccak_init() -> stack u64[25]
 }
 
 
-inline fn __add_full_block(
+inline fn __add_full_block_scalar(
   stack u64[25] state,
-  reg u64 in,
-  reg u64 inlen,
+  reg u64 in inlen,
   reg u64 rate
 ) -> stack u64[25], reg u64, reg u64
 {
@@ -85,10 +47,9 @@ inline fn __add_full_block(
 
 
 // obs: @pre: inlen < rate_in_bytes
-inline fn __add_final_block(
+inline fn __add_final_block_scalar(
   stack u64[25] state,
-  reg   u64 in,
-  reg   u64 inlen,
+  reg   u64 in inlen,
   reg   u8  trail_byte,
   reg   u64 rate
 ) -> stack u64[25]
@@ -124,7 +85,7 @@ inline fn __add_final_block(
 }
 
 
-inline fn __absorb(
+inline fn __absorb_scalar(
   stack u64[25] state,
   reg   u64 in inlen,
   stack u8  s_trail_byte,
@@ -138,26 +99,25 @@ inline fn __absorb(
   // intermediate blocks
   while ( inlen >= rate )
   {
-    state, in, inlen = __add_full_block(state, in, inlen, rate);
-    s_in, s_inlen, s_rate = __spill_3(in, inlen, rate);
+    state, in, inlen = __add_full_block_scalar(state, in, inlen, rate);
+    s_in, s_inlen, s_rate = __r2s_x3(in, inlen, rate);
 
     state = __keccakf1600_scalar(state);
-    in, inlen, rate = __load_3(s_in, s_inlen, s_rate);
+    in, inlen, rate = __s2r_x3(s_in, s_inlen, s_rate);
   }
 
   // final block
   trail_byte = s_trail_byte;
 
-  state = __add_final_block(state, in, inlen, trail_byte, rate);
+  state = __add_final_block_scalar(state, in, inlen, trail_byte, rate);
 
   return state, rate;
 }
 
 
-inline fn __xtr_full_block(
+inline fn __xtr_full_block_scalar(
   stack u64[25] state,
-  reg u64 out,
-  reg u64 outlen,
+  reg u64 out outlen,
   reg u64 rate
 ) -> reg u64, reg u64
 {
@@ -180,10 +140,9 @@ inline fn __xtr_full_block(
 }
 
 
-inline fn __xtr_bytes(
+inline fn __xtr_bytes_scalar(
   stack u64[25] state,
-  reg u64 out,
-  reg u64 outlen
+  reg u64 out outlen
 ) -> reg u64
 {
   reg u64 i t outlen8;
@@ -212,7 +171,7 @@ inline fn __xtr_bytes(
 }
 
 
-inline fn __squeeze(
+inline fn __squeeze_scalar(
   stack u64[25] state,
   stack u64 s_out,
   reg   u64 outlen,
@@ -225,19 +184,19 @@ inline fn __squeeze(
   // intermediate blocks
   while ( outlen > rate )
   {
-    s_outlen, s_rate = __spill_2(outlen, rate);
+    s_outlen, s_rate = __r2s_x2(outlen, rate);
     state = __keccakf1600_scalar(state);
-    out, outlen, rate = __load_3(s_out, s_outlen, s_rate);
+    out, outlen, rate = __s2r_x3(s_out, s_outlen, s_rate);
 
-    out, outlen = __xtr_full_block(state, out, outlen, rate);
+    out, outlen = __xtr_full_block_scalar(state, out, outlen, rate);
     s_out = out;
   }
 
   s_outlen = outlen;
   state = __keccakf1600_scalar(state);
-  out, outlen = __load_2(s_out, s_outlen);
+  out, outlen = __s2r_x2(s_out, s_outlen);
 
-  out = __xtr_bytes(state, out, outlen);
+  out = __xtr_bytes_scalar(state, out, outlen);
 }
 
 
@@ -251,14 +210,14 @@ inline fn __keccak1600_scalar(reg u64 out outlen in inlen, reg u8 trail_byte, re
   s_outlen = outlen;
   s_trail_byte = trail_byte;
 
-  state = __keccak_init();
+  state = __keccak_init_scalar();
 
   // absorb
-  state, rate = __absorb(state, in, inlen, s_trail_byte, rate);
+  state, rate = __absorb_scalar(state, in, inlen, s_trail_byte, rate);
 
   // squeeze
   outlen = s_outlen;
-  __squeeze(state, s_out, outlen, rate);
+  __squeeze_scalar(state, s_out, outlen, rate);
 }
 
 #ifdef EXPORT
