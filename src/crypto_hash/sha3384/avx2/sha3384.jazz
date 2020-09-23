@@ -73,7 +73,7 @@ inline fn __sha3384_avx2(reg u64 out in inlen)
   trail_byte = 0x6;
   rate = (832/8);
 
-  __keccak1600_avx2(out, outlen, in, inlen, trail_byte, rate);
+  _keccak1600_avx2(out, outlen, in, inlen, trail_byte, rate);
 }
 
 #ifdef EXPORT
