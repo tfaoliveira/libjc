@@ -2,10 +2,13 @@
 #define CRYPTO_SCALARMULT_ED25519_AVX2
 
 #include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult2.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_globals.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_addsub.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_compress.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_inter.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_ser.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_sqr.jazz"
+#include "crypto_scalarmult/curve25519/avx2/x25519_mul.jazz"
 
 
 inline fn __point_ed2mont(stack u256[10] p) -> reg u64[4]
@@ -31,6 +34,78 @@ inline fn __point_ed2mont(stack u256[10] p) -> reg u64[4]
   return enc;
 }
 
+#if 0
+http://www.hyperelliptic.org/EFD/g1p/auto-twisted-extended-1.html#doubling-dbl-2008-hwcd
+  A = X1^2
+  B = Y1^2
+  C = 2*Z1^2
+  D = a*A
+  E = (X1+Y1)^2-A-B
+  G = D+B
+  F = G-C
+  H = D-B
+  X3 = E*F
+  Y3 = G*H
+  T3 = E*H
+  Z3 = F*G
+#endif
+inline fn __point_eddoubling(stack u256[10] P) -> stack u256[10]
+{
+  inline int i;
+  reg u256 v;
+  reg u256[5] ZZ EC AB EG HF FH XY TZ;
+  stack u256[5] ZZs ECs ABs EGs HFs FHs XYs TZs;
+  reg u256 ZERO BA _0B AC _BG;
+
+  for i=0 to 5
+  { ZZ[i]  = PERM64(P[5+i], 0xEE /*(4u2)[3,2,3,2]*/); /* [Z|Z] */
+    ZZs[i] = ZZ[i]; }
+
+  EC  = __rrx_mul_rss_v2(P[5:5], ZZs); /* [T|Z] = [ TZ | Z^2 ] = [ XY | Z^2 ] */
+  ECs = __rrx_add_sr(EC);              /* [E|C] = [2XY | 2Z^2] = [ 2(X+Y)^2-A-B | 2Z^2 ] */
+  AB  = __rrx_sqr_rs_v2(P[0:5]);       /* [A|B] = [X^2 | Y^2 ] */
+
+  ZERO = #set0_256();
+  for i=0 to 5
+  {  
+     BA   = PERM64(AB[i], 0x4E /*(4u2)[1,0,3,2]*/);   /* [B | A] */
+    _0B   = BLEND32(AB[i], ZERO, 0x0F);               /* [0 | B] */
+     AC   = BLEND32(AB[i], ECs[i], 0xF0);             /* [A | C] */
+    _BG   = _0B -4u64 BA;                             /* [-B| G] = [0|B] - [B|A] = [-B|B-A] */
+    EG[i] = BLEND32(_BG, ECs[i], 0x0F);               /* [E | G] */
+    HF[i] = _BG -4u64 AC;                             /* [H | F] = [-B|G] - [A|C] */
+    EG[i] = EG[i] +4u64 CONST_2_to_35P_2w[i];
+    HF[i] = HF[i] +4u64 CONST_2_to_35P_2w[i];
+  }
+
+  HF, EG = __rrx_compress2_rr(HF, EG);
+  EGs = EG;
+
+  //if 1
+  //TODO implement __rrx_mul2_ssrr or similar
+  //TZ, XY = __rrx_mul2_ssrr(HF, EG);
+  //else
+  for i=0 to 5
+  { FH[i] = PERM64(HF[i],0x4E /*(4u2)[1,0,3,2]*/);
+    HFs[i] = HF[i];
+    FHs[i] = FH[i];
+  }
+
+  XY  = __rrx_mul_rss_v2(FHs,EGs);
+  XYs = XY;
+  TZ  = __rrx_mul_rss_v2(HFs,EGs);
+  XY  = XYs;
+  //endif
+
+  XY, TZ = __rrx_compress2_rr(XY, TZ);
+  for i=0 to 5
+  { P[i] = XY[i];
+    P[5+i] = TZ[i];
+  }
+ 
+  return P; 
+}
+
 #ifdef EXPORT
 
 export fn point_ed2mont(reg u64 rp pp)
@@ -51,6 +126,26 @@ export fn point_ed2mont(reg u64 rp pp)
   rp = rps;
   for i=0 to 4
   { [rp + 8*i] = r[i]; }
+}
+
+export fn point_eddoubling(reg u64 pp)
+{
+  inline int i;
+  reg u256[10] r p;
+  stack u256[10] rs ps;
+  stack u64 pps;
+
+  pps = pp;
+  for i=0 to 10
+  { p[i] = (u256)[pp + 32*i]; }
+  ps = p;
+
+  ps = __point_eddoubling(ps);
+
+  p = ps;
+  pp = pps;
+  for i=0 to 10
+  { (u256)[pp + 32*i] = p[i]; }
 }
 
 #endif

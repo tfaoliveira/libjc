@@ -5,6 +5,28 @@
 #include "crypto_scalarmult/curve25519/avx2/x25519_macros.jazz"
 
 
+inline fn __rrx_add_r(reg u256[5] a) -> reg u256[5]
+{
+  inline int i;
+
+  for i=0 to 5
+  { a[i] +4u64= a[i]; }
+
+  return a;
+}
+
+inline fn __rrx_add_sr(reg u256[5] a) -> stack u256[5]
+{
+  inline int i;
+  stack u256[5] as;
+
+  for i=0 to 5
+  { a[i] +4u64= a[i];
+    as[i] = a[i]; }
+
+  return as;
+}
+
 inline fn __rrx_add_rrs(reg u256[5] a, stack u256[5] bs) -> reg u256[5]
 {
   inline int i;

@@ -30,6 +30,14 @@ u128[3] CONST_2P_2P_H0H5_012 = {
   (2u64)[0x3fffffe, 0x7fffffe]
 };
 
+u256[5] CONST_2_to_35P_2w = {
+  (4u64)[0x0ffffff800000000, 0x1fffff6800000000, 0x0ffffff800000000, 0x1fffff6800000000],
+  (4u64)[0x1ffffff800000000, 0x0ffffff800000000, 0x1ffffff800000000, 0x0ffffff800000000],
+  (4u64)[0x0ffffff800000000, 0x1ffffff800000000, 0x0ffffff800000000, 0x1ffffff800000000],
+  (4u64)[0x1ffffff800000000, 0x0ffffff800000000, 0x1ffffff800000000, 0x0ffffff800000000],
+  (4u64)[0x0ffffff800000000, 0x1ffffff800000000, 0x0ffffff800000000, 0x1ffffff800000000]
+};
+
 u256 g_mask0  = (4u64)[0x1FFFFFF, 0x3FFFFFF, 0x1FFFFFF, 0x3FFFFFF];
 u256 g_mask1  = (4u64)[0x3FFFFFF, 0x1FFFFFF, 0x3FFFFFF, 0x1FFFFFF];
 u256 g_shift0 = (4u64)[25, 26, 25, 26];

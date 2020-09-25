@@ -4,6 +4,7 @@
 #include "crypto_scalarmult/curve25519/avx2/x25519_globals.jazz"
 #include "crypto_scalarmult/curve25519/avx2/x25519_macros.jazz"
 
+//TODO refactor when implementation complete
 inline fn __rrx_sqr_rs(stack u256[5] a, stack u256 sh_0 sh_1) -> reg u256[5]
 {
   inline int i;
@@ -134,6 +135,143 @@ inline fn __rrx_sqr_ss(stack u256[5] a, stack u256 sh_0 sh_1) -> stack u256[5]
   cs[2] = c[2];                 cs[3] = c[3];
 
   t[4] = SHLV(k[4],sh_0);     c[4] +4u64= t[4];
+  cs[4] = c[4];
+
+  return cs;
+}
+
+//uses sh_* global variables directly
+inline fn __rrx_sqr_rs_v2(stack u256[5] a) -> reg u256[5]
+{
+  inline int i;
+  reg u256 x ai aj a2i a2j;
+  reg u256[5] br dr er c k t;
+  stack u256[5] d e;
+
+  br = a;
+
+  for i=4 downto -1
+  { er[i] = MUL(br[i], g_times_19);
+    //dr[i] = ALIGNX(br[i],er[i]); //TODO
+    ALIGNR(dr[i],br[i],er[i]);
+    e[i]  = er[i]; 
+    d[i]  = dr[i]; }
+
+  //
+  ai   = SHUF32(a[0],0x44);     aj   = SHUF32(a[1],0x44); // FIX C
+  a2i  = ai +4u64 ai;           a2j  = aj +4u64 aj;
+  c[0] = MUL(ai, a[0]);         k[0] = MUL(a2j,d[4]);
+  c[1] = MUL(a2i,a[1]);         k[2] = MUL(aj, a[1]);
+  c[2] = MUL(a2i,a[2]);         k[3] = MUL(a2j,a[2]);
+  c[3] = MUL(a2i,a[3]);         k[4] = MUL(a2j,a[3]);
+  c[4] = MUL(a2i,a[4]);         
+
+  //
+  ai   = SHUF32(a[2], 0x44);    aj   = SHUF32(a[3], 0x44);
+  a2i  = ai +4u64 ai;           a2j  = aj +4u64 aj;
+  ADD_MUL(c[0],a2i,d[3]);       k[1] = MUL(aj, d[3]);
+  ADD_MUL(c[1],a2i,d[4]);       ADD_MUL(k[2],a2j,d[4]);
+  ADD_MUL(c[4],ai,a[2]);
+
+  //
+  ai   = SHUF32(a[4],0x44);     aj   = SHUF32(a[0],0xEE);
+  a2i  = ai +4u64 ai;           a2j  = aj +4u64 aj;
+                                ADD_MUL(k[0],aj, d[0]);
+                                ADD_MUL(k[1],a2j,d[1]);
+                                ADD_MUL(k[2],a2j,d[2]);
+  ADD_MUL(c[3],ai,d[4]);        ADD_MUL(k[3],a2j,d[3]);
+                                ADD_MUL(k[4],a2j,d[4]);
+
+  //
+  ai   = SHUF32(a[1],0xEE);     aj  = SHUF32(a[2],0xEE);
+  a2i  = ai +4u64 ai;           a2j = aj +4u64 aj;
+  ADD_MUL(c[0],a2i,e[4]);       ADD_MUL(k[0],a2j,e[3]);
+  ADD_MUL(c[2],ai, d[1]);       ADD_MUL(k[1],a2j,e[4]);
+  ADD_MUL(c[3],a2i,d[2]);       ADD_MUL(k[4],aj,d[2]);
+  ADD_MUL(c[4],a2i,d[3]);       
+
+  //
+  ai  = SHUF32(a[3],0xEE);      aj = SHUF32(a[4],0xEE);
+  a2i = ai +4u64 ai;
+  ADD_MUL(c[1],ai,e[3]);
+  ADD_MUL(c[2],a2i,e[4]);       ADD_MUL(k[3],aj,e[4]);
+
+  //
+  t[0] = SHLV(k[0],g_sh_0);     t[1] = SHLV(k[1],g_sh_1);
+  c[0] +4u64= t[0];             c[1] +4u64= t[1];
+  t[2] = SHLV(k[2],g_sh_0);     t[3] = SHLV(k[3],g_sh_1);
+  c[2] +4u64= t[2];             c[3] +4u64= t[3];
+  t[4] = SHLV(k[4],g_sh_0);     c[4] +4u64= t[4];
+
+  return c;
+}
+
+//uses sh_* global variables directly
+inline fn __rrx_sqr_ss_v2(stack u256[5] a) -> stack u256[5]
+{
+  inline int i;
+  reg u256 x ai aj a2i a2j;
+  reg u256[5] br dr er c k t;
+  stack u256[5] d e cs;
+
+  br = a;
+
+  for i=4 downto -1
+  { er[i] = MUL(br[i], g_times_19);
+    //dr[i] = ALIGNX(br[i],er[i]); //TODO
+    ALIGNR(dr[i],br[i],er[i]);
+    e[i]  = er[i]; 
+    d[i]  = dr[i]; }
+
+  //
+  ai   = SHUF32(a[0],0x44);     aj   = SHUF32(a[1],0x44);
+  a2i  = ai +4u64 ai;           a2j  = aj +4u64 aj;
+  c[0] = MUL(ai, a[0]);         k[0] = MUL(a2j,d[4]);
+  c[1] = MUL(a2i,a[1]);         k[2] = MUL(aj, a[1]);
+  c[2] = MUL(a2i,a[2]);         k[3] = MUL(a2j,a[2]);
+  c[3] = MUL(a2i,a[3]);         k[4] = MUL(a2j,a[3]);
+  c[4] = MUL(a2i,a[4]);         
+
+  //
+  ai   = SHUF32(a[2], 0x44);    aj   = SHUF32(a[3], 0x44);
+  a2i  = ai +4u64 ai;           a2j  = aj +4u64 aj;
+  ADD_MUL(c[0],a2i,d[3]);       k[1] = MUL(aj, d[3]);
+  ADD_MUL(c[1],a2i,d[4]);       ADD_MUL(k[2],a2j,d[4]);
+  ADD_MUL(c[4],ai,a[2]);
+
+  //
+  ai   = SHUF32(a[4],0x44);     aj   = SHUF32(a[0],0xEE);
+  a2i  = ai +4u64 ai;           a2j  = aj +4u64 aj;
+                                ADD_MUL(k[0],aj, d[0]);
+                                ADD_MUL(k[1],a2j,d[1]);
+                                ADD_MUL(k[2],a2j,d[2]);
+  ADD_MUL(c[3],ai,d[4]);        ADD_MUL(k[3],a2j,d[3]);
+                                ADD_MUL(k[4],a2j,d[4]);
+
+  //
+  ai   = SHUF32(a[1],0xEE);     aj  = SHUF32(a[2],0xEE);
+  a2i  = ai +4u64 ai;           a2j = aj +4u64 aj;
+  ADD_MUL(c[0],a2i,e[4]);       ADD_MUL(k[0],a2j,e[3]);
+  ADD_MUL(c[2],ai, d[1]);       ADD_MUL(k[1],a2j,e[4]);
+  ADD_MUL(c[3],a2i,d[2]);       ADD_MUL(k[4],aj,d[2]);
+  ADD_MUL(c[4],a2i,d[3]);       
+
+  //
+  ai  = SHUF32(a[3],0xEE);      aj = SHUF32(a[4],0xEE);
+  a2i = ai +4u64 ai;
+  ADD_MUL(c[1],ai,e[3]);
+  ADD_MUL(c[2],a2i,e[4]);       ADD_MUL(k[3],aj,e[4]);
+
+  //
+  t[0] = SHLV(k[0],g_sh_0);     t[1] = SHLV(k[1],g_sh_1);
+  c[0] +4u64= t[0];             c[1] +4u64= t[1];
+  cs[0] = c[0];                 cs[1] = c[1];
+
+  t[2] = SHLV(k[2],g_sh_0);     t[3] = SHLV(k[3],g_sh_1);
+  c[2] +4u64= t[2];             c[3] +4u64= t[3];
+  cs[2] = c[2];                 cs[3] = c[3];
+
+  t[4] = SHLV(k[4],g_sh_0);     c[4] +4u64= t[4];
   cs[4] = c[4];
 
   return cs;
