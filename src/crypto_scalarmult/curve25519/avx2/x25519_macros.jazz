@@ -6,10 +6,14 @@
 #define SHUF32 #VPSHUFD_256
 #define SHUF32_M(a,i,c) #VPSHUFD_256((u256)[a + 32*i],c)
 
+#if 0
 #define ALIGNR(c, a, b) \
   x=#VPSLLDQ_256(a,8);\
   c=#VPSRLDQ_256(b,8);\
   c|=x
+#else
+#define ALIGNR(c, a, b) c = #VPALIGNR_256(a, b, 8)
+#endif
 
 #define ADD_MUL(c, a, b) \
   x = MUL(a, b);\
