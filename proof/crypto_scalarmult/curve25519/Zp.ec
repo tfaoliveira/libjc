@@ -1,5 +1,6 @@
-require import List Int IntDiv IntExtra CoreMap.
-require import EClib.
+require import List Int IntDiv CoreMap ZModP.
+require (*--*) Ring.
+(*---*) import Ring.IntID.
 
 from Jasmin require import JModel.
 
@@ -9,15 +10,12 @@ op p = 2^255 - 19 axiomatized by pE.
 lemma two_pow255E: 2^255 = 57896044618658097711785492504343953926634992332820282019728792003956564819968 by done.
 
 (* Embedding into ring theory *)
+clone import ZModRing as Zp with
+  op p <- p
+  rename "zmod" as "zp"
+  proof ge2_p by rewrite pE.
 
-require ZModP.
-
-clone import ZModP as Zp with
-        op p <- p 
-        rename "zmod" as "zp"
-        proof le2_p by rewrite pE.
-
-
+(**
 (* congruence "mod p" *)
 
 lemma zpcgr_over a b:
@@ -69,3 +67,4 @@ have ->: (to_uint x0 + 18446744073709551616 * to_uint x1 +
 by ring.
 qed.
 
+**)

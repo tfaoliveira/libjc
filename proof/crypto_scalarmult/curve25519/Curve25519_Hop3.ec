@@ -1,4 +1,4 @@
-require import Bool List Int IntExtra IntDiv CoreMap Real Zp.
+require import Bool List Int (*IntExtra*) IntDiv CoreMap Real Zp.
 from Jasmin require import JModel.
 require import Curve25519_Spec.
 require import Curve25519_Hop1.
@@ -128,7 +128,13 @@ qed.
 
 lemma eq_h3_invert (z : zp) : 
   phoare[MHop2.invert : z1' =  z ==> res = invert2 z] = 1%r.
-proof. by conseq ill_invert (eq_h2_invert z). qed.
+proof.
+(** by conseq ill_invert (eq_h2_invert z). **)
+conseq ill_invert (eq_h2_invert z).
+simplify. move => &hr h1 h2. split.
+move => h3 => /#.
+move => h4 => /#.
+qed.
 
 (** step 10 : encode point **)
 lemma ill_encode_point : islossless MHop2.encode_point.
@@ -139,7 +145,13 @@ qed.
 
 lemma eq_h3_encode_point (q : zp * zp) : 
   phoare[MHop2.encode_point : x2 =  q.`1 /\ z2 = q.`2 ==> res = encodePoint1 q] = 1%r.
-proof. by conseq ill_encode_point (eq_h2_encode_point q). qed.
+proof.
+(**by conseq ill_encode_point (eq_h2_encode_point q).**)
+conseq ill_encode_point (eq_h2_encode_point q).
+simplify. move => &hr h1 h2. split.
+move => h3 => /#.
+move => h3 => /#.
+qed.
 
 (** step 11 : scalarmult **)
 lemma ill_scalarmult : islossless MHop2.scalarmult.

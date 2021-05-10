@@ -1,15 +1,13 @@
-require import AllCore Bool List Int IntExtra IntDiv CoreMap Real Zp.
+require import AllCore Bool List Int (*IntExtra*) IntDiv CoreMap Real Zp.
 from Jasmin require import JModel.
-require import Curve25519_Spec.
-require import Curve25519_Hop1.
-require import Curve25519_Hop2.
-require import Curve25519_Hop3.
-require import Curve25519_smulx.
-import Zp ZModpRing.
-import Curve25519_Spec Curve25519_Hop1 Curve25519_Hop2 Curve25519_Hop3.
-import Curve25519_smulx.
+require import Curve25519_Spec Curve25519_Hop1 Curve25519_Hop2 Curve25519_Hop3.
 
+require import Curve25519_smulx.
+import Curve25519_smulx.
+import Zp ZModpRing.
 require import Array4 Array8.
+
+(**FROM HERE**)
 require import W64limbs.
 
 (** representation : move to another file/use rep3/5 **)

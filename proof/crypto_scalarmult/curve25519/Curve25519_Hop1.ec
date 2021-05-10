@@ -1,18 +1,18 @@
-require import Bool List Int IntExtra IntDiv CoreMap Real Zp.
+require import Bool List Int IntDiv CoreMap Real Zp.
 from Jasmin require import JModel.
 require import Curve25519_Spec.
 import Zp ZModpRing.
+import Ring.IntID.
 
 (** generic stuff **)
 
-search ZModpRing.exp.
-
+(** REMOVE ME *)
 (* exp exp *)
 lemma expE (z : zp) (e1 e2 : int) : 0 <= e1 /\ 0 <= e2 =>
   ZModpRing.exp (ZModpRing.exp z e1) e2 =
   ZModpRing.exp z (e1*e2).
 proof.
-admit. (**TODO**)
+by smt(ZModpRing.exprM).
 qed.
 
 (* returns the first 2 elements of the input triple *)
@@ -94,7 +94,8 @@ lemma eq_montgomery_ladder1_step (k : W256.t, init : zp, nqs : (zp * zp) * (zp *
   montgomery_ladder_step k init nqs ctr = montgomery_ladder1_step k init nqs ctr.
 proof.
   rewrite /montgomery_ladder_step /montgomery_ladder1_step.
-  rewrite 2!eq_add_and_double1. trivial.
+  smt(eq_add_and_double1).
+  (**rewrite 2!eq_add_and_double1. trivial.**)
 qed.
 
 (* lemma: montgomery_ladder = montgomery_ladder1 *)
@@ -108,8 +109,8 @@ lemma eq_montgomery_ladder1 (init : zp) (k : W256.t) :
 proof.
   rewrite /montgomery_ladder /montgomery_ladder1.
   apply foldl_in_eq.
-  move => 3?. rewrite eq_montgomery_ladder1_step.
-  trivial.
+  move => 3?. smt(eq_montgomery_ladder1_step). (**rewrite eq_montgomery_ladder1_step.
+  trivial.**)
 qed.
 
 (** step 2: isolate foldl function and introduce reconstruct tuple **)
@@ -167,8 +168,8 @@ lemma eq_montgomery_ladder3 (init : zp) (k: W256.t) :
 proof.
   move => hkf.
   have tbf : (montgomery_ladder3 init k).`3 = false. (*third bit false*)
-    rewrite /montgomery_ladder3 /montgomery_ladder3_step /select_tuple_12 /cswap /ith_bit.
-    by simplify rev.
+  rewrite /montgomery_ladder3 /montgomery_ladder3_step /select_tuple_12 /cswap /ith_bit.
+  by rewrite -iotaredE; simplify rev.
   have seqr : select_tuple_12 (montgomery_ladder3 init k) = (*select eq reconstruct*)
               reconstruct_tuple (montgomery_ladder3 init k).
     by apply /eq_reconstruct_select_tuple /tbf.
@@ -230,24 +231,27 @@ proof.
 rewrite invert_pE.
 (*invert_p1*)
 rewrite /invert_p_p1 /= expE //=.
-  cut -> : invert_p_p3 (invert_p_p2 (z1 * exp z1 8 * 
+  have -> : invert_p_p3 (invert_p_p2 (z1 * exp z1 8 * 
                 exp (exp z1 2 * (z1 * exp z1 8)) 2))
                     (exp z1 2 * (z1 * exp z1 8)) =
            invert_p_p3 (invert_p_p2 (exp z1 (2^5 - 2^0))) (exp z1 11).
-           smt(expE exprS exprD).
-(*invert_p2*)
+           simplify. congr. congr. rewrite -!exprS //. simplify.
+           rewrite -exprD_nneg //= expE //=. by rewrite -exprD_nneg //=.
+           by rewrite -exprS //= -exprD_nneg //=.
 rewrite /invert_p_p2 //=.
-  cut -> : invert_p_p3 (exp (exp (exp 
+  have -> : invert_p_p3 (exp (exp (exp 
                      (exp (exp z1 31) 32 * exp z1 31) 1024 *
                      (exp (exp z1 31) 32 * exp z1 31)) 1048576 *
                 (exp (exp (exp z1 31) 32 * exp z1 31) 1024 *
                      (exp (exp z1 31) 32 * exp z1 31))) 1024 *
                      (exp (exp z1 31) 32 * exp z1 31)) (exp z1 11) =
            invert_p_p3 (exp z1 (2^50 - 2^0)) (exp z1 11).
-           smt(expE exprS exprD).
+           congr.
+           by do 4! rewrite !expE //= -exprD_nneg //=.
 (*invert_p3*)
 rewrite /invert_p_p3 //= pE //=.
-smt(expE exprS exprD).
+do 3! rewrite expE //= -exprD_nneg //=.
+rewrite expE //. simplify. rewrite -exprD_nneg //.
 qed.
 
 (* now we define invert as one op and prove it equiv to exp z1 (p-2) *)
@@ -302,11 +306,15 @@ lemma eq_it_sqr1 (e : int, z : zp) :
   it_sqr1 e z = it_sqr e z.
 proof.
   move : e.
-  rewrite /it_sqr1 /it_sqr. elim. by simplify; smt(expr1).
+  rewrite /it_sqr1 /it_sqr. elim.
+  rewrite iota0 //=.
+  by rewrite expr1 //=.
+
   move => i ige0 hin.
   rewrite iotaSr // -cats1 foldl_cat hin /= expE /=. smt(gt0_pow2).
   congr. clear hin.
-  rewrite powS // mulzC //.
+  rewrite exprS //=.
+  smt().
 qed.
 
 op invert1(z1 : zp) : zp =
@@ -340,12 +348,20 @@ op invert1(z1 : zp) : zp =
 lemma eq_invert1 (z1: zp) :
   invert1 z1 = invert0 z1.
 proof.
- rewrite invert1E invert0E /= /it_sqr /sqr /=.
- smt(exprS exprD expE).
+ rewrite invert1E /= /it_sqr /sqr /=.
+ rewrite  !expE //=.
+ rewrite -!exprS //=.
+ rewrite -!exprD_nneg //=.
+ rewrite  !expE //=.
+ rewrite -!exprS //=.
+ rewrite -!exprD_nneg //=.
+ rewrite  !expE //=.
+ rewrite -!exprD_nneg //=.
+ by rewrite eq_invert0 eq_invert_p pE //=.
+ (*smt(exprS exprD_nneg expE).*)
 qed.
 
 (** split invert2 in 3 parts : jump from it_sqr to it_sqr1 **)
-
 op invert2(z1 : zp) : zp =
   let t0 = sqr z1  in        (* z1^2  *)
   let t1 = sqr t0  in        (* z1^4  *)
@@ -413,12 +429,15 @@ lemma eq_scalarmult1 (k:W256.t) (u:W256.t) :
   scalarmult1 k u = scalarmult k u.
 proof.
   simplify.
-  rewrite eq_encodePoint1.
-  congr.
+  have : (montgomery_ladder3 (decodeUCoordinate u) (decodeScalar25519 k)).`1 =
+         (montgomery_ladder (decodeUCoordinate u) (decodeScalar25519 k)).`1.
   have kb0f  : (decodeScalar25519 k).[0] = false. (* k bit 0 false *)
     rewrite /decodeScalar25519 //.
   have ml123 : montgomery_ladder (decodeUCoordinate u) (decodeScalar25519 k) =
                select_tuple_12 (montgomery_ladder3 (decodeUCoordinate u) (decodeScalar25519 k)).
     move : kb0f. apply eq_montgomery_ladder123.
   rewrite ml123 /select_tuple_12 //.
+  move => H1. rewrite H1.
+  pose x := (montgomery_ladder (decodeUCoordinate u) (decodeScalar25519 k)).`1.
+  clear H1. smt(eq_encodePoint1). (**rewrite eq_encodePoint1. trivial.**)
 qed.
