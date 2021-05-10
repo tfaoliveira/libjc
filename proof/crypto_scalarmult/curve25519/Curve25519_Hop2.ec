@@ -308,7 +308,8 @@ lemma eq_h2_add_and_double (qx : zp) (nqs : (zp * zp) * (zp * zp)):
          ==> ((res.`1, res.`2),(res.`3, res.`4)) = add_and_double1 qx nqs].
 proof.
   proc; inline *; wp; skip.
-  rewrite /add_and_double1 /=. admit. (*smt(expr2).*)
+  rewrite /add_and_double1 /=.
+  rewrite !ZModpRing.expr2 => /#.
 qed.
 
 (** step 6 : montgomery_ladder_step **)

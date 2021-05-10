@@ -14,6 +14,8 @@ lemma expE (z : zp) (e1 e2 : int) : 0 <= e1 /\ 0 <= e2 =>
 proof.
 by smt(ZModpRing.exprM).
 qed.
+(** end REMOVE me**)
+
 
 (* returns the first 2 elements of the input triple *)
 op select_tuple_12 (t : ('a * 'a) * ('a * 'a) * 'c) = (t.`1, t.`2).
