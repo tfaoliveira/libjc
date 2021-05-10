@@ -1,0 +1,36 @@
+#ifndef CRYPTO_SCALARMULT_X25519_REF4_LADDER
+#define CRYPTO_SCALARMULT_X25519_REF4_LADDER
+
+#include "crypto_scalarmult/curve25519/ref4/x25519_scalarmult2.jazz"
+
+#ifdef EXPORT
+
+export fn jasmin_montgomery_ladder_ref4(reg u64 x2p z2p kp up)
+{
+  stack u64 x2ps z2ps;
+  reg u64[4] u z2;
+  stack u64[4] k x2;
+  reg u64 v;
+  inline int i;
+
+  // save output pointers
+  x2ps = x2p;
+  z2ps = z2p;
+
+  k = __decode_scalar_25519_shl1(kp);
+  u = __decode_u_coordinate(up);
+  (x2,z2,_,_) = __montgomery_ladder_ref4(u, k);
+
+  // load output pointers and store the result
+  x2p = x2ps;
+  z2p = z2ps;
+  for i=0 to 4
+  { v = x2[i];
+    [x2p + 8*i] = v;
+    [z2p + 8*i] = z2[i];
+  }
+}
+
+#endif
+
+#endif

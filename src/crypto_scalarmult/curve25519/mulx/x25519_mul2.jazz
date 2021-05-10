@@ -1,0 +1,246 @@
+// note: defines the same macro to prevent the alternative code of x25519_mul from being included
+#ifndef CRYPTO_SCALARMULT_X25519_MULX_MUL
+#define CRYPTO_SCALARMULT_X25519_MULX_MUL
+
+// alternative mul implementation by JBA
+param int nlimbs = 4;
+
+/* multiplies a scalar by a reg array (first iteration of mul) */
+/* REGS (params + workspace): (1+nlimbs) + (nlimbs+2) */
+inline fn __mul1_rrr
+( reg u64 f0,
+  reg u64[nlimbs] g,
+  stack u64[nlimbs] rspill
+) -> reg u64, reg bool, reg bool, reg u64[2*nlimbs], stack u64[nlimbs]
+{
+  inline int i;
+  reg bool of, cf;
+  reg u64 _zero, lo;
+  reg u64[2*nlimbs] r;
+
+  of, cf, _, _, _, _zero = #set0();
+
+  r[1], r[0] = #MULX ( f0, g[0] );
+  rspill[0] = r[0]; // obs: r[0] is dead!
+
+  for i = 1 to nlimbs {
+    r[i+1], lo = #MULX ( f0, g[i] );
+    cf, r[i] = #ADCX ( r[i], lo, cf );
+  }
+
+  cf, r[nlimbs] = #ADCX ( r[nlimbs], _zero, cf );
+  // cf = 0
+
+  return _zero, of, cf, r, rspill;
+}
+
+/* multiplies a (shifted) scalar by a reg array (remaining iterations of mul) */
+/* REGS (params + workspace):  */
+inline fn __mul1acc_rrr
+( inline int k,
+  reg u64 _zero, reg bool of cf, // should be set to 0
+  reg u64[2*nlimbs] r,
+  stack u64[nlimbs] rspill,
+  reg u64 fk,
+  reg u64[nlimbs] y
+) -> reg u64, reg bool, reg bool, reg u64[2*nlimbs], stack u64[nlimbs]
+{
+  inline int i;
+  reg u64 hi, lo;
+
+  for i = 0 to nlimbs-1 {
+    hi, lo = #MULX ( fk, y[i] ); 
+    of, r[k+i] = #ADOX ( r[k+i], lo, of );
+    cf, r[k+i+1] = #ADCX ( r[k+i+1], hi, cf );
+    if (i==0) {rspill[k] = r[k];} // r[0] is now dead!
+  }
+
+  r[nlimbs+k], lo = #MULX ( fk, y[nlimbs-1] ); // fk is now dead!
+  of, r[nlimbs+k-1] = #ADOX ( r[nlimbs+k-1], lo, of );
+
+  cf, r[nlimbs+k] = #ADCX ( r[nlimbs+k], _zero, cf);
+  of, r[nlimbs+k] = #ADOX ( r[nlimbs+k], _zero, of);
+  // cf = 0, of = 0
+
+  return _zero, of, cf, r, rspill;
+}
+
+/* full multiplication (first arg. as a stack) */
+inline fn __mul_rsr
+( stack u64[nlimbs] f,
+  reg u64[nlimbs] y
+) -> reg u64, reg bool, reg bool, reg u64[2*nlimbs]
+{
+  inline int i;
+  reg bool of cf;
+  reg u64 _zero fi;
+  reg u64[2*nlimbs] r;
+  stack u64[nlimbs] rspill;
+
+  of, cf, _, _, _, _zero = #set0();
+
+  fi = f[0];
+  _zero, of, cf, r, rspill = __mul1_rrr(fi, y, rspill);
+
+  for i = 1 to nlimbs {
+    fi = f[i];
+    _zero, of, cf, r, rspill = __mul1acc_rrr(i, _zero, of, cf, r, rspill, fi, y );
+  }
+  for i = 0 to nlimbs { r[i] = rspill[i]; }
+  return _zero, of, cf, r;
+}
+
+/* full multiplication (first arg. as a pointer) */
+inline fn __mul_rpr
+( reg u64 fptr,
+  reg u64[nlimbs] y
+) -> reg u64, reg bool, reg bool, reg u64[2*nlimbs]
+{
+  inline int i;
+  reg bool of cf;
+  reg u64 _zero fi;
+  reg u64[2*nlimbs] r;
+  stack u64[nlimbs] rspill;
+
+  of, cf, _, _, _, _zero = #set0();
+
+  fi = [fptr+8*0]; //fi = f[0];
+  _zero, of, cf, r, rspill = __mul1_rrr(fi, y, rspill);
+
+  for i = 1 to nlimbs {
+    fi = [fptr+8*i]; //fi = f[i];
+    _zero, of, cf, r, rspill = __mul1acc_rrr(i, _zero, of, cf, r, rspill, fi, y );
+  }
+  for i = 0 to nlimbs { r[i] = rspill[i]; }
+  return _zero, of, cf, r;
+}
+
+/*
+  @pre: _zero=0, of=cf=FALSE
+*/
+/* REGS (params + workspace):  */
+inline fn __redp25519
+( reg bool of cf, // should be 0
+  reg u64[2*nlimbs] h
+) -> reg u64[nlimbs]
+{
+  inline int i;
+  reg u64 hi lo _number;
+  reg u64[nlimbs] r;
+
+  _number = 38;
+  for i = 0 to nlimbs-1 {
+    hi, lo      = #MULX ( _number, h[i+nlimbs] );
+    of, h[i]    = #ADOX ( h[i],   lo, of );
+    cf, h[i+1]  = #ADCX ( h[i+1], hi, cf );
+  }
+
+  h[nlimbs], lo   = #MULX ( _number, h[2*nlimbs-1] );
+  of, h[nlimbs-1] = #ADOX ( h[nlimbs-1], lo, of );
+
+  _number = 0;
+  cf, h[nlimbs]   = #ADCX ( h[nlimbs], _number, cf ); 
+  of, h[nlimbs]   = #ADOX ( h[nlimbs], _number, of );
+
+  //
+  _,_,_,_,_,lo = #IMULri ( h[nlimbs], 38 );
+
+  cf, h[0] += lo;
+  for i = 1 to nlimbs {
+    cf, h[i] += _number + cf;
+  }
+
+  _, _number -= _number - cf; // if cf = 1 then z = 0xFF..FF else z = 0
+  _number &= 38; // if cf = 1 then z = 38 else z = 0
+  h[0] += _number; // it never overflows (cf => r[0] <=...) 
+
+  for i = 0 to nlimbs { r[i] = h[i]; }
+  return r;
+}
+
+//////////////////////////////////////
+// api compatible with x25519_mul.jazz
+inline fn __mulx_mul4_rmr
+( reg u64 fp,
+  stack u64 i,
+  reg u64[nlimbs] g
+) -> reg u64[nlimbs]
+{
+  reg bool cf of;
+  reg u64[2*nlimbs] h;
+  reg u64[nlimbs] r;
+  reg u64 o _zero;
+
+  o = i;
+  o <<= (2 + 3);
+  fp += o;
+  _zero, of, cf, h = __mul_rpr(fp, g);
+  r = __redp25519(of, cf, h);
+  return r; // if r and g are the same the compiler merges it;
+}
+
+inline fn __mulx_mul4_ssr(stack u64[nlimbs] fs, reg u64[nlimbs] g) -> stack u64[nlimbs]
+{
+  reg bool cf of;
+  reg u64[2*nlimbs] h;
+  reg u64[nlimbs] r;
+  reg u64 _zero;
+  stack u64[nlimbs] rs;
+
+  _zero, of, cf, h = __mul_rsr(fs, g);
+  r = __redp25519(of, cf, h);
+  rs = r;
+  return rs;
+}
+
+inline fn __mulx_mul4_rms(reg u64 fp, stack u64 i, stack u64[nlimbs] gs) -> reg u64[nlimbs]
+{
+  reg u64[nlimbs] h g;
+
+  g = gs;
+  h = __mulx_mul4_rmr(fp, i, g);
+
+  return h;
+}
+
+inline fn __mulx_mul4_sss(stack u64[nlimbs] fs gs) -> stack u64[nlimbs]
+{
+  reg bool cf of;
+  reg u64[2*nlimbs] h;
+  reg u64[nlimbs] g r;
+  reg u64 _zero;
+  stack u64[nlimbs] rs;
+
+  g = gs;
+  _zero, of, cf, h = __mul_rsr(fs, g);
+  r = __redp25519(of, cf, h);
+  rs = r;
+  return rs; 
+}
+
+inline fn __mulx_mul4_rss(stack u64[nlimbs] fs gs) -> reg u64[nlimbs]
+{
+  reg bool cf of;
+  reg u64[2*nlimbs] h;
+  reg u64[nlimbs] g r;
+  reg u64 _zero;
+
+  g = gs;
+  _zero, of, cf, h = __mul_rsr(fs, g);
+  r = __redp25519(of, cf, h);
+  return r; 
+}
+
+inline fn __mulx_mul4_rsr(stack u64[nlimbs] fs, reg u64[nlimbs] g) -> reg u64[nlimbs]
+{
+  reg bool cf of;
+  reg u64[2*nlimbs] h;
+  reg u64[nlimbs] r;
+  reg u64 _zero;
+
+  _zero, of, cf, h = __mul_rsr(fs, g);
+  r = __redp25519(of, cf, h);
+  return r; 
+}
+
+#endif
