@@ -5,13 +5,27 @@
 // alternative mul implementation by JBA
 param int nlimbs = 4;
 
+#undef MAX_SPILL
+
+#ifdef MAX_SPILL
+#define RSPILL_PARAM()	, stack u64[nlimbs] rspill
+#define RSPILL_RET()	, stack u64[nlimbs]
+#define RSPILL_DECL()	stack u64[nlimbs] rspill;
+#define RSPILL_ARG()	, rspill
+#else
+#define RSPILL_PARAM()	
+#define RSPILL_RET()
+#define RSPILL_DECL()	
+#define RSPILL_ARG()	
+#endif
+
 /* multiplies a scalar by a reg array (first iteration of mul) */
 /* REGS (params + workspace): (1+nlimbs) + (nlimbs+2) */
 inline fn __mul1_rrr
 ( reg u64 f0,
-  reg u64[nlimbs] g,
-  stack u64[nlimbs] rspill
-) -> reg u64, reg bool, reg bool, reg u64[2*nlimbs], stack u64[nlimbs]
+  reg u64[nlimbs] g
+  RSPILL_PARAM()
+) -> reg u64, reg bool, reg bool, reg u64[2*nlimbs] RSPILL_RET()
 {
   inline int i;
   reg bool of, cf;
@@ -21,7 +35,9 @@ inline fn __mul1_rrr
   of, cf, _, _, _, _zero = #set0();
 
   r[1], r[0] = #MULX ( f0, g[0] );
+#ifdef MAX_SPILL
   rspill[0] = r[0]; // obs: r[0] is dead!
+#endif
 
   for i = 1 to nlimbs {
     r[i+1], lo = #MULX ( f0, g[i] );
@@ -31,7 +47,7 @@ inline fn __mul1_rrr
   cf, r[nlimbs] = #ADCX ( r[nlimbs], _zero, cf );
   // cf = 0
 
-  return _zero, of, cf, r, rspill;
+  return _zero, of, cf, r RSPILL_ARG();
 }
 
 /* multiplies a (shifted) scalar by a reg array (remaining iterations of mul) */
@@ -39,11 +55,11 @@ inline fn __mul1_rrr
 inline fn __mul1acc_rrr
 ( inline int k,
   reg u64 _zero, reg bool of cf, // should be set to 0
-  reg u64[2*nlimbs] r,
-  stack u64[nlimbs] rspill,
+  reg u64[2*nlimbs] r
+  RSPILL_PARAM(),
   reg u64 fk,
   reg u64[nlimbs] y
-) -> reg u64, reg bool, reg bool, reg u64[2*nlimbs], stack u64[nlimbs]
+) -> reg u64, reg bool, reg bool, reg u64[2*nlimbs] RSPILL_RET()
 {
   inline int i;
   reg u64 hi, lo;
@@ -52,7 +68,9 @@ inline fn __mul1acc_rrr
     hi, lo = #MULX ( fk, y[i] ); 
     of, r[k+i] = #ADOX ( r[k+i], lo, of );
     cf, r[k+i+1] = #ADCX ( r[k+i+1], hi, cf );
+#ifdef MAX_SPILL
     if (i==0) {rspill[k] = r[k];} // r[0] is now dead!
+#endif
   }
 
   r[nlimbs+k], lo = #MULX ( fk, y[nlimbs-1] ); // fk is now dead!
@@ -62,7 +80,7 @@ inline fn __mul1acc_rrr
   of, r[nlimbs+k] = #ADOX ( r[nlimbs+k], _zero, of);
   // cf = 0, of = 0
 
-  return _zero, of, cf, r, rspill;
+  return _zero, of, cf, r RSPILL_ARG();
 }
 
 /* full multiplication (first arg. as a stack) */
@@ -75,18 +93,20 @@ inline fn __mul_rsr
   reg bool of cf;
   reg u64 _zero fi;
   reg u64[2*nlimbs] r;
-  stack u64[nlimbs] rspill;
+  RSPILL_DECL()
 
   of, cf, _, _, _, _zero = #set0();
 
   fi = f[0];
-  _zero, of, cf, r, rspill = __mul1_rrr(fi, y, rspill);
+  _zero, of, cf, r RSPILL_ARG() = __mul1_rrr(fi, y RSPILL_ARG());
 
   for i = 1 to nlimbs {
     fi = f[i];
-    _zero, of, cf, r, rspill = __mul1acc_rrr(i, _zero, of, cf, r, rspill, fi, y );
+    _zero, of, cf, r RSPILL_ARG() = __mul1acc_rrr(i, _zero, of, cf, r RSPILL_ARG(), fi, y );
   }
+#ifdef MAX_SPILL
   for i = 0 to nlimbs { r[i] = rspill[i]; }
+#endif
   return _zero, of, cf, r;
 }
 
@@ -100,18 +120,20 @@ inline fn __mul_rpr
   reg bool of cf;
   reg u64 _zero fi;
   reg u64[2*nlimbs] r;
-  stack u64[nlimbs] rspill;
+  RSPILL_DECL()
 
   of, cf, _, _, _, _zero = #set0();
 
   fi = [fptr+8*0]; //fi = f[0];
-  _zero, of, cf, r, rspill = __mul1_rrr(fi, y, rspill);
+  _zero, of, cf, r RSPILL_ARG() = __mul1_rrr(fi, y RSPILL_ARG());
 
   for i = 1 to nlimbs {
     fi = [fptr+8*i]; //fi = f[i];
-    _zero, of, cf, r, rspill = __mul1acc_rrr(i, _zero, of, cf, r, rspill, fi, y );
+    _zero, of, cf, r RSPILL_ARG() = __mul1acc_rrr(i, _zero, of, cf, r RSPILL_ARG(), fi, y );
   }
+#ifdef MAX_SPILL
   for i = 0 to nlimbs { r[i] = rspill[i]; }
+#endif
   return _zero, of, cf, r;
 }
 
