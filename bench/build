@@ -11,12 +11,6 @@ shared_libs_dir="$root/third_party_shared_libs"
 mkdir -p $static_libs_dir
 mkdir -p $shared_libs_dir
 
-### libsodium
-libsodium_dir="$src_libs_dir/libsodium"
-./scripts/libsodium_static $libsodium_dir $static_libs_dir
-./scripts/libsodium_static_disable_asm $libsodium_dir $static_libs_dir
-./scripts/libsodium_static_disable_asm_ccomp $libsodium_dir $static_libs_dir
-
 ### openssl
 openssl_dir="$src_libs_dir/openssl"
 openssl_build_info="$root/patch/openssl/crypto/sha/build-keccak-avx2.info"
@@ -33,31 +27,30 @@ openssl_build_info="$root/patch/openssl/crypto/sha/build-keccak-avx2.info"
 ./scripts/openssl_shared_no_asm $openssl_dir $shared_libs_dir
 ./scripts/openssl_shared_keccak_avx2 $openssl_dir $shared_libs_dir $openssl_build_info
 
+### libsodium
+libsodium_dir="$src_libs_dir/libsodium"
+./scripts/libsodium_static $libsodium_dir $static_libs_dir
+./scripts/libsodium_static_disable_asm $libsodium_dir $static_libs_dir
+./scripts/libsodium_static_disable_asm_ccomp $libsodium_dir $static_libs_dir
+
+
 ### boringssl
 boringssl_dir="$src_libs_dir/boringssl"
 ./scripts/boringssl_static $boringssl_dir $static_libs_dir
 
 ### hacl-star
-###  - gcc and gcc_vec are the same lib: this is just an hack to fit with the binding infrastructure
-hacl_star_dir="$src_libs_dir/hacl-star"
+hacl_star_dir="$src_libs_dir/hacl-star/dist/gcc64-only"
 ./scripts/hacl_star_gcc $hacl_star_dir $static_libs_dir
 
-hacl_star_evercrypt_dir="$src_libs_dir/hacl-star-evercrypt/hacl-star/dist/compact-gcc"
-./scripts/evercrypt_compact_gcc $hacl_star_evercrypt_dir $static_libs_dir $shared_libs_dir
-hacl_star_kremlib_dir="$src_libs_dir/hacl-star-evercrypt/hacl-star/dist/kremlin/kremlib/dist/generic"
-./scripts/kremlib $hacl_star_kremlib_dir $static_libs_dir
-
-hacl_star_ccomp_dir="$src_libs_dir/hacl-star/snapshots/hacl-c-compcert"
-hacl_star_ccomp_makefile="$root/patch/hacl-star/Makefile"
-./scripts/hacl_star_ccomp $hacl_star_ccomp_dir $static_libs_dir $hacl_star_ccomp_makefile
+####### old stuff
+###hacl_star_ccomp_dir="$src_libs_dir/hacl-star/snapshots/hacl-c-compcert"
+###hacl_star_ccomp_makefile="$root/patch/hacl-star/Makefile"
+###./scripts/hacl_star_ccomp $hacl_star_ccomp_dir $static_libs_dir $hacl_star_ccomp_makefile
+#######
 
 ### usuba
 usuba_dir="$src_libs_dir/usuba/supercop/crypto_stream/chacha20"
 ./scripts/usuba_copy $usuba_dir $root
-
-### vale
-vale_dir="$src_libs_dir/vale/poly1305/"
-./scripts/vale_copy $vale_dir $root
 
 ###fld-ecc-vec
 fld_ecc_vec_dir="$src_libs_dir/fld-ecc-vec/"

@@ -1,8 +1,8 @@
 with import <nixpkgs> {};
 
 stdenv.mkDerivation {
-	name = "ccomp-v3.6";
+	name = "ccomp-";
 	buildInputs = []
-	++ (with coqPackages_8_9; [ coq ssreflect ])
+	++ (with coqPackages_8_13; [ coq ssreflect ])
 	;
 }
