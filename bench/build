@@ -11,7 +11,7 @@ shared_libs_dir="$root/third_party_shared_libs"
 mkdir -p $static_libs_dir
 mkdir -p $shared_libs_dir
 
-### openssl
+## openssl
 openssl_dir="$src_libs_dir/openssl"
 openssl_build_info="$root/patch/openssl/crypto/sha/build-keccak-avx2.info"
 
