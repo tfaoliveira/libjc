@@ -4,19 +4,23 @@ whereami=$(cd `dirname "$0"`; pwd -P)
 myname=`basename "$0"`
 dir="$1"
 libs_dir="$2"
+evercrypt_poly="$3"
 
 # the lib is libevercrypt.a but, for legacy issues with this repository, the previous name (hacl_star_gcc.a) will be maintained
 
 (cd $dir && \
+  cp $evercrypt_poly .
   export CFLAGS="-Ofast -march=native -mtune=native -m64 -fwrapv -fomit-frame-pointer -funroll-loops" && \
   make clean && make && \
   cp libevercrypt.a $libs_dir/$myname.a && \
   cp libevercrypt.a $libs_dir/${myname}_vec32.a && \
   cp libevercrypt.a $libs_dir/${myname}_vec128.a && \
   cp libevercrypt.a $libs_dir/${myname}_vec256.a && \
+  cp libevercrypt.a $libs_dir/${myname}_vale.a && \
   cd $libs_dir && \
   $whereami/rename_lib $myname $libs_dir && \
   $whereami/rename_lib ${myname}_vec32 $libs_dir && \
   $whereami/rename_lib ${myname}_vec128 $libs_dir && \
-  $whereami/rename_lib ${myname}_vec256 $libs_dir
+  $whereami/rename_lib ${myname}_vec256 $libs_dir && \
+  $whereami/rename_lib ${myname}_vale $libs_dir
 )

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 VERSION=`cat config/version`
-ILIST="sha3224 sha3256 sha3384 sha3512 shake128 shake256"
+#ILIST="sha3224 sha3256 sha3384 sha3512 shake128 shake256"
+ILIST="shake256"
 
 ## remove previous benchmarks files related to keccak
 rm -f data/crypto_hash_sha3*
@@ -9,7 +10,7 @@ rm -f data/crypto_hash_shake*
 
 ## copy implementations and bindings into supercop-*
 ./sync
-./sync evercrypt
+./sync hacl_star
 
 PREVIOUS_LD_LIBRARY_PATH=`echo -n $LD_LIBRARY_PATH`
 
@@ -17,7 +18,7 @@ PREVIOUS_LD_LIBRARY_PATH=`echo -n $LD_LIBRARY_PATH`
 ./bench keccak
 
 ## run evercrypt
-./bench keccak-evercrypt
+./bench keccak-hacl_star
 
 ## run benchmarks with openssl configured with no-asm
 export LD_LIBRARY_PATH=$PREVIOUS_LD_LIBRARY_PATH:`pwd`/third_party_shared_libs/openssl-no-asm/lib/
@@ -41,14 +42,14 @@ for i in $ILIST; do mv data/crypto_hash_${i}_openssl.data data/crypto_hash_${i}_
 ## gen plots
 for i in $ILIST; do ./plot $i cycles 128 16384 ""; done
 
-today=`date "+%Y%m%d"`
-mkdir -p data/keccak-$today
+#today=`date "+%Y%m%d"`
+#mkdir -p data/keccak-$today
 
-for i in $ILIST
-do
-  ls data/*$i*.* | egrep -v "\.data$" | while read file
-  do
-    mv $file data/keccak-$today
-  done
-done
+#for i in $ILIST
+#do
+#  ls data/*$i*.* | egrep -v "\.data$" | while read file
+#  do
+#    mv $file data/keccak-$today
+#  done
+#done
 

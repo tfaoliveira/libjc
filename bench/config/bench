@@ -1,10 +1,6 @@
-crypto_scalarmult curve25519 jazz/mulx
-
-# crypto_hash sha512 jazz/ref0
-
-# crypto_hash sha256 jazz/ref
-# crypto_hash sha256 jazz/ref0
-# crypto_hash sha256 jazz/inplace
+#crypto_hash sha256 jazz/ref
+#crypto_hash sha256 jazz/ref0
+#crypto_hash sha256 jazz/inplace
 
 #crypto_hash sha3224 jazz/scalar
 #crypto_hash sha3224 jazz/avx2

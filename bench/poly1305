@@ -8,7 +8,7 @@ ls data/crypto_onetimeauth_poly1305_* | xargs rm
 ./sync openssl
 ./sync libsodium
 ./sync hacl_star
-./sync vale
+#./sync vale : vale implementation is distributed in hacl_star
 
 ## run benchmarks... this can take some time
 ./bench poly1305
@@ -24,21 +24,21 @@ mv data/crypto_onetimeauth_poly1305_openssl_static.data data/crypto_onetimeauth_
 (export OPENSSL_ia32cap=~0x200000000000000000 && ./bench poly1305-openssl && unset OPENSSL_ia32cap)
 mv data/crypto_onetimeauth_poly1305_openssl_static.data data/crypto_onetimeauth_poly1305_openssl_static_avx.data
 
-# plot
-./plot poly1305 cycles 32 16384 "(jazz|openssl)"
-./plot poly1305 cycles 32 16384 "(jazz|hacl_star_gcc)"
-./plot poly1305 cycles 32 16384 "(jazz|hacl_star_ccomp)"
-./plot poly1305 cycles 32 16384 "(jazz|libsodium)"
-./plot poly1305 cycles 32 16384 "(jazz|moon)"
-./plot poly1305 cycles 32 16384 "(jazz|vale)"
-./plot poly1305 cycles 32 16384 "(jazz|53|amd64|avx)"
-./plot poly1305 cycles 32 16384
+## plot
+#./plot poly1305 cycles 32 16384 "(jazz|openssl)"
+#./plot poly1305 cycles 32 16384 "(jazz|hacl_star_gcc)"
+#./plot poly1305 cycles 32 16384 "(jazz|hacl_star_ccomp)"
+#./plot poly1305 cycles 32 16384 "(jazz|libsodium)"
+#./plot poly1305 cycles 32 16384 "(jazz|moon)"
+#./plot poly1305 cycles 32 16384 "(jazz|vale)"
+#./plot poly1305 cycles 32 16384 "(jazz|53|amd64|avx)"
+#./plot poly1305 cycles 32 16384
 
-today=`date "+%Y%m%d"`
-mkdir -p data/poly1305-$today
+#today=`date "+%Y%m%d"`
+#mkdir -p data/poly1305-$today
 
-ls data/*poly1305*.* | egrep -v "\.data$" | while read file
-do
-  mv $file data/poly1305-$today
-done
+#ls data/*poly1305*.* | egrep -v "\.data$" | while read file
+#do
+#  mv $file data/poly1305-$today
+#done
 

@@ -13,6 +13,6 @@ Hacl_SHA3_shake128_hacl(
 
 int crypto_hash(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
-  evercrypt_compact_gcc_Hacl_SHA3_shake128_hacl((uint32_t)inlen, in, CRYPTO_BYTES, out);
+  hacl_star_gcc_Hacl_SHA3_shake128_hacl((uint32_t)inlen, in, CRYPTO_BYTES, out);
   return 0;
 }

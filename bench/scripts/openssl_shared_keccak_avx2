@@ -13,6 +13,6 @@ mkdir -p $lib_dir
   cp $build_info crypto/sha/build.info && \
   ./Configure --prefix=$lib_dir linux-x86_64 && \
   make && \
-  make install_runtime_libs && \
-  git checkout crypto/sha/build.info
-)
+  make install_runtime_libs) #&& \
+  #git checkout crypto/sha/build.info
+#)

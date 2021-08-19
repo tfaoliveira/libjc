@@ -40,7 +40,8 @@ boringssl_dir="$src_libs_dir/boringssl"
 
 ### hacl-star
 hacl_star_dir="$src_libs_dir/hacl-star/dist/gcc64-only"
-./scripts/hacl_star_gcc $hacl_star_dir $static_libs_dir
+hacl_star_evercrypt_poly="$root/patch/hacl-star/EverCrypt_Poly1305.c"
+./scripts/hacl_star_gcc $hacl_star_dir $static_libs_dir $hacl_star_evercrypt_poly
 
 ####### old stuff
 ###hacl_star_ccomp_dir="$src_libs_dir/hacl-star/snapshots/hacl-c-compcert"

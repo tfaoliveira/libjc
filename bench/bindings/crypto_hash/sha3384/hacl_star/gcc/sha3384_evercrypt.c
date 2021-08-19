@@ -12,6 +12,6 @@ Hacl_SHA3_sha3_384(
 
 int crypto_hash(unsigned char *out,const unsigned char *in,unsigned long long inlen)
 {
-  evercrypt_compact_gcc_Hacl_SHA3_sha3_384((uint32_t)inlen, in, out);
+  hacl_star_gcc_Hacl_SHA3_sha3_384((uint32_t)inlen, in, out);
   return 0;
 }

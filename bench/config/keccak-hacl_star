@@ -1,0 +1,6 @@
+crypto_hash sha3224  hacl_star/gcc
+crypto_hash sha3256  hacl_star/gcc
+crypto_hash sha3384  hacl_star/gcc
+crypto_hash sha3512  hacl_star/gcc
+crypto_hash shake128 hacl_star/gcc
+crypto_hash shake256 hacl_star/gcc

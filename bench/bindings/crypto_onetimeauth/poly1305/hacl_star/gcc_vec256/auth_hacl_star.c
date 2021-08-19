@@ -7,7 +7,7 @@ int crypto_onetimeauth(
   const unsigned char *k
 )
 {
-  hacl_star_gcc_EverCrypt_Poly1305_poly1305_32(out, in, inlen, k);
+  hacl_star_gcc_vec256_EverCrypt_Poly1305_poly1305_vec256(out, in, inlen, k);
   return 0;
 }
 
