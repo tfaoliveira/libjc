@@ -1,0 +1,182 @@
+#ifndef CRYPTO_SCALARMULT_X25519_REF5_SCALARMULT2
+#define CRYPTO_SCALARMULT_X25519_REF5_SCALARMULT2
+
+#include "crypto_scalarmult/curve25519/common/x25519.jazz"
+#include "crypto_scalarmult/curve25519/common/51/x25519_load5.jazz"
+#include "crypto_scalarmult/curve25519/common/51/x25519_add5.jazz"
+#include "crypto_scalarmult/curve25519/common/51/x25519_cswap5.jazz"
+#include "crypto_scalarmult/curve25519/common/51/x25519_sub5.jazz"
+#include "crypto_scalarmult/curve25519/common/51/x25519_tobytes5.jazz"
+
+#include "crypto_scalarmult/curve25519/ref5/x25519_mul_a24.jazz"
+#include "crypto_scalarmult/curve25519/ref5/x25519_mul.jazz"
+#include "crypto_scalarmult/curve25519/ref5/x25519_sqr.jazz"
+#include "crypto_scalarmult/curve25519/ref5/x25519_invert.jazz"
+
+
+inline fn __add_and_double_ref5(
+  stack u64[5] init,
+  stack u64[5] x2,
+  reg   u64[5] z2r,
+  stack u64[5] x3,
+  stack u64[5] z3) -> stack u64[5],
+                      reg   u64[5],
+                      stack u64[5],
+                      stack u64[5]
+{
+  stack u64[5] z2 t0 t1 t2;
+  reg u64[5] t1r;
+
+  t0  = __sub5_ssr(x2, z2r);
+  x2  = __add5_ssr(x2, z2r);
+
+  t1  = __sub5_sss(x3, z3);
+  z2  = __add5_sss(x3, z3);
+
+  z3  = __ref5_mul_sss(x2, t1);
+  z2  = __ref5_mul_sss(z2, t0);
+
+  t2  = __ref5_sqr_ss(x2);
+  t1  = __ref5_sqr_ss(t0);
+
+  x3  = __add5_sss(z3, z2);
+  z2  = __sub5_sss(z3, z2);
+
+  x2  = __ref5_mul_sss(t2, t1);
+  t0  = __sub5_sss(t2, t1);
+
+  #if 1 // CHECKME
+  z2  = __ref5_sqr_ss(z2);
+  z3  = __ref5_mul_a24_ss(t0, 996679680); //121665 * 2^13
+  x3  = __ref5_sqr_ss(x3);
+  t2  = __add5_sss(t2, z3);
+  z3  = __ref5_mul_sss(init, z2);
+  z2r = __ref5_mul_rss(t0, t2);
+  #else
+  z2  = __ref5_sqr_ss(z2);
+  t2  = __ref5_mul_a24_add_ss(t0, t2, 996679680); //121665 * 2^13
+  x3  = __ref5_sqr_ss(x3);
+  z3  = __ref5_mul_sss(init, z2);
+  z2r = __ref5_mul_rss(t0, t2);
+  #endif
+
+  return x2, z2r, x3, z3;
+}
+
+inline fn __montgomery_ladder_step_ref5(
+  stack u64 k,
+  stack u64[5] init,
+  stack u64[5] x2,
+  reg   u64[5] z2r,
+  stack u64[5] x3,
+  stack u64[5] z3,
+  stack u64    swapped) -> stack u64,
+                           stack u64[5],
+                           reg   u64[5],
+                           stack u64[5],
+                           stack u64[5],
+                           stack u64
+{
+  reg u64 toswap bit;
+
+  bit, k = __next_bit(k);
+
+  toswap  = swapped;
+  toswap ^= bit;
+  swapped = bit;
+  x2, z2r, x3, z3 = __cswap5(x2, z2r, x3, z3, toswap);
+  x2, z2r, x3, z3 = __add_and_double_ref5(init, x2, z2r, x3, z3);
+
+  return k, x2, z2r, x3, z3, swapped;
+}
+
+
+inline fn __montgomery_ladder_ref5(reg u64[5] initr, stack u64[4] k)
+  -> stack u64[5],
+     reg u64[5],
+     stack u64[5],
+     stack u64[5]
+{ 
+  stack u64[5] init x2 x3 z3;
+  reg u64[5] z2r;
+  stack u64 ki is js swapped;
+  reg u64 t i j;
+
+  (x2,z2r,x3,z3) = __init_points(initr); 
+  init = initr;
+
+  swapped = 0;
+  i = 4;
+  j = 63;
+  while
+  {
+    i -= 1;
+    t  = k[(int) i];
+    is = i;
+    ki = t;
+
+    while
+    {
+      j -= 1;
+      js = j;
+      (ki, x2, z2r, x3, z3, swapped) = __montgomery_ladder_step_ref5(ki, init, x2, z2r, x3, z3, swapped);
+      j = js;
+    }(j > 0)
+
+    j = 64;
+    i = is;
+  }(i > 0)
+
+  return x2, z2r, x3, z3;
+}
+
+inline fn __encode_point_ref5(stack u64[5] x2, reg u64[5] z2r) -> reg u64[4]
+{
+  stack u64[5] z2;
+  reg u64[5] r1;
+  reg u64[4] r2;
+
+  z2 = z2r;
+  z2 = __ref5_invert(z2);
+  r1 = __ref5_mul_rss(x2, z2);
+  r2 = __tobytes5(r1);
+
+  return r2;
+}
+
+inline fn __x25519_scalarmult_ref5(
+  reg u64 rp,
+  reg u64 kp,
+  reg u64 up
+)
+{
+  inline int i;
+  stack u64[4] k;
+  stack u64[5] x2 x3 z3;
+  reg u64[5] u z2r;
+  reg u64[4] r;
+  reg u64 swap pos b;
+  stack u64 rps swaps poss;
+
+  rps = rp; // rp dead
+
+  k = __decode_scalar_25519_shl1(kp); // kp dead
+  u = __decode_u_coordinate(up); // up dead
+  (x2,z2r,x3,z3) = __montgomery_ladder_ref5(u, k);
+  r = __encode_point_ref5(x2,z2r);
+
+  rp = rps;
+  for i=0 to 4
+  { [rp + 8*i] = r[i]; }
+}
+
+#ifdef EXPORT
+
+export fn curve25519_ref5(reg u64 out scalar point)
+{
+  __x25519_scalarmult_ref5(out, scalar, point);
+}
+
+#endif
+
+#endif

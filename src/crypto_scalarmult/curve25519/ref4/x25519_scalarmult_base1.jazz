@@ -2,16 +2,16 @@
 #define CRYPTO_SCALARMULT_X25519_REF4_SCALARMULT_BASE1
 
 #include "crypto_scalarmult/curve25519/common/x25519.jazz"
-#include "crypto_scalarmult/curve25519/common/x25519_add4.jazz"
-#include "crypto_scalarmult/curve25519/common/x25519_cswap4.jazz"
-#include "crypto_scalarmult/curve25519/common/x25519_sub4.jazz"
-#include "crypto_scalarmult/curve25519/common/x25519_tobytes4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_load4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_add4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_cswap4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_sub4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_tobytes4.jazz"
 
 #include "crypto_scalarmult/curve25519/ref4/x25519_mul_a24.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_mul.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_sqr.jazz"
 #include "crypto_scalarmult/curve25519/ref4/x25519_invert.jazz"
-#include "crypto_scalarmult/curve25519/ref4/x25519_scalarmult.jazz"
 
 u64[252*4] table_ladder = {
  0xfffffffffffffff3, 0xffffffffffffffff, 0xffffffffffffffff, 0x5fffffffffffffff,

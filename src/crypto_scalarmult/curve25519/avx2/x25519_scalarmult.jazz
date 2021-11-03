@@ -8,6 +8,7 @@
 #include "crypto_scalarmult/curve25519/avx2/ed25519.jazz"
 
 #include "crypto_scalarmult/curve25519/common/x25519.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_load4.jazz"
 #include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult2.jazz"
 
 #include "crypto_scalarmult/curve25519/avx2/x25519_mul.jazz"

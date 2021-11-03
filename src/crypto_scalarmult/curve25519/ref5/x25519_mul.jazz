@@ -1,0 +1,177 @@
+#ifndef CRYPTO_SCALARMULT_X25519_REF5_MUL
+#define CRYPTO_SCALARMULT_X25519_REF5_MUL
+
+// from amd64-51 (and adapted from https://github.com/tfaoliveira/qhasm-translator/blob/master/test-cases/crypto_scalarmult/curve25519/amd64-51/fe25519_mul.mil)
+inline fn __ref5_mul_rss
+( stack u64[5] xa,
+  stack u64[5] ya) -> reg u64[5]
+{
+  reg bool cf;
+  reg u64 mulr01 mulr11 mulr21 mulr31 mulr41;
+  reg u64 mulrax mulrdx;
+  reg u64 mulredmask;
+  reg u64 mult;
+  stack u64 mulx319_stack mulx419_stack;
+  reg u64[5] r;
+
+  mulrax = xa[3];
+  mulrax *= 19;
+  mulx319_stack = mulrax;
+  mulrdx, mulrax = mulrax * ya[2];
+  r[0] = mulrax;
+  mulr01 = mulrdx;
+  mulrax = xa[4];
+  mulrax *= 19;
+  mulx419_stack = mulrax;
+  mulrdx, mulrax = mulrax * ya[1];
+  cf, r[0] += mulrax;
+  _, mulr01 += mulrdx + cf;
+  mulrax = xa[0];
+  mulrdx, mulrax = mulrax * ya[0];
+  cf, r[0] += mulrax;
+  _, mulr01 += mulrdx + cf;
+  mulrax = xa[0];
+  mulrdx, mulrax = mulrax * ya[1];
+  r[1] = mulrax;
+  mulr11 = mulrdx;
+  mulrax = xa[0];
+  mulrdx, mulrax = mulrax * ya[2];
+  r[2] = mulrax;
+  mulr21 = mulrdx;
+  mulrax = xa[0];
+  mulrdx, mulrax = mulrax * ya[3];
+  r[3] = mulrax;
+  mulr31 = mulrdx;
+  mulrax = xa[0];
+  mulrdx, mulrax = mulrax * ya[4];
+  r[4] = mulrax;
+  mulr41 = mulrdx;
+  mulrax = xa[1];
+  mulrdx, mulrax = mulrax * ya[0];
+  cf, r[1] += mulrax;
+  _, mulr11 += mulrdx + cf;
+  mulrax = xa[1];
+  mulrdx, mulrax = mulrax * ya[1];
+  cf, r[2] += mulrax;
+  _, mulr21 += mulrdx + cf;
+  mulrax = xa[1];
+  mulrdx, mulrax = mulrax * ya[2];
+  cf, r[3] += mulrax;
+  _, mulr31 += mulrdx + cf;
+  mulrax = xa[1];
+  mulrdx, mulrax = mulrax * ya[3];
+  cf, r[4] += mulrax;
+  _, mulr41 += mulrdx + cf;
+  mulrax = xa[1];
+  mulrax *= 19;
+  mulrdx, mulrax = mulrax * ya[4];
+  cf, r[0] += mulrax;
+  _, mulr01 += mulrdx + cf;
+  mulrax = xa[2];
+  mulrdx, mulrax = mulrax * ya[0];
+  cf, r[2] += mulrax;
+  _, mulr21 += mulrdx + cf;
+  mulrax = xa[2];
+  mulrdx, mulrax = mulrax * ya[1];
+  cf, r[3] += mulrax;
+  _, mulr31 += mulrdx + cf;
+  mulrax = xa[2];
+  mulrdx, mulrax = mulrax * ya[2];
+  cf, r[4] += mulrax;
+  _, mulr41 += mulrdx + cf;
+  mulrax = xa[2];
+  mulrax *= 19;
+  mulrdx, mulrax = mulrax * ya[3];
+  cf, r[0] += mulrax;
+  _, mulr01 += mulrdx + cf;
+  mulrax = xa[2];
+  mulrax *= 19;
+  mulrdx, mulrax = mulrax * ya[4];
+  cf, r[1] += mulrax;
+  _, mulr11 += mulrdx + cf;
+  mulrax = xa[3];
+  mulrdx, mulrax = mulrax * ya[0];
+  cf, r[3] += mulrax;
+  _, mulr31 += mulrdx + cf;
+  mulrax = xa[3];
+  mulrdx, mulrax = mulrax * ya[1];
+  cf, r[4] += mulrax;
+  _, mulr41 += mulrdx + cf;
+  mulrax = mulx319_stack;
+  mulrdx, mulrax = mulrax * ya[3];
+  cf, r[1] += mulrax;
+  _, mulr11 += mulrdx + cf;
+  mulrax = mulx319_stack;
+  mulrdx, mulrax = mulrax * ya[4];
+  cf, r[2] += mulrax;
+  _, mulr21 += mulrdx + cf;
+  mulrax = xa[4];
+  mulrdx, mulrax = mulrax * ya[0];
+  cf, r[4] += mulrax;
+  _, mulr41 += mulrdx + cf;
+  mulrax = mulx419_stack;
+  mulrdx, mulrax = mulrax * ya[2];
+  cf, r[1] += mulrax;
+  _, mulr11 += mulrdx + cf;
+  mulrax = mulx419_stack;
+  mulrdx, mulrax = mulrax * ya[3];
+  cf, r[2] += mulrax;
+  _, mulr21 += mulrdx + cf;
+  mulrax = mulx419_stack;
+  mulrdx, mulrax = mulrax * ya[4];
+  cf, r[3] += mulrax;
+  _, mulr31 += mulrdx + cf;
+  mulredmask = 0x7FFFFFFFFFFFF;
+  _, _, _, _, _, mulr01 = #SHLD(mulr01, r[0], 13);
+  r[0] &= mulredmask;
+  _, _, _, _, _, mulr11 = #SHLD(mulr11, r[1], 13);
+  r[1] &= mulredmask;
+  r[1] += mulr01;
+  _, _, _, _, _, mulr21 = #SHLD(mulr21, r[2], 13);
+  r[2] &= mulredmask;
+  r[2] += mulr11;
+  _, _, _, _, _, mulr31 = #SHLD(mulr31, r[3], 13);
+  r[3] &= mulredmask;
+  r[3] += mulr21;
+  _, _, _, _, _, mulr41 = #SHLD(mulr41, r[4], 13);
+  r[4] &= mulredmask;
+  r[4] += mulr31;
+  mulr41 = mulr41 * 19;
+  r[0] += mulr41;
+  mult = r[0];
+  mult >>= 51;
+  mult += r[1];
+  r[1] = mult;
+  mult >>= 51;
+  r[0] &= mulredmask;
+  mult += r[2];
+  r[2] = mult;
+  mult >>= 51;
+  r[1] &= mulredmask;
+  mult += r[3];
+  r[3] = mult;
+  mult >>= 51;
+  r[2] &= mulredmask;
+  mult += r[4];
+  r[4] = mult;
+  mult >>= 51;
+  r[3] &= mulredmask;
+  mult *= 19;
+  r[0] += mult;
+  r[4] &= mulredmask;
+
+	return r;
+}
+
+inline fn __ref5_mul_sss(stack u64[5] fs gs) -> stack u64[5]
+{
+  stack u64[5] hs;
+  reg u64[5] h;
+
+  h = __ref5_mul_rss(fs, gs);
+  hs = h;
+
+  return hs;
+}
+
+#endif 

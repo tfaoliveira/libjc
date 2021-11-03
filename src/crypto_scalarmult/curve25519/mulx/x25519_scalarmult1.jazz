@@ -2,10 +2,11 @@
 #define CRYPTO_SCALARMULT_X25519_MULX_SCALARMULT1
 
 #include "crypto_scalarmult/curve25519/common/x25519.jazz"
-#include "crypto_scalarmult/curve25519/common/x25519_add4.jazz"
-#include "crypto_scalarmult/curve25519/common/x25519_cswap4.jazz"
-#include "crypto_scalarmult/curve25519/common/x25519_sub4.jazz"
-#include "crypto_scalarmult/curve25519/common/x25519_tobytes4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_load4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_add4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_cswap4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_sub4.jazz"
+#include "crypto_scalarmult/curve25519/common/64/x25519_tobytes4.jazz"
 
 #include "crypto_scalarmult/curve25519/mulx/x25519_mul_a24.jazz"
 #include "crypto_scalarmult/curve25519/mulx/x25519_mul.jazz"

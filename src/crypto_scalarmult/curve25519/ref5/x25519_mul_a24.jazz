@@ -1,0 +1,189 @@
+#ifndef CRYPTO_SCALARMULT_X25519_REF5_MUL_A24
+#define CRYPTO_SCALARMULT_X25519_REF5_MUL_A24
+
+
+inline fn __ref5_mul_a24(stack u64[5] xa, inline u64 _a24) -> reg u64[5]
+{
+  reg u64 a24;
+  reg u64 mul121666rax mul121666rdx;
+  reg u64[5] z;
+  #if 0
+  reg u64 mult mask;
+  #endif
+  
+  a24 = _a24;
+
+  // xa[0] * a24 
+  mul121666rax = xa[0];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[0] = mul121666rax;
+  z[1] = mul121666rdx;
+  
+  // xa[1] * a24
+  mul121666rax = xa[1];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[1] += mul121666rax;
+  z[2] = mul121666rdx;
+  
+  // xa[2] * a24
+  mul121666rax = xa[2];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[2] += mul121666rax;
+  z[3] = mul121666rdx;
+  
+  // xa[3] * a24
+  mul121666rax = xa[3];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[3] += mul121666rax;
+  z[4] = mul121666rdx;
+  
+  // xa[4] * a24
+  mul121666rax = xa[4];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[4] += mul121666rax;
+  mul121666rdx *= 19;
+
+  z[0] += mul121666rdx;
+
+  #if 0  
+  mask = 0x7FFFFFFFFFFFF;
+  z[0] += mul121666rdx;
+  mult = z[0];
+  mult >>= 51;
+  mult += z[1];
+  z[1] = mult;
+  mult >>= 51;
+  z[0] &= mask;
+  mult += z[2];
+  z[2] = mult;
+  mult >>= 51;
+  z[1] &= mask;
+  mult += z[3];
+  z[3] = mult;
+  mult >>= 51;
+  z[2] &= mask;
+  mult += z[4];
+  z[4] = mult;
+  mult >>= 51;
+  z[3] &= mask;
+  mult *= 19;
+  z[0] += mult;
+  z[4] &= mask;
+  #endif
+  
+  return z;
+}
+
+inline fn __ref5_mul_a24_add(stack u64[5] xa ya, inline u64 _a24) -> reg u64[5]
+{
+  reg u64 a24;
+  reg u64 mul121666rax mul121666rdx;
+  reg u64[5] z;
+  #if 0
+  reg u64 mult mask;
+  #endif
+  
+  a24 = _a24;
+
+  // xa[0] * a24 
+  mul121666rax = xa[0];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[0] = mul121666rax;
+  z[1] = mul121666rdx;
+  
+  // xa[1] * a24
+  mul121666rax = xa[1];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[1] += mul121666rax;
+  z[2] = mul121666rdx;
+  
+  // xa[2] * a24
+  mul121666rax = xa[2];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[2] += mul121666rax;
+  z[3] = mul121666rdx;
+  
+  // xa[3] * a24
+  mul121666rax = xa[3];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[3] += mul121666rax;
+  z[4] = mul121666rdx;
+  
+  // xa[4] * a24
+  mul121666rax = xa[4];
+  mul121666rdx, mul121666rax = mul121666rax * a24;
+  mul121666rax >>= 13;
+  z[4] += mul121666rax;
+  mul121666rdx *= 19;
+  
+  z[0] += mul121666rdx;
+  
+  z[0] += ya[0];
+  z[1] += ya[1];
+  z[2] += ya[2];
+  z[3] += ya[3];
+  z[4] += ya[4];
+
+  #if 0  
+  mask = 0x7FFFFFFFFFFFF;
+  z[0] += mul121666rdx;
+  mult = z[0];
+  mult >>= 51;
+  mult += z[1];
+  z[1] = mult;
+  mult >>= 51;
+  z[0] &= mask;
+  mult += z[2];
+  z[2] = mult;
+  mult >>= 51;
+  z[1] &= mask;
+  mult += z[3];
+  z[3] = mult;
+  mult >>= 51;
+  z[2] &= mask;
+  mult += z[4];
+  z[4] = mult;
+  mult >>= 51;
+  z[3] &= mask;
+  mult *= 19;
+  z[0] += mult;
+  z[4] &= mask;
+  #endif
+  
+  return z;
+}
+
+
+inline fn __ref5_mul_a24_ss(stack u64[5] fs, inline u64 a24) -> stack u64[5]
+{
+  stack u64[5] hs;
+  reg u64[5] h;
+
+  h = __ref5_mul_a24(fs, a24);
+  hs = h;
+
+  return hs;
+}
+
+inline fn __ref5_mul_a24_add_ss(stack u64[5] fs gs, inline u64 a24) -> stack u64[5]
+{
+  stack u64[5] hs;
+  reg u64[5] h;
+
+  h = __ref5_mul_a24_add(fs, gs, a24);
+  hs = h;
+
+  return hs;
+}
+
+
+#endif

@@ -1,0 +1,158 @@
+#ifndef CRYPTO_SCALARMULT_X25519_REF5_SQR
+#define CRYPTO_SCALARMULT_X25519_REF5_SQR
+
+inline fn __ref5_sqr_rs(stack u64[5] xa) -> reg u64[5]
+{
+  reg bool cf;
+  reg u64[5] r;
+  reg u64 squarer01 squarer11 squarer21 squarer31 squarer41;
+  reg u64 squarerax squarerdx;
+  reg u64 squareredmask squaret;
+
+  squarerax = xa[0];
+  squarerdx, squarerax = squarerax * xa[0];
+  r[0] = squarerax;
+  squarer01 = squarerdx;
+  squarerax = xa[0];
+  squarerax <<= 1;
+  squarerdx, squarerax = squarerax * xa[1];
+  r[1] = squarerax;
+  squarer11 = squarerdx;
+  squarerax = xa[0];
+  squarerax <<= 1;
+  squarerdx, squarerax = squarerax * xa[2];
+  r[2] = squarerax;
+  squarer21 = squarerdx;
+  squarerax = xa[0];
+  squarerax <<= 1;
+  squarerdx, squarerax = squarerax * xa[3];
+  r[3] = squarerax;
+  squarer31 = squarerdx;
+  squarerax = xa[0];
+  squarerax <<= 1;
+  squarerdx, squarerax = squarerax * xa[4];
+  r[4] = squarerax;
+  squarer41 = squarerdx;
+  squarerax = xa[1];
+  squarerdx, squarerax = squarerax * xa[1];
+  cf, r[2] += squarerax;
+  _, squarer21 += squarerdx + cf;
+  squarerax = xa[1];
+  squarerax <<= 1;
+  squarerdx, squarerax = squarerax * xa[2];
+  cf, r[3] += squarerax;
+  _, squarer31 += squarerdx + cf;
+  squarerax = xa[1];
+  squarerax <<= 1;
+  squarerdx, squarerax = squarerax * xa[3];
+  cf, r[4] += squarerax;
+  _, squarer41 += squarerdx + cf;
+  squarerax = xa[1];
+  squarerax *= 38;
+  squarerdx, squarerax = squarerax * xa[4];
+  cf, r[0] += squarerax;
+  _, squarer01 += squarerdx + cf;
+  squarerax = xa[2];
+  squarerdx, squarerax = squarerax * xa[2];
+  cf, r[4] += squarerax;
+  _, squarer41 += squarerdx + cf;
+  squarerax = xa[2];
+  squarerax *= 38;
+  squarerdx, squarerax = squarerax * xa[3];
+  cf, r[0] += squarerax;
+  _, squarer01 += squarerdx + cf;
+  squarerax = xa[2];
+  squarerax *= 38;
+  squarerdx, squarerax = squarerax * xa[4];
+  cf, r[1] += squarerax;
+  _, squarer11 += squarerdx + cf;
+  squarerax = xa[3];
+  squarerax *= 19;
+  squarerdx, squarerax = squarerax * xa[3];
+  cf, r[1] += squarerax;
+  _, squarer11 += squarerdx + cf;
+  squarerax = xa[3];
+  squarerax *= 38;
+  squarerdx, squarerax = squarerax * xa[4];
+  cf, r[2] += squarerax;
+  _, squarer21 += squarerdx + cf;
+  squarerax = xa[4];
+  squarerax *= 19;
+  squarerdx, squarerax = squarerax * xa[4];
+  cf, r[3] += squarerax;
+  _, squarer31 += squarerdx + cf;
+  squareredmask = 0x7FFFFFFFFFFFF;
+  _, _, _, _, _, squarer01 = #SHLD(squarer01, r[0], 13);
+  r[0] &= squareredmask;
+  _, _, _, _, _, squarer11 = #SHLD(squarer11, r[1], 13);
+  r[1] &= squareredmask;
+  r[1] += squarer01;
+  _, _, _, _, _, squarer21 = #SHLD(squarer21, r[2], 13);
+  r[2] &= squareredmask;
+  r[2] += squarer11;
+  _, _, _, _, _, squarer31 = #SHLD(squarer31, r[3], 13);
+  r[3] &= squareredmask;
+  r[3] += squarer21;
+  _, _, _, _, _, squarer41 = #SHLD(squarer41, r[4], 13);
+  r[4] &= squareredmask;
+  r[4] += squarer31;
+  squarer41 = squarer41 * 19;
+  r[0] += squarer41;
+  squaret = r[0];
+  squaret >>= 51;
+  squaret += r[1];
+  r[0] &= squareredmask;
+  r[1] = squaret;
+  squaret >>= 51;
+  squaret += r[2];
+  r[1] &= squareredmask;
+  r[2] = squaret;
+  squaret >>= 51;
+  squaret += r[3];
+  r[2] &= squareredmask;
+  r[3] = squaret;
+  squaret >>= 51;
+  squaret += r[4];
+  r[3] &= squareredmask;
+  r[4] = squaret;
+  squaret >>= 51;
+  squaret *= 19;
+  r[0] += squaret;
+  r[4] &= squareredmask;
+
+	return r;
+}
+
+inline fn __ref5_it_sqr_x1(stack u64[5] xa, stack u64 n) -> stack u64[5]
+{
+  reg u64 n_r;
+  reg bool cf;
+  reg u64[5] r;
+  reg u64 squarer01 squarer11 squarer21 squarer31 squarer41;
+  reg u64 squarerax squarerdx;
+  reg u64 squareredmask squaret;
+  
+  while
+  { r = __ref5_sqr_rs(xa);
+    xa = r;
+    n_r = n;  
+  }(n_r > 0){
+    n_r -= 1;
+    n = n_r;
+  }
+
+  return xa;
+}
+
+inline fn __ref5_sqr_ss(stack u64[5] fs) -> stack u64[5]
+{
+  stack u64[5] hs;
+  reg u64[5] h;
+
+  h = __ref5_sqr_rs(fs);
+  hs = h;
+
+  return hs;
+}
+
+#endif
