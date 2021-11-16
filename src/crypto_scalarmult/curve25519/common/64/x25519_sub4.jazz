@@ -15,7 +15,7 @@ inline fn __sub4_rrs
   reg u64[4] h;
   reg u64 z;
 
-  z = #set0();
+  _,_,_,_,_,z = #set0();
 
   h = f;
 
@@ -67,7 +67,7 @@ inline fn __sub4_rsr(stack u64[4] fs, reg u64[4] g) -> reg u64[4]
   reg u64[4] h;
   reg u64 z;
 
-  z = #set0();
+  _,_,_,_,_,z = #set0();
 
   h = fs;
 

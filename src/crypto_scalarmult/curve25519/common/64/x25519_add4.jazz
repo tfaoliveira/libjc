@@ -15,7 +15,7 @@ inline fn __add4_rrs
   reg u64[4] h;
   reg u64 z;
 
-  z = #set0();
+  _,_,_,_,_,z = #set0();
 
   h = f;
 

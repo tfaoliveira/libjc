@@ -33,7 +33,7 @@ inline fn __rrx_step_ladder(stack u64[4] key, reg u256[5] X2X3 Z2Z3) -> reg u256
 
   X1s = X2X3;
 
-  prev = #set0();
+  _,_,_,_,_,prev = #set0();
   i = 3;
   j = 63;
   while
@@ -41,7 +41,7 @@ inline fn __rrx_step_ladder(stack u64[4] key, reg u256[5] X2X3 Z2Z3) -> reg u256
     k = key[(int) i];
     while
     {
-      bit = #set0();
+      _,_,_,_,_,bit = #set0();
       _, cf, _, _, _, k = #SHL(k, 1);
       _, bit += 0 + cf;
       swap = bit;

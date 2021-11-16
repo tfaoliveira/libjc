@@ -9,7 +9,7 @@ inline fn __tobytes4(reg u64[4] f) -> reg u64[4]
   
   /* t = f[3] + f[3]; // requires -lea */
   t = #LEA(f[3] + f[3]);
-  f[3] = #SAR(f[3], 63);
+  _,_,_,_,_,f[3] = #SAR(f[3], 63);
   t >>= 1;
   f[3] &= 19;
   f[3] += 19;
@@ -21,7 +21,7 @@ inline fn __tobytes4(reg u64[4] f) -> reg u64[4]
 
   /* f[3] = t + t; // requires -lea */
   f[3] = #LEA(t + t);
-  t = #SAR(t, 63);
+  _,_,_,_,_,t = #SAR(t, 63);
   f[3] >>= 1;
   t = !t;
   t &= 19;
