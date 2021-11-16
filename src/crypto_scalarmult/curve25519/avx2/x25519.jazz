@@ -1,0 +1,6 @@
+#ifndef CRYPTO_SCALARMULT_X25519_AVX2
+#define CRYPTO_SCALARMULT_X25519_AVX2
+
+#include "crypto_scalarmult/curve25519/avx2/x25519_scalarmult.jazz"
+
+#endif

@@ -3,8 +3,6 @@
 
 // Jasmin version of: https://github.com/armfazh/fld-ecc-vec/
 
-#define EXPORT
-
 #include "crypto_scalarmult/curve25519/avx2/ed25519.jazz"
 
 #include "crypto_scalarmult/curve25519/common/x25519.jazz"
@@ -62,10 +60,14 @@ inline fn __x25519_scalarmult_avx2(
   { [rp + 8*i] = r[i]; }
 }
 
+#ifdef EXPORT
+
 export fn curve25519_avx2(reg u64 out scalar point)
 {
   __x25519_scalarmult_avx2(out, scalar, point);
 }
+
+#endif
 
 #endif
 
