@@ -6,17 +6,6 @@ import Ring.IntID.
 
 (** generic stuff **)
 
-(** REMOVE ME *)
-(* exp exp *)
-lemma expE (z : zp) (e1 e2 : int) : 0 <= e1 /\ 0 <= e2 =>
-  ZModpRing.exp (ZModpRing.exp z e1) e2 =
-  ZModpRing.exp z (e1*e2).
-proof.
-by smt(ZModpRing.exprM).
-qed.
-(** end REMOVE me**)
-
-
 (* returns the first 2 elements of the input triple *)
 op select_tuple_12 (t : ('a * 'a) * ('a * 'a) * 'c) = (t.`1, t.`2).
 
@@ -232,13 +221,13 @@ lemma eq_invert_p (z1: zp) :
 proof.
 rewrite invert_pE.
 (*invert_p1*)
-rewrite /invert_p_p1 /= expE //=.
+rewrite /invert_p_p1 /= -exprM //=.
   have -> : invert_p_p3 (invert_p_p2 (z1 * exp z1 8 * 
                 exp (exp z1 2 * (z1 * exp z1 8)) 2))
                     (exp z1 2 * (z1 * exp z1 8)) =
            invert_p_p3 (invert_p_p2 (exp z1 (2^5 - 2^0))) (exp z1 11).
            simplify. congr. congr. rewrite -!exprS //. simplify.
-           rewrite -exprD_nneg //= expE //=. by rewrite -exprD_nneg //=.
+           rewrite -exprD_nneg //= -exprM //=. by rewrite -exprD_nneg //=.
            by rewrite -exprS //= -exprD_nneg //=.
 rewrite /invert_p_p2 //=.
   have -> : invert_p_p3 (exp (exp (exp 
@@ -249,11 +238,11 @@ rewrite /invert_p_p2 //=.
                      (exp (exp z1 31) 32 * exp z1 31)) (exp z1 11) =
            invert_p_p3 (exp z1 (2^50 - 2^0)) (exp z1 11).
            congr.
-           by do 4! rewrite !expE //= -exprD_nneg //=.
+           by do 4! rewrite -exprM //= -exprD_nneg //=.
 (*invert_p3*)
 rewrite /invert_p_p3 //= pE //=.
-do 3! rewrite expE //= -exprD_nneg //=.
-rewrite expE //. simplify. rewrite -exprD_nneg //.
+do 3! rewrite -exprM //= -exprD_nneg //=.
+rewrite -exprM //. simplify. rewrite -exprD_nneg //.
 qed.
 
 (* now we define invert as one op and prove it equiv to exp z1 (p-2) *)
@@ -311,12 +300,9 @@ proof.
   rewrite /it_sqr1 /it_sqr. elim.
   rewrite iota0 //=.
   by rewrite expr1 //=.
-
   move => i ige0 hin.
-  rewrite iotaSr // -cats1 foldl_cat hin /= expE /=. smt(gt0_pow2).
-  congr. clear hin.
-  rewrite exprS //=.
-  smt().
+  rewrite iotaSr // -cats1 foldl_cat hin /= -exprM /=.
+  rewrite exprS /#.
 qed.
 
 op invert1(z1 : zp) : zp =
@@ -351,13 +337,13 @@ lemma eq_invert1 (z1: zp) :
   invert1 z1 = invert0 z1.
 proof.
  rewrite invert1E /= /it_sqr /sqr /=.
- rewrite  !expE //=.
+ rewrite -!exprM //=.
  rewrite -!exprS //=.
  rewrite -!exprD_nneg //=.
- rewrite  !expE //=.
+ rewrite -!exprM //=.
  rewrite -!exprS //=.
  rewrite -!exprD_nneg //=.
- rewrite  !expE //=.
+ rewrite -!exprM //=.
  rewrite -!exprD_nneg //=.
  by rewrite eq_invert0 eq_invert_p pE //=.
  (*smt(exprS exprD_nneg expE).*)
