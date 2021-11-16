@@ -41,7 +41,6 @@ ECSRC := \
  crypto_core/keccakf160064bits/Keccakf1600_sscalar_CT.ec \
 \
 \
-\
  crypto_hash/keccak1600/Keccak1600_sref.ec \
  crypto_hash/keccak1600/Keccak1600_sscalar.ec \
 \
@@ -49,8 +48,17 @@ ECSRC := \
  crypto_hash/keccak1600/Keccak1600_sscalar_CT.ec \
 \
 \
+ crypto_scalarmult/curve25519/Curve25519_sref4.ec \
+ crypto_scalarmult/curve25519/Curve25519_sref4_CT.ec \
+ crypto_scalarmult/curve25519/Curve25519_sref5.ec \
+ crypto_scalarmult/curve25519/Curve25519_sref5_CT.ec \
  crypto_scalarmult/curve25519/Curve25519_smulx.ec \
  crypto_scalarmult/curve25519/Curve25519_smulx_CT.ec
+
+#TODO: toEC 715
+# crypto_scalarmult/curve25519/Curve25519_savx2.ec \
+# crypto_scalarmult/curve25519/Curve25519_savx2_CT.ec
+ 
 
 #TODO: toEC 525
 #crypto_core/keccakf160064bits/Keccakf1600_savx2.ec
@@ -85,13 +93,17 @@ clean:
 		find $$i -name "*Array*.ec" | grep -v "p\.ec" | while read f; do rm -f $$f; done \
 	done
 
+
+###############
 # ChaCha20
-crypto_stream/chacha20/ChaCha20_s%.ec: $(TOP)/src/crypto_stream/chacha20/%/chacha20.jazz
+crypto_stream/chacha20/ChaCha20_s%.ec: $(TOP)/src/crypto_stream/chacha20/%/chacha20.japp
 	cd $$(dirname $@) && jasminc -ec chacha20_$* -oec $$(basename $@) $<
 
-crypto_stream/chacha20/ChaCha20_s%_CT.ec: $(TOP)/src/crypto_stream/chacha20/%/chacha20.jazz
+crypto_stream/chacha20/ChaCha20_s%_CT.ec: $(TOP)/src/crypto_stream/chacha20/%/chacha20.japp
 	cd $$(dirname $@) && jasminc -ec chacha20_$* -oec $$(basename $@) -CT $<
 
+
+###############
 # Poly1305
 crypto_onetimeauth/poly1305/Poly1305_s%.ec: $(TOP)/src/crypto_onetimeauth/poly1305/%/poly1305.japp
 	cd $$(dirname $@) && jasminc -ec poly1305_$* -oec $$(basename $@) $<
@@ -99,6 +111,8 @@ crypto_onetimeauth/poly1305/Poly1305_s%.ec: $(TOP)/src/crypto_onetimeauth/poly13
 crypto_onetimeauth/poly1305/Poly1305_s%_CT.ec: $(TOP)/src/crypto_onetimeauth/poly1305/%/poly1305.japp
 	cd $$(dirname $@) && jasminc -ec poly1305_$* -oec $$(basename $@) -CT $<
 
+
+###############
 # Keccakf1600
 crypto_core/keccakf160064bits/Keccakf1600_s%.ec: $(TOP)/src/crypto_core/keccakf160064bits/%/keccakf1600_export.japp
 	cd $$(dirname $@) && jasminc -ec __keccakf1600_$* -oec $$(basename $@) $<
@@ -113,13 +127,16 @@ crypto_hash/keccak1600/Keccak1600_s%.ec: $(TOP)/src/crypto_hash/keccak1600/%/kec
 crypto_hash/keccak1600/Keccak1600_s%_CT.ec: $(TOP)/src/crypto_hash/keccak1600/%/keccak1600.japp
 	cd $$(dirname $@) && jasminc -ec __keccak1600_$* -oec $$(basename $@) -CT $<
 
+
+###############
 # Curve25519
-crypto_scalarmult/curve25519/Curve25519_s%.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
+crypto_scalarmult/curve25519/Curve25519_s%.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_export.japp
 	cd $$(dirname $@) && jasminc -ec curve25519_$* -oec $$(basename $@) $<
 
-crypto_scalarmult/curve25519/Curve25519_s%_CT.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_scalarmult_export.japp
+crypto_scalarmult/curve25519/Curve25519_s%_CT.ec: $(TOP)/src/crypto_scalarmult/curve25519/%/x25519_export.japp
 	cd $$(dirname $@) && jasminc -ec curve25519_$* -oec $$(basename $@) -CT $<
 
 %.japp: %.jazz
 	cd $$(dirname $@) && $(MAKE) $$(basename $@)
+
 
