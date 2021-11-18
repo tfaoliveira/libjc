@@ -1,6 +1,6 @@
-require import Bool List Int (*IntExtra*) IntDiv CoreMap Real.
+require import Bool List Int IntDiv CoreMap Real.
 from Jasmin require import JModel.
-require import Curve25519_Spec Curve25519_Hop1 Zp.
+require import Curve25519_Spec Curve25519_Hop1 Zp25519.
 import Zp.
 
 module MHop2 = {
@@ -17,7 +17,7 @@ module MHop2 = {
   proc sub(f g : zp) : zp =
   {
     var h: zp;
-    h <- f - g;
+    h <- Zp.(-) f g; (** 'f -g' more than one operator, named `-', matches.  **)
     return h;
   }
 
@@ -390,14 +390,11 @@ import Ring.IntID.
 lemma it_sqr1_m2_exp4 (e : int) (z : zp) :
   0 <= e - 2 => it_sqr1 e z = it_sqr1 (e-2) (exp (exp z 2) 2).
 proof.
-  rewrite expE // /= => eg0.
+  rewrite -exprM // /= => eg0.
   rewrite !eq_it_sqr1. smt(). trivial.
-  rewrite /it_sqr (*expE*).
-  (* directly rewriting expE takes too long *)
-  have ee :  exp (exp z 4) (2 ^ (e - 2)) =  exp z (2^2 * 2 ^ (e - 2)). smt(expE).
-  rewrite ee. congr.
-  rewrite -exprD_nneg. trivial. trivial. congr.
-  by simplify.
+  rewrite /it_sqr -exprM.
+  congr. rewrite (_:4=2^2) //.
+  rewrite -exprD_nneg //.
 qed.
 
 lemma it_sqr1_0 (e : int) (z : zp) :

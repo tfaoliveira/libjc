@@ -1,5 +1,5 @@
 require import List Int IntDiv CoreMap Real.
-require import Zp.
+require import Zp25519.
 import Zp.
 
 from Jasmin require import JModel.
@@ -48,7 +48,7 @@ op montgomery_ladder(init : zp, k : W256.t) =
         (rev (iota_ 0 255)).
 
 op encodePoint (q: zp * zp) : W256.t =
-  let q = q.`1 * (ZModpRing.exp q.`2 (p - 2)) in
+  let q = q.`1 * (ZModpRing.exp q.`2 (P - 2)) in
       W256.of_int (asint q).
 
 op scalarmult (k:W256.t) (u:W256.t) : W256.t =

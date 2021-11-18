@@ -1,4 +1,4 @@
-require import Bool List Int IntDiv CoreMap Real Zp.
+require import Bool List Int IntDiv CoreMap Real Zp25519.
 from Jasmin require import JModel.
 require import Curve25519_Spec.
 import Zp ZModpRing.
@@ -189,24 +189,24 @@ op invert_p_p1(z1 : zp) : (zp*zp) =
   (z_5_0, z11).
 
 op invert_p_p2(z_5_0 : zp) : zp = 
-  let z_10_5 = ZModpRing.exp z_5_0 (2^5) in
+  let z_10_5 = exp z_5_0 (2^5) in
   let z_10_0 = z_10_5 * z_5_0 in
-  let z_20_10 = ZModpRing.exp z_10_0 (2^10) in
+  let z_20_10 = exp z_10_0 (2^10) in
   let z_20_0 = z_20_10 * z_10_0 in
-  let z_40_20 = ZModpRing.exp z_20_0 (2^20) in
+  let z_40_20 = exp z_20_0 (2^20) in
   let z_40_0 = z_40_20 * z_20_0 in
-  let z_50_10 = ZModpRing.exp z_40_0 (2^10) in
+  let z_50_10 = exp z_40_0 (2^10) in
   let z_50_0 = z_50_10 * z_10_0 in
   z_50_0.
 
 op invert_p_p3(z_50_0 z11 : zp) : zp =
-  let z_100_50 = ZModpRing.exp z_50_0 (2^50) in
+  let z_100_50 = exp z_50_0 (2^50) in
   let z_100_0 = z_100_50 * z_50_0 in
-  let z_200_100 = ZModpRing.exp z_100_0 (2^100) in
+  let z_200_100 = exp z_100_0 (2^100) in
   let z_200_0 = z_200_100 * z_100_0 in
-  let z_250_50 = ZModpRing.exp z_200_0 (2^50) in
+  let z_250_50 = exp z_200_0 (2^50) in
   let z_250_0 = z_250_50 * z_50_0 in
-  let z_255_5 = ZModpRing.exp z_250_0 (2^5) in
+  let z_255_5 = exp z_250_0 (2^5) in
   let z_255_21 = z_255_5 * z11 in
   z_255_21.
 
@@ -217,7 +217,7 @@ op invert_p(z1 : zp) : zp =
   z_255_21 axiomatized by invert_pE.
 
 lemma eq_invert_p (z1: zp) :
-  invert_p z1 = ZModpRing.exp z1 (p-2).
+  invert_p z1 = exp z1 (P - 2).
 proof.
 rewrite invert_pE.
 (*invert_p1*)
@@ -229,6 +229,7 @@ rewrite /invert_p_p1 /= -exprM //=.
            simplify. congr. congr. rewrite -!exprS //. simplify.
            rewrite -exprD_nneg //= -exprM //=. by rewrite -exprD_nneg //=.
            by rewrite -exprS //= -exprD_nneg //=.
+(*invert_p2*)
 rewrite /invert_p_p2 //=.
   have -> : invert_p_p3 (exp (exp (exp 
                      (exp (exp z1 31) 32 * exp z1 31) 1024 *
@@ -247,27 +248,27 @@ qed.
 
 (* now we define invert as one op and prove it equiv to exp z1 (p-2) *)
 op invert0(z1 : zp) : zp =
-  let z2 = ZModpRing.exp z1 2 in
-  let z8 = ZModpRing.exp z2 (2*2) in
+  let z2 = exp z1 2 in
+  let z8 = exp z2 (2*2) in
   let z9 = z1 * z8 in
   let z11 = z2 * z9 in
-  let z22 = ZModpRing.exp z11 2 in
+  let z22 = exp z11 2 in
   let z_5_0 = z9 * z22 in
-  let z_10_5 = ZModpRing.exp z_5_0 (2^5) in
+  let z_10_5 = exp z_5_0 (2^5) in
   let z_10_0 = z_10_5 * z_5_0 in
-  let z_20_10 = ZModpRing.exp z_10_0 (2^10) in
+  let z_20_10 = exp z_10_0 (2^10) in
   let z_20_0 = z_20_10 * z_10_0 in
-  let z_40_20 = ZModpRing.exp z_20_0 (2^20) in
+  let z_40_20 = exp z_20_0 (2^20) in
   let z_40_0 = z_40_20 * z_20_0 in
-  let z_50_10 = ZModpRing.exp z_40_0 (2^10) in
+  let z_50_10 = exp z_40_0 (2^10) in
   let z_50_0 = z_50_10 * z_10_0 in
-  let z_100_50 = ZModpRing.exp z_50_0 (2^50) in
+  let z_100_50 = exp z_50_0 (2^50) in
   let z_100_0 = z_100_50 * z_50_0 in
-  let z_200_100 = ZModpRing.exp z_100_0 (2^100) in
+  let z_200_100 = exp z_100_0 (2^100) in
   let z_200_0 = z_200_100 * z_100_0 in
-  let z_250_50 = ZModpRing.exp z_200_0 (2^50) in
+  let z_250_50 = exp z_200_0 (2^50) in
   let z_250_0 = z_250_50 * z_50_0 in
-  let z_255_5 = ZModpRing.exp z_250_0 (2^5) in
+  let z_255_5 = exp z_250_0 (2^5) in
   let z_255_21 = z_255_5 * z11 in
   z_255_21 axiomatized by invert0E.
 
@@ -278,16 +279,16 @@ proof.
 qed.
 
 lemma eq_invert0p (z1 : zp) :
-  invert0 z1 = ZModpRing.exp z1 (p-2).
+  invert0 z1 = exp z1 (P - 2).
 proof.
   rewrite eq_invert0 eq_invert_p //.
 qed.
 
 op sqr(z : zp) : zp =
- ZModpRing.exp z 2.
+ exp z 2.
 
 op it_sqr(e : int, z : zp) : zp =
-  ZModpRing.exp z (2^e).
+  exp z (2^e).
 
 op it_sqr1(e : int, z : zp) : zp =
   foldl (fun (z' : zp) _ => exp z' 2) z (iota_ 0 e).
@@ -385,7 +386,7 @@ proof.
 qed.
 
 lemma eq_invert210p (z1: zp) :
-  invert2 z1 = ZModpRing.exp z1 (p-2).
+  invert2 z1 = ZModpRing.exp z1 (P - 2).
 proof.
 rewrite eq_invert2 eq_invert1 eq_invert0p //.
 qed.

@@ -1,10 +1,7 @@
-require import Bool List Int (*IntExtra*) IntDiv CoreMap Real Zp.
+require import Bool List Int IntDiv CoreMap Real Zp25519.
 from Jasmin require import JModel.
-require import Curve25519_Spec.
-require import Curve25519_Hop1.
-require import Curve25519_Hop2.
-
-import Zp ZModpRing Curve25519_Spec Curve25519_Hop1 Curve25519_Hop2.
+require import Curve25519_Spec Curve25519_Hop1 Curve25519_Hop2.
+import Zp ZModpRing.
 
 (** step 1 : decode_scalar_25519 **)
 lemma ill_decode_scalar_25519 : islossless MHop2.decode_scalar_25519.
