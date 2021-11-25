@@ -280,36 +280,62 @@ admit.
 qed.
 
 (** step 8 : iterated square **)
+print W32.
+
 equiv eq_h4_it_sqr :
  MHop2.it_sqr ~ M.__mulx_it_sqr4_x2:
-   ImplFpC f{1} f{2}                  /\
-   i{1}            =    to_uint i{2}  /\
-   i{1}            <=   W64.modulus   /\
-    2              <=   i{1}          /\
+   ImplFpC f{1} f{2}                        /\
+   i{1} %/ 2        =   to_uint i{2}        /\
+   i{1}            <=   W32.modulus         /\
+    2              <=   i{1}                /\
    i{1} %% 2        =   0
    ==>
    ImplFpC res{1} res{2}.
 proof.
 proc.
-  while (ImplFpC f{1} f{2}                             /\ 
-         i{1}            =    to_uint i{2}             /\
-         i{1}            <=   W64.modulus              /\
-         0               <=   i{1}                     /\
+  while (ImplFpC f{1} f{2}                        /\ 
+         i{1} %/ 2        =   to_uint i{2}        /\
+         i{1}            <=   W32.modulus         /\
+         0               <=   i{1}                /\
          i{1}            %%   2 = 0).
-  
-  swap 2 3 3. wp. conseq(_: _ ==> f{1} = inzpRep4 f{2}).
-  move=> &1 &2 [#] ????? ->> ?? ??? /=. print DEC_64.
-    rewrite /DEC_64 /rflags_of_aluop_nocf_w /ZF_of_w64 => /=.
-    progress.
-    smt(@W64). move : H1; smt(). smt(). smt(). smt(@W64). smt(@W64).
-  by do 2! call eq_h4_sqr; skip; done.
-  swap 3 4 4. wp. conseq(_: _ ==> f{1} = inzpRep4 f{2}).
-  move=> &1 &2 [#] /= ->> ->> ??? ?? ->> /=.
-    rewrite /DEC_64 /rflags_of_aluop_nocf_w /ZF_of_w64 => /=.
-    progress.
-    smt(@W64). move : H1; smt(). smt(). smt(). smt(@W64). smt(@W64).
-  by do 2! call eq_h4_sqr; wp; skip; done.
+  (** loop body **)
+  swap{1} 2 3 3. swap{2} 1 2 3. wp. conseq(_: _ ==> ImplFpC f{1} f{2}).
+  move=> &1 &2 [#].
+  move=> H1 H2 H3 H4 H5 H6 H7.
+  move=> fl fr imp. simplify. split.
+   split. by trivial. split.
+   rewrite divzDl // H2 /=. rewrite to_uintB. move : (H7). by smt(@W32). by rewrite to_uint1 //.
+   split. move : (H3). simplify. smt(). smt().
+   split. move => H8.
+   (** at this point we need to prove that '0 < i{2} - 1' 
+       we know that 'i{1} > 2' because of H8 : '0 < i{1} - 2'
+       we also know that 'i{1}' is at least 4 because of H8 and H5 : 'i{1} %% 2 = 0'
+       and we also know that i{2} is i{1} (int)divided by 2; so i{2} is at least 2.
+       we know a lot; so, how to prove that i{2} is >= 2?
+    **)
+   rewrite ultE to_uint0 to_uintB. rewrite uleE to_uint1 /#. by smt().
+   move => H8.
+   have H9 : 2 <= to_uint i{2}.
+     move : (H8). rewrite ultE to_uint0 to_uintB.
+     rewrite uleE to_uint1 /#. smt().
+   move : (H9) (H2). smt().
+   do 2! call eq_h4_sqr_rr. skip. done.
+   swap{1} 3 4 4. wp. do 2! call eq_h4_sqr_rr. wp. skip.
+   move => &1 &2 [#]. simplify.
+   move => H1 H2 H3 H4 H5.
+   split; first by trivial. move => H6.
+   move => rL rR H7.
+   split; first by trivial. move => _. move => rL1 rR2 H8.
+   split. split. split; first by trivial.
+   split. rewrite divzDl // H2 /=. rewrite to_uintB. rewrite uleE to_uint1. move : (H2). smt().
+   rewrite to_uint1 //.
+   split. move : (H3). smt().
+   split. smt(). smt().
+   rewrite ultE to_uint0 to_uintB. rewrite uleE to_uint1. move : (H2). smt().
+   rewrite to_uint1. move : (H2). smt().
+   trivial.
 qed.
+(** TODO : this proof ended with some repeated patterns: refactor **)
 
 (** step 9 : invert **)
 equiv eq_h4_invert :
