@@ -196,28 +196,36 @@ proc.
 do 4! unroll for{2} ^while.
 case: (toswap{1}).
   rcondt {1} 1 => //. wp => /=; skip.
-    admit.
-(** TODO FROM HERE
-    move => &1 &2 [#] 4!->> ??.
-    have mask_set :  (set0_64.`6 - toswap{2}) = W64.onew. rewrite /set0_64 /=. smt(@W64).
-    rewrite !mask_set /=.
+  move => &1 &2 [#]. move => Hx2 Hz2 Hx3 Hz3 Hbit Swp.
+  have mask_set :  (W64.ALU.set0_64.`6 - toswap{2}) = W64.onew. rewrite /set0_64 /=. smt(@W64).
+  rewrite !mask_set /=.
     have lxor1 : forall (x1 x2:W64.t),  x1 `^` (x2 `^` x1) = x2.
       move=> *. rewrite xorwC -xorwA xorwK xorw0 //.
     have lxor2 : forall (x1 x2:W64.t),  x1 `^` (x1 `^` x2) = x2.
-      move=> *. rewrite xorwA xorwK xor0w //. 
-  rewrite !lxor1 !lxor2.
-      split. congr. apply Array4.ext_eq. smt(@Array4).
-      split. congr. apply Array4.ext_eq. smt(@Array4).
-      split. congr. apply Array4.ext_eq. smt(@Array4).
-             congr. apply Array4.ext_eq. smt(@Array4).
-  rcondf {1} 1 => //. wp => /=; skip.
-    move => &1 &2 [#] 4!->> ??.
-    have mask_not_set :  (set0_64.`6 - toswap{2}) = W64.zero. smt(@W64).
-    rewrite !mask_not_set !andw0 !xorw0.
-    smt(@Array4).
-**)
-  admit.
+      move=> *. rewrite xorwA xorwK xor0w //.
+    rewrite !lxor1 !lxor2.
+
+    pose S1 := Array4."_.[_<-_]" _ _ _.
+    pose S2 := Array4."_.[_<-_]" _ _ _.
+    pose S3 := Array4."_.[_<-_]" _ _ _.
+    pose S4 := Array4."_.[_<-_]" _ _ _.
+    split. have -> : S1 = x3{2}.  apply Array4.ext_eq => H1 H2. rewrite !Array4.get_setE /#.
+    by trivial.
+    split. have -> : S2 = z3{2}.  apply Array4.ext_eq => H1 H2. rewrite !Array4.get_setE /#.
+    by trivial.
+    split. have -> : S3 = x2{2}.  apply Array4.ext_eq => H1 H2. rewrite !Array4.get_setE /#.
+    by trivial.
+           have -> : S4 = z2r{2}. apply Array4.ext_eq => H1 H2. rewrite !Array4.get_setE /#.
+    by trivial.
+
+  (* *** *)
+  rcondf {1} 1 => //. wp => /=. skip.
+  move => &1 &2 [#]. move => Hx2 Hz2 Hx3 Hz3 Hbit Hswp.
+  have mask_not_set :  (set0_64.`6 - toswap{2}) = W64.zero. smt(@W64).
+  rewrite !mask_not_set !andw0 !xorw0.
+  by smt(Array4.set_notmod).
 qed.
+
 
 (** step 5 : add_and_double **)
 equiv eq_h4_add_and_double :
@@ -280,15 +288,15 @@ equiv eq_h4_it_sqr :
     2              <=   i{1}          /\
    i{1} %% 2        =   0
    ==>
-   ImplFpC res{1} res{2}.`2.
+   ImplFpC res{1} res{2}.
 proof.
 proc.
-  while (f{1}            =    inzpRep4 f{2}            /\ 
+  while (ImplFpC f{1} f{2}                             /\ 
          i{1}            =    to_uint i{2}             /\
          i{1}            <=   W64.modulus              /\
          0               <=   i{1}                     /\
-         i{1}            %%   2 = 0 /\
-         zf{2} = (i{2} = W64.zero)).
+         i{1}            %%   2 = 0).
+  
   swap 2 3 3. wp. conseq(_: _ ==> f{1} = inzpRep4 f{2}).
   move=> &1 &2 [#] ????? ->> ?? ??? /=. print DEC_64.
     rewrite /DEC_64 /rflags_of_aluop_nocf_w /ZF_of_w64 => /=.
