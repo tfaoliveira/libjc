@@ -1,0 +1,252 @@
+#ifndef CRYPTO_CORE_SALSA20_REF
+#define CRYPTO_CORE_SALSA20_REF
+
+param int SALSA20_ROUNDS = 20;
+
+// _init0 reads:
+// * 16 bytes from _nonce
+// * 32 bytes from _key
+// * 16 bytes from _sigma ("expand 32-byte k")
+//
+// _init0 is used by the crypto_core_salsa20_ref
+inline fn __salsa20_init0_ref(reg u64 _nonce _key _sigma) -> reg u32[16], stack u32, stack u32
+{
+  inline int i;
+  reg u32[16] state;
+  stack u32 state2 state3;
+  stack u32 t;
+
+  // state[1,2,3,4, 11,12,13,14] = key[0,1,2,3, 4,5,6,7]
+  for i=0 to 4
+  { state[i+1] = (u32)[_key + i*4]; }
+  state2 = state[2];
+  state3 = state[3];
+
+  for i=4 to 8
+  { state[i+7] = (u32)[_key + i*4]; }
+
+  // state[0,5,10,15] = sigma[0,1,2,3]
+  for i=0 to 4
+  { state[i*5] = (u32)[_sigma + i*4]; }
+
+  // state[6,7,8,9] = nonce[0,1,2,3]
+  for i=0 to 4
+  { state[i+6] = (u32)[_nonce + i*4]; }
+
+  return state, state2, state3;
+}
+
+// _init1 reads:
+// * 8  bytes from _nonce
+// * 32 bytes from _key
+// *               _sigma is hardcoded
+//
+// _init1 is used by the crypto_stream implementation
+inline fn __salsa20_init1_ref(reg u64 _nonce _key) -> reg u32[16], stack u32, stack u32
+{
+  inline int i;
+  reg u32[16] state;
+  stack u32 state2 state3;
+  stack u32 t;
+
+  // state[1,2,3,4, 11,12,13,14] = key[0,1,2,3, 4,5,6,7]
+  for i=0 to 4
+  { state[i+1] = (u32)[_key + i*4]; }
+  state2 = state[2];
+  state3 = state[3];
+
+  for i=4 to 8
+  { state[i+7] = (u32)[_key + i*4]; }
+
+  // state[0,5,10,15] = sigma[0,1,2,3]
+  state[0]  = 0x61707865;
+  state[5]  = 0x3320646e;
+  state[10] = 0x79622d32;
+  state[15] = 0x6b206574;
+
+  // state[6,7] = nonce[0,1]
+  for i=0 to 2
+  { state[i+6] = (u32)[_nonce + i*4]; }
+
+  // state[8,9] = 0
+  for i=0 to 2
+  { _,_,_,_,_,state[i+8] = #set0_32(); }
+
+
+  return state, state2, state3;
+}
+
+inline fn __salsa20_copy0_ref(reg u32[16] state, stack u32 state2 state3) -> stack u32[16]
+{
+  inline int i;
+  stack u32[16] state_s;
+  reg u32 t;
+
+  for i=0 to 2
+  { state_s[i] = state[i]; }
+
+  t = state2; state_s[2] = t;
+  t = state3; state_s[3] = t;
+
+  for i=4 to 16
+  { state_s[i] = state[i]; }
+
+  return state_s;
+}
+
+inline fn __salsa20_copy1_ref(stack u32[16] state_s) ->  reg u32[16], stack u32, stack u32
+{
+  inline int i;
+  reg u32[16] state;
+  stack u32 state2 state3;
+
+  for i=0 to 2
+  { state[i] = state_s[i]; }
+
+  state[2] = state_s[2]; state2 = state[2];
+  state[3] = state_s[3]; state3 = state[3];
+
+  for i=4 to 16
+  { state[i] = state_s[i]; }
+
+  return state, state2, state3;
+}
+
+inline fn __salsa20_line_ref(reg u32[16] state, inline int a b c r) -> reg u32[16]
+{
+  reg u32 t;
+  t  = state[b];
+  t += state[c];
+  _, _, t = #ROL_32(t, r);
+  state[a] ^= t;
+  return state;
+}
+
+inline fn __salsa20_quarter_round_ref(reg u32[16] state, inline int a b c d) -> reg u32[16]
+{
+  state = __salsa20_line_ref(state, a, d, c, 7);
+  state = __salsa20_line_ref(state, b, a, d, 9);
+  state = __salsa20_line_ref(state, c, b, a, 13);
+  state = __salsa20_line_ref(state, d, c, b, 18);
+  return state;
+}
+
+inline fn __salsa20_half_round_ref(reg u32[16] state, inline int a b c d e f g h) -> reg u32[16]
+{
+  state = __salsa20_quarter_round_ref(state, a, b, c, d);
+  state = __salsa20_quarter_round_ref(state, e, f, g, h);
+  return state;
+}
+
+inline fn __salsa20_swap2(reg u32[16] state, stack u32 state0 state1, inline int a b c d) -> reg u32[16], stack u32, stack u32
+{
+  stack u32 state2 state3;
+
+  state2 = state[c];
+  state3 = state[d];
+
+  state[a] = state0;
+  state[b] = state1;
+
+  return state, state2, state3;
+}
+
+inline fn __salsa20_double_round_ref(reg u32[16] state, stack u32 state2 state3) -> reg u32[16], stack u32, stack u32
+{
+  stack u32 state12 state13;
+
+  state = __salsa20_half_round_ref(state,
+             4, 8, 12, 0,
+             9, 13, 1, 5);
+
+  state, state12, state13 = __salsa20_swap2(state, state2, state3, 2, 3, 12, 13);
+
+  state = __salsa20_half_round_ref(state,
+             14, 2, 6, 10,
+             3, 7, 11, 15);
+
+  state = __salsa20_half_round_ref(state,
+             1, 2, 3, 0,
+             6, 7, 4, 5);
+
+  state, state2, state3 = __salsa20_swap2(state, state12, state13, 12, 13, 2, 3);
+
+  state = __salsa20_half_round_ref(state,
+             11, 8, 9, 10,
+             12, 13, 14, 15);
+
+  return state, state2, state3;
+}
+
+// live at the end of the function: 0,5,10,15, 6,7,8,9
+// no need to return state2 and state3
+inline fn __salsa20_rounds_ref(reg u32[16] state, stack u32 state2 state3) -> reg u32[16], stack u32, stack u32
+{
+  inline int i;
+  stack u32 c;
+
+  c = (SALSA20_ROUNDS / 2);
+  while
+  {
+    state, state2, state3 = __salsa20_double_round_ref(state, state2, state3);
+    _,_,_,_,c = #DEC_32(c);
+  } (c > 0)
+
+  return state, state2, state3;
+}
+
+inline fn __salsa20_add_ref(reg u32[16] state, stack u32 state2 state3, stack u32[16] state_s) -> reg u32[16], stack u32, stack u32
+{
+  inline int i;
+
+  for i=0 to 2
+  { state[i] += state_s[i]; }
+
+  state[2] = state2; state[2] += state_s[2]; state2 = state[2];
+  state[3] = state3; state[3] += state_s[3]; state3 = state[3];
+
+  for i=4 to 16
+  { state[i] += state_s[i]; }
+
+  return state, state2, state3;
+}
+
+
+inline fn __salsa20_store0_ref(reg u64 _state, reg u32[16] state, stack u32 state2 state3)
+{
+  inline int i;
+  reg u32 t;
+
+  for i=0 to 2
+  { (u32)[_state + 4*i] = state[i]; }
+
+  t = state2; (u32)[_state + 4*2] = t;
+  t = state3; (u32)[_state + 4*3] = t;
+
+  for i=4 to 16
+  { (u32)[_state + 4*i] = state[i]; }
+}
+
+#ifdef EXPORT
+
+export fn crypto_core_salsa20_ref(reg u64 _state _nonce _key _sigma)
+{
+  stack u64 _state_s;
+  reg u32[16] state;
+  stack u32[16] state_s;
+  stack u32 state2 state3;
+
+  _state_s = _state;
+
+  state, state2, state3 = __salsa20_init0_ref(_nonce, _key, _sigma);
+  state_s = __salsa20_copy0_ref(state, state2, state3);
+  state, state2, state3 = __salsa20_rounds_ref(state, state2, state3);
+  state, state2, state3 = __salsa20_add_ref(state, state2, state3, state_s);
+
+  _state = _state_s;
+  __salsa20_store0_ref(_state, state, state2, state3);
+}
+
+#endif
+
+#endif

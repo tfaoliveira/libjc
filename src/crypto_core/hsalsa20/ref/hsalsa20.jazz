@@ -1,0 +1,35 @@
+#ifndef CRYPTO_CORE_HSALSA20_REF
+#define CRYPTO_CORE_HSALSA20_REF
+
+#include "crypto_core/salsa20/ref/salsa20.jazz"
+
+inline fn __hsalsa20_store0_ref(reg u64 _subkey, reg u32[16] subkey)
+{
+  inline int i;
+
+  for i=0 to 4
+  { (u32)[_subkey + 4*i] = subkey[5*i]; }
+  for i=0 to 4
+  { (u32)[_subkey + 4*(i+4)] = subkey[6+i]; }
+}
+
+#ifdef EXPORT
+
+export fn crypto_core_hsalsa20_ref(reg u64 _subkey _nonce _key _sigma)
+{
+  stack u64 _subkey_s;
+  reg u32[16] subkey;
+  stack u32 subkey2 subkey3;
+
+  _subkey_s = _subkey;
+
+  subkey, subkey2, subkey3 = __salsa20_init0_ref(_nonce, _key, _sigma);
+  subkey, subkey2, subkey3 = __salsa20_rounds_ref(subkey, subkey2, subkey3);
+
+  _subkey = _subkey_s;
+  __hsalsa20_store0_ref(_subkey, subkey);
+}
+
+#endif
+
+#endif

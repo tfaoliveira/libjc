@@ -1,0 +1,7 @@
+TOP := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
+%_bench: bench.c *.s
+	gcc -Wall -Ofast -I. -I$(TOP) -o $@ $< *.s
+
+clean:
+	@rm -f *_bench

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# usage: ./syncm
+# to copy Jasmin assembly files into m(icro)benchs folder
+
+find ../src/ -name "*.s" -printf "%h\n" | sort -u | while read implementationdir
+do
+  dir=`echo $implementationdir | sed -e 's/^\.\.\/src\///'`
+  if [ -d mbench/$dir ]
+  then
+    find $implementationdir -maxdepth 1 -type f -name "*.s" -exec cp {} mbench/$dir \;
+  fi
+done

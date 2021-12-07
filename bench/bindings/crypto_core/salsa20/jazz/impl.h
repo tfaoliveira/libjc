@@ -1,0 +1,1 @@
+#define crypto_core_salsa20_impl crypto_core_salsa20_IMPL

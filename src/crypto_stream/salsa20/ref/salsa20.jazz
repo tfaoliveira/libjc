@@ -1,0 +1,117 @@
+#ifndef CRYPTO_STREAM_SALSA20_REF
+#define CRYPTO_STREAM_SALSA20_REF
+
+#include "crypto_core/salsa20/ref/salsa20.jazz"
+
+inline fn __salsa20_xor0_ref(stack u64 _c_s _m_s, reg u32[16] state, stack u32 state2 state3)
+{
+  inline int i;
+  reg u64 _m _c;
+  stack u32 state15;
+
+  state15 = state[15];
+  _m = _m_s;
+  _c = _c_s;
+
+  for i=0 to 2
+  { state[i] ^= (u32)[_m + 4*i];
+    (u32)[_c + 4*i] = state[i]; }
+
+  state[2] = state2;
+  state[3] = state3;
+
+  for i=2 to 15
+  { state[i] ^= (u32)[_m + 4*i];
+    (u32)[_c + 4*i] = state[i]; }
+
+  state[15] = state15;
+  state[15] ^= (u32)[_m + 4*15];
+  (u32)[_c + 4*15] = state[15];
+}
+
+inline fn __salsa20_xor1_ref(stack u64 _c_s _m_s _mlen_s, reg u32[16] state, stack u32 state2 state3)
+{
+  inline int i;
+  reg u64 _m _c _mlen j;
+  stack u32[16] state_s;
+  reg u8 t;
+
+  //
+  for i=0 to 2
+  { state_s[i] = state[i]; }
+
+  state[2] = state2; state_s[2] = state[2];
+  state[3] = state3; state_s[3] = state[3];
+
+  for i=4 to 16
+  { state_s[i] = state[i]; }
+
+  //
+   j = 0;
+  _c = _c_s;
+  _m = _m_s;
+  _mlen = _mlen_s;
+  while
+  {
+    t = state_s[u8 (int) j];
+    t ^= (u8)[_m + j];
+    (u8)[_c + j] = t;
+    j += 1;
+  }(j < _mlen)
+}
+
+
+inline fn __salsa20_increment_counter(stack u32[16] state_s) -> stack u32[16]
+{
+  reg u64 c;
+  c = state_s[u64 4];
+  c += 1;
+  state_s[u64 4] = c;
+  return state_s;
+}
+
+inline fn __salsa20_ref(reg u64 _c _m _mlen _nonce _key)
+{
+  stack u64 _c_s _m_s _mlen_s;
+  reg u32[16] state;
+  stack u32[16] state_s;
+  stack u32 state2 state3;
+
+  _c_s = _c;
+  _m_s = _m;
+  _mlen_s = _mlen;
+
+  state, state2, state3 = __salsa20_init1_ref(_nonce, _key);
+  state_s = __salsa20_copy0_ref(state, state2, state3);
+
+  while(_mlen_s >= 64)
+  {
+    state, state2, state3 = __salsa20_rounds_ref(state, state2, state3);
+    state, state2, state3 = __salsa20_add_ref(state, state2, state3, state_s);
+    __salsa20_xor0_ref(_c_s, _m_s, state, state2, state3);
+    state_s = __salsa20_increment_counter(state_s);
+    state, state2, state3 = __salsa20_copy1_ref(state_s);
+
+    _mlen_s -= 64;
+    _m_s += 64;
+    _c_s += 64;
+  }
+
+  if(_mlen_s > 0)
+  {
+    state, state2, state3 = __salsa20_rounds_ref(state, state2, state3);
+    state, state2, state3 = __salsa20_add_ref(state, state2, state3, state_s);
+    __salsa20_xor1_ref(_c_s, _m_s, _mlen_s, state, state2, state3);
+  }
+}
+
+#ifdef EXPORT
+
+export fn salsa20_ref(reg u64 _c _m _mlen _nonce _key)
+{
+  __salsa20_ref(_c, _m, _mlen, _nonce, _key);
+}
+
+#endif
+
+#endif

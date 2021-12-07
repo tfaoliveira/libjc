@@ -1,0 +1,1 @@
+#define crypto_core_hsalsa20_impl crypto_core_hsalsa20_IMPL
