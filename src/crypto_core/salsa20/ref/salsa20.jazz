@@ -1,7 +1,31 @@
 #ifndef CRYPTO_CORE_SALSA20_REF
 #define CRYPTO_CORE_SALSA20_REF
 
+// Notes:
+// - the 'state' is represented with a triple (reg u32[16], stack u32, stack u32), mainly because there are not enough registers.
+//  * when Jasmin supports 'typedef' like statements, they could be used to encapsulate this
+//
+// - there are 4 different 'init' functions defined in this file:
+//  * init0 is used for the crypto_core operation (SUPERCOP), where sigma is given as a pointer; it reads 16 bytes from nonce; and 32 bytes from key
+//  * init1 is used by crypto_stream/salsa20/ref implementation: sigma is hardcoded; nonce with 8 bytes; 32 bytes from key;
+//  * init2 is used by an internal implementation of hsalsa20, that is required to implement crypto_stream/xsalsa20; it is similar to the init0, where 16 and 32 bytes are read from nonce and key, respectively, but sigma is hardcoded. The state is returned in the previously mentioned triple (reg u32[16], stack u32, stack u32)
+//  * init3 is similar to init1, so 8 and 32 bytes are read from nonce and key, respectively, sigma is hardcoded, and the return type is same. The difference is in the type of the key: instead of being a pointer to external memory, it is a stack u32 array, as required to implement xsalsa20.
+//  * it is expected that the support for 'reg ptr' in export functions can be used to reduce the amount of 'init'ialization functions
+
 param int SALSA20_ROUNDS = 20;
+
+inline fn __salsa20_swap2_ref(reg u32[16] state, stack u32 state0 state1, inline int a b c d) -> reg u32[16], stack u32, stack u32
+{
+  stack u32 state2 state3;
+
+  state2 = state[c];
+  state3 = state[d];
+
+  state[a] = state0;
+  state[b] = state1;
+
+  return state, state2, state3;
+}
 
 // _init0 reads:
 // * 16 bytes from _nonce
@@ -72,6 +96,78 @@ inline fn __salsa20_init1_ref(reg u64 _nonce _key) -> reg u32[16], stack u32, st
   for i=0 to 2
   { _,_,_,_,_,state[i+8] = #set0_32(); }
 
+  return state, state2, state3;
+}
+
+// _init2 reads:
+// * 16 bytes from _nonce
+// * 32 bytes from _key
+// *               _sigma is hardcoded
+//
+inline fn __salsa20_init2_ref(reg u64 _nonce _key) -> reg u32[16], stack u32, stack u32
+{
+  inline int i;
+  reg u32[16] state;
+  stack u32 state2 state3;
+  stack u32 t;
+
+  // state[1,2,3,4, 11,12,13,14] = key[0,1,2,3, 4,5,6,7]
+  for i=0 to 4
+  { state[i+1] = (u32)[_key + i*4]; }
+  state2 = state[2];
+  state3 = state[3];
+
+  for i=4 to 8
+  { state[i+7] = (u32)[_key + i*4]; }
+
+  // state[0,5,10,15] = sigma[0,1,2,3]
+  state[0]  = 0x61707865;
+  state[5]  = 0x3320646e;
+  state[10] = 0x79622d32;
+  state[15] = 0x6b206574;
+
+  // state[6,7] = nonce[0,1]
+  for i=0 to 4
+  { state[i+6] = (u32)[_nonce + i*4]; }
+
+  return state, state2, state3;
+}
+
+// _init3 reads:
+// * 8  bytes     from _nonce
+// * 8  u32 words from _key
+// *                   _sigma is hardcoded
+//
+// _init3 is by xsalsa20
+inline fn __salsa20_init3_ref(reg u64 _nonce, stack u32[8] key) -> reg u32[16], stack u32, stack u32
+{
+  inline int i;
+  reg u32[16] state;
+  stack u32 state2 state3;
+  stack u32 t;
+
+  // state[1,2,3,4, 11,12,13,14] = key[0,1,2,3, 4,5,6,7]
+  for i=0 to 4
+  { state[i+1] = key[i]; }
+  state2 = state[2];
+  state3 = state[3];
+
+  for i=4 to 8
+  { state[i+7] = key[i]; }
+
+  // state[0,5,10,15] = sigma[0,1,2,3]
+  state[0]  = 0x61707865;
+  state[5]  = 0x3320646e;
+  state[10] = 0x79622d32;
+  state[15] = 0x6b206574;
+
+  // state[6,7] = nonce[0,1]
+  for i=0 to 2
+  { state[i+6] = (u32)[_nonce + i*4]; }
+
+  // state[8,9] = 0
+  for i=0 to 2
+  { _,_,_,_,_,state[i+8] = #set0_32(); }
 
   return state, state2, state3;
 }
@@ -112,6 +208,7 @@ inline fn __salsa20_copy1_ref(stack u32[16] state_s) ->  reg u32[16], stack u32,
   return state, state2, state3;
 }
 
+//
 inline fn __salsa20_line_ref(reg u32[16] state, inline int a b c r) -> reg u32[16]
 {
   reg u32 t;
@@ -138,19 +235,6 @@ inline fn __salsa20_half_round_ref(reg u32[16] state, inline int a b c d e f g h
   return state;
 }
 
-inline fn __salsa20_swap2(reg u32[16] state, stack u32 state0 state1, inline int a b c d) -> reg u32[16], stack u32, stack u32
-{
-  stack u32 state2 state3;
-
-  state2 = state[c];
-  state3 = state[d];
-
-  state[a] = state0;
-  state[b] = state1;
-
-  return state, state2, state3;
-}
-
 inline fn __salsa20_double_round_ref(reg u32[16] state, stack u32 state2 state3) -> reg u32[16], stack u32, stack u32
 {
   stack u32 state12 state13;
@@ -159,7 +243,7 @@ inline fn __salsa20_double_round_ref(reg u32[16] state, stack u32 state2 state3)
              4, 8, 12, 0,
              9, 13, 1, 5);
 
-  state, state12, state13 = __salsa20_swap2(state, state2, state3, 2, 3, 12, 13);
+  state, state12, state13 = __salsa20_swap2_ref(state, state2, state3, 2, 3, 12, 13);
 
   state = __salsa20_half_round_ref(state,
              14, 2, 6, 10,
@@ -169,7 +253,7 @@ inline fn __salsa20_double_round_ref(reg u32[16] state, stack u32 state2 state3)
              1, 2, 3, 0,
              6, 7, 4, 5);
 
-  state, state2, state3 = __salsa20_swap2(state, state12, state13, 12, 13, 2, 3);
+  state, state2, state3 = __salsa20_swap2_ref(state, state12, state13, 12, 13, 2, 3);
 
   state = __salsa20_half_round_ref(state,
              11, 8, 9, 10,
@@ -180,6 +264,8 @@ inline fn __salsa20_double_round_ref(reg u32[16] state, stack u32 state2 state3)
 
 // live at the end of the function: 0,5,10,15, 6,7,8,9
 // no need to return state2 and state3
+//
+// change this function to local when register arrays are supported
 inline fn __salsa20_rounds_ref(reg u32[16] state, stack u32 state2 state3) -> reg u32[16], stack u32, stack u32
 {
   inline int i;
@@ -211,7 +297,6 @@ inline fn __salsa20_add_ref(reg u32[16] state, stack u32 state2 state3, stack u3
   return state, state2, state3;
 }
 
-
 inline fn __salsa20_store0_ref(reg u64 _state, reg u32[16] state, stack u32 state2 state3)
 {
   inline int i;
@@ -227,9 +312,7 @@ inline fn __salsa20_store0_ref(reg u64 _state, reg u32[16] state, stack u32 stat
   { (u32)[_state + 4*i] = state[i]; }
 }
 
-#ifdef EXPORT
-
-export fn crypto_core_salsa20_ref(reg u64 _state _nonce _key _sigma)
+inline fn __crypto_core_salsa20_0_ref(reg u64 _state _nonce _key _sigma)
 {
   stack u64 _state_s;
   reg u32[16] state;
@@ -245,6 +328,13 @@ export fn crypto_core_salsa20_ref(reg u64 _state _nonce _key _sigma)
 
   _state = _state_s;
   __salsa20_store0_ref(_state, state, state2, state3);
+}
+
+#ifdef EXPORT
+
+export fn crypto_core_salsa20_ref(reg u64 _state _nonce _key _sigma)
+{
+  __crypto_core_salsa20_0_ref(_state, _nonce, _key, _sigma);
 }
 
 #endif

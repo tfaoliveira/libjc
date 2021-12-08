@@ -13,9 +13,21 @@ inline fn __hsalsa20_store0_ref(reg u64 _subkey, reg u32[16] subkey)
   { (u32)[_subkey + 4*(i+4)] = subkey[6+i]; }
 }
 
-#ifdef EXPORT
+inline fn __hsalsa20_store1_ref(reg u32[16] subkey) -> stack u32[8]
+{
+  inline int i;
+  stack u32[8] subkey_s;
+  
+  for i=0 to 4
+  { subkey_s[i] = subkey[5*i]; }
+  for i=0 to 4
+  { subkey_s[i+4] = subkey[6+i]; }
+  
+  return subkey_s;
+}
 
-export fn crypto_core_hsalsa20_ref(reg u64 _subkey _nonce _key _sigma)
+// this function writes the output in external memory
+inline fn __crypto_core_hsalsa20_0_ref(reg u64 _subkey _nonce _key _sigma)
 {
   stack u64 _subkey_s;
   reg u32[16] subkey;
@@ -28,6 +40,27 @@ export fn crypto_core_hsalsa20_ref(reg u64 _subkey _nonce _key _sigma)
 
   _subkey = _subkey_s;
   __hsalsa20_store0_ref(_subkey, subkey);
+}
+
+// this function performs the same computation as the previous one (if sigma is the same) but writes the result in internal memory to be used by xsalsa20
+inline fn __crypto_core_hsalsa20_1_ref(reg u64 _nonce _key) -> stack u32[8]
+{
+  reg u32[16] subkey;
+  stack u32 subkey2 subkey3;
+  stack u32[8] subkey_s;
+  
+  subkey, subkey2, subkey3 = __salsa20_init2_ref(_nonce, _key);
+  subkey, _, _ = __salsa20_rounds_ref(subkey, subkey2, subkey3);
+
+  subkey_s = __hsalsa20_store1_ref(subkey);
+  return subkey_s;
+}
+
+#ifdef EXPORT
+
+export fn crypto_core_hsalsa20_ref(reg u64 _subkey _nonce _key _sigma)
+{
+  __crypto_core_hsalsa20_0_ref(_subkey, _nonce, _key, _sigma);
 }
 
 #endif

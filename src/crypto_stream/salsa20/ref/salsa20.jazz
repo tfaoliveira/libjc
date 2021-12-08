@@ -60,7 +60,6 @@ inline fn __salsa20_xor1_ref(stack u64 _c_s _m_s _mlen_s, reg u32[16] state, sta
   }(j < _mlen)
 }
 
-
 inline fn __salsa20_increment_counter(stack u32[16] state_s) -> stack u32[16]
 {
   reg u64 c;
@@ -70,7 +69,7 @@ inline fn __salsa20_increment_counter(stack u32[16] state_s) -> stack u32[16]
   return state_s;
 }
 
-inline fn __salsa20_ref(reg u64 _c _m _mlen _nonce _key)
+inline fn __salsa20_0_ref(reg u64 _c _m _mlen _nonce _key)
 {
   stack u64 _c_s _m_s _mlen_s;
   reg u32[16] state;
@@ -105,11 +104,48 @@ inline fn __salsa20_ref(reg u64 _c _m _mlen _nonce _key)
   }
 }
 
+// this function is the same as the previous one but receives key in internal memory instead;
+// it can be merged when reg ptr are supported in export functions
+inline fn __salsa20_1_ref(reg u64 _c _m _mlen _nonce, stack u32[8] key)
+{
+  stack u64 _c_s _m_s _mlen_s;
+  reg u32[16] state;
+  stack u32[16] state_s;
+  stack u32 state2 state3;
+
+  _c_s = _c;
+  _m_s = _m;
+  _mlen_s = _mlen;
+
+  state, state2, state3 = __salsa20_init3_ref(_nonce, key);
+  state_s = __salsa20_copy0_ref(state, state2, state3);
+
+  while(_mlen_s >= 64)
+  {
+    state, state2, state3 = __salsa20_rounds_ref(state, state2, state3);
+    state, state2, state3 = __salsa20_add_ref(state, state2, state3, state_s);
+    __salsa20_xor0_ref(_c_s, _m_s, state, state2, state3);
+    state_s = __salsa20_increment_counter(state_s);
+    state, state2, state3 = __salsa20_copy1_ref(state_s);
+
+    _mlen_s -= 64;
+    _m_s += 64;
+    _c_s += 64;
+  }
+
+  if(_mlen_s > 0)
+  {
+    state, state2, state3 = __salsa20_rounds_ref(state, state2, state3);
+    state, state2, state3 = __salsa20_add_ref(state, state2, state3, state_s);
+    __salsa20_xor1_ref(_c_s, _m_s, _mlen_s, state, state2, state3);
+  }
+}
+
 #ifdef EXPORT
 
 export fn salsa20_ref(reg u64 _c _m _mlen _nonce _key)
 {
-  __salsa20_ref(_c, _m, _mlen, _nonce, _key);
+  __salsa20_0_ref(_c, _m, _mlen, _nonce, _key);
 }
 
 #endif

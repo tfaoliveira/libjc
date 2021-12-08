@@ -1,0 +1,29 @@
+#ifndef CRYPTO_STREAM_XSALSA20_REF
+#define CRYPTO_STREAM_XSALSA20_REF
+
+#include "utils/spill.jazz"
+#include "crypto_core/hsalsa20/ref/hsalsa20.jazz"
+#include "crypto_stream/salsa20/ref/salsa20.jazz"
+
+inline fn __xsalsa20_0_ref(reg u64 _c _m _mlen _nonce _key)
+{
+  stack u64 _c_s _m_s _mlen_s _nonce_s;
+  stack u32[8] subkey;
+  
+  _c_s, _m_s, _mlen_s, _nonce_s = __r2s_x4(_c, _m, _mlen, _nonce);
+  subkey = __crypto_core_hsalsa20_1_ref(_nonce, _key);
+  _c, _m, _mlen, _nonce = __s2r_x4(_c_s, _m_s, _mlen_s, _nonce_s);    
+  _nonce += 16;
+  __salsa20_1_ref(_c, _m, _mlen, _nonce, subkey);
+}
+
+#ifdef EXPORT
+
+export fn xsalsa20_ref(reg u64 _c _m _mlen _nonce _key)
+{
+  __xsalsa20_0_ref(_c, _m, _mlen, _nonce, _key);
+}
+
+#endif
+
+#endif

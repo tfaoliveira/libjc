@@ -1,0 +1,16 @@
+#ifndef CRYPTO_STREAM_SALSA20_AVX2
+#define CRYPTO_STREAM_SALSA20_AVX2
+
+#include "crypto_stream/salsa20/avx2/salsa20_r8.jazz"
+
+#ifdef EXPORT
+// currently, only r8 representation is used in this context
+// - once more representations are included the following function
+//   can be changed to decide which one to execute depending on the message length 
+export fn salsa20_avx2(reg u64 _c _m _mlen _nonce _key)
+{
+  __salsa20_r8_0_avx2(_c, _m, _mlen, _nonce, _key);
+}
+#endif
+
+#endif
