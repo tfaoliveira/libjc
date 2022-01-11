@@ -1,6 +1,6 @@
 TOP := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 GFLAGS ?=
-JFLAGS ?=
+JFLAGS := $(JFLAGS) --intel 
 JASMINC ?= jasminc
 
 %_export.japp: %.jazz
@@ -10,7 +10,7 @@ JASMINC ?= jasminc
 	@gpp -I. -I$(TOP) $(GFLAGS) -o $@ $<
 
 %.s: %.japp
-	@$(JASMINC) $(JFLAGS) -o $@ $< || (rm -f $@ && touch fail && echo "\033[1;31m FAIL \033[0m")
+	$(JASMINC) $(JFLAGS) -o $@ $< || (rm -f $@ && touch fail && echo "\033[1;31m FAIL \033[0m")
 
 clean:
 	@rm -f log fail *.japp *.s

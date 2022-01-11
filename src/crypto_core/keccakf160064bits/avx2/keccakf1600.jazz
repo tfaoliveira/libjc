@@ -75,7 +75,7 @@ inline fn __keccakf1600_avx2(reg u256[7] state) -> reg u256[7]
   rhotates_right_p = KECCAK_RHOTATES_RIGHT;
 
   r = 24;
-  align while
+  /*align*/ while
   {
 	  //######################################## Theta
 	  c00 = #VPSHUFD_256(state[2], (4u2)[1,0,3,2]);
@@ -217,11 +217,11 @@ export fn keccakf1600_avx2(reg u64 out in)
   state_s[u64 2] = t;
   state_s[u64 3] = t;
   
-  state = state_s;
+  state = #copy(state_s);
 
   state = __keccakf1600_avx2(state);
 
-  state_s = state;
+  state_s = #copy(state);
 
   for i=0 to 25
   { idx = KECCAK_A_JAGGED[i];
