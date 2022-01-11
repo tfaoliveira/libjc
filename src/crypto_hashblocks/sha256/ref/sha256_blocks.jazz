@@ -134,7 +134,7 @@ fn _sha256_blocks_ref(reg ptr u32[8] H, reg u64 in inlen) -> reg ptr u32[8], reg
   stack u64 in_s;
 
   Hp = H;
-  r = H;
+  r = #copy(H);
 
   in_s = in;
   while(inlen >= 64)
@@ -157,7 +157,7 @@ fn _sha256_blocks_ref(reg ptr u32[8] H, reg u64 in inlen) -> reg ptr u32[8], reg
     for i=0 to 8
     { r[i] += H[i]; }
 
-    H = r;
+    H = #copy(r);
     Hp = H;
 
     //in = in_s;
