@@ -162,7 +162,6 @@ inline fn __salsa20_double_round_x8_avx2(reg u256[16] state, stack u256 state2 s
 
 inline fn __salsa20_rounds_x8_avx2(reg u256[16] state) -> reg u256[16]
 {
-  inline int i;
   reg u32 c;
   stack u256 state2 state3;
 
