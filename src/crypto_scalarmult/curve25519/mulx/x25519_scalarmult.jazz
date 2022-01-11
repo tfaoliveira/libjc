@@ -1,6 +1,6 @@
 #ifndef CRYPTO_SCALARMULT_X25519_MULX_SCALARMULT
 #define CRYPTO_SCALARMULT_X25519_MULX_SCALARMULT
 
-#include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult2.jazz"
+#include "crypto_scalarmult/curve25519/mulx/x25519_scalarmult1.jazz"
 
 #endif

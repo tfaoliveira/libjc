@@ -85,19 +85,15 @@ inline fn __montgomery_ladder_step_mulx(
 }
 
 
-inline fn __montgomery_ladder_mulx(reg u64[4] initr, stack u8[32] k)
-  -> stack u64[4],
-     reg u64[4],
-     stack u64[4],
-     stack u64[4]
+inline fn __montgomery_ladder_mulx(reg u64[4] u, stack u8[32] k) -> stack u64[4], reg u64[4]
 {
-  stack u64[4] init x2 x3 z3;
+  stack u64[4] us x2 x3 z3;
   reg u64[4] z2r;
   stack u64 ctrs swapped;
-  reg u64 ctr bit;
+  reg u64 ctr;
 
-  (x2,z2r,x3,z3) = __init_points(initr); 
-  init = initr;
+  (x2,z2r,x3,z3) = __init_points(u); 
+  us = u;
 
   ctr = 255;
   swapped = 0;
@@ -107,12 +103,12 @@ inline fn __montgomery_ladder_mulx(reg u64[4] initr, stack u8[32] k)
     ctr -= 1;
     ctrs = ctr;
 
-    (x2, z2r, x3, z3, swapped) = __montgomery_ladder_step_mulx(k, init, x2, z2r, x3, z3, swapped, ctr);
+    (x2, z2r, x3, z3, swapped) = __montgomery_ladder_step_mulx(k, us, x2, z2r, x3, z3, swapped, ctr);
 
     ctr = ctrs;
   } (ctr > 0)
 
-  return x2, z2r, x3, z3;
+  return x2, z2r;
 }
 
 inline fn __encode_point_mulx(stack u64[4] x2, reg u64[4] z2r) -> reg u64[4]
@@ -126,24 +122,18 @@ inline fn __encode_point_mulx(stack u64[4] x2, reg u64[4] z2r) -> reg u64[4]
   return r;
 }
 
-inline fn __x25519_scalarmult_mulx(
-  reg u64 rp,
-  reg u64 kp,
-  reg u64 up
-)
+inline fn __x25519_scalarmult_mulx(reg u64 rp kp up)
 {
   inline int i;
   stack u8[32] k;
-  stack u64[4] x2 x3 z3;
+  stack u64[4] x2;
   reg u64[4] u z2r r;
-  reg u64 swap pos b;
-  stack u64 rps swaps poss;
+  stack u64 rps;
 
-  rps = rp; // rp dead
-
-  k = __decode_scalar_25519(kp); // kp dead
-  u = __decode_u_coordinate(up); // up dead
-  (x2,z2r,x3,z3) = __montgomery_ladder_mulx(u, k);
+  rps = rp;
+  k = __decode_scalar_25519(kp);
+  u = __decode_u_coordinate(up);
+  (x2,z2r) = __montgomery_ladder_mulx(u, k);
   r = __encode_point_mulx(x2,z2r);
 
   rp = rps;
