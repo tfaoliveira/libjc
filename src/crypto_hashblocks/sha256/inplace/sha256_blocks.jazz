@@ -96,8 +96,10 @@ fn _sha256_blocks_inplace(reg ptr u32[8] H, reg u64 in inlen) -> reg ptr u32[8],
   stack u32[16] W;
   stack ptr u32[8] Hp;
 
+  // r = #copy(H);
+  for i=0 to 8
+  { r[i] = H[i]; }
   Hp = H;
-  r = H;
 
   while(inlen >= 64)
   {
@@ -118,7 +120,9 @@ fn _sha256_blocks_inplace(reg ptr u32[8] H, reg u64 in inlen) -> reg ptr u32[8],
     for i=0 to 8
     { r[i] += H[i]; }
 
-    H = r;
+    //H = #copy(r);
+    for i=0 to 8
+    { H[i] = r[i]; }
     Hp = H;
 
     in += 64;
