@@ -1,6 +1,6 @@
 TOP := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 GFLAGS ?=
-JFLAGS := $(JFLAGS) --intel 
+JFLAGS := $(JFLAGS)
 JASMINC ?= jasminc
 
 %_export.japp: %.jazz
