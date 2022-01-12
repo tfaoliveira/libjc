@@ -3,39 +3,40 @@
 # remove previous benchmarks files related to curve25519
 ls data/crypto_scalarmult_curve25519_* | xargs rm
 
-# copy implementations and bindings into supercop-*
-./sync
-./sync openssl
-./sync boringssl
-./sync hacl_star
-./sync fiat-crypto
-./sync evercrypt
+#### copy implementations and bindings into supercop-*
+###./sync
+###./sync openssl
+###./sync boringssl
+###./sync hacl_star
+###./sync fiat-crypto
+###./sync evercrypt
+###./sync fld-ecc-vec
 
 # run benchmarks... this can take some time
 ./bench curve25519
 
-# move openssl static results to openssl static x25519_fe64_eligible or just fe64 (0x80100 bits 64+8 and 64+19 : man OPENSSL_ia32cap)
-mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_fe64.data
+#### move openssl static results to openssl static x25519_fe64_eligible or just fe64 (0x80100 bits 64+8 and 64+19 : man OPENSSL_ia32cap)
+###mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_fe64.data
 
-# disable x25519_fe64_eligible (adcx adox bmi2)
-(export OPENSSL_ia32cap=~0x801000000000000000000 && ./bench curve25519-openssl && unset OPENSSL_ia32cap)
-mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_disable_fe64.data
+#### disable x25519_fe64_eligible (adcx adox bmi2)
+###(export OPENSSL_ia32cap=~0x801000000000000000000 && ./bench curve25519-openssl && unset OPENSSL_ia32cap)
+###mv data/crypto_scalarmult_curve25519_openssl_static.data data/crypto_scalarmult_curve25519_openssl_static_disable_fe64.data
 
-# plot
-./plot-fixed curve25519 cycles
-./plot-fixed curve25519 base_cycles
+## plot
+#./plot-fixed curve25519 cycles
+#./plot-fixed curve25519 base_cycles
 
-./plot-fixed curve25519 cycles "(jazz)"
-./plot-fixed curve25519 base_cycles "(jazz)"
+#./plot-fixed curve25519 cycles "(jazz)"
+#./plot-fixed curve25519 base_cycles "(jazz)"
 
-./plot-fixed curve25519 cycles "(amd64|boring|donna|fiat|hacl_star_gcc|jazz|openssl|sandy|ever)"
-./plot-fixed curve25519 base_cycles "(amd64|boring|donna|fiat|hacl_star_gcc|jazz|openssl|sandy|ever)"
+#./plot-fixed curve25519 cycles "(amd64|boring|donna|fiat|hacl_star_gcc|jazz|openssl|sandy|ever)"
+#./plot-fixed curve25519 base_cycles "(amd64|boring|donna|fiat|hacl_star_gcc|jazz|openssl|sandy|ever)"
 
-today=`date "+%Y%m%d"`
-mkdir -p data/curve25519-$today
+#today=`date "+%Y%m%d"`
+#mkdir -p data/curve25519-$today
 
-ls data/*curve25519*.* | egrep -v "\.data$" | while read file
-do
-  mv $file data/curve25519-$today
-done
+#ls data/*curve25519*.* | egrep -v "\.data$" | while read file
+#do
+#  mv $file data/curve25519-$today
+#done
 

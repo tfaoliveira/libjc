@@ -1,12 +1,15 @@
 #include "crypto_scalarmult.h"
 
-extern int hacl_star_gcc_Hacl_Curve25519_crypto_scalarmult(
+extern int hacl_star_gcc_Hacl_Curve25519_51_scalarmult(
   unsigned char *q,
   const unsigned char *n,
   const unsigned char *p
 );
 
-static const unsigned char basepoint[32] = {9};
+extern int hacl_star_gcc_Hacl_Curve25519_51_secret_to_public(
+  unsigned char *q,
+  const unsigned char *n
+);
 
 int crypto_scalarmult(
   unsigned char *q,
@@ -15,7 +18,7 @@ int crypto_scalarmult(
 )
 {
   int r;
-  r = hacl_star_gcc_Hacl_Curve25519_crypto_scalarmult(q,n,p);
+  r = hacl_star_gcc_Hacl_Curve25519_51_scalarmult(q,n,p);
   return 0;
 }
 
@@ -25,6 +28,6 @@ int crypto_scalarmult_base(
 )
 {
   int r;
-  r = crypto_scalarmult(q,n,basepoint);
+  r = hacl_star_gcc_Hacl_Curve25519_51_secret_to_public(q,n);
   return 0;
 }

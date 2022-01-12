@@ -1,3 +1,47 @@
+crypto_stream chacha20 jazz/ref
+
+## supercop curve25519
+
+# crypto_scalarmult curve25519 jazz/ref4
+
+# crypto_scalarmult curve25519 donna_c64
+# crypto_scalarmult curve25519 ref10
+# crypto_scalarmult curve25519 ref
+# crypto_scalarmult curve25519 donna
+# crypto_scalarmult curve25519 sandy2x
+# crypto_scalarmult curve25519 amd64-64
+# crypto_scalarmult curve25519 amd64-51
+
+# crypto_scalarmult curve25519 jazz/ref4
+# crypto_scalarmult curve25519 jazz/ref5
+# crypto_scalarmult curve25519 jazz/mulx
+# crypto_scalarmult curve25519 jazz/avx2
+
+# crypto_stream salsa20 jazz/ref
+# crypto_stream salsa20 jazz/avx2
+# crypto_stream salsa20 dolbeau/amd64-xmm6int
+# crypto_stream salsa20 ref
+# crypto_stream salsa20 amd64_xmm6
+# crypto_stream salsa20 e/amd64-xmm2
+
+# crypto_stream chacha20 jazz/ref
+# crypto_stream chacha20 jazz/avx2
+
+#crypto_core salsa20 jazz/ref
+#crypto_core hsalsa20 jazz/ref
+#crypto_stream xsalsa20 jazz/ref
+#crypto_stream xsalsa20 jazz/avx2
+#crypto_stream xsalsa20 ref
+
+# crypto_stream salsa20 e/amd64-xmm6
+# crypto_stream salsa20 e/x86-xmm5
+# crypto_stream salsa20 e/amd64-xmm
+# crypto_stream salsa20 e/x86-xmm2
+# crypto_stream salsa20 e/x86-xmm4
+# crypto_stream salsa20 e/amd64-xmm5
+# crypto_stream salsa20 e/x86-xmm
+# crypto_stream salsa20 x86_xmm5
+#crypto_stream xsalsa20 jazz/ref
 #crypto_hash sha256 jazz/ref
 #crypto_hash sha256 jazz/ref0
 #crypto_hash sha256 jazz/inplace

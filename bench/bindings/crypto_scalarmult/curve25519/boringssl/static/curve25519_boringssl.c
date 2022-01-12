@@ -6,7 +6,10 @@ extern int boringssl_static_X25519(
   const unsigned char *p
 );
 
-static const unsigned char basepoint[32] = {9};
+extern int boringssl_static_X25519_public_from_private(
+  unsigned char *q,
+  const unsigned char *n
+);
 
 int crypto_scalarmult(
   unsigned char *q,
@@ -25,6 +28,6 @@ int crypto_scalarmult_base(
 )
 {
   int r;
-  r = crypto_scalarmult(q,n,basepoint);
+  r = boringssl_static_X25519_public_from_private(q,n);
   return 0;
 }

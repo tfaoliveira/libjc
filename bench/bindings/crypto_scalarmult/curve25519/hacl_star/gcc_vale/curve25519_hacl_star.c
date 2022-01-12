@@ -1,12 +1,12 @@
 #include "crypto_scalarmult.h"
 
-extern int openssl_static_X25519(
+extern int hacl_star_gcc_vale_Hacl_Curve25519_64_scalarmult(
   unsigned char *q,
   const unsigned char *n,
   const unsigned char *p
 );
 
-extern int openssl_static_X25519_public_from_private(
+extern int hacl_star_gcc_vale_Hacl_Curve25519_64_secret_to_public(
   unsigned char *q,
   const unsigned char *n
 );
@@ -18,7 +18,7 @@ int crypto_scalarmult(
 )
 {
   int r;
-  r = openssl_static_X25519(q,n,p);
+  r = hacl_star_gcc_vale_Hacl_Curve25519_64_scalarmult(q,n,p);
   return 0;
 }
 
@@ -28,6 +28,6 @@ int crypto_scalarmult_base(
 )
 {
   int r;
-  r = openssl_static_X25519_public_from_private(q,n);
+  r = hacl_star_gcc_vale_Hacl_Curve25519_64_secret_to_public(q,n);
   return 0;
 }

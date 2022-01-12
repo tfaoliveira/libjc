@@ -1,0 +1,51 @@
+# find . -name *.s | sed -e 's/^\.\///' | xargs dirname | awk -F'/' '{print $1" "$2 " jazz/"$3}'
+
+crypto_stream chacha20 jazz/ref
+crypto_stream chacha20 jazz/avx
+crypto_stream chacha20 jazz/avx2
+crypto_stream xsalsa20 jazz/avx2
+crypto_core keccakf160064bits jazz/ref
+crypto_core keccakf160064bits jazz/scalar
+crypto_core keccakf160064bits jazz/avx2
+crypto_core hsalsa20 jazz/ref
+
+# crypto_kdf hkdfsha256 jazz/ref
+# crypto_kdf hkdfsha256 jazz/ref0
+# crypto_kdf hkdfsha256 jazz/inplace
+# crypto_hash2curve expand_message jazz/xmd
+# crypto_hash2curve expand_message jazz/xmd
+
+crypto_auth hmacsha256 jazz/ref
+crypto_auth hmacsha256 jazz/ref0
+crypto_auth hmacsha256 jazz/inplace
+crypto_scalarmult curve25519 jazz/ref4
+crypto_scalarmult curve25519 jazz/ref5
+crypto_scalarmult curve25519 jazz/mulx
+crypto_scalarmult curve25519 jazz/avx2
+crypto_hash sha512 jazz/ref0
+crypto_hash sha3384 jazz/scalar
+crypto_hash sha3384 jazz/avx2
+crypto_hash sha256 jazz/ref
+crypto_hash sha256 jazz/ref0
+crypto_hash sha256 jazz/inplace
+crypto_hash sha3512 jazz/scalar
+crypto_hash sha3512 jazz/avx2
+crypto_hash sha3224 jazz/scalar
+crypto_hash sha3224 jazz/avx2
+crypto_hash sha3256 jazz/scalar
+crypto_hash sha3256 jazz/avx2
+crypto_hash shake256 jazz/ref
+crypto_hash shake256 jazz/scalar
+crypto_hash shake256 jazz/avx2
+crypto_hash shake128 jazz/scalar
+crypto_hash shake128 jazz/avx2
+crypto_hash keccak1600 jazz/ref
+crypto_hash keccak1600 jazz/scalar
+crypto_hash keccak1600 jazz/avx2
+crypto_onetimeauth poly1305 jazz/ref3
+crypto_onetimeauth poly1305 jazz/avx
+crypto_onetimeauth poly1305 jazz/avx2
+crypto_hashblocks sha512 jazz/ref0
+crypto_hashblocks sha256 jazz/ref
+crypto_hashblocks sha256 jazz/ref0
+crypto_hashblocks sha256 jazz/inplace
