@@ -37,7 +37,11 @@ op swap_tuple( t : ('a * 'a) * ('a * 'a) ) = (t.`2, t.`1).
 
 op ith_bit(k : W256.t, i : int) = k.[i].
 
-op montgomery_ladder_step(k : W256.t, init : zp, nqs : (zp * zp) * (zp * zp), ctr : int) =
+op montgomery_ladder_step
+ (k : W256.t)
+ (init : zp)
+ (nqs : (zp * zp) * (zp * zp))
+ (ctr : int) =
   if ith_bit k ctr
   then swap_tuple (add_and_double init (swap_tuple(nqs)))
   else add_and_double init nqs.
@@ -47,7 +51,7 @@ op montgomery_ladder(init : zp, k : W256.t) =
         ((Zp.one,Zp.zero),(init,Zp.one))
         (rev (iota_ 0 255)).
 
-op encodePoint (q: zp * zp) : W256.t =
+op encodePoint (q: zp * zp) =
   let q = q.`1 * (ZModpRing.exp q.`2 (P - 2)) in
       W256.of_int (asint q).
 
