@@ -5,7 +5,7 @@
 ### $ make install_glob_array3 # copies jasminc into /usr/local/bin and updates ~/.config/easycrypt/easycrypt.conf
 ### $ make install_annotation # same as previous, but for annotation branch
 
-BRANCHES := jasmin_glob_array3 jasmin_annotation
+BRANCHES := jasmin_glob_array3 jasmin_intel_syntax jasmin_annotation
 
 jasmin_%:
 	git clone https://github.com/jasmin-lang/jasmin.git -b $* $@
