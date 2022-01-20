@@ -1,0 +1,23 @@
+#ifndef CRYPTO_STREAM_CHACHA20_IETF_REF
+#define CRYPTO_STREAM_CHACHA20_IETF_REF
+
+param int CHACHA_ROUNDS=20;
+
+//require "crypto_stream/chacha20-ietf/ref/chacha_state.jinc"
+//require "crypto_stream/chacha/ref/chacha_store.jinc"
+//require "crypto_stream/chacha/ref/chacha_core.jinc"
+require "chacha_state.jinc"
+require "../../chacha/ref/chacha_store.jinc"
+require "../../chacha/ref/chacha_core.jinc"
+
+
+#ifdef EXPORT
+
+export fn chacha20_ietf_ref(reg u64 output plain len nonce key)
+{
+  __chacha20_ref(output, plain, len, nonce, key);
+}
+
+#endif
+#endif
+

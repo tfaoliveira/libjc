@@ -8,12 +8,8 @@ int crypto_stream(
   const unsigned char *k
 )
 {
-  unsigned char nonce[12];
   libsodium_static_disable_asm_ccomp_sodium_init();
-  memset(out, 0, outlen);
-  memset(nonce, 0, 4);
-  memcpy(nonce+4, n, 8);
-  libsodium_static_disable_asm_ccomp_crypto_stream_chacha20_ietf(out, outlen, nonce, k);
+  libsodium_static_disable_asm_ccomp_crypto_stream_chacha20_ietf(out, outlen, n, k);
 	return 0;
 }
 
@@ -25,11 +21,7 @@ int crypto_stream_xor(
   const unsigned char *k
 )
 {
-  unsigned char nonce[12];
   libsodium_static_disable_asm_ccomp_sodium_init();
-  memset(nonce, 0, 4);
-  memcpy(nonce+4, n, 8);
-  libsodium_static_disable_asm_ccomp_crypto_stream_chacha20_ietf_xor(out, in, inlen, nonce, k);
+  libsodium_static_disable_asm_ccomp_crypto_stream_chacha20_ietf_xor(out, in, inlen, n, k);
 	return 0;
 }
-

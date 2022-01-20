@@ -1,5 +1,15 @@
 #include "crypto_stream.h"
+#include "impl.h"
 #include <string.h>
+#include <stdint.h>
+
+extern void chacha20_ietf_impl(
+  unsigned char *out,
+  const unsigned char *in,
+  unsigned long long inlen,
+  const unsigned char *k,
+  const unsigned char *n
+);
 
 int crypto_stream(
   unsigned char *out,
@@ -8,12 +18,8 @@ int crypto_stream(
   const unsigned char *k
 )
 {
-  unsigned char nonce[12];
-  libsodium_static_sodium_init();
   memset(out, 0, outlen);
-  memset(nonce, 0, 4);
-  memcpy(nonce+4, n, 8);
-  libsodium_static_crypto_stream_chacha20_ietf(out, outlen, nonce, k);
+	chacha20_ietf_impl(out, out, outlen, n, k);
 	return 0;
 }
 
@@ -25,11 +31,7 @@ int crypto_stream_xor(
   const unsigned char *k
 )
 {
-  unsigned char nonce[12];
-  libsodium_static_sodium_init();
-  memset(nonce, 0, 4);
-  memcpy(nonce+4, n, 8);
-  libsodium_static_crypto_stream_chacha20_ietf_xor(out, in, inlen, nonce, k);
+	chacha20_ietf_impl(out, in, inlen, n, k);
 	return 0;
 }
 
