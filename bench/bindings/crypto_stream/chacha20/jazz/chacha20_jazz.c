@@ -8,6 +8,39 @@ extern void chacha20_impl(
   const unsigned char *in,
   unsigned long long inlen,
   const unsigned char *k,
+  const unsigned char *n
+);
+
+int crypto_stream(
+  unsigned char *out,
+  unsigned long long outlen,
+  const unsigned char *n,
+  const unsigned char *k
+)
+{
+  memset(out, 0, outlen);
+	chacha20_impl(out, out, outlen, n, k);
+	return 0;
+}
+
+int crypto_stream_xor(
+  unsigned char *out,
+  const unsigned char *in,
+  unsigned long long inlen,
+  const unsigned char *n,
+  const unsigned char *k
+)
+{
+	chacha20_impl(out, in, inlen, n, k);
+	return 0;
+}
+
+/*
+extern void chacha20_impl(
+  unsigned char *out,
+  const unsigned char *in,
+  unsigned long long inlen,
+  const unsigned char *k,
   const unsigned char *n,
   unsigned int counter
 );
@@ -41,3 +74,4 @@ int crypto_stream_xor(
 	chacha20_impl(out, in, inlen, k, nonce, 0);
 	return 0;
 }
+*/
