@@ -49,8 +49,8 @@ inline fn __column_round_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack
 {
   stack u32 k14;
 
-  k = __quarter_round_ref(k, 0, 4, 8,  12);
-  k = __quarter_round_ref(k, 1, 5, 9,  13);
+  k = __quarter_round_ref(k, 0, 4,  8, 12);
+  k = __quarter_round_ref(k, 1, 5,  9, 13);
   k = __quarter_round_ref(k, 2, 6, 10, 14);  k14 = k[14]; k[15] = k15;
   k = __quarter_round_ref(k, 3, 7, 11, 15);  k15 = k[15]; k[14] = k14;
 
@@ -71,7 +71,7 @@ inline fn __diagonal_round_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], sta
 }
 
 // not exported; may be useful as spec;
-inline fn __round_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
+inline fn __double_round_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
 {
   k, k15 = __column_round_ref(k, k15);
   k, k15 = __diagonal_round_ref(k, k15);
@@ -86,7 +86,7 @@ inline fn __rounds_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
   c = (CHACHA_ROUNDS/2);
   while
   {
-    k, k15 = __round_ref(k, k15);
+    k, k15 = __double_round_ref(k, k15);
     (_,_,_,_,c) = #DEC_32(c);
   } (c > 0)
 
@@ -149,7 +149,7 @@ inline fn __half_round_inline_ref(
 }
 
 // used;
-inline fn __round_inline_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
+inline fn __double_round_inline_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
 {
   stack u32 k14;
 
@@ -183,7 +183,7 @@ inline fn __rounds_inline_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stac
   c = (CHACHA_ROUNDS/2);
   while
   {
-    k, k15 = __round_inline_ref(k, k15);
+    k, k15 = __double_round_inline_ref(k, k15);
     (_,_,_,_,c) = #DEC_32(c);
   } (c > 0)
 
