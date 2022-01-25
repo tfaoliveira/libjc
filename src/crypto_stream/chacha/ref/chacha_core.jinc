@@ -81,7 +81,7 @@ inline fn __double_round_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack
 // not exported; may be useful as spec;
 inline fn __rounds_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
 {
-  stack u32 c k14;
+  stack u32 c;
 
   c = (CHACHA_ROUNDS/2);
   while
@@ -178,7 +178,7 @@ inline fn __double_round_inline_ref(reg u32[16] k, stack u32 k15) -> reg u32[16]
 inline fn __rounds_inline_ref(reg u32[16] k, stack u32 k15) -> reg u32[16], stack u32
 {
   inline int i;
-  stack u32 c k14;
+  stack u32 c;
 
   c = (CHACHA_ROUNDS/2);
   while

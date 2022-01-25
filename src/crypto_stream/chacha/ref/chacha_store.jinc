@@ -7,6 +7,7 @@ inline fn __update_ptr_ref(reg u64 output plain len, inline int n) -> reg u64, r
   return output, plain, len;
 }
 
+// 64 bytes
 inline fn __store_ref(stack u64 s_output s_plain s_len, reg u32[16] k, stack u32 k15) -> stack u64, stack u64, stack u64
 {
   inline int i;

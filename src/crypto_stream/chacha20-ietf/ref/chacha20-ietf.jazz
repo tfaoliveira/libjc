@@ -15,7 +15,7 @@ require "../../chacha/ref/chacha_core.jinc"
 
 export fn chacha20_ietf_ref(reg u64 output plain len nonce key)
 {
-  __chacha20_ref(output, plain, len, nonce, key);
+  __chacha_ref(output, plain, len, nonce, key);
 }
 
 #endif
