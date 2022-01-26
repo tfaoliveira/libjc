@@ -1,0 +1,20 @@
+#ifndef CRYPTO_STREAM_SALSA2012_REF
+#define CRYPTO_STREAM_SALSA2012_REF
+
+param int SALSA20_ROUNDS=12;
+//require "crypto_stream/salsa20/ref/salsa20.jinc"
+require "../../salsa20/ref/salsa20.jinc"
+
+#ifdef EXPORT
+
+export fn salsa2012_ref(reg u64 output plain len nonce key) -> reg u64
+{
+  reg u64 r;
+  __salsa20_ref(output, plain, len, nonce, key);
+  _,_,_,_,_,r = #set0();
+  return r;
+}
+
+#endif
+#endif
+

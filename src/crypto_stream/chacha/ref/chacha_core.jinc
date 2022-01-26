@@ -213,9 +213,7 @@ inline fn __sum_states_ref(reg u32[16] k, stack u32 k15, stack u32[16] st) -> re
 
 inline fn __chacha_ref(reg u64 output plain len nonce key)
 {
-  stack u64 s_output, s_plain;
-  stack u64 s_len;
-
+  stack u64 s_output s_plain s_len;
   stack u32[16] st;
   reg u32[16] k;  // the full state is in k[0..14] and k15;
   stack u32 k15;
