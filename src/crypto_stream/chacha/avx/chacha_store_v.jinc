@@ -132,7 +132,7 @@ inline fn __interleave_avx(stack u128[8] s, reg u128[8] k, inline int o) -> reg 
 
 
 // 128 bytes (non sequentially)
-inline fn __store_half_interleave_v_avx(reg u64 output plain, reg u32 len, reg u128[8] k, inline int o)
+inline fn __store_half_interleave_v_avx(reg u64 output plain len, reg u128[8] k, inline int o)
 {
   inline int i;
 

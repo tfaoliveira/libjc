@@ -2,11 +2,11 @@
 //require "crypto_stream/chacha/avx/chacha_globals.jinc"
 require "../../chacha/avx/chacha_globals.jinc"
 
-// _h /////////////////////////////////////////////////////////////////////////
-
 u128 CHACHA_P0001_H_AVX = (4u32)[0,0,0,1];
 u128 CHACHA_P0002_H_AVX = (4u32)[0,0,0,2];
 u128 CHACHA_P4444_V_AVX = (4u32)[4,4,4,4];
+
+// _h /////////////////////////////////////////////////////////////////////////
 
 // nonce : 12 bytes
 // key : 32 bytes

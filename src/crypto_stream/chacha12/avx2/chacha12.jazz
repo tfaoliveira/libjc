@@ -1,0 +1,21 @@
+#ifndef CRYPTO_STREAM_CHACHA12_AVX2
+#define CRYPTO_STREAM_CHACHA12_AVX2
+
+param int CHACHA_ROUNDS=12;
+//require "crypto_stream/chacha/avx/chacha.jinc"
+require "../../chacha/avx2/chacha.jinc"
+
+#ifdef EXPORT
+
+export fn chacha12_avx2(reg u64 output plain len nonce key) -> reg u64
+{
+  reg u64 r;
+  __chacha_avx2(output, plain, len, nonce, key);
+  _,_,_,_,_,r = #set0();
+  return r;
+}
+
+#endif
+#endif
+
+
