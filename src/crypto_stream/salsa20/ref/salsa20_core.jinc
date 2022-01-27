@@ -150,4 +150,32 @@ inline fn __salsa20_ref(reg u64 output plain len nonce key)
   }
 }
 
+inline fn __salsa20_1_ref(reg u64 output plain len nonce, reg u32[8] key)
+{
+  stack u64 s_output s_plain s_len;
+  stack u32[16] st;
+  reg u32[16] k;
+  stack u32 k2 k3 k15;
+
+  s_output = output;
+  s_plain = plain;
+  s_len = len;
+
+  st = __init_1_ref(nonce, key);
+
+  while(s_len >= 64)
+  { k, k2, k3 = __copy_state_ref(st);
+    k, k15 = __rounds_ref(k, k2, k3);
+    s_output, s_plain, s_len = __sum_states_store_ref(s_output, s_plain, s_len, k, k15, st);
+    st = __increment_counter_ref(st);
+  }
+
+  if(s_len > 0)
+  { k, k2, k3 = __copy_state_ref(st);
+    k, k15 = __rounds_ref(k, k2, k3);
+    k, k15 = __sum_states_ref(k, k15, st);
+    __store_last_ref(s_output, s_plain, s_len, k, k15);
+  }
+}
+
 

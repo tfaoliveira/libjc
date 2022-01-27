@@ -132,3 +132,27 @@ inline fn __salsa20_v_avx(reg u64 output plain len nonce key)
 }
 
 
+inline fn __salsa20_v_1_avx(reg u64 output plain len nonce, reg u32[8] key)
+{
+  stack u128[16] st;
+  reg u128[16] k;
+
+  st = __init_v_1_avx(nonce, key);
+
+  while(len >= 256)
+  { k = __copy_state_v_avx(st);
+    k = __rounds_v_avx(k);
+    k = __sum_states_v_avx(k, st);
+    output, plain, len = __store_v_avx(output, plain, len, k);
+    st = __increment_counter_v_avx(st);
+  }
+
+  if(len > 0)
+  { k = __copy_state_v_avx(st);
+    k = __rounds_v_avx(k);
+    k = __sum_states_v_avx(k, st);
+    __store_last_v_avx(output, plain, len, k);
+  }
+}
+
+
