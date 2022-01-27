@@ -1,0 +1,4 @@
+inline fn __salsa20_avx(reg u64 output plain len nonce key)
+{
+  __salsa20_v_avx(output, plain, len, nonce, key);
+}
