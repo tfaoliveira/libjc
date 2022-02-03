@@ -1,0 +1,17 @@
+#ifndef CRYPTO_STREAM_CHACHA12_REF
+#define CRYPTO_STREAM_CHACHA12_REF
+
+param int CHACHA_ROUNDS=12;
+//require "crypto_stream/chacha/ref/chacha.jinc"
+require "../../chacha/ref/chacha.jinc"
+
+#ifdef EXPORT
+
+export fn chacha12_ref(reg u64 output plain len nonce key)
+{
+  __chacha_ref(output, plain, len, nonce, key);
+}
+
+#endif
+#endif
+

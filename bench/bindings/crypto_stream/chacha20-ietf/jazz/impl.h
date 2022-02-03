@@ -1,0 +1,1 @@
+#define chacha20_ietf_impl chacha20_ietf_IMPL

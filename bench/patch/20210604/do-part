@@ -583,31 +583,34 @@ do
           fi
           # XXX: also support standalone *.rs via okrs-${abi}
 
+          o_s=`echo "$o" | tr - _`
+          op_s=`echo "$op" | tr - _`
           (
             cd "$work/compile"
 
             (
-              echo "#ifndef ${o}_H"
-              echo "#define ${o}_H"
+              echo "#ifndef ${o_s}_H"
+              echo "#define ${o_s}_H"
               echo ""
               echo "#include \"${op}.h\""
               echo ""
               egrep "${o}"'$|'"${o}"'\(|'"${o}"'_' < MACROS \
-              | sed "s/$o/$op/" | while read mop
+              | sed "s/$o/$op_s/" | while read mop
               do
-                echo "#define ${mop} ${mop}" | sed "s/$op/$o/"
+                echo "#define ${mop} ${mop}" | sed "s/$op_s/$o/"
               done
               echo "#define ${o}_PRIMITIVE \"${p}\""
-              echo "#define ${o}_IMPLEMENTATION ${op}_IMPLEMENTATION"
-              echo "#define ${o}_VERSION ${op}_VERSION"
+              echo "#define ${o}_IMPLEMENTATION ${op_s}_IMPLEMENTATION"
+              echo "#define ${o}_VERSION ${op_s}_VERSION"
               echo ""
               echo "#endif"
             ) > "$o.h"
             for opp in "$op" "${op}_publicinputs"
             do
+              opp_s=`echo "$opp" | tr - _`
               (
-                echo "#ifndef ${opp}_H"
-                echo "#define ${opp}_H"
+                echo "#ifndef ${opp_s}_H"
+                echo "#define ${opp_s}_H"
                 echo ""
                 sed 's/[         ]CRYPTO_/ '"${opi}"'_/g' < api.h
                 echo ' '
@@ -623,13 +626,13 @@ do
                 egrep "${o}"'$|'"${o}"'\(|'"${o}"'_' < MACROS \
                 | sed "s/$o/$opi/" | while read mopi
                 do
-                  echo "#define ${mopi} ${mopi}" | sed "s/$opi/$opp/"
+                  echo "#define ${mopi} ${mopi}" | sed "s/$opi/$opp_s/"
                 done
-                echo "#define ${opp}_IMPLEMENTATION \"${implementationdir}\""
+                echo "#define ${opp_s}_IMPLEMENTATION \"${implementationdir}\""
                 echo "#ifndef ${opi}_VERSION"
                 echo "#define ${opi}_VERSION \"-\""
                 echo "#endif"
-                echo "#define ${opp}_VERSION ${opi}_VERSION"
+                echo "#define ${opp_s}_VERSION ${opi}_VERSION"
                 echo ""
                 echo "#endif"
               ) > "$opp.h"
@@ -723,11 +726,18 @@ do
               # patch : $libpath $liblink ... $lstlink
               if [ ! "$rust" ]
               then
+#                echo "killafter 300 \
+#                $compiler -DSUPERCOP \
+#                  $includes \
+#                  -o try-small try-small.$language try-anything.$language \
+#                  "lib$op.a" $libpath $liblink $trylibs $lstlink >../errors 2>&1 || ok=0"
+
                 killafter 300 \
                 $compiler -DSUPERCOP \
                   $includes \
                   -o try-small try-small.$language try-anything.$language \
                   "lib$op.a" $libpath $liblink $trylibs $lstlink >../errors 2>&1 || ok=0
+
                 cat ../errors \
                 | while read err
                 do

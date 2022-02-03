@@ -1,0 +1,15 @@
+#ifndef CRYPTO_STREAM_XSALSA20_AVX
+#define CRYPTO_STREAM_XSALSA20_AVX
+
+param int SALSA20_ROUNDS=20;
+require "xsalsa20.jinc"
+
+#ifdef EXPORT
+
+export fn xsalsa20_avx(reg u64 output plain len nonce key)
+{
+  __xsalsa20_avx(output, plain, len, nonce, key);
+}
+
+#endif
+#endif

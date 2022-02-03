@@ -1,0 +1,25 @@
+#ifndef CRYPTO_STREAM_CHACHA20_IETF_AVX2
+#define CRYPTO_STREAM_CHACHA20_IETF_AVX2
+
+param int CHACHA_ROUNDS=20;
+
+require "chacha_state.jinc"
+require "../../chacha/avx2/chacha_store_h.jinc"
+require "../../chacha/avx2/chacha_core_h.jinc"
+require "../../chacha/avx2/chacha_store_v.jinc"
+require "../../chacha/avx2/chacha_core_v.jinc"
+require "../../chacha/avx2/_chacha.jinc"
+
+#ifdef EXPORT
+
+export fn chacha20_ietf_avx2(reg u64 output plain len nonce key) -> reg u64
+{
+  reg u64 r;
+  __chacha_avx2(output, plain, len, nonce, key);
+  _,_,_,_,_,r = #set0();
+  return r;
+}
+
+#endif
+#endif
+
