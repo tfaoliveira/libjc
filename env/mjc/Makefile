@@ -27,7 +27,7 @@ jasmin_%:
 	git clone https://github.com/jasmin-lang/jasmin.git -b $* jasmin_$*
 
 pull_%: jasmin_%
-	(cd jasmin_$* && git pull)
+	(cd jasmin_$* && (git pull || true))
 
 build_%: pull_%
 	(cd jasmin_$* && nix-shell --command "(cd compiler && make clean && make CIL && make)")
@@ -36,3 +36,6 @@ install_%: build_%
 	sudo install -b -D jasmin_$*/compiler/jasminc /usr/local/bin/
 	echo "[general]\nidirs = Jasmin:$(shell pwd)/jasmin_$*/eclib" > ~/.config/easycrypt/easycrypt.conf
 
+just_install_%:
+	sudo install -b -D jasmin_$*/compiler/jasminc /usr/local/bin/
+	echo "[general]\nidirs = Jasmin:$(shell pwd)/jasmin_$*/eclib" > ~/.config/easycrypt/easycrypt.conf
