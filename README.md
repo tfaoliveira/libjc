@@ -1,3 +1,9 @@
+# Important Notice
+
+The development of new Jasmin implementations switched to https://github.com/formosa-crypto/libjade
+
+For more information about the Formosa Crypto Project, consult the following website: https://formosa-crypto.org/
+
 # Setup
 ```
 git clone --recurse-submodules https://github.com/tfaoliveira/libjc.git
